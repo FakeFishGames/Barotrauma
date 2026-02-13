@@ -27,7 +27,8 @@ namespace Barotrauma.Networking
             ServerIdentity,
             General,
             Antigriefing,
-            Banlist
+            Banlist,
+            SubEditor
         }
 
         public void AssignGUIComponent(string propertyName, GUIComponent component)
@@ -87,8 +88,13 @@ namespace Barotrauma.Networking
             var settingsTabTypes = Enum.GetValues(typeof(SettingsTab)).Cast<SettingsTab>();
             foreach (var settingsTab in settingsTabTypes)
             {
+                // Only show SubEditor tab when the SubEditor screen is active
+                if (settingsTab == SettingsTab.SubEditor && !(Screen.Selected is SubEditorScreen))
+                {
+                    continue;
+                }
                 settingsTabs[settingsTab] = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), tabContent.RectTransform, Anchor.Center));
-                tabButtons[settingsTab] = new GUIButton(new RectTransform(new Vector2(0.2f, 1.2f), buttonArea.RectTransform), TextManager.Get($"ServerSettings{settingsTab}Tab"), style: "GUITabButton")
+                tabButtons[settingsTab] = new GUIButton(new RectTransform(new Vector2(0.2f, 1.2f), buttonArea.RectTransform), TextManager.Get($"ServerSettings{settingsTab}Tab").Fallback(settingsTab.ToString()), style: "GUITabButton")
                 {
                     UserData = settingsTab,
                     OnClicked = SelectSettingsTab
@@ -111,6 +117,10 @@ namespace Barotrauma.Networking
             CreateGeneralTab(settingsTabs[SettingsTab.General]);
             CreateAntigriefingTab(settingsTabs[SettingsTab.Antigriefing]);
             CreateBanlistTab(settingsTabs[SettingsTab.Banlist]);
+            if (settingsTabs.ContainsKey(SettingsTab.SubEditor))
+            {
+                CreateSubEditorTab(settingsTabs[SettingsTab.SubEditor]);
+            }
 
             if (GameMain.Client == null || 
                 !GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings))
@@ -943,6 +953,172 @@ namespace Barotrauma.Networking
         private void CreateBanlistTab(GUIComponent parent)
         {
             BanList.CreateBanFrame(parent);
+        }
+
+        private void CreateSubEditorTab(GUIComponent parent)
+        {
+            var layout = new GUILayoutGroup(new RectTransform(Vector2.One, parent.RectTransform))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.01f
+            };
+
+            // --- Default permissions for new clients ---
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.04f), layout.RectTransform),
+                "Default Editor Permissions for New Clients:", font: GUIStyle.SubHeadingFont);
+
+            var permList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.45f), layout.RectTransform));
+            int itemHeight = (int)(25 * GUI.Scale);
+
+            foreach (SubEditorPermissions perm in Enum.GetValues(typeof(SubEditorPermissions)))
+            {
+                if (perm == SubEditorPermissions.None || perm == SubEditorPermissions.All) continue;
+
+                bool isSet = (SubEditorNetworkingShared.DefaultClientPermissions & perm) != 0;
+                var tickBox = new GUITickBox(new RectTransform(new Point(permList.Content.Rect.Width, itemHeight), permList.Content.RectTransform),
+                    perm.ToString(), font: GUIStyle.SmallFont)
+                {
+                    Selected = isSet,
+                    OnSelected = (tb) =>
+                    {
+                        if (tb.Selected)
+                            SubEditorNetworkingShared.DefaultClientPermissions |= perm;
+                        else
+                            SubEditorNetworkingShared.DefaultClientPermissions &= ~perm;
+                        return true;
+                    }
+                };
+            }
+
+            // Mass Edit Threshold
+            var thresholdLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.04f), layout.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), thresholdLayout.RectTransform),
+                "Mass Edit Threshold:", font: GUIStyle.SmallFont);
+            var thresholdInput = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), thresholdLayout.RectTransform),
+                NumberType.Int)
+            {
+                IntValue = SubEditorNetworkingShared.MassEditThreshold,
+                MinValueInt = 1,
+                MaxValueInt = 9999
+            };
+            thresholdInput.OnValueChanged += (input) =>
+            {
+                SubEditorNetworkingShared.MassEditThreshold = input.IntValue;
+            };
+
+            // --- Per-user permissions ---
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.04f), layout.RectTransform),
+                "Per-User Permissions:", font: GUIStyle.SubHeadingFont);
+
+            var userPermList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.35f), layout.RectTransform));
+
+            // Populate with connected clients
+            if (GameMain.Client?.ConnectedClients != null)
+            {
+                foreach (var client in GameMain.Client.ConnectedClients)
+                {
+                    var userLayout = new GUILayoutGroup(new RectTransform(new Point(userPermList.Content.Rect.Width, (int)(30 * GUI.Scale)), userPermList.Content.RectTransform), isHorizontal: true)
+                    {
+                        Stretch = true,
+                        RelativeSpacing = 0.02f
+                    };
+
+                    new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), userLayout.RectTransform),
+                        client.Name, font: GUIStyle.SmallFont)
+                    {
+                        TextColor = client.IsOwner ? Color.Yellow : Color.White
+                    };
+
+                    // Per-user permissions dropdown
+                    var netClient = SubEditorNetworkingClient.Instance;
+                    var currentPerms = netClient?.GetPermissions(client.SessionId) ?? SubEditorNetworkingShared.DefaultClientPermissions;
+                    var permDropdown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1.0f), userLayout.RectTransform),
+                        text: GetPermSummary(currentPerms), style: "GUIDropDown")
+                    {
+                        UserData = client.SessionId
+                    };
+
+                    permDropdown.AddItem("All Permissions", SubEditorPermissions.All);
+                    permDropdown.AddItem("None", SubEditorPermissions.None);
+
+                    byte sessionId = client.SessionId;
+                    permDropdown.OnSelected = (component, obj) =>
+                    {
+                        var selectedPerm = (SubEditorPermissions)obj;
+                        SubEditorNetworkingClient.Instance?.SetPermissions(sessionId, selectedPerm);
+                        permDropdown.Text = GetPermSummary(selectedPerm);
+                        return true;
+                    };
+
+                    // "Customize..." button for detailed per-flag editing
+                    new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), userLayout.RectTransform),
+                        "Edit...", style: "GUIButtonSmall")
+                    {
+                        OnClicked = (btn, _) =>
+                        {
+                            ShowPerUserPermissionsDialog(client);
+                            return true;
+                        }
+                    };
+                }
+            }
+        }
+
+        private static string GetPermSummary(SubEditorPermissions perms)
+        {
+            if (perms == SubEditorPermissions.All) return "All";
+            if (perms == SubEditorPermissions.None) return "None";
+            int count = 0;
+            foreach (SubEditorPermissions p in Enum.GetValues(typeof(SubEditorPermissions)))
+            {
+                if (p == SubEditorPermissions.None || p == SubEditorPermissions.All) continue;
+                if ((perms & p) != 0) count++;
+            }
+            return $"Custom ({count}/9)";
+        }
+
+        private static void ShowPerUserPermissionsDialog(Client client)
+        {
+            var msgBox = new GUIMessageBox(
+                $"Editor Permissions: {client.Name}",
+                "",
+                new LocalizedString[] { TextManager.Get("Close") },
+                relativeSize: new Vector2(0.35f, 0.55f));
+
+            var scrollList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), msgBox.Content.RectTransform));
+            int itemHeight = (int)(25 * GUI.Scale);
+
+            var currentPerms = SubEditorNetworkingClient.Instance?.GetPermissions(client.SessionId) ?? SubEditorNetworkingShared.DefaultClientPermissions;
+
+            foreach (SubEditorPermissions perm in Enum.GetValues(typeof(SubEditorPermissions)))
+            {
+                if (perm == SubEditorPermissions.None || perm == SubEditorPermissions.All) continue;
+
+                bool isSet = (currentPerms & perm) != 0;
+                byte sessionId = client.SessionId;
+                SubEditorPermissions capturedPerm = perm;
+                var tickBox = new GUITickBox(new RectTransform(new Point(scrollList.Content.Rect.Width, itemHeight), scrollList.Content.RectTransform),
+                    perm.ToString(), font: GUIStyle.SmallFont)
+                {
+                    Selected = isSet,
+                    OnSelected = (tb) =>
+                    {
+                        var current = SubEditorNetworkingClient.Instance?.GetPermissions(sessionId) ?? SubEditorNetworkingShared.DefaultClientPermissions;
+                        if (tb.Selected)
+                            current |= capturedPerm;
+                        else
+                            current &= ~capturedPerm;
+                        SubEditorNetworkingClient.Instance?.SetPermissions(sessionId, current);
+                        return true;
+                    }
+                };
+            }
+
+            msgBox.Buttons[0].OnClicked = msgBox.Close;
         }
 
         private bool SelectSettingsTab(GUIButton button, object obj)
