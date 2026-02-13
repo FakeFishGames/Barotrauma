@@ -290,9 +290,6 @@ namespace Barotrauma
         private string undoActiveSubTab = "edits"; // "edits" or "wires"
         /// <summary>Tracks all users who have ever been in the session, for persistent tabs.</summary>
         private readonly Dictionary<string, string> undoTabUsers = new Dictionary<string, string>();
-        /// <summary>Persistent undo history lines loaded from .undohistory file.</summary>
-        private List<string> loadedPersistentHistory = new List<string>();
-
         private GUIDropDown linkedSubBox;
 
         // Collaborative editing UI elements
@@ -301,9 +298,6 @@ namespace Barotrauma
         private GUIFrame collaborativeUsersPanel;
         private GUIListBox collaborativeUsersList;
         private GUIButton collaborativeToggleButton;
-        private GUIFrame serverLogPanel;
-        private GUIListBox serverLogList;
-        private GUIButton serverLogToggleButton;
         
         // Collaborative editing state
         private SubmarineInfo collaborativeEditingSubInfo;
@@ -1247,9 +1241,6 @@ namespace Barotrauma
                 return true;
             };
             snapToGridFrame.RectTransform.MinSize = new Point(snapToGridFrame.Rect.Width, (int)(saveStampButton.Rect.Height / saveStampButton.RectTransform.RelativeSize.Y));
-
-            // Activity Log panel (always available, even offline)
-            CreateActivityLogPanel();
 
             // Collaborative editing users panel
             CreateCollaborativeUsersPanel();
@@ -2918,67 +2909,6 @@ namespace Barotrauma
         /// <summary>
         /// Create the panel showing connected collaborative editors.
         /// </summary>
-        /// <summary>
-        /// Create the Activity Log UI (always available, even offline).
-        /// Must be called before CreateCollaborativeUsersPanel.
-        /// </summary>
-        private void CreateActivityLogPanel()
-        {
-            int logTopOffset = TopPanel.Rect.Height + (int)(5 * GUI.Scale);
-            
-            serverLogToggleButton = new GUIButton(new RectTransform(new Vector2(0.07f, 0.025f), GUI.Canvas, Anchor.TopRight)
-            {
-                MinSize = new Point((int)(100 * GUI.Scale), (int)(20 * GUI.Scale)),
-                AbsoluteOffset = new Point((int)(10 * GUI.Scale), logTopOffset)
-            }, "Activity Log ▼", style: "GUIButtonSmall")
-            {
-                Visible = true,
-                OnClicked = (btn, userData) =>
-                {
-                    // Use the real server log if available (multiplayer), else toggle our custom panel
-                    if (GameMain.Client?.ServerSettings?.ServerLog != null)
-                    {
-                        GameMain.Client.ServerSettings.ServerLog.CreateLogFrame();
-                    }
-                    else if (serverLogPanel != null)
-                    {
-                        serverLogPanel.Visible = !serverLogPanel.Visible;
-                        btn.Text = serverLogPanel.Visible ? "Activity Log ▲" : "Activity Log ▼";
-                    }
-                    return true;
-                }
-            };
-
-            serverLogPanel = new GUIFrame(new RectTransform(new Vector2(0.18f, 0.40f), GUI.Canvas, Anchor.TopRight)
-            {
-                MinSize = new Point((int)(220 * GUI.Scale), (int)(180 * GUI.Scale)),
-                AbsoluteOffset = new Point((int)(10 * GUI.Scale), logTopOffset + serverLogToggleButton.Rect.Height + (int)(2 * GUI.Scale))
-            }, "InnerFrame")
-            {
-                Visible = false
-            };
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.08f), serverLogPanel.RectTransform, Anchor.TopCenter),
-                "Activity Log", font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center);
-
-            serverLogList = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.80f), serverLogPanel.RectTransform, Anchor.Center)
-            {
-                RelativeOffset = new Vector2(0, -0.02f)
-            });
-
-            new GUIButton(new RectTransform(new Vector2(0.8f, 0.08f), serverLogPanel.RectTransform, Anchor.BottomCenter)
-            {
-                RelativeOffset = new Vector2(0, 0.01f)
-            }, "Clear History", style: "GUIButtonSmall")
-            {
-                OnClicked = (btn, _) =>
-                {
-                    ClearPersistentUndoHistory();
-                    return true;
-                }
-            };
-        }
-
         private void CreateCollaborativeUsersPanel()
         {
             // --- Editors toggle button (multiplayer only) ---
@@ -3041,27 +2971,6 @@ namespace Barotrauma
                 OnClicked = (btn, _) =>
                 {
                     ShowSubEditorPermissionsDialog();
-                    return true;
-                }
-            };
-
-            new GUIButton(new RectTransform(new Vector2(1.0f, 0.08f), editorsPanelLayout.RectTransform), "Activity Log...", style: "GUIButtonSmall")
-            {
-                OnClicked = (btn, _) =>
-                {
-                    // Use the real server log if available (multiplayer), else toggle our custom panel
-                    if (GameMain.Client?.ServerSettings?.ServerLog != null)
-                    {
-                        GameMain.Client.ServerSettings.ServerLog.CreateLogFrame();
-                    }
-                    else if (serverLogPanel != null)
-                    {
-                        serverLogPanel.Visible = !serverLogPanel.Visible;
-                        if (serverLogToggleButton != null)
-                        {
-                            serverLogToggleButton.Text = serverLogPanel.Visible ? "Activity Log ▲" : "Activity Log ▼";
-                        }
-                    }
                     return true;
                 }
             };
@@ -3148,226 +3057,6 @@ namespace Barotrauma
                 collaborativeToggleButton.Text = $"Editors ({userCount}) {arrow}";
                 collaborativeToggleButton.Visible = SubEditorNetworkingClient.Instance.IsActive;
             }
-        }
-
-        /// <summary>
-        /// Add an entry to the server activity log.
-        /// Called whenever a command is stored in collaborative mode.
-        /// </summary>
-        private void AddServerLogEntry(Command command)
-        {
-            string authorName = "You";
-            Color authorColor = Color.LightGreen;
-            if (SubEditorNetworkingClient.Instance?.IsActive == true && !string.IsNullOrEmpty(command.AuthorSessionId))
-            {
-                var user = SubEditorNetworkingClient.Instance.GetUserBySessionId(command.AuthorSessionId);
-                if (user != null)
-                {
-                    authorName = user.Value.Name;
-                    authorColor = user.Value.GetColor();
-                }
-            }
-
-            string timestamp = DateTime.Now.ToString("HH:mm:ss");
-            string logText = $"[{timestamp}] {authorName}: {command.GetDescription().Value}";
-
-            // Write to the real server log if available (multiplayer)
-            GameMain.Client?.ServerSettings?.ServerLog?.WriteLine(logText, Networking.ServerLog.MessageType.Chat);
-
-            // Also write to our custom offline panel
-            if (serverLogList != null)
-            {
-                var entry = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverLogList.Content.RectTransform) { MinSize = new Point(0, 18) },
-                    logText, font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft, wrap: true)
-                {
-                    TextColor = authorColor,
-                    ToolTip = logText,
-                    CanBeFocused = false
-                };
-
-                // Auto-scroll to newest
-                serverLogList.ScrollBar.BarScrollValue = 1.0f;
-            }
-            serverLogList.ScrollBar.BarScrollValue = 1.0f;
-        }
-
-        /// <summary>
-        /// Save the undo history to a file alongside the .sub file.
-        /// Format: one line per command — "[timestamp] [author] description"
-        /// </summary>
-        private void SavePersistentUndoHistory(string subFilePath)
-        {
-            try
-            {
-                string historyPath = System.IO.Path.ChangeExtension(subFilePath, ".undohistory");
-                var lines = new List<string>();
-
-                // Load existing history if it exists (append new commands)
-                int existingCount = 0;
-                if (File.Exists(historyPath))
-                {
-                    var existing = File.ReadAllLines(historyPath);
-                    lines.AddRange(existing);
-                    existingCount = existing.Length;
-                }
-
-                // Add new commands that haven't been saved yet
-                int limit = Math.Min(commandIndex, Commands.Count);
-                for (int i = existingCount; i < limit; i++)
-                {
-                    Command cmd = Commands[i];
-                    string author = cmd.AuthorSessionId ?? "local";
-                    string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                    string desc = cmd.GetDescription()?.Value ?? "unknown action";
-                    lines.Add($"[{timestamp}] [{author}] {desc}");
-                }
-
-                File.WriteAllLines(historyPath, lines);
-                DebugConsole.NewMessage($"[SubEditor] Saved undo history ({lines.Count} entries) to {historyPath}", Color.Cyan);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.AddWarning($"[SubEditor] Failed to save undo history: {e.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Load persisted undo history from the history file and display in the server log.
-        /// Called when opening a submarine file.
-        /// </summary>
-        private void LoadPersistentUndoHistory(string subFilePath)
-        {
-            DebugConsole.NewMessage($"[SubEditor] Loading undo history for: {subFilePath}", Color.Cyan);
-            try
-            {
-                string historyPath = System.IO.Path.ChangeExtension(subFilePath, ".undohistory");
-                DebugConsole.NewMessage($"[SubEditor] Looking for history file: {historyPath} (exists: {File.Exists(historyPath)})", Color.Cyan);
-                
-                // Try multiple path resolutions since save uses full disk path
-                // but load may use relative path
-                if (!File.Exists(historyPath))
-                {
-                    // Try full path resolution
-                    try
-                    {
-                        string fullPath = System.IO.Path.GetFullPath(historyPath);
-                        if (File.Exists(fullPath))
-                        {
-                            historyPath = fullPath;
-                        }
-                    }
-                    catch { /* fallthrough */ }
-                }
-
-                // Try the last saved path (savePath from SaveSub may differ from info.FilePath)
-                if (!File.Exists(historyPath) && MainSub?.Info?.FilePath != null)
-                {
-                    string altPath = System.IO.Path.ChangeExtension(MainSub.Info.FilePath, ".undohistory");
-                    if (File.Exists(altPath)) { historyPath = altPath; }
-                    else
-                    {
-                        try
-                        {
-                            string fullAlt = System.IO.Path.GetFullPath(altPath);
-                            if (File.Exists(fullAlt)) { historyPath = fullAlt; }
-                        }
-                        catch { /* fallthrough */ }
-                    }
-                }
-
-                if (!File.Exists(historyPath))
-                {
-                    DebugConsole.NewMessage($"[SubEditor] No undo history file found. Tried: {System.IO.Path.ChangeExtension(subFilePath, ".undohistory")}", Color.Yellow);
-                    return;
-                }
-
-                var lines = File.ReadAllLines(historyPath);
-
-                // Store loaded history for display in undo panel
-                loadedPersistentHistory.Clear();
-                foreach (string line in lines)
-                {
-                    if (!string.IsNullOrWhiteSpace(line))
-                    {
-                        loadedPersistentHistory.Add(line);
-                    }
-                }
-
-                // Load into our custom offline panel
-                if (serverLogList != null)
-                {
-                    // Clear previous entries before loading new ones
-                    serverLogList.Content.ClearChildren();
-
-                    foreach (string line in loadedPersistentHistory)
-                    {
-                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverLogList.Content.RectTransform) { MinSize = new Point(0, 18) },
-                            line, font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft, wrap: true)
-                        {
-                            TextColor = Color.Gray,
-                            ToolTip = line,
-                            CanBeFocused = false
-                        };
-                    }
-                }
-                else
-                {
-                    DebugConsole.AddWarning("[SubEditor] serverLogList is null — cannot display undo history");
-                }
-
-                // Also feed into the real server log if available
-                if (GameMain.Client?.ServerSettings?.ServerLog != null)
-                {
-                    foreach (string line in loadedPersistentHistory)
-                    {
-                        GameMain.Client.ServerSettings.ServerLog.WriteLine(line, Networking.ServerLog.MessageType.Chat);
-                    }
-                }
-
-                // Rebuild the undo panel to show loaded history
-                UpdateUndoHistoryPanel();
-
-                DebugConsole.NewMessage($"[SubEditor] Loaded undo history ({loadedPersistentHistory.Count} entries) from {historyPath}", Color.Cyan);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.AddWarning($"[SubEditor] Failed to load undo history: {e.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Clear the persistent undo history for the current submarine.
-        /// </summary>
-        public void ClearPersistentUndoHistory()
-        {
-            if (MainSub?.Info?.FilePath == null) return;
-
-            string historyPath = System.IO.Path.ChangeExtension(MainSub.Info.FilePath, ".undohistory");
-            if (!File.Exists(historyPath)) return;
-
-            var confirmBox = new GUIMessageBox(
-                TextManager.Get("Warning").Fallback("Warning"),
-                "Are you sure you want to clear the entire undo history for this submarine? This cannot be undone.",
-                new[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
-            confirmBox.Buttons[0].OnClicked = (_, _) =>
-            {
-                try
-                {
-                    File.Delete(historyPath);
-                    serverLogList?.Content.ClearChildren();
-                    loadedPersistentHistory.Clear();
-                    UpdateUndoHistoryPanel();
-                    DebugConsole.Log($"[SubEditor] Cleared undo history: {historyPath}");
-                    GUI.AddMessage("Undo history cleared.", GUIStyle.Green);
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.AddWarning($"[SubEditor] Failed to clear undo history: {e.Message}");
-                }
-                confirmBox.Close();
-                return true;
-            };
-            confirmBox.Buttons[1].OnClicked = confirmBox.Close;
         }
 
         /// <summary>
@@ -4465,9 +4154,6 @@ namespace Barotrauma
                     MainSub.CheckForErrors();
 
                     GUI.AddMessage(TextManager.GetWithVariable("SubSavedNotification", "[filepath]", savePath), GUIStyle.Green);
-
-                    // Save persistent undo history alongside the .sub file
-                    SavePersistentUndoHistory(savePath);
 
                     if (savePath.StartsWith(newLocalModDir))
                     {
@@ -6352,11 +6038,6 @@ namespace Barotrauma
             {
                 ClearUndoBuffer();
             }
-            // Load persistent undo history when opening a submarine
-            if (info?.FilePath != null)
-            {
-                LoadPersistentUndoHistory(info.FilePath);
-            }
             CreateDummyCharacter();
 
             // After sub loading, Item.Move(HSP) → FindHull() sets Submarine=null
@@ -8119,9 +7800,6 @@ namespace Barotrauma
             {
                 GameMain.SubEditorScreen.SendCollaborativeTransformToolUpdate(transformToolCommand);
             }
-
-            // Add to server activity log
-            GameMain.SubEditorScreen?.AddServerLogEntry(command);
         }
 
         private string prevSelectedLayer;
@@ -9012,29 +8690,6 @@ namespace Barotrauma
 
             // "Beginning" marker at the bottom
             CreateUndoEntry(TextManager.Get("undo.beginning").Value, TextManager.Get("undo.beginningtooltip"), null, commandIndex == 0 ? GUIStyle.Green : Color.Gray);
-
-            // Add persistent history entries below the "Beginning" marker (read-only, not undoable)
-            if (loadedPersistentHistory.Count > 0)
-            {
-                // "Previous Session History" separator
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), undoBufferList.Content.RectTransform) { MinSize = new Point(0, 18) },
-                    "── Previous Session ──", font: GUIStyle.SmallFont, textAlignment: Alignment.Center)
-                {
-                    TextColor = Color.Gray * 0.7f,
-                    CanBeFocused = false
-                };
-
-                foreach (string line in loadedPersistentHistory)
-                {
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), undoBufferList.Content.RectTransform) { MinSize = new Point(0, 18) },
-                        line, font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft)
-                    {
-                        TextColor = Color.DarkGray,
-                        ToolTip = line + " (from previous session)",
-                        CanBeFocused = false
-                    };
-                }
-            }
 
             void CreateUndoEntry(string name, LocalizedString tooltip, Command command, Color textColor)
             {

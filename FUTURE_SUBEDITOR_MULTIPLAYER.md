@@ -64,12 +64,12 @@ Host always has `All` permissions. Clients default to `None`. Permission checkin
 
 ---
 
-## ✅ 8. Undo Steps as Activity Log
+## 🔲 8. Undo Steps as Activity Log
 
-**IMPLEMENTED** — Activity Log panel created at startup (works offline too). Toggle button always visible in top-right. Shows timestamped entries for every command with author name and color. Auto-scrolls to newest.
+**DEFERRED** — Removed for simplicity. Activity Log panel was implemented but deemed unnecessary for this mod.
 
 ---
 
-## ✅ 9. Persistent Undo History
+## 🔲 9. Persistent Undo History
 
-**IMPLEMENTED** — Commands saved to `.undohistory` text file alongside `.sub` file on every save. Loaded and displayed in Activity Log when opening a submarine (works offline). "Clear History" button with confirmation prompt. Format: `[timestamp] [author] description` — one line per action.
+**DEFERRED** — Removed for simplicity. Persistent undo history (.undohistory files) was implemented but deemed unnecessary for this mod.
