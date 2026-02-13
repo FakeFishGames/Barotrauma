@@ -2884,7 +2884,12 @@ namespace Barotrauma
                 Visible = true,
                 OnClicked = (btn, userData) =>
                 {
-                    if (serverLogPanel != null)
+                    // Use the real server log if available (multiplayer), else toggle our custom panel
+                    if (GameMain.Client?.ServerSettings?.ServerLog != null)
+                    {
+                        GameMain.Client.ServerSettings.ServerLog.CreateLogFrame();
+                    }
+                    else if (serverLogPanel != null)
                     {
                         serverLogPanel.Visible = !serverLogPanel.Visible;
                         btn.Text = serverLogPanel.Visible ? "Activity Log ▲" : "Activity Log ▼";
@@ -2979,11 +2984,26 @@ namespace Barotrauma
                 }
             };
 
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.08f), editorsPanelLayout.RectTransform),
+                "Editor Permissions...", style: "GUIButtonSmall")
+            {
+                OnClicked = (btn, _) =>
+                {
+                    ShowSubEditorPermissionsDialog();
+                    return true;
+                }
+            };
+
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.08f), editorsPanelLayout.RectTransform), "Activity Log...", style: "GUIButtonSmall")
             {
                 OnClicked = (btn, _) =>
                 {
-                    if (serverLogPanel != null)
+                    // Use the real server log if available (multiplayer), else toggle our custom panel
+                    if (GameMain.Client?.ServerSettings?.ServerLog != null)
+                    {
+                        GameMain.Client.ServerSettings.ServerLog.CreateLogFrame();
+                    }
+                    else if (serverLogPanel != null)
                     {
                         serverLogPanel.Visible = !serverLogPanel.Visible;
                         if (serverLogToggleButton != null)
@@ -3024,7 +3044,8 @@ namespace Barotrauma
                     MinSize = new Point(0, (int)(25 * GUI.Scale))
                 }, style: null)
                 {
-                    UserData = user
+                    UserData = user,
+                    CanBeFocused = true
                 };
 
                 // Color indicator
@@ -3044,7 +3065,10 @@ namespace Barotrauma
                 new GUITextBlock(new RectTransform(new Vector2(0.85f, 1.0f), userFrame.RectTransform, Anchor.CenterLeft)
                 {
                     RelativeOffset = new Vector2(0.12f, 0)
-                }, displayName, font: GUIStyle.SmallFont);
+                }, displayName, font: GUIStyle.SmallFont)
+                {
+                    CanBeFocused = false
+                };
 
                 // Right-click context menu: reuse the existing multiplayer moderation menu
                 string userName = user.Name;
@@ -3081,8 +3105,6 @@ namespace Barotrauma
         /// </summary>
         private void AddServerLogEntry(Command command)
         {
-            if (serverLogList == null) return;
-
             string authorName = "You";
             Color authorColor = Color.LightGreen;
             if (SubEditorNetworkingClient.Instance?.IsActive == true && !string.IsNullOrEmpty(command.AuthorSessionId))
@@ -3098,16 +3120,23 @@ namespace Barotrauma
             string timestamp = DateTime.Now.ToString("HH:mm:ss");
             string logText = $"[{timestamp}] {authorName}: {command.GetDescription().Value}";
 
-            var entry = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverLogList.Content.RectTransform) { MinSize = new Point(0, 18) },
-                ToolBox.LimitString(logText, GUIStyle.SmallFont, serverLogList.Content.Rect.Width),
-                font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft)
-            {
-                TextColor = authorColor,
-                ToolTip = logText,
-                CanBeFocused = false
-            };
+            // Write to the real server log if available (multiplayer)
+            GameMain.Client?.ServerSettings?.ServerLog?.WriteLine(logText, Networking.ServerLog.MessageType.Chat);
 
-            // Auto-scroll to newest
+            // Also write to our custom offline panel
+            if (serverLogList != null)
+            {
+                var entry = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverLogList.Content.RectTransform) { MinSize = new Point(0, 18) },
+                    logText, font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft, wrap: true)
+                {
+                    TextColor = authorColor,
+                    ToolTip = logText,
+                    CanBeFocused = false
+                };
+
+                // Auto-scroll to newest
+                serverLogList.ScrollBar.BarScrollValue = 1.0f;
+            }
             serverLogList.ScrollBar.BarScrollValue = 1.0f;
         }
 
@@ -3157,29 +3186,41 @@ namespace Barotrauma
         /// </summary>
         private void LoadPersistentUndoHistory(string subFilePath)
         {
-            if (serverLogList == null) return;
-
-            // Clear previous entries before loading new ones
-            serverLogList.Content.ClearChildren();
-
             try
             {
                 string historyPath = System.IO.Path.ChangeExtension(subFilePath, ".undohistory");
                 if (!File.Exists(historyPath)) return;
 
                 var lines = File.ReadAllLines(historyPath);
-                foreach (string line in lines)
-                {
-                    if (string.IsNullOrWhiteSpace(line)) continue;
 
-                    var entry = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverLogList.Content.RectTransform) { MinSize = new Point(0, 18) },
-                        ToolBox.LimitString(line, GUIStyle.SmallFont, serverLogList.Content.Rect.Width),
-                        font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft)
+                // Load into our custom offline panel
+                if (serverLogList != null)
+                {
+                    // Clear previous entries before loading new ones
+                    serverLogList.Content.ClearChildren();
+
+                    foreach (string line in lines)
                     {
-                        TextColor = Color.Gray,
-                        ToolTip = line,
-                        CanBeFocused = false
-                    };
+                        if (string.IsNullOrWhiteSpace(line)) continue;
+
+                        var entry = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverLogList.Content.RectTransform) { MinSize = new Point(0, 18) },
+                            line, font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft, wrap: true)
+                        {
+                            TextColor = Color.Gray,
+                            ToolTip = line,
+                            CanBeFocused = false
+                        };
+                    }
+                }
+
+                // Also feed into the real server log if available
+                if (GameMain.Client?.ServerSettings?.ServerLog != null)
+                {
+                    foreach (string line in lines)
+                    {
+                        if (string.IsNullOrWhiteSpace(line)) continue;
+                        GameMain.Client.ServerSettings.ServerLog.WriteLine(line, Networking.ServerLog.MessageType.Chat);
+                    }
                 }
 
                 DebugConsole.Log($"[SubEditor] Loaded undo history ({lines.Length} entries) from {historyPath}");
@@ -3221,6 +3262,49 @@ namespace Barotrauma
                 return true;
             };
             confirmBox.Buttons[1].OnClicked = confirmBox.Close;
+        }
+
+        /// <summary>
+        /// Show the SubEditor-specific permissions dialog for setting default client permissions.
+        /// </summary>
+        private void ShowSubEditorPermissionsDialog()
+        {
+            var msgBox = new GUIMessageBox(
+                TextManager.Get("ServerSettingsButton").Fallback("Editor Permissions"),
+                "",
+                new LocalizedString[] { TextManager.Get("Close") },
+                relativeSize: new Vector2(0.35f, 0.5f));
+
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), msgBox.Content.RectTransform, Anchor.TopCenter))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform),
+                "Default permissions for new clients:", font: GUIStyle.SmallFont);
+
+            foreach (SubEditorPermissions perm in Enum.GetValues(typeof(SubEditorPermissions)))
+            {
+                if (perm == SubEditorPermissions.None || perm == SubEditorPermissions.All) continue;
+
+                bool isSet = (SubEditorNetworkingShared.DefaultClientPermissions & perm) != 0;
+                var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform),
+                    perm.ToString(), font: GUIStyle.SmallFont)
+                {
+                    Selected = isSet,
+                    OnSelected = (tb) =>
+                    {
+                        if (tb.Selected)
+                            SubEditorNetworkingShared.DefaultClientPermissions |= perm;
+                        else
+                            SubEditorNetworkingShared.DefaultClientPermissions &= ~perm;
+                        return true;
+                    }
+                };
+            }
+
+            msgBox.Buttons[0].OnClicked = msgBox.Close;
         }
 
         #endregion Collaborative Editing
