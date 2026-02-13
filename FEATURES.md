@@ -71,4 +71,4 @@ Submarine state is synced as gzip-compressed XML rather than file transfers. Ent
 ### Permission system
 `SubEditorPermissions` is a flags enum with 9 individual flags covering editing, deleting, wiring, mass editing, and undo. The host always has all permissions. Other clients receive configurable default permissions when they join. The host can customize permissions per-user through the server settings SubEditor tab.
 
-Permissions are enforced server-side — the server silently drops packets from clients who lack the required permission for an action.
+Permission changes are synced in real-time: when the host modifies a client's permissions, the change is sent to the server via a `SetPermissions` packet, the server updates its authoritative permission state and broadcasts the update to all clients. Permissions are enforced server-side — the server silently drops packets from clients who lack the required permission for an action.
