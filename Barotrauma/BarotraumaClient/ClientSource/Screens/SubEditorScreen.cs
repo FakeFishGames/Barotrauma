@@ -222,10 +222,6 @@ namespace Barotrauma
 
         private SubmarineInfo backedUpSubInfo;
         
-        /// <summary>
-        /// The name of the submarine being edited in collaborative mode.
-        /// Used to auto-reload the sub when returning from test mode.
-        /// </summary>
         private string collaborativeEditingSubName;
 
         private readonly HashSet<ulong> publishedWorkshopItemIds = new HashSet<ulong>();
@@ -288,55 +284,34 @@ namespace Barotrauma
         private GUILayoutGroup undoRightColumn;
         private string undoActiveTab = "all"; // "all", "local", or a session ID
         private string undoActiveSubTab = "edits"; // "edits" or "wires"
-        /// <summary>Tracks all users who have ever been in the session, for persistent tabs.</summary>
         private readonly Dictionary<string, string> undoTabUsers = new Dictionary<string, string>();
         private GUIDropDown linkedSubBox;
 
-        // Collaborative editing UI elements
         private GUIButton hostButton;
         private GUIButton joinButton;
         private GUIFrame collaborativeUsersPanel;
         private GUIListBox collaborativeUsersList;
         private GUIButton collaborativeToggleButton;
         
-        // Collaborative editing state
         private SubmarineInfo collaborativeEditingSubInfo;
         private Dictionary<ushort, Vector2> collaborativeEntityPositions = new Dictionary<ushort, Vector2>();
-        /// <summary>Track serializable property values per entity for fast-sync change detection.</summary>
         private Dictionary<ushort, Dictionary<string, string>> collaborativePropertySnapshots = new Dictionary<ushort, Dictionary<string, string>>();
-        /// <summary>Track entity flip states for Ctrl+M/Ctrl+N sync.</summary>
         private Dictionary<ushort, (bool flipX, bool flipY)> collaborativeFlipStates = new Dictionary<ushort, (bool, bool)>();
-        /// <summary>Timer to throttle property change detection (avoid per-frame overhead with many selected entities).</summary>
         private float collaborativePropertyCheckTimer;
         private const float CollaborativePropertyCheckInterval = 0.5f;
-        /// <summary>Owner key used to authenticate host with the SubEditor server.</summary>
         private int collaborativeOwnerKey;
-        /// <summary>Password used for the hosted SubEditor server (so host auto-authenticates).</summary>
         private string collaborativePassword = "";
-        /// <summary>Snapshot of in-memory sub XML before entering test mode, for restoring on return.</summary>
         private string preTestSubmarineXml;
-        /// <summary>Set to true after restoring from preTestSubmarineXml, blocks incoming SyncSubmarine until cleared.</summary>
         private bool ignoreSubmarineSync;
-        /// <summary>Set to true to suppress the auto-sync in LoadSub (used during programmatic loads that handle sync separately).</summary>
         private bool suppressLoadSubAutoSync;
-        /// <summary>Track if an entity was being dragged last frame to detect drag-end.</summary>
 
-        /// <summary>
-        /// Guard flag to prevent re-sending entity changes that were received from the network.
-        /// Set to true when applying remote changes, so StoreCommand/EntityAddedOrDeleted won't re-broadcast.
-        /// </summary>
         private bool isApplyingRemoteChange;
 
-        /// <summary>
-        /// Batch remote entity placements/removals from the same sender into a single undo command.
-        /// When a client places multiple entities at once (e.g., paste), the server sends them as
-        /// separate messages. Without batching, each creates a separate undo entry on the host.
-        /// </summary>
         private byte pendingRemoteCommandSender;
         private bool pendingRemoteCommandIsDelete;
         private readonly List<MapEntity> pendingRemoteEntities = new List<MapEntity>();
         private double pendingRemoteCommandTimer;
-        private const double RemoteCommandBatchWindow = 0.1; // 100ms window to batch
+        private const double RemoteCommandBatchWindow = 0.1;
 
         private static GUIComponent autoSaveLabel;
         private static int MaxAutoSaves => GameSettings.CurrentConfig.MaxAutoSaves;
@@ -637,9 +612,7 @@ namespace Barotrauma
             subNameLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft),
                 TextManager.Get("unspecifiedsubfilename"), font: GUIStyle.LargeFont, textAlignment: Alignment.CenterLeft);
 
-            // Flexible spacer: Stretch=true compresses relative-width elements proportionally
-            // BothHeight buttons are exempt from compression (ScaleBasis != Normal)
-            // This spacer absorbs the excess, effectively pushing Host→Scale to the right
+            // Spacer pushes Host→Scale to the right
             new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), paddedTopPanel.RectTransform), style: null)
             {
                 CanBeFocused = false
@@ -909,7 +882,6 @@ namespace Barotrauma
                 RelativeSpacing = 0.01f
             };
 
-            // LEFT column: user tabs (scrollable, only visible in collaborative host mode)
             undoTabBar = new GUILayoutGroup(new RectTransform(new Vector2(0.22f, 1.0f), undoPanelLayout.RectTransform), isHorizontal: false)
             {
                 Stretch = false,
@@ -946,7 +918,6 @@ namespace Barotrauma
 
                     bool isCollaborativeSession = SubEditorNetworkingClient.Instance?.IsActive == true;
                     
-                    // In collaborative mode: CAD-style selective removal
                     if (isCollaborativeSession)
                     {
                         RemoveCommandFromStack(command);
@@ -1242,7 +1213,6 @@ namespace Barotrauma
             };
             snapToGridFrame.RectTransform.MinSize = new Point(snapToGridFrame.Rect.Width, (int)(saveStampButton.Rect.Height / saveStampButton.RectTransform.RelativeSize.Y));
 
-            // Collaborative editing users panel
             CreateCollaborativeUsersPanel();
 
             //Entity menu
@@ -1363,7 +1333,6 @@ namespace Barotrauma
                 return true;
             }
 
-            // In collaborative mode, only the host can start test mode
             if (SubEditorNetworkingClient.Instance?.IsActive == true && !SubEditorNetworkingClient.Instance.IsHost)
             {
                 new GUIMessageBox(
@@ -1376,10 +1345,8 @@ namespace Barotrauma
 
             backedUpSubInfo = new SubmarineInfo(MainSub);
 
-            // Check if we're hosting a collaborative session
             bool isCollaborativeHost = SubEditorNetworkingClient.Instance?.IsActive == true && SubEditorNetworkingClient.Instance.IsHost;
             
-            // If hosting collaborative session, start multiplayer test mode via server
             if (isCollaborativeHost && GameMain.Client != null)
             {
                 // Store the submarine name for reload after test
@@ -1389,7 +1356,6 @@ namespace Barotrauma
                 
                 // Snapshot entity state before TrySaveAs modifies MainSub.Info
                 preTestSubmarineXml = backedUpSubInfo.SubmarineElement.ToString();
-                DebugConsole.NewMessage($"[SubEditor] Saved pre-test snapshot from backedUpSubInfo ({preTestSubmarineXml.Length} chars)", Microsoft.Xna.Framework.Color.Lime);
                 
                 // Save current submarine to a temp file for test mode
                 string tempSubPath = System.IO.Path.Combine("Submarines", "_SubEditorTestMode.sub");
@@ -1397,14 +1363,12 @@ namespace Barotrauma
                 {
                     System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(tempSubPath));
                     MainSub.TrySaveAs(tempSubPath);
-                    DebugConsole.NewMessage($"[SubEditor] Saved current sub to temp file: {tempSubPath}", Microsoft.Xna.Framework.Color.Lime);
                 }
                 catch (Exception ex)
                 {
                     DebugConsole.AddWarning($"[SubEditor] Failed to save temp sub for test mode: {ex.Message}");
                 }
                 
-                // Sync the current XML to the server so it has the latest state
                 SyncSubmarineToClients();
                 
                 // Request test mode immediately — no delay needed since the file is already saved
@@ -1445,9 +1409,6 @@ namespace Barotrauma
             return true;
         }
 
-        /// <summary>
-        /// Spawn characters for connected collaborative editors during test mode.
-        /// </summary>
         private void SpawnCollaborativeEditorCharacters()
         {
             if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
@@ -1487,18 +1448,12 @@ namespace Barotrauma
                     character.TeamID = CharacterTeamType.Team1;
                     character.GiveJobItems(isPvPMode: false, spawnPoint);
                     
-                    DebugConsole.Log($"[SubEditor] Spawned test character for editor: {user.Name}");
                 }
             }
         }
 
-        /// <summary>
-        /// Notify connected editors that test mode has ended.
-        /// </summary>
         private void NotifyTestModeEnded()
         {
-            // TODO: Send network message to return all users to editor
-            DebugConsole.NewMessage("[SubEditor] Test mode ended, returning to editor", Color.Yellow);
         }
 
         public void ClearBackedUpSubInfo()
@@ -1508,9 +1463,6 @@ namespace Barotrauma
 
         #region Collaborative Editing
 
-        /// <summary>
-        /// Show the dialog for hosting a collaborative editing session.
-        /// </summary>
         private bool ShowHostSessionPrompt(GUIButton button, object obj)
         {
             // Check for unsaved changes before hosting
@@ -1645,9 +1597,6 @@ namespace Barotrauma
             msgBox.Buttons[1].OnClicked = msgBox.Close;
         }
 
-        /// <summary>
-        /// Show the dialog for joining a collaborative editing session.
-        /// </summary>
         private bool ShowJoinSessionPrompt(GUIButton button, object obj)
         {
             // Check for unsaved changes before joining
@@ -1678,19 +1627,13 @@ namespace Barotrauma
         {
             SubEditorNetworkingClient.Instance?.LeaveSession();
 
-            // Open the server browser with SubEditor mode filter pre-checked
             if (GameMain.ServerListScreen != null)
             {
-                // Pre-filter to show only SubEditor-mode servers
                 GameMain.ServerListScreen.SetGameModeFilter("subeditor".ToIdentifier());
                 GameMain.ServerListScreen.Select();
             }
         }
 
-        /// <summary>
-        /// Start hosting a collaborative editing session.
-        /// Starts a DedicatedServer in SubEditor mode, then connects to it as a client.
-        /// </summary>
         private void StartHostingSession(string sessionName, int port, string password = "", bool isPublic = false, int maxPlayers = 16, string description = "")
         {
             try
@@ -1724,7 +1667,7 @@ namespace Barotrauma
                     "-karmaenabled", "false",
                     "-maxplayers", maxPlayers.ToString(),
                     "-language", GameSettings.CurrentConfig.Language.ToString(),
-                    "-requireauthentication", "false",  // Allow LAN connections without Steam/EOS auth
+                    "-requireauthentication", "false",
                     "-subeditormode", "true",
                     "-ownerkey", ownerKey.ToString()
                 };
@@ -1762,8 +1705,6 @@ namespace Barotrauma
                 
                 // Start the server process
                 ChildServerRelay.Start(processInfo);
-                
-                DebugConsole.Log($"[SubEditor] Started SubEditor server: {sessionName} on port {port}");
                 
                 var connectionInfo = new List<string>();
                 try
@@ -1804,9 +1745,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Connect to the locally hosted SubEditor server after a brief delay.
-        /// </summary>
         private IEnumerable<CoroutineStatus> ConnectToHostedServer(int port, string playerName)
         {
             // Show a modal "connecting" overlay to prevent UI interaction
@@ -1836,8 +1774,6 @@ namespace Barotrauma
                     GameMain.Client.ClientPeer.AutomaticallyAttemptedPassword = collaborativePassword;
                 }
                 
-                DebugConsole.Log($"[SubEditor] Host connecting to own server at 127.0.0.1:{port}");
-                
                 UpdateCollaborativeSessionUI();
             }
             catch (Exception e)
@@ -1850,10 +1786,6 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        /// <summary>
-        /// Join an existing collaborative editing session.
-        /// Connects using the game's standard GameClient, then the server sends EnterSubEditor message.
-        /// </summary>
         private void JoinCollaborativeSession(Endpoint endpoint)
         {
             try
@@ -1869,7 +1801,6 @@ namespace Barotrauma
                     string.Empty,
                     Option.None);
                 
-                DebugConsole.Log($"[SubEditor] Connecting to session at {endpoint}");
             }
             catch (Exception e)
             {
@@ -1879,9 +1810,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Update UI elements based on collaborative session state.
-        /// </summary>
         internal void UpdateCollaborativeSessionUI()
         {
             if (SubEditorNetworkingClient.Instance?.IsActive == true)
@@ -1938,9 +1866,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Leave the current collaborative session.
-        /// </summary>
         private void LeaveCollaborativeSession()
         {
             // Preserve the current submarine state so it's not lost when disconnecting.
@@ -1965,8 +1890,7 @@ namespace Barotrauma
             // If we were the host, kill the server process too
             ChildServerRelay.AttemptGracefulShutDown();
             
-            // Restore submarine from snapshot — the disconnect flow calls Submarine.Unload()
-            // then Select() which creates an empty sub, so MainSub won't be null but it'll be empty.
+            // Restore submarine from snapshot after disconnect
             if (!string.IsNullOrEmpty(preservedSubXml))
             {
                 LoadSubmarineFromXml(preservedSubXml, "session-leave restore");
@@ -1975,30 +1899,17 @@ namespace Barotrauma
             UpdateCollaborativeSessionUI();
         }
 
-        /// <summary>
-        /// Check if the local user can edit a specific entity (not locked by others).
-        /// </summary>
         public bool CanEditEntity(MapEntity entity)
         {
             if (SubEditorNetworkingClient.Instance?.IsActive != true) return true;
             return SubEditorNetworkingClient.Instance.CanEditEntity(entity);
         }
 
-        /// <summary>
-        /// Save the current in-memory submarine to a temp file and notify the server,
-        /// so clients can receive the current state including unsaved changes.
-        /// </summary>
         private void SyncCurrentSubmarineToServer()
         {
-            // Use the XML-based sync which sends the full in-memory state
-            // This handles unsaved edits correctly (unlike file-based sync)
             SyncSubmarineToClients();
         }
 
-        /// <summary>
-        /// Save current in-memory submarine to a temp file and notify the server.
-        /// Used before test mode so TryStartGame() has a file to send to clients.
-        /// </summary>
         private void SaveSubToTempAndNotifyServer()
         {
             if (MainSub == null) return;
@@ -2017,7 +1928,6 @@ namespace Barotrauma
                 MainSub.TrySaveAs(tempPath);
                 var savedSubInfo = new SubmarineInfo(tempPath);
                 SubEditorNetworkingClient.Instance?.NotifySubmarineLoaded(savedSubInfo);
-                DebugConsole.Log($"[SubEditor] Saved temp sub for test mode: {tempPath}");
             }
             catch (Exception e)
             {
@@ -2025,19 +1935,12 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Get the selection color for an entity (colored if selected by another user).
-        /// </summary>
         public Color GetEntitySelectionColor(MapEntity entity)
         {
             if (SubEditorNetworkingClient.Instance?.IsActive != true) return Color.White;
             return SubEditorNetworkingClient.Instance.GetEntitySelectionColor(entity.ID) ?? Color.White;
         }
         
-        /// <summary>
-        /// Hook up event handlers for collaborative editing events.
-        /// Only hooks up once - safe to call multiple times.
-        /// </summary>
         private bool collaborativeEventHandlersSetup = false;
         private void SetupCollaborativeEventHandlers()
         {
@@ -2064,7 +1967,6 @@ namespace Barotrauma
             {
                 return;
             }
-            DebugConsole.Log($"[SubEditor] Remote entity placed by session {senderSessionId}");
             
             try
             {
@@ -2077,11 +1979,7 @@ namespace Barotrauma
                 var contentElement = new ContentXElement(contentPackage: null, xElement);
                 string elemName = xElement.Name.LocalName.ToLowerInvariant();
                 
-                // Use IdRemap that preserves the sender's entity IDs (offset=0 means IDs pass through unchanged)
-                // This is critical: subsequent EntityMoved/EntityUpdated messages reference entities by ID,
-                // so the receiver must use the same IDs as the sender.
-                // If an ID collision occurs, the entity will get the existing ID's slot (replacing it).
-                // First check if the ID exists and remove it to prevent dictionary conflicts.
+                // Preserve sender's entity IDs (offset=0, no remap)
                 ushort xmlId = (ushort)xElement.GetAttributeInt("ID", 0);
                 if (xmlId != 0)
                 {
@@ -2119,8 +2017,7 @@ namespace Barotrauma
                         break;
                 }
 
-                // Batch for host's undo stack — multiple entities from the same sender
-                // within 100ms get combined into a single undo command
+                // Batch remote entity ops into a single undo command
                 if (loadedEntity != null && SubEditorNetworkingClient.Instance?.IsHost == true)
                 {
                     FlushPendingRemoteCommandIfNeeded(senderSessionId, isDelete: false);
@@ -2130,12 +2027,8 @@ namespace Barotrauma
                     pendingRemoteCommandTimer = Timing.TotalTime + RemoteCommandBatchWindow;
                 }
 
-                // entity.Save() writes rect as (rect - HiddenSubPosition), i.e. design-time coordinates.
-                // Item.Load() creates the entity at those design-time coordinates.
-                // But all existing entities in the sub are at design-time + HiddenSubPosition
-                // (applied by the Submarine constructor during loading).
-                // So we must apply the same offset to match the submarine's coordinate space.
-                // This is the same thing the Submarine constructor does for all entities.
+                // Apply HiddenSubPosition offset to match the submarine's coordinate space
+                // (same as Submarine constructor does during loading)
                 if (loadedEntity != null)
                 {
                     if (Submarine.MainSub != null)
@@ -2154,7 +2047,6 @@ namespace Barotrauma
                         }
                     }
                     
-                    // Track position for movement sync (use Rect.X/Y to match UpdateCollaborativeEntityMoves comparison)
                     collaborativeEntityPositions[loadedEntity.ID] = new Vector2(loadedEntity.Rect.X, loadedEntity.Rect.Y);
                 }
             }
@@ -2172,7 +2064,6 @@ namespace Barotrauma
             {
                 return;
             }
-            DebugConsole.Log($"[SubEditor] Remote entity removed: {entityId} by session {senderSessionId}");
             
             var entity = Entity.FindEntityByID(entityId) as MapEntity;
             if (entity != null)
@@ -2193,9 +2084,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Flush pending remote entity batch if the new message is from a different sender.
-        /// </summary>
         private void FlushPendingRemoteCommandIfNeeded(byte newSender, bool isDelete)
         {
             if (pendingRemoteEntities.Count > 0 && (newSender != pendingRemoteCommandSender || isDelete != pendingRemoteCommandIsDelete))
@@ -2204,9 +2092,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Flush batched remote entity placements into a single undo command.
-        /// </summary>
         private void FlushPendingRemoteCommand()
         {
             if (pendingRemoteEntities.Count == 0) return;
@@ -2230,7 +2115,6 @@ namespace Barotrauma
             var entity = Entity.FindEntityByID(entityId) as MapEntity;
             if (entity == null) return;
 
-            // Items are synced via EntityUpdated (full XML) — ignore EntityMoved for items.
             if (entity is Item) return;
 
             // For non-items (structures, hulls, gaps, etc.), x/y are deltas.
@@ -2245,7 +2129,7 @@ namespace Barotrauma
 
         private void OnCollaborativeEntityPropertyChanged(byte senderSessionId, ushort entityId, string propName, string propValue)
         {
-            // Don't apply our own property changes back to ourselves (prevents jitter during rapid edits)
+            // Don't apply own property changes back (prevents jitter)
             if (SubEditorNetworkingClient.Instance != null && senderSessionId == SubEditorNetworkingClient.Instance.LocalSessionId)
             {
                 return;
@@ -2263,8 +2147,7 @@ namespace Barotrauma
                 var propIdentifier = new Identifier(propName);
                 if (target.SerializableProperties.TryGetValue(propIdentifier, out SerializableProperty prop))
                 {
-                    // For items, save rect before property application so we can restore it
-                    // if the property setter (e.g. Scale → UpdateTransform → FindHull) corrupts it
+                    // Save rect before property application; some setters corrupt it via FindHull
                     Rectangle savedRect = default;
                     float savedBodyRotation = 0f;
                     bool isItemProp = entity is Item;
@@ -2330,11 +2213,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Handle receiving a full entity state update from another user (absolute sync).
-        /// This replaces the entity's state completely with the received XML, like loading from a .sub file.
-        /// The sender serialized the entity with entity.Save() after making changes.
-        /// </summary>
         private void OnCollaborativeEntityUpdated(byte senderSessionId, ushort entityId, string entityXml)
         {
             // Don't apply our own updates back
@@ -2349,7 +2227,6 @@ namespace Barotrauma
                 var existingEntity = Entity.FindEntityByID(entityId) as MapEntity;
                 if (existingEntity == null)
                 {
-                    DebugConsole.Log($"[SubEditor] EntityUpdated: entity {entityId} not found, ignoring");
                     return;
                 }
 
@@ -2357,14 +2234,12 @@ namespace Barotrauma
                 var element = doc.Root;
                 if (element == null) return;
 
-                // Check if this is a transform-only sync (position change, no properties)
                 bool isTransformSync = element.GetAttributeBool("transformSync", false);
 
                 // For Items: read the design-time rect from XML and set position directly.
                 // This is the same approach as loading from a .sub file — the XML contains
                 // design-time coordinates (rect - HiddenSubPosition), and we add our own HSP
                 // to convert back to runtime coordinates. No Move(), no FindHull(), no
-                // UpdateTransform(), no physics corruption. Immutable per-item XML sync.
                 if (existingEntity is Item existingItem)
                 {
                     // Read rect from XML (design-time coordinates, same as .sub file)
@@ -2379,36 +2254,28 @@ namespace Barotrauma
                         // Compute movement delta before setting new rect (for wire node movement)
                         Vector2 moveDelta = new Vector2(runtimeX - existingEntity.Rect.X, runtimeY - existingEntity.Rect.Y);
 
-                        // Set rect directly — no Move(), no FindHull()
-                        // Only update position (X,Y), keep existing Width/Height.
-                        // Item.Save() writes defaultRect.W/H for non-resizable axes,
-                        // which may differ from actual rect.W/H when Scale != 1.
-                        // Using wrong W/H breaks wire endpoint containment checks
-                        // in MoveConnectedWires and causes endpoint teleportation.
+                        // Set rect directly — keep existing Width/Height to avoid Scale mismatch
                         existingEntity.Rect = new Rectangle(runtimeX, runtimeY, existingEntity.Rect.Width, existingEntity.Rect.Height);
 
-                        // Update physics body to match new rect center (if item has a body)
+                        // Update physics body to match new position
                         if (existingItem.body != null)
                         {
-                            // Position = center of rect = (rect.X + width/2, rect.Y - height/2)
                             Vector2 newCenter = new Vector2(
                                 runtimeX + existingEntity.Rect.Width / 2.0f,
                                 runtimeY - existingEntity.Rect.Height / 2.0f);
                             existingItem.body.SetTransformIgnoreContacts(
                                 FarseerPhysics.ConvertUnits.ToSimUnits(newCenter), existingItem.body.Rotation);
-                            // Snap draw position immediately (no interpolation lag)
                             existingItem.body.UpdateDrawPosition(interpolate: false);
                         }
                         
-                        // Ensure Submarine is MainSub (FindHull in Move() can null it)
+                        // Ensure Submarine is MainSub (FindHull can null it)
                         if (existingItem.Submarine == null && Submarine.MainSub != null)
                         {
                             existingItem.Submarine = Submarine.MainSub;
                             if (existingItem.body != null) { existingItem.body.Submarine = Submarine.MainSub; }
                         }
 
-                        // Move connected wire endpoint nodes by the same delta.
-                        // This mirrors what ConnectionPanel.Move() does locally when the host moves an item.
+                        // Move connected wire endpoint nodes by the same delta
                         if (moveDelta != Vector2.Zero)
                         {
                             var connPanel = existingItem.GetComponent<Items.Components.ConnectionPanel>();
@@ -2418,22 +2285,15 @@ namespace Barotrauma
                             }
                         }
 
-                        // Update tracking to prevent re-broadcast
                         collaborativeEntityPositions[existingEntity.ID] = new Vector2(runtimeX, runtimeY);
                     }
 
-                    // Check if this is a wire sync (wire node/connection changes)
                     bool isWireSync = element.GetAttributeBool("wireSync", false);
 
-                    // For transform-only or wire sync, skip general property application.
-                    // Properties are synced separately via UpdateCollaborativePropertyChanges.
-                    // Applying properties here (especially Scale) triggers UpdateTransform →
-                    // FindHull → Submarine null → body/rect corruption → teleportation.
+                    // Skip property application for transform/wire sync to avoid rect corruption
                     if (isTransformSync || isWireSync)
                     {
-                        // For wire sync OR if this is a wire item being transform-synced,
                         // apply wire-specific data (nodes and connections).
-                        // Wire nodes need updating during transform sync because when
                         // "select all + move all", Wire.Move() moves all nodes locally
                         // and the new node positions are in the XML.
                         if (isWireSync || existingItem.GetComponent<Items.Components.Wire>() != null)
@@ -2443,8 +2303,7 @@ namespace Barotrauma
                         return;
                     }
 
-                    // Apply serializable properties from XML, but SKIP "scale" to avoid
-                    // UpdateTransform → FindHull → body corruption chain.
+                    // Apply serializable properties from XML, skipping "scale" to avoid rect corruption
                     if (existingEntity is ISerializableEntity serializableItem && serializableItem.SerializableProperties != null)
                     {
                         foreach (var prop in serializableItem.SerializableProperties)
@@ -2464,7 +2323,6 @@ namespace Barotrauma
                 }
                 else
                 {
-                    // Non-items: for transform sync, just update rect from XML
                     if (isTransformSync)
                     {
                         Vector2 hsp = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
@@ -2508,7 +2366,6 @@ namespace Barotrauma
                         return;
                     }
 
-                    // Non-items property sync: apply serializable properties normally (structures, hulls, gaps work fine)
                     if (existingEntity is ISerializableEntity serializableEntity && serializableEntity.SerializableProperties != null)
                     {
                         foreach (var prop in serializableEntity.SerializableProperties)
@@ -2525,7 +2382,6 @@ namespace Barotrauma
                     }
                 }
 
-                // For Items with full property sync (not transform/wire), update component properties and wire data
                 if (existingEntity is Item item)
                 {
                     foreach (var component in item.Components)
@@ -2643,8 +2499,7 @@ namespace Barotrauma
                         newLinkedIds.Add(wptLinkedId);
                     }
                 }
-                // Determine if the XML contains link data at all (so we don't accidentally
-                // clear links from property-only updates that happen to have no link attributes)
+                // Determine if the XML actually contains link data
                 bool xmlHasLinkData = linkedToStr != null || element.GetAttributeString("linkedto0", null) != null;
                 if (xmlHasLinkData)
                 {
@@ -2659,13 +2514,11 @@ namespace Barotrauma
                     }
                 }
 
-                // Update tracking position (use Rect.X/Y to match UpdateCollaborativeEntityMoves comparison)
                 if (collaborativeEntityPositions != null)
                 {
                     collaborativeEntityPositions[entityId] = new Vector2(existingEntity.Rect.X, existingEntity.Rect.Y);
                 }
 
-                DebugConsole.Log($"[SubEditor] Applied full entity update for {entityId} from session {senderSessionId}");
             }
             catch (Exception ex)
             {
@@ -2677,39 +2530,23 @@ namespace Barotrauma
             }
         }
 
-        /// If we don't have it, the SubEditorNetworkingClient.ReceiveSubmarineInfo() already
-        /// requests the file via GameMain.Client.RequestFile(), and the file will be loaded
-        /// when the transfer completes via OnFileReceived in GameClient.
-        /// </summary>
         private void OnCollaborativeSubmarineInfoReceived(string subName, string subHash)
         {
-            DebugConsole.Log($"[SubEditor] Host is editing submarine: {subName} (hash: {subHash})");
             
             // Check if we have this submarine locally
             var localSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.StringRepresentation == subHash);
             
             if (localSub != null)
             {
-                DebugConsole.Log($"[SubEditor] Already have submarine {subName}, loading it...");
                 LoadSub(localSub);
             }
             else
             {
-                DebugConsole.Log($"[SubEditor] Waiting for submarine file transfer: {subName}");
-                // The file request was already sent by SubEditorNetworkingClient.ReceiveSubmarineInfo()
-                // The file will be loaded when transfer completes via OnFileReceived in GameClient
             }
         }
 
-        /// <summary>
-        /// Handle the server starting test mode - switch to game screen.
-        /// </summary>
         private void OnCollaborativeTestModeStarted()
         {
-            DebugConsole.NewMessage("[SubEditor] Server started test mode - switching to game screen", Microsoft.Xna.Framework.Color.Green);
-            // Save pre-test snapshot so we can restore when returning from test mode.
-            // The host already does this in TestSubmarine(), but non-host clients also need a snapshot
-            // to restore their submarine state after the round-end cleanup calls Submarine.Unload().
             if (string.IsNullOrEmpty(preTestSubmarineXml) && MainSub != null)
             {
                 try
@@ -2717,7 +2554,6 @@ namespace Barotrauma
                     var snapshotInfo = new SubmarineInfo(MainSub);
                     preTestSubmarineXml = snapshotInfo.SubmarineElement.ToString();
                     collaborativeEditingSubName = MainSub.Info?.Name;
-                    DebugConsole.NewMessage($"[SubEditor] Saved pre-test snapshot for non-host ({preTestSubmarineXml.Length} chars)", Color.Lime);
                 }
                 catch (Exception e)
                 {
@@ -2726,39 +2562,21 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Handle the server ending test mode - return to SubEditor.
-        /// </summary>
         private void OnCollaborativeTestModeEnded()
         {
-            DebugConsole.NewMessage("[SubEditor] Server ended test mode - returning to SubEditor", Microsoft.Xna.Framework.Color.Green);
             
-            // DON't restore here! The round-end flow calls Submarine.Unload() which destroys
-            // any entities we create. Instead, keep preTestSubmarineXml alive and let Select()
-            // restore from it (at line ~2783) AFTER the round cleanup is complete.
-            // Also clear backedUpSubInfo so Select() doesn't load the saved file.
             backedUpSubInfo = null;
             Level.IsSubEditorTestMode = false;
         }
         
-        /// <summary>
-        /// Handle receiving a submarine from the host.
-        /// </summary>
         private void OnCollaborativeSubmarineReceived(string submarineXml)
         {
-            // Don't load synced subs during test mode — it would overwrite the test round's state
             if (Level.IsSubEditorTestMode) { return; }
-            // Don't load synced subs while EndGame coroutine is running — Submarine.Unload() will destroy them
             if (CoroutineManager.IsCoroutineRunning("EndGame")) { return; }
-            // Don't overwrite entities that were just restored from pre-test snapshot
             if (ignoreSubmarineSync) { return; }
             LoadSubmarineFromXml(submarineXml, "sync");
         }
         
-        /// <summary>
-        /// Load a submarine's entities from XML string.
-        /// Uses the same approach as .sub file loading: parse XML → SubmarineInfo → LoadSub().
-        /// </summary>
         internal void LoadSubmarineFromXml(string submarineXml, string source)
         {
             try
@@ -2769,9 +2587,6 @@ namespace Barotrauma
                     return;
                 }
                 
-                DebugConsole.Log($"[SubEditor] Loading submarine from XML ({source}, {submarineXml.Length} chars)");
-                
-                // Parse the XML  
                 XDocument doc = XDocument.Parse(submarineXml);
                 XElement rootElement = doc.Root;
                 if (rootElement == null)
@@ -2780,10 +2595,7 @@ namespace Barotrauma
                     return;
                 }
                 
-                // Create SubmarineInfo from the XML element.
                 // Write to a temp .sub file so SubmarineInfo has a valid FilePath for MD5Hash
-                // computation (the game's networking layer calls SubmarineInfo.MD5Hash which
-                // tries to open FilePath + ".sub" — an empty path causes a crash on re-test).
                 string tempSubDir = System.IO.Path.Combine("Submarines");
                 System.IO.Directory.CreateDirectory(tempSubDir);
                 string tempSubPath = System.IO.Path.Combine(tempSubDir, "_CollaborativeSync.sub");
@@ -2798,23 +2610,14 @@ namespace Barotrauma
                 }
                 SubmarineInfo subInfo = new SubmarineInfo(filePath: tempSubPath, element: rootElement);
                 
-                // Suppress the auto-sync in LoadSub — this is a programmatic load (sync, pre-test restore, etc.)
-                // and the caller handles syncing separately when needed.
                 suppressLoadSubAutoSync = true;
                 
-                // CRITICAL: Use loadEntities callback to preserve entity IDs from the sender.
-                // The default Submarine constructor uses IdRemap.DetermineNewOffset() which
-                // remaps entity IDs to a new range, causing ID mismatches between host and client.
-                // MapEntity.LoadAll creates its own IdRemap(parentElement, offset) which compacts
-                // IDs into contiguous ranges — this also remaps IDs and breaks sync.
-                // Instead, we use IdRemap(null, 0) which has null srcRanges, so GetOffsetId(id)
-                // returns id + 0 = id unchanged. We load each entity via reflection (same as
-                // MapEntity.LoadAll) but with our ID-preserving remap.
+                // Use loadEntities callback to preserve entity IDs (avoid IdRemap offset)
                 Submarine.Unload();
                 var loadedSub = new Submarine(subInfo, loadEntities: (sub) =>
                 {
                     if (subInfo.SubmarineElement == null) return new List<MapEntity>();
-                    // IdRemap with null srcRanges and offset 0: ids pass through unchanged
+                    // IdRemap with offset 0: ids pass through unchanged
                     var idRemap = new IdRemap(null, 0);
                     var entities = new List<MapEntity>();
                     foreach (var element in subInfo.SubmarineElement.Elements())
@@ -2849,13 +2652,9 @@ namespace Barotrauma
                 MainSub = loadedSub;
                 MainSub.UpdateTransform(interpolate: false);
                 
-                // Don't clear undo buffer when loading from collaborative sync
-                // This preserves undo history across test mode transitions and sub syncs
                 CreateDummyCharacter();
                 
-                // After sub loading, Item.Move(HSP) → FindHull() sets Submarine=null
-                // for items with physics bodies (no hulls at runtime coords).
-                // Restore Submarine=MainSub so position tracking and sync detection work.
+                // Fix Submarine=null caused by FindHull() during Item.Move(HSP)
                 foreach (var me in MapEntity.MapEntityList)
                 {
                     if (me is Item loadedItem && loadedItem.Submarine == null && MainSub != null)
@@ -2865,10 +2664,7 @@ namespace Barotrauma
                     }
                 }
                 
-                // Initialize position tracking for ALL loaded entities so that
-                // movement sync works from the very first move.
-                // NOTE: Do NOT filter by me.Submarine == MainSub — items with physics
-                // bodies can have Submarine=null from FindHull, and they still need tracking.
+                // Initialize position tracking for all loaded entities
                 collaborativeEntityPositions.Clear();
                 collaborativePropertySnapshots.Clear();
                 collaborativeFlipStates.Clear();
@@ -2879,7 +2675,6 @@ namespace Barotrauma
                     trackedCount++;
                 }
                 
-                
                 string name = MainSub.Info.Name;
                 subNameLabel.Text = ToolBox.LimitString(name, subNameLabel.Font, subNameLabel.Rect.Width);
                 cam.Position = MainSub.Position + MainSub.HiddenSubPosition;
@@ -2889,7 +2684,6 @@ namespace Barotrauma
                 
                 ReconstructLayers();
                 
-                DebugConsole.NewMessage($"[SubEditor] Loaded submarine from {source}: {subInfo.Name}", Microsoft.Xna.Framework.Color.Green);
             }
             catch (Exception e)
             {
@@ -2898,17 +2692,11 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Draw other users' cursors in the editor.
-        /// </summary>
         private void DrawCollaborativeCursors(SpriteBatch spriteBatch)
         {
             SubEditorNetworkingClient.Instance?.DrawCursors(spriteBatch, cam);
         }
 
-        /// <summary>
-        /// Create the panel showing connected collaborative editors.
-        /// </summary>
         private void CreateCollaborativeUsersPanel()
         {
             // --- Editors toggle button (multiplayer only) ---
@@ -2986,9 +2774,6 @@ namespace Barotrauma
             };
         }
 
-        /// <summary>
-        /// Refresh the list of connected users in the panel.
-        /// </summary>
         private void RefreshCollaborativeUsersList()
         {
             if (collaborativeUsersList == null) return;
@@ -3059,9 +2844,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Show the SubEditor-specific permissions dialog for setting default client permissions.
-        /// </summary>
         private void ShowSubEditorPermissionsDialog()
         {
             var msgBox = new GUIMessageBox(
@@ -3462,7 +3244,6 @@ namespace Barotrauma
             GUI.ForceMouseOn(null);
             SetMode(Mode.Default);
 
-            // Subscribe to wire editing callbacks for undo tracking
             Connection.OnSubEditorWireConnected = OnWireConnected;
             Connection.OnSubEditorWireDisconnected = OnWireDisconnected;
             Wire.OnSubEditorNodeMoved = OnWireNodeMoved;
@@ -3472,23 +3253,18 @@ namespace Barotrauma
             rotateToolToggle.Selected= false;
             scaleToolToggle.Selected = false;
 
-            // Collaborative test mode: restore from pre-test XML snapshot FIRST (preserves unsaved edits)
             if (!string.IsNullOrEmpty(preTestSubmarineXml))
             {
-                DebugConsole.NewMessage("[SubEditor] Restoring from pre-test XML snapshot in Select()", Microsoft.Xna.Framework.Color.Lime);
                 Level.IsSubEditorTestMode = false;
                 LoadSubmarineFromXml(preTestSubmarineXml, "pre-test restore");
                 preTestSubmarineXml = null;
                 backedUpSubInfo = null;
                 collaborativeEditingSubName = null;
-                // Block incoming SyncSubmarine packets temporarily — the server will send one
                 // with the old stored XML immediately after test mode ends, but we've already
                 // restored the correct pre-test state. Clear the flag after a brief delay so
-                // subsequent intentional syncs (from new edits) are accepted.
                 ignoreSubmarineSync = true;
                 CoroutineManager.Invoke(() => { ignoreSubmarineSync = false; }, delay: 2.0f);
                 
-                // Host: re-sync the correct state to all clients after restore
                 if (SubEditorNetworkingClient.Instance?.IsHost == true && MainSub != null)
                 {
                     CoroutineManager.Invoke(() => SyncSubmarineToClients(), delay: 2.5f);
@@ -3503,13 +3279,11 @@ namespace Barotrauma
                 }
                 backedUpSubInfo = null;
             }
-            // Auto-reload submarine after collaborative test mode
             else if (!string.IsNullOrEmpty(collaborativeEditingSubName) && MainSub == null)
             {
                 var subToLoad = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == collaborativeEditingSubName);
                 if (subToLoad != null)
                 {
-                    DebugConsole.Log($"[SubEditor] Auto-reloading submarine: {collaborativeEditingSubName}");
                     MainSub = new Submarine(subToLoad);
                     ReconstructLayers();
                 }
@@ -4550,7 +4324,6 @@ namespace Barotrauma
             };
             canAttachToPrevGroup.RectTransform.MinSize = new Point(0, gapPositionGroup.RectTransform.Children.Max(c => c.MinSize.Y));
 
-
             // -------------------
 
             var maxModuleCountGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), outpostModuleSettingsContainer.RectTransform), isHorizontal: true)
@@ -4815,7 +4588,6 @@ namespace Barotrauma
             };
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), priceGroup.RectTransform),
                 TextManager.Get("subeditor.price"), textAlignment: Alignment.CenterLeft, wrap: true);
-
 
             int basePrice = (GameMain.DebugDraw ? 0 : MainSub?.CalculateBasePrice()) ?? 1000;
             new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), priceGroup.RectTransform), NumberType.Int, buttonVisibility: GUINumberInput.ButtonVisibility.ForceHidden)
@@ -5591,9 +5363,6 @@ namespace Barotrauma
         
         private void CreateLoadScreen()
         {
-            // Block non-host clients from loading submarines — only the host's sub is authoritative.
-            // Clients loading a different sub would cause desync/corruption since the host
-            // doesn't know about it and keeps syncing its own version.
             if (SubEditorNetworkingClient.Instance?.IsActive == true && SubEditorNetworkingClient.Instance.IsHost == false)
             {
                 DebugConsole.NewMessage("[SubEditor] Only the host can load submarines in collaborative mode.", Microsoft.Xna.Framework.Color.Red);
@@ -5767,7 +5536,6 @@ namespace Barotrauma
                 deleteButton.Enabled = false;
                 return true;
             };
-
 
             if (AutoSaveInfo?.Root != null)
             {
@@ -6032,8 +5800,6 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Failed to load the submarine. The submarine file might be corrupted.", e);
                 return;
             }
-            // Don't clear undo buffer when loading from collaborative sync (LoadSubmarineFromXml)
-            // This preserves undo history across test mode transitions and sub syncs
             if (!suppressLoadSubAutoSync)
             {
                 ClearUndoBuffer();
@@ -6042,7 +5808,6 @@ namespace Barotrauma
 
             // After sub loading, Item.Move(HSP) → FindHull() sets Submarine=null
             // for items with physics bodies (no hulls at runtime coords).
-            // Restore Submarine=MainSub so position tracking and sync detection work.
             if (SubEditorNetworkingClient.Instance?.IsActive == true)
             {
                 foreach (var me in MapEntity.MapEntityList)
@@ -6056,7 +5821,6 @@ namespace Barotrauma
             }
             
             // Initialize position tracking for ALL loaded entities so that
-            // movement sync works from the very first move.
             // NOTE: Do NOT filter by me.Submarine == MainSub — items with physics
             // bodies can have Submarine=null from FindHull, and they still need tracking.
             if (SubEditorNetworkingClient.Instance?.IsActive == true)
@@ -6101,13 +5865,9 @@ namespace Barotrauma
 
             ReconstructLayers();
             
-            // If we're the host in a collaborative session, sync the full sub state to clients.
-            // Skip if suppressLoadSubAutoSync is set (programmatic loads from LoadSubmarineFromXml
-            // handle syncing separately — auto-syncing here would cause infinite reload loops).
             if (SubEditorNetworkingClient.Instance?.IsActive == true && SubEditorNetworkingClient.Instance.IsHost
                 && !suppressLoadSubAutoSync)
             {
-                // Delay to ensure LoadSub is fully complete (MainSub, entity IDs, etc.)
                 CoroutineManager.Invoke(() =>
                 {
                     if (MainSub != null)
@@ -6118,10 +5878,6 @@ namespace Barotrauma
             }
         }
         
-        /// <summary>
-        /// Send the current submarine XML to all connected clients for sync.
-        /// Large submarine XMLs are compressed to avoid exceeding message size limits.
-        /// </summary>
         private void SyncSubmarineToClients()
         {
             if (MainSub == null) return;
@@ -6164,12 +5920,10 @@ namespace Barotrauma
                 msg.WriteBytes(compressedBytes, 0, compressedBytes.Length);
                 client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
                 
-                DebugConsole.Log($"[SubEditor] Sent submarine sync ({submarineXml.Length} chars, compressed to {compressedBytes.Length} bytes)");
             }
             catch (Exception e)
             {
                 // Silently ignore send failures during connection establishment
-                DebugConsole.Log($"[SubEditor] Sync deferred - connection not ready yet: {e.Message}");
             }
         }
 
@@ -6321,9 +6075,6 @@ namespace Barotrauma
         public void SetMode(Mode newMode)
         {
             if (newMode == mode) { return; }
-            
-            // Wire changes are now tracked via WireCommand undo entries and
-            // synced individually. No need for full submarine sync on mode switch.
             
             mode = newMode;
 
@@ -7572,7 +7323,6 @@ namespace Barotrauma
 
         private static void Redo(int amount)
         {
-            // In collaborative mode, non-host clients can only redo their own commands
             bool isCollaborativeSession = SubEditorNetworkingClient.Instance?.IsActive == true;
             bool isNonHostCollaborative = isCollaborativeSession && !SubEditorNetworkingClient.Instance.IsHost;
             string localAuthorId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
@@ -7616,7 +7366,6 @@ namespace Barotrauma
 
         private static void Undo(int amount)
         {
-            // In collaborative mode, non-host clients can only undo their own commands
             bool isCollaborativeSession = SubEditorNetworkingClient.Instance?.IsActive == true;
             bool isNonHostCollaborative = isCollaborativeSession && !SubEditorNetworkingClient.Instance.IsHost;
             string localAuthorId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
@@ -7658,9 +7407,6 @@ namespace Barotrauma
             GameMain.SubEditorScreen.UpdateUndoHistoryPanel();
         }
 
-        /// <summary>
-        /// Broadcast entity changes from an undo/redo operation to other collaborative editors.
-        /// </summary>
         private static void BroadcastCommandChanges(Command command, bool isUndo)
         {
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
@@ -7700,8 +7446,6 @@ namespace Barotrauma
             }
             else if (command is WireCommand wireCmd)
             {
-                // After undo/redo of a wire command, sync the wire and its connected items.
-                // The wire may have been removed (undo of connect removes the wire entity).
                 if (Entity.FindEntityByID(wireCmd.WireId) is Item wireItem)
                 {
                     var wire = wireItem.GetComponent<Wire>();
@@ -7712,9 +7456,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    // Wire was removed (e.g. undo of Connect removes the wire entity)
                     SubEditorNetworkingClient.Instance.NotifyEntityRemoved(wireCmd.WireId);
-                    // Also sync the items that were connected to update their ConnectionPanel
                     if (wireCmd.TargetItemId != 0 && Entity.FindEntityByID(wireCmd.TargetItemId) is Item targetItem && !targetItem.Removed)
                     {
                         var itemElement = SaveEntityForSync(targetItem);
@@ -7743,17 +7485,12 @@ namespace Barotrauma
 
         public static void StoreCommand(Command command)
         {
-            // Don't store commands that are the result of applying a remote change —
-            // remote changes are already tracked by the originator's undo stack.
-            // BUT: allow storing when AuthorSessionId is already set (host storing
-            // client commands from OnCollaborativeEntityPlaced/Removed).
             if (GameMain.SubEditorScreen?.isApplyingRemoteChange == true 
                 && string.IsNullOrEmpty(command.AuthorSessionId)) 
             { 
                 return; 
             }
 
-            // Tag command with the author's session ID for collaborative undo tracking
             if (string.IsNullOrEmpty(command.AuthorSessionId))
             {
                 command.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString() ?? "local";
@@ -7781,21 +7518,16 @@ namespace Barotrauma
                 GameMain.SubEditorScreen.EntityAddedOrDeleted(addOrDelete.Receivers, addOrDelete.IsDeleteOperation);
             }
 
-            // Sync property changes to other collaborative editors
             if (command is PropertyCommand propertyCommand)
             {
                 GameMain.SubEditorScreen.SendCollaborativePropertyChange(propertyCommand);
             }
 
-            // Sync transform updates to other collaborative editors
             if (command is TransformCommand transformCommand)
             {
                 GameMain.SubEditorScreen.SendCollaborativeTransformUpdate(transformCommand);
             }
 
-            // Sync scale/rotate tool updates to other collaborative editors.
-            // TransformToolCommand extends Command (not TransformCommand), so it
-            // needs its own handler.
             if (command is TransformToolCommand transformToolCommand)
             {
                 GameMain.SubEditorScreen.SendCollaborativeTransformToolUpdate(transformToolCommand);
@@ -7836,21 +7568,13 @@ namespace Barotrauma
                 }
             }
 
-            // Send network notifications for collaborative editing
             SendCollaborativeEntityChanges(entities, wasDeleted);
         }
 
-        /// <summary>
-        /// Get the local player's account identifier for ownership tracking.
-        /// Uses Steam/EOS account ID when available, falls back to player name.
-        /// </summary>
         private static string GetLocalAccountId()
         {
-            // Try to get a persistent account ID
             var accountId = GameMain.Client?.SessionId.ToString();
             if (!string.IsNullOrEmpty(accountId)) return accountId;
-            
-            // Fallback to player name (less reliable but better than nothing)
             return MultiplayerPreferences.Instance?.PlayerName?.FallbackNullOrEmpty("local") ?? "local";
         }
 
@@ -7864,15 +7588,11 @@ namespace Barotrauma
                 if (wasDeleted)
                 {
                     // Entity was deleted
-                    DebugConsole.Log($"[SubEditor] Sending entity removed: {entity.ID} ({entity.Name})");
                     SubEditorNetworkingClient.Instance.NotifyEntityRemoved(entity.ID);
                 }
                 else
                 {
-                    // Entity was added - serialize to XML to capture all properties.
-                    // entity.Save() writes the rect as design-time coordinates (rect - HiddenSubPosition),
-                    // which is the same format as .sub files. The receiver applies HiddenSubPosition
-                    // offset after loading to place the entity in the submarine's coordinate space.
+                    // Entity was added - serialize to XML for sync
                     try
                     {
                         System.Xml.Linq.XElement element;
@@ -7904,7 +7624,6 @@ namespace Barotrauma
                         // Some entity types (e.g. LinkedSubmarine) don't write "ID" in Save().
                         element.SetAttributeValue("ID", entity.ID);
                         string xml = element.ToString();
-                        DebugConsole.Log($"[SubEditor] Sending entity placed: {entity.ID} ({entity.Name}), XML length: {xml.Length}");
                         SubEditorNetworkingClient.Instance.NotifyEntityPlaced(xml);
                     }
                     catch (Exception ex)
@@ -7915,10 +7634,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Sync a single entity's full state (including linkedTo) to other collaborative editors.
-        /// Called when link relationships change (Space+Click linking in editor).
-        /// </summary>
         internal void SyncLinkedEntityState(MapEntity entity)
         {
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
@@ -7933,7 +7648,6 @@ namespace Barotrauma
             }
             catch (Exception ex)
             {
-                DebugConsole.Log($"[SubEditor] Failed to sync linked entity state: {ex.Message}");
             }
         }
 
@@ -7941,13 +7655,9 @@ namespace Barotrauma
 
         private void OnWireConnected(Wire wire, Connection thisConnection, Connection otherConnection)
         {
-            // If this is the second end of a wire connection (both ends now connected),
-            // remove the initial one-sided connection step since the full connection is
-            // what matters. Only keep the initial step if the wire never gets connected
-            // on the other end.
+            // Replace single-ended connect with the full two-sided connection
             if (otherConnection != null)
             {
-                // Find and remove the initial one-sided Connect command for this wire
                 for (int i = Commands.Count - 1; i >= 0; i--)
                 {
                     if (Commands[i] is WireCommand wc && wc.Type == WireCommandType.Connect && wc.WireId == wire.Item.ID)
@@ -7963,7 +7673,6 @@ namespace Barotrauma
             cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
             StoreCommand(cmd);
 
-            // Immediately sync wire state to other clients
             SyncWireAndConnectedItems(wire, thisConnection, otherConnection);
         }
 
@@ -7973,13 +7682,9 @@ namespace Barotrauma
             cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
             StoreCommand(cmd);
 
-            // Immediately sync wire state to other clients
             SyncWireAndConnectedItems(wire, disconnectedConnection, null);
         }
 
-        /// <summary>
-        /// Sync wire item and its connected items' full state to other collaborative editors.
-        /// </summary>
         internal void SyncWireAndConnectedItems(Wire wire, Connection conn1, Connection conn2)
         {
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
@@ -7987,17 +7692,9 @@ namespace Barotrauma
 
             try
             {
-                // First, ensure the wire Item EXISTS on the receiver.
-                // Wires created in wiring mode bypass StoreCommand/NotifyEntityPlaced,
-                // so the receiver may not have this wire entity yet.
-                // Send it as EntityPlaced first, then send wireSync updates for connections.
                 var wireElement = SaveEntityForSync(wire.Item);
                 SubEditorNetworkingClient.Instance.NotifyEntityPlaced(wireElement.ToString());
 
-                // Now sync connected items WITH wireSync flag so their ConnectionPanel data
-                // is processed on the receiver (normally skipped to prevent corruption).
-                // The receiver now has the wire entity (from EntityPlaced above), so
-                // Entity.FindEntityByID(wireId) will succeed in the ConnectionPanel processing.
                 if (conn1?.Item != null && !conn1.Item.Removed)
                 {
                     var itemElement = SaveEntityForSync(conn1.Item);
@@ -8013,7 +7710,6 @@ namespace Barotrauma
             }
             catch (Exception ex)
             {
-                DebugConsole.Log($"[SubEditor] Failed to sync wire state: {ex.Message}");
             }
         }
 
@@ -8023,7 +7719,6 @@ namespace Barotrauma
             cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
             StoreCommand(cmd);
             
-            // Sync wire node changes to other clients
             SyncWireNodeState(wire);
         }
 
@@ -8033,7 +7728,6 @@ namespace Barotrauma
             cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
             StoreCommand(cmd);
             
-            // Sync wire node changes to other clients
             SyncWireNodeState(wire);
         }
 
@@ -8043,16 +7737,9 @@ namespace Barotrauma
             cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
             StoreCommand(cmd);
             
-            // Sync wire node changes to other clients
             SyncWireNodeState(wire);
         }
 
-        /// <summary>
-        /// Apply wire-specific sync data (nodes and connections) from received XML.
-        /// Called by OnCollaborativeEntityUpdated when wireSync="true" is set.
-        /// This only processes wire nodes and ConnectionPanel connections — no general
-        /// property application, which prevents Scale/UpdateTransform/FindHull corruption.
-        /// </summary>
         private void ApplyWireSyncData(Item item, System.Xml.Linq.XElement element, byte senderSessionId)
         {
             // Apply wire node positions from XML
@@ -8146,10 +7833,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Sync a wire's node positions to other collaborative editors.
-        /// Sends the wire item's full state with wireSync flag so the receiver updates nodes.
-        /// </summary>
         private void SyncWireNodeState(Wire wire)
         {
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
@@ -8168,9 +7851,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Send property changes to other collaborative editors via full entity state sync.
-        /// </summary>
         internal void SendCollaborativePropertyChange(PropertyCommand propertyCommand)
         {
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
@@ -8186,7 +7866,6 @@ namespace Barotrauma
                 
                 if (mapEntity == null || !processedEntities.Add(mapEntity.ID)) continue;
 
-                // Serialize the full entity state (absolute sync)
                 try
                 {
                     var element = SaveEntityForSync(mapEntity);
@@ -8200,10 +7879,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Save entity to XML, ensuring Item.Submarine is set to MainSub so that
-        /// Save() produces correct design-time coordinates (rect - HiddenSubPosition).
-        /// FindHull() can null Submarine for items with physics bodies, which makes
-        /// Save() write runtime coordinates instead of design-time.
+        /// Save entity to XML for sync, ensuring Submarine is set so Save() writes design-time coordinates.
         /// </summary>
         private static System.Xml.Linq.XElement SaveEntityForSync(MapEntity entity)
         {
@@ -8230,11 +7906,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Send transform (move/resize) updates to other collaborative editors via full entity XML sync.
-        /// For Items, the receiver reads the design-time rect from the XML and sets position directly
-        /// (no Move(), no FindHull(), no physics corruption).
-        /// </summary>
         internal void SendCollaborativeTransformUpdate(TransformCommand transformCommand)
         {
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
@@ -8251,8 +7922,6 @@ namespace Barotrauma
                     SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entity.ID, element.ToString());
                     collaborativeEntityPositions[entity.ID] = new Vector2(entity.Rect.X, entity.Rect.Y);
 
-                    // Update property snapshots so UpdateCollaborativePropertyChanges
-                    // doesn't re-detect and re-send changes caused by the transform.
                     if (entity is ISerializableEntity serializable && serializable.SerializableProperties != null)
                     {
                         if (!collaborativePropertySnapshots.TryGetValue(entity.ID, out var snapshot))
@@ -8278,14 +7947,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Send scale/rotate tool updates to other collaborative editors.
-        /// TransformToolCommand extends Command (not TransformCommand), so it
-        /// needs its own sync method. Sends each affected entity's full XML
-        /// with transformSync flag, same as SendCollaborativeTransformUpdate.
-        /// Also updates property snapshots so UpdateCollaborativePropertyChanges
-        /// doesn't re-send the changes.
-        /// </summary>
         internal void SendCollaborativeTransformToolUpdate(TransformToolCommand transformToolCommand)
         {
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
@@ -8303,9 +7964,6 @@ namespace Barotrauma
                     SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entity.ID, element.ToString());
                     collaborativeEntityPositions[entity.ID] = new Vector2(entity.Rect.X, entity.Rect.Y);
 
-                    // Send explicit property changes for Scale and Rotation since
-                    // transformSync early-returns without applying properties.
-                    // The transform tool changes Scale, Rotation, and dimensions.
                     if (entity is ISerializableEntity serializable && serializable.SerializableProperties != null)
                     {
                         if (!collaborativePropertySnapshots.TryGetValue(entity.ID, out var snapshot))
@@ -8314,7 +7972,6 @@ namespace Barotrauma
                             collaborativePropertySnapshots[entity.ID] = snapshot;
                         }
                         
-                        // Properties that the transform tool modifies
                         string[] transformToolProps = { "scale", "rotation", "textureoffset" };
                         foreach (var kvp in serializable.SerializableProperties)
                         {
@@ -8347,11 +8004,6 @@ namespace Barotrauma
         
         private void UpdateCollaborativeEntityMoves()
         {
-            // Per-frame sync is DISABLED. Position sync only happens on mouse/key release
-            // via SendCollaborativeTransformUpdate (called from StoreCommand/TransformCommand).
-            // This prevents rapid arrow key presses from flooding the client with messages
-            // that cause tiling, box size changes, and ordering issues.
-            // We still track positions so SendCollaborativeTransformUpdate can update correctly.
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
             if (MainSub == null) return;
             if (MapEntity.SelectedList.Count == 0) return;
@@ -8363,9 +8015,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Convert a property value to an XML-compatible string format.
-        /// </summary>
         private static string PropertyValueToXmlString(object value)
         {
             if (value == null) return "";
@@ -8671,7 +8320,6 @@ namespace Barotrauma
                 Color textColor = Color.White;
                 if (i == limit - 1) textColor = GUIStyle.Green;
 
-                // In collaborative mode, show author labels with user color
                 if (isCollaborativeSession && !string.IsNullOrEmpty(command.AuthorSessionId))
                 {
                     var user = SubEditorNetworkingClient.Instance?.GetUserBySessionId(command.AuthorSessionId);
@@ -8715,9 +8363,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Build Edits / Wires subtab buttons.
-        /// </summary>
         private void RebuildUndoSubTabs()
         {
             undoSubTabBar.ClearChildren();
@@ -8746,9 +8391,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Undo the most recent command from the currently selected tab and subtab.
-        /// </summary>
         private void UndoLatestFromCurrentTab()
         {
             bool isCollaborativeSession = SubEditorNetworkingClient.Instance?.IsActive == true;
@@ -8775,11 +8417,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Rebuild the tab buttons in the undo panel for collaborative mode.
-        /// Host sees: [All] [Me] [User1] [User2] ... (persistent — includes disconnected users)
-        /// Non-host sees: [My Changes] only (no tabs needed, just filter to own)
-        /// </summary>
         private void RebuildUndoTabs(bool isHost, string localAuthorId)
         {
             undoTabBar.ClearChildren();
@@ -8844,10 +8481,8 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// CAD-style selective undo: remove a specific command from the stack.
-        /// If the command is an "add entity" command, any subsequent commands that reference
-        /// those entity IDs (property changes, transforms, etc.) are also removed since they
-        /// would be operating on non-existent entities.
+        /// Selective undo: remove a command and cascade-remove any dependent commands
+        /// referencing entity IDs that would no longer exist.
         /// </summary>
         private static void RemoveCommandFromStack(Command command)
         {
@@ -8870,7 +8505,6 @@ namespace Barotrauma
             {
                 command.UnExecute();
                 
-                // Broadcast the undo to other editors
                 bool isCollaborativeSession = SubEditorNetworkingClient.Instance?.IsActive == true;
                 if (isCollaborativeSession)
                 {
@@ -8948,21 +8582,12 @@ namespace Barotrauma
             SkipInventorySlotUpdate = false;
             ImageManager.Update((float)deltaTime);
 
-            // Update cursor position for collaborative editing
             if (SubEditorNetworkingClient.Instance?.IsActive == true)
             {
                 Vector2 worldPos = cam.ScreenToWorld(PlayerInput.MousePosition);
                 SubEditorNetworkingClient.Instance.UpdateCursor(worldPos, (float)deltaTime);
                 
                 UpdateCollaborativeEntityMoves();
-                // Only detect property changes when the user is NOT actively moving entities.
-                // Arrow keys call Move() per-frame, and each move can change properties that
-                // UpdateCollaborativePropertyChanges detects and broadcasts. The receiver applies
-                // these as full property updates (no transformSync flag), which can trigger
-                // Scale → UpdateTransform → FindHull → teleportation. We defer property detection
-                // until the movement is complete (arrow key released, drag finished).
-                // Also throttle to avoid per-frame overhead when many entities are selected
-                // (each entity's serializable properties + component properties are checked).
                 bool isActivelyMoving = MapEntity.GetNudgeAmount() != Vector2.Zero 
                     || MapEntity.StartMovingPos != Vector2.Zero
                     || (transformWidget != null && transformWidget.IsSelected);
@@ -8977,11 +8602,9 @@ namespace Barotrauma
                 }
                 else
                 {
-                    // Reset timer so property check runs immediately after movement ends
                     collaborativePropertyCheckTimer = 0f;
                 }
 
-                // Flush pending batched remote entity commands after the batch window expires
                 if (pendingRemoteEntities.Count > 0 && Timing.TotalTime >= pendingRemoteCommandTimer)
                 {
                     FlushPendingRemoteCommand();
@@ -9906,7 +9529,6 @@ namespace Barotrauma
                 Submarine.DrawFront(spriteBatch);
                 Submarine.DrawDamageable(spriteBatch, null);
                 spriteBatch.End();
-
 
                 GameMain.Instance.GraphicsDevice.SetRenderTarget(null);
                 rt.SaveAsPng(stream, width, height);
