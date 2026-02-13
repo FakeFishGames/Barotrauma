@@ -619,88 +619,32 @@ namespace Barotrauma
 
             new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
 
-            subNameLabel = new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft),
+            subNameLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft),
                 TextManager.Get("unspecifiedsubfilename"), font: GUIStyle.LargeFont, textAlignment: Alignment.CenterLeft);
 
-            // Collaborative editing buttons - placed before Add Submarine dropdown
-            hostButton = new GUIButton(new RectTransform(new Vector2(0.05f, 0.9f), paddedTopPanel.RectTransform), 
-                TextManager.Get("SubEditorHostButton").Fallback("Host"), style: "GUIButtonSmall")
+            // Right-aligned toolbar group: Host, Join, Add Sub, Edit/Wiring, Waypoints, Rotate, Scale
+            var rightToolbarContainer = new GUIFrame(new RectTransform(Vector2.One, paddedTopPanel.RectTransform) { RelativeSize = new Vector2(1.0f, 1.0f) }, style: null);
+            var rightToolbarPanel = new GUILayoutGroup(new RectTransform(Vector2.One, rightToolbarContainer.RectTransform, Anchor.CenterRight),
+                isHorizontal: true, childAnchor: Anchor.CenterRight)
             {
-                ToolTip = TextManager.Get("SubEditorHostButtonTooltip").Fallback("Host a collaborative editing session"),
-                OnClicked = ShowHostSessionPrompt
+                RelativeSpacing = 0.005f
             };
 
-            joinButton = new GUIButton(new RectTransform(new Vector2(0.05f, 0.9f), paddedTopPanel.RectTransform), 
-                TextManager.Get("SubEditorJoinButton").Fallback("Join"), style: "GUIButtonSmall")
+            // NOTE: Right-aligned children are added in REVERSE order (rightmost first)
+
+            scaleToolToggle = new GUITickBox(new RectTransform(new Vector2(0.9f), rightToolbarPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "SubEditorScaleToggle")
             {
-                ToolTip = TextManager.Get("SubEditorJoinButtonTooltip").Fallback("Join a collaborative editing session"),
-                OnClicked = ShowJoinSessionPrompt
+                ToolTip = TextManager.Get("SubEditor.ScaleToggleToolTip")
+            };
+            rotateToolToggle = new GUITickBox(new RectTransform(new Vector2(0.9f), rightToolbarPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "SubEditorRotateToggle")
+            {
+                ToolTip = TextManager.Get("SubEditor.RotateToggleToolTip")
             };
 
-            linkedSubBox = new GUIDropDown(new RectTransform(new Vector2(0.12f, 0.9f), paddedTopPanel.RectTransform),
-                TextManager.Get("AddSubButton"), elementCount: 20)
-            {
-                ToolTip = TextManager.Get("AddSubToolTip")
-            };
+            var spacingR3 = new GUIFrame(new RectTransform(new Vector2(0.02f, 1.0f), rightToolbarPanel.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), spacingR3.RectTransform, Anchor.Center), style: "VerticalLine");
 
-            List<(string Name, SubmarineInfo Sub)> subs = new List<(string Name, SubmarineInfo Sub)>();
-
-            foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
-            {
-                if (sub.Type != SubmarineType.Player) { continue; }
-                subs.Add((sub.Name, sub));
-            }
-
-            foreach (var (name, sub) in subs.OrderBy(tuple => tuple.Name))
-            {
-                linkedSubBox.AddItem(name, sub);
-            }
-
-            linkedSubBox.OnSelected += SelectLinkedSub;
-            linkedSubBox.OnDropped += (component, obj) =>
-            {
-                MapEntity.SelectedList.Clear();
-                return true;
-            };
-
-            var spacing = new GUIFrame(new RectTransform(new Vector2(0.02f, 1.0f), paddedTopPanel.RectTransform), style: null);
-            new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), spacing.RectTransform, Anchor.Center), style: "VerticalLine");
-
-            defaultModeTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "EditSubButton")
-            {
-                ToolTip = RichString.Rich(TextManager.Get("SubEditorEditingMode")　+ "‖color:125,125,125‖\nCtrl + 1‖color:end‖"),
-                OnSelected = tBox =>
-                {
-                    if (!lockMode)
-                    {
-                        if (tBox.Selected) { SetMode(Mode.Default); }
-
-                        return true;
-                    }
-
-                    return false;
-                }
-            };
-
-            wiringModeTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "WiringModeButton")
-            {
-                ToolTip = RichString.Rich(TextManager.Get("WiringModeButton") + '\n' + TextManager.Get("WiringModeToolTip") + "‖color:125,125,125‖\nCtrl + 2‖color:end‖"),
-                OnSelected = tBox =>
-                {
-                    if (!lockMode)
-                    {
-                        SetMode(tBox.Selected ? Mode.Wiring : Mode.Default);
-                        return true;
-                    }
-
-                    return false;
-                }
-            };
-
-            spacing = new GUIFrame(new RectTransform(new Vector2(0.02f, 1.0f), paddedTopPanel.RectTransform), style: null);
-            new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), spacing.RectTransform, Anchor.Center), style: "VerticalLine");
-
-            new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "GenerateWaypointsButton")
+            new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), rightToolbarPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "GenerateWaypointsButton")
             {
                 ToolTip = TextManager.Get("GenerateWaypointsButton") + '\n' + TextManager.Get("GenerateWaypointsToolTip"),
                 OnClicked = (btn, userdata) =>
@@ -738,16 +682,82 @@ namespace Barotrauma
                 }
             };
 
-            spacing = new GUIFrame(new RectTransform(new Vector2(0.02f, 1.0f), paddedTopPanel.RectTransform), style: null);
-            new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), spacing.RectTransform, Anchor.Center), style: "VerticalLine");
+            var spacingR2 = new GUIFrame(new RectTransform(new Vector2(0.02f, 1.0f), rightToolbarPanel.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), spacingR2.RectTransform, Anchor.Center), style: "VerticalLine");
 
-            rotateToolToggle = new GUITickBox(new RectTransform(new Vector2(0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "SubEditorRotateToggle")
+            wiringModeTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.9f), rightToolbarPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "WiringModeButton")
             {
-                ToolTip = TextManager.Get("SubEditor.RotateToggleToolTip")
+                ToolTip = RichString.Rich(TextManager.Get("WiringModeButton") + '\n' + TextManager.Get("WiringModeToolTip") + "‖color:125,125,125‖\nCtrl + 2‖color:end‖"),
+                OnSelected = tBox =>
+                {
+                    if (!lockMode)
+                    {
+                        SetMode(tBox.Selected ? Mode.Wiring : Mode.Default);
+                        return true;
+                    }
+
+                    return false;
+                }
             };
-            scaleToolToggle = new GUITickBox(new RectTransform(new Vector2(0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "SubEditorScaleToggle")
+
+            defaultModeTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.9f), rightToolbarPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "EditSubButton")
             {
-                ToolTip = TextManager.Get("SubEditor.ScaleToggleToolTip")
+                ToolTip = RichString.Rich(TextManager.Get("SubEditorEditingMode")　+ "‖color:125,125,125‖\nCtrl + 1‖color:end‖"),
+                OnSelected = tBox =>
+                {
+                    if (!lockMode)
+                    {
+                        if (tBox.Selected) { SetMode(Mode.Default); }
+
+                        return true;
+                    }
+
+                    return false;
+                }
+            };
+
+            var spacingR1 = new GUIFrame(new RectTransform(new Vector2(0.02f, 1.0f), rightToolbarPanel.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), spacingR1.RectTransform, Anchor.Center), style: "VerticalLine");
+
+            linkedSubBox = new GUIDropDown(new RectTransform(new Vector2(0.15f, 0.9f), rightToolbarPanel.RectTransform),
+                TextManager.Get("AddSubButton"), elementCount: 20)
+            {
+                ToolTip = TextManager.Get("AddSubToolTip")
+            };
+
+            // Collaborative editing buttons
+            joinButton = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), rightToolbarPanel.RectTransform), 
+                TextManager.Get("SubEditorJoinButton").Fallback("Join"), style: "GUIButtonSmall")
+            {
+                ToolTip = TextManager.Get("SubEditorJoinButtonTooltip").Fallback("Join a collaborative editing session"),
+                OnClicked = ShowJoinSessionPrompt
+            };
+
+            hostButton = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), rightToolbarPanel.RectTransform), 
+                TextManager.Get("SubEditorHostButton").Fallback("Host"), style: "GUIButtonSmall")
+            {
+                ToolTip = TextManager.Get("SubEditorHostButtonTooltip").Fallback("Host a collaborative editing session"),
+                OnClicked = ShowHostSessionPrompt
+            };
+
+            List<(string Name, SubmarineInfo Sub)> subs = new List<(string Name, SubmarineInfo Sub)>();
+
+            foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
+            {
+                if (sub.Type != SubmarineType.Player) { continue; }
+                subs.Add((sub.Name, sub));
+            }
+
+            foreach (var (name, sub) in subs.OrderBy(tuple => tuple.Name))
+            {
+                linkedSubBox.AddItem(name, sub);
+            }
+
+            linkedSubBox.OnSelected += SelectLinkedSub;
+            linkedSubBox.OnDropped += (component, obj) =>
+            {
+                MapEntity.SelectedList.Clear();
+                return true;
             };
 
             var selectedLayerText = new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), paddedTopPanel.RectTransform),
