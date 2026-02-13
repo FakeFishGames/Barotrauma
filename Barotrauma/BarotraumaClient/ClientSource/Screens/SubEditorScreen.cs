@@ -619,25 +619,25 @@ namespace Barotrauma
 
             new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
 
-            subNameLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft),
+            subNameLabel = new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft),
                 TextManager.Get("unspecifiedsubfilename"), font: GUIStyle.LargeFont, textAlignment: Alignment.CenterLeft);
 
             // Collaborative editing buttons - placed before Add Submarine dropdown
-            hostButton = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform), 
+            hostButton = new GUIButton(new RectTransform(new Vector2(0.05f, 0.9f), paddedTopPanel.RectTransform), 
                 TextManager.Get("SubEditorHostButton").Fallback("Host"), style: "GUIButtonSmall")
             {
                 ToolTip = TextManager.Get("SubEditorHostButtonTooltip").Fallback("Host a collaborative editing session"),
                 OnClicked = ShowHostSessionPrompt
             };
 
-            joinButton = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform), 
+            joinButton = new GUIButton(new RectTransform(new Vector2(0.05f, 0.9f), paddedTopPanel.RectTransform), 
                 TextManager.Get("SubEditorJoinButton").Fallback("Join"), style: "GUIButtonSmall")
             {
                 ToolTip = TextManager.Get("SubEditorJoinButtonTooltip").Fallback("Join a collaborative editing session"),
                 OnClicked = ShowJoinSessionPrompt
             };
 
-            linkedSubBox = new GUIDropDown(new RectTransform(new Vector2(0.15f, 0.9f), paddedTopPanel.RectTransform),
+            linkedSubBox = new GUIDropDown(new RectTransform(new Vector2(0.12f, 0.9f), paddedTopPanel.RectTransform),
                 TextManager.Get("AddSubButton"), elementCount: 20)
             {
                 ToolTip = TextManager.Get("AddSubToolTip")
@@ -8028,7 +8028,9 @@ namespace Barotrauma
                     SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entity.ID, element.ToString());
                     collaborativeEntityPositions[entity.ID] = new Vector2(entity.Rect.X, entity.Rect.Y);
 
-                    // Update property snapshots to prevent false change detection
+                    // Send explicit property changes for Scale and Rotation since
+                    // transformSync early-returns without applying properties.
+                    // The transform tool changes Scale, Rotation, and dimensions.
                     if (entity is ISerializableEntity serializable && serializable.SerializableProperties != null)
                     {
                         if (!collaborativePropertySnapshots.TryGetValue(entity.ID, out var snapshot))
@@ -8036,14 +8038,28 @@ namespace Barotrauma
                             snapshot = new Dictionary<string, string>();
                             collaborativePropertySnapshots[entity.ID] = snapshot;
                         }
+                        
+                        // Properties that the transform tool modifies
+                        string[] transformToolProps = { "scale", "rotation", "textureoffset" };
                         foreach (var kvp in serializable.SerializableProperties)
                         {
                             if (kvp.Value.PropertyInfo?.SetMethod == null) continue;
-                            try
+                            string propName = kvp.Key.Value;
+                            string currentValue;
+                            try { currentValue = PropertyValueToXmlString(kvp.Value.GetValue(serializable)); }
+                            catch { continue; }
+                            
+                            // Send property change for transform-tool-affected properties
+                            if (transformToolProps.Contains(propName.ToLowerInvariant()))
                             {
-                                snapshot[kvp.Key.Value] = PropertyValueToXmlString(kvp.Value.GetValue(serializable));
+                                if (!snapshot.TryGetValue(propName, out string lastValue) || currentValue != lastValue)
+                                {
+                                    SubEditorNetworkingClient.Instance.NotifyEntityPropertyChanged(entity.ID, propName, currentValue);
+                                }
                             }
-                            catch { }
+                            
+                            // Update all snapshots to prevent false change detection
+                            snapshot[propName] = currentValue;
                         }
                     }
                 }
