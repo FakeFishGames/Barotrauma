@@ -20,6 +20,7 @@ namespace Barotrauma.Networking
 
         private const double SubEditorResyncCooldown = 0.5;
         private readonly Dictionary<byte, double> subEditorLastResyncTime = new Dictionary<byte, double>();
+        private readonly Dictionary<ushort, string> subEditorEntityXml = new Dictionary<ushort, string>();
 
         public bool IsSubEditorSessionActive => isSubEditorSessionActive;
         
@@ -127,20 +128,36 @@ namespace Barotrauma.Networking
             if (!perms.HasFlag(SubEditorPermissions.CanEditOwn))
             {
                 DebugConsole.NewMessage($"[SubEditor] EntityPlaced DENIED for {sender.Name} (session={sender.SessionId}, perms={perms})", Color.Red);
-                ResyncClientState(sender);
+                // Send targeted removal back to the denied client to remove the ghost entity
+                try
+                {
+                    var xElement = XElement.Parse(entityXml);
+                    int id = xElement.GetAttributeInt("ID", 0);
+                    if (id > 0)
+                    {
+                        IWriteMessage denyMsg = new WriteOnlyMessage();
+                        denyMsg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+                        denyMsg.WriteByte((byte)SubEditorPacketHeader.EntityRemoved);
+                        denyMsg.WriteByte(0); // session 0 = server correction, bypasses self-skip on client
+                        denyMsg.WriteUInt16((ushort)id);
+                        serverPeer.Send(denyMsg, sender.Connection, DeliveryMethod.Reliable);
+                    }
+                }
+                catch { }
                 return;
             }
 
-            // Track ownership: try to extract entity ID from XML
+            // Track ownership and store entity XML for potential denial undo
             if (subEditorSession != null)
             {
                 try
                 {
-                    var xElement = System.Xml.Linq.XElement.Parse(entityXml);
+                    var xElement = XElement.Parse(entityXml);
                     int id = xElement.GetAttributeInt("ID", 0);
                     if (id > 0)
                     {
                         subEditorSession.SetEntityOwner((ushort)id, GetSenderAccountId(sender));
+                        subEditorEntityXml[(ushort)id] = entityXml;
                     }
                 }
                 catch { }
@@ -166,10 +183,20 @@ namespace Barotrauma.Networking
                 string accountId = GetSenderAccountId(sender);
                 if (!subEditorSession.CanUserDeleteEntity((byte)sender.SessionId, entityId, accountId))
                 {
-                    ResyncClientState(sender);
+                    // Send the entity back to the denied client so it reappears
+                    if (subEditorEntityXml.TryGetValue(entityId, out string storedXml))
+                    {
+                        IWriteMessage denyMsg = new WriteOnlyMessage();
+                        denyMsg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+                        denyMsg.WriteByte((byte)SubEditorPacketHeader.EntityPlaced);
+                        denyMsg.WriteByte(0); // session 0 = server correction
+                        denyMsg.WriteString(storedXml);
+                        serverPeer.Send(denyMsg, sender.Connection, DeliveryMethod.Reliable);
+                    }
                     return;
                 }
                 subEditorSession.RemoveEntityOwnership(entityId);
+                subEditorEntityXml.Remove(entityId);
             }
 
             foreach (var client in connectedClients.Where(c => c != sender))
@@ -428,6 +455,7 @@ namespace Barotrauma.Networking
             subEditorSession = null;
             subEditorHost = null;
             isSubEditorSessionActive = false;
+            subEditorEntityXml.Clear();
 
             DebugConsole.Log("[SubEditor] Session ended");
         }
