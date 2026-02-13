@@ -185,14 +185,23 @@ namespace Barotrauma.Networking
             return GetPermissions(localSessionId).HasFlag(perm);
         }
 
+        private string GetLocalAccountId()
+        {
+            var myClient = GameMain.Client?.MyClient;
+            if (myClient != null && myClient.AccountId.TryUnwrap(out var accountId))
+            {
+                return accountId.StringRepresentation;
+            }
+            return GameMain.Client?.Name ?? "";
+        }
+
         public bool CanEditEntity(MapEntity entity)
         {
             if (!IsActive) return true;
             if (entity == null) return false;
             if (IsEntityLockedByOther(entity.ID, localSessionId)) return false;
 
-            string myAccountId = GameMain.Client?.Name ?? "";
-            return CanUserEditEntity(localSessionId, entity.ID, myAccountId);
+            return CanUserEditEntity(localSessionId, entity.ID, GetLocalAccountId());
         }
 
         public bool CanDeleteEntity(MapEntity entity)
@@ -200,8 +209,7 @@ namespace Barotrauma.Networking
             if (!IsActive) return true;
             if (entity == null) return false;
 
-            string myAccountId = GameMain.Client?.Name ?? "";
-            return CanUserDeleteEntity(localSessionId, entity.ID, myAccountId);
+            return CanUserDeleteEntity(localSessionId, entity.ID, GetLocalAccountId());
         }
 
         public void DrawCursors(SpriteBatch spriteBatch, Camera cam)
