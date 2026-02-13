@@ -631,21 +631,21 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            hostButton = new GUIButton(new RectTransform(new Vector2(0.105f, 0.9f), paddedTopPanel.RectTransform), 
+            hostButton = new GUIButton(new RectTransform(new Vector2(0.1575f, 0.9f), paddedTopPanel.RectTransform), 
                 TextManager.Get("SubEditorHostButton").Fallback("Host"), style: "GUIButtonSmall")
             {
                 ToolTip = TextManager.Get("SubEditorHostButtonTooltip").Fallback("Host a collaborative editing session"),
                 OnClicked = ShowHostSessionPrompt
             };
 
-            joinButton = new GUIButton(new RectTransform(new Vector2(0.105f, 0.9f), paddedTopPanel.RectTransform), 
+            joinButton = new GUIButton(new RectTransform(new Vector2(0.1575f, 0.9f), paddedTopPanel.RectTransform), 
                 TextManager.Get("SubEditorJoinButton").Fallback("Join"), style: "GUIButtonSmall")
             {
                 ToolTip = TextManager.Get("SubEditorJoinButtonTooltip").Fallback("Join a collaborative editing session"),
                 OnClicked = ShowJoinSessionPrompt
             };
 
-            linkedSubBox = new GUIDropDown(new RectTransform(new Vector2(0.30f, 0.9f), paddedTopPanel.RectTransform),
+            linkedSubBox = new GUIDropDown(new RectTransform(new Vector2(0.45f, 0.9f), paddedTopPanel.RectTransform),
                 TextManager.Get("AddSubButton"), elementCount: 20)
             {
                 ToolTip = TextManager.Get("AddSubToolTip")
