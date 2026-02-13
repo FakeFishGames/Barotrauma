@@ -2287,10 +2287,20 @@ namespace Barotrauma
                         collaborativeEntityPositions[existingEntity.ID] = new Vector2(runtimeX, runtimeY);
                     }
 
-                    // For transform-only sync, we're done — don't touch properties.
+                    // Check if this is a wire sync (wire node/connection changes)
+                    bool isWireSync = element.GetAttributeBool("wireSync", false);
+
+                    // For transform-only or wire sync, skip general property application.
                     // Properties are synced separately via UpdateCollaborativePropertyChanges.
-                    if (isTransformSync)
+                    // Applying properties here (especially Scale) triggers UpdateTransform →
+                    // FindHull → Submarine null → body/rect corruption → teleportation.
+                    if (isTransformSync || isWireSync)
                     {
+                        // For wire sync, apply wire-specific data (nodes and connections)
+                        if (isWireSync)
+                        {
+                            ApplyWireSyncData(existingItem, element, senderSessionId);
+                        }
                         return;
                     }
 
@@ -2347,7 +2357,7 @@ namespace Barotrauma
                     }
                 }
 
-                // For Items, also update ItemComponent properties and wire data
+                // For Items with full property sync (not transform/wire), update component properties and wire data
                 if (existingEntity is Item item)
                 {
                     foreach (var component in item.Components)
@@ -2380,112 +2390,6 @@ namespace Barotrauma
                                         wire.UpdateSections();
                                     }
                                     break;
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Wire node positions and connections are synced separately via
-                    // SyncWireAndConnectedItems which sets wireSync="true" flag.
-                    // Only process ConnectionPanel wire data when this flag is present.
-                    // Property-only updates (color, etc.) include stale ConnectionPanel data
-                    // that would corrupt wire state if applied.
-                    bool isWireSync = element.GetAttributeBool("wireSync", false);
-                    if (isWireSync)
-                    {
-                        // Find ConnectionPanel and apply wire connections from XML.
-                        // Item XML structure: <Item><ConnectionPanel><input name="..."><link w="id"/></input></ConnectionPanel></Item>
-                        // So we must navigate: element → ConnectionPanel element → input/output elements → link elements
-                        var connPanel = item.GetComponent<Items.Components.ConnectionPanel>();
-                        if (connPanel != null)
-                        {
-                            // Find the ConnectionPanel sub-element (input/output are nested inside it)
-                            foreach (var compElem in element.Elements())
-                            {
-                                string compName = compElem.Name.ToString().ToLowerInvariant();
-                                if (compName != "connectionpanel") continue;
-                                
-                                // Now iterate input/output elements inside ConnectionPanel
-                                foreach (var subElem in compElem.Elements())
-                                {
-                                    string elemName = subElem.Name.ToString().ToLowerInvariant();
-                                    if (elemName != "input" && elemName != "output") continue;
-                                    
-                                    string connName = subElem.GetAttributeString("name", "");
-                                    var conn = connPanel.Connections.FirstOrDefault(c => c.Name == connName);
-                                    if (conn == null) continue;
-                                    
-                                    // Collect wire IDs from XML links
-                                    var xmlWireIds = new HashSet<ushort>();
-                                    foreach (var linkElem in subElem.Elements("link"))
-                                    {
-                                        ushort wireId = (ushort)linkElem.GetAttributeInt("w", 0);
-                                        if (wireId > 0) xmlWireIds.Add(wireId);
-                                    }
-                                    
-                                    // Disconnect wires not in XML
-                                    foreach (var existingWire in conn.Wires.ToList())
-                                    {
-                                        if (!xmlWireIds.Contains(existingWire.Item.ID))
-                                        {
-                                            // Create WireCommand on host for undo tracking (wiring subtab)
-                                            if (SubEditorNetworkingClient.Instance?.IsHost == true)
-                                            {
-                                                var disconnCmd = new WireCommand(WireCommandType.Disconnect, existingWire, conn);
-                                                disconnCmd.AuthorSessionId = senderSessionId.ToString();
-                                                StoreCommand(disconnCmd);
-                                            }
-                                            conn.DisconnectWire(existingWire);
-                                            existingWire.RemoveConnection(conn);
-                                        }
-                                    }
-                                    
-                                    // Connect wires from XML that aren't already connected
-                                    foreach (ushort wireId in xmlWireIds)
-                                    {
-                                        if (Entity.FindEntityByID(wireId) is Item wireItem)
-                                        {
-                                            var wire = wireItem.GetComponent<Items.Components.Wire>();
-                                            if (wire != null && !conn.Wires.Contains(wire))
-                                            {
-                                                conn.ConnectWire(wire);
-                                                wire.TryConnect(conn, addNode: false);
-                                                // Update wire sections for rendering (Wire needs sections to draw)
-                                                wire.UpdateSections();
-                                                // Create WireCommand on host for undo tracking (wiring subtab)
-                                                if (SubEditorNetworkingClient.Instance?.IsHost == true)
-                                                {
-                                                    var otherConn = wire.OtherConnection(conn);
-                                                    var connectCmd = new WireCommand(WireCommandType.Connect, wire, conn, otherConn);
-                                                    connectCmd.AuthorSessionId = senderSessionId.ToString();
-                                                    StoreCommand(connectCmd);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                break; // only one ConnectionPanel per item
-                            }
-                        }
-
-                        // Also apply wire node positions from XML when wireSync is set
-                        foreach (var component in item.Components)
-                        {
-                            if (component is Items.Components.Wire wire)
-                            {
-                                foreach (var subElem in element.Elements())
-                                {
-                                    string nodesAttr = subElem.Attribute("nodes")?.Value;
-                                    if (nodesAttr != null)
-                                    {
-                                        var newNodes = Items.Components.Wire.ExtractNodes(subElem).ToList();
-                                        if (newNodes.Count > 0)
-                                        {
-                                            wire.SetNodes(newNodes);
-                                            wire.UpdateSections();
-                                        }
-                                        break;
-                                    }
                                 }
                             }
                         }
@@ -7816,6 +7720,105 @@ namespace Barotrauma
             
             // Sync wire node changes to other clients
             SyncWireNodeState(wire);
+        }
+
+        /// <summary>
+        /// Apply wire-specific sync data (nodes and connections) from received XML.
+        /// Called by OnCollaborativeEntityUpdated when wireSync="true" is set.
+        /// This only processes wire nodes and ConnectionPanel connections — no general
+        /// property application, which prevents Scale/UpdateTransform/FindHull corruption.
+        /// </summary>
+        private void ApplyWireSyncData(Item item, System.Xml.Linq.XElement element, byte senderSessionId)
+        {
+            // Apply wire node positions from XML
+            foreach (var component in item.Components)
+            {
+                if (component is Items.Components.Wire wire)
+                {
+                    foreach (var subElem in element.Elements())
+                    {
+                        string nodesAttr = subElem.Attribute("nodes")?.Value;
+                        if (nodesAttr != null)
+                        {
+                            var newNodes = Items.Components.Wire.ExtractNodes(subElem).ToList();
+                            if (newNodes.Count > 0)
+                            {
+                                wire.SetNodes(newNodes);
+                                wire.UpdateSections();
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Apply ConnectionPanel wire connections from XML
+            var connPanel = item.GetComponent<Items.Components.ConnectionPanel>();
+            if (connPanel != null)
+            {
+                foreach (var compElem in element.Elements())
+                {
+                    string compName = compElem.Name.ToString().ToLowerInvariant();
+                    if (compName != "connectionpanel") continue;
+
+                    foreach (var subElem in compElem.Elements())
+                    {
+                        string elemName = subElem.Name.ToString().ToLowerInvariant();
+                        if (elemName != "input" && elemName != "output") continue;
+
+                        string connName = subElem.GetAttributeString("name", "");
+                        var conn = connPanel.Connections.FirstOrDefault(c => c.Name == connName);
+                        if (conn == null) continue;
+
+                        // Collect wire IDs from XML links
+                        var xmlWireIds = new HashSet<ushort>();
+                        foreach (var linkElem in subElem.Elements("link"))
+                        {
+                            ushort wireId = (ushort)linkElem.GetAttributeInt("w", 0);
+                            if (wireId > 0) xmlWireIds.Add(wireId);
+                        }
+
+                        // Disconnect wires not in XML
+                        foreach (var existingWire in conn.Wires.ToList())
+                        {
+                            if (!xmlWireIds.Contains(existingWire.Item.ID))
+                            {
+                                if (SubEditorNetworkingClient.Instance?.IsHost == true)
+                                {
+                                    var disconnCmd = new WireCommand(WireCommandType.Disconnect, existingWire, conn);
+                                    disconnCmd.AuthorSessionId = senderSessionId.ToString();
+                                    StoreCommand(disconnCmd);
+                                }
+                                conn.DisconnectWire(existingWire);
+                                existingWire.RemoveConnection(conn);
+                            }
+                        }
+
+                        // Connect wires from XML that aren't already connected
+                        foreach (ushort wireId in xmlWireIds)
+                        {
+                            if (Entity.FindEntityByID(wireId) is Item wireItem)
+                            {
+                                var wire = wireItem.GetComponent<Items.Components.Wire>();
+                                if (wire != null && !conn.Wires.Contains(wire))
+                                {
+                                    conn.ConnectWire(wire);
+                                    wire.TryConnect(conn, addNode: false);
+                                    wire.UpdateSections();
+                                    if (SubEditorNetworkingClient.Instance?.IsHost == true)
+                                    {
+                                        var otherConn = wire.OtherConnection(conn);
+                                        var connectCmd = new WireCommand(WireCommandType.Connect, wire, conn, otherConn);
+                                        connectCmd.AuthorSessionId = senderSessionId.ToString();
+                                        StoreCommand(connectCmd);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    break; // only one ConnectionPanel per item
+                }
+            }
         }
 
         /// <summary>
