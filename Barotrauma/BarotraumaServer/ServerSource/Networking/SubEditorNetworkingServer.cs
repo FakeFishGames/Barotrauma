@@ -90,9 +90,7 @@ namespace Barotrauma.Networking
         private SubEditorPermissions GetSenderPermissions(Client sender)
         {
             if (subEditorSession == null) return SubEditorPermissions.None;
-            var perms = subEditorSession.GetPermissions((byte)sender.SessionId);
-            DebugConsole.Log($"[SubEditor] GetSenderPermissions({sender.Name}, session={sender.SessionId}): hostSession={subEditorSession.HostSessionId}, result={perms}");
-            return perms;
+            return subEditorSession.GetPermissions((byte)sender.SessionId);
         }
 
         private string GetSenderAccountId(Client sender)
@@ -102,22 +100,16 @@ namespace Barotrauma.Networking
 
         private void ResyncClientState(Client sender)
         {
-            if (subEditorStoredSubmarineCompressed == null || subEditorStoredSubmarineCompressed.Length == 0)
-            {
-                DebugConsole.NewMessage($"[SubEditor] ResyncClientState({sender.Name}): NO stored submarine data to send!", Color.Red);
-                return;
-            }
+            if (subEditorStoredSubmarineCompressed == null || subEditorStoredSubmarineCompressed.Length == 0) return;
 
             byte sessionId = (byte)sender.SessionId;
             double now = Timing.TotalTime;
             if (subEditorLastResyncTime.TryGetValue(sessionId, out double lastTime) && now - lastTime < SubEditorResyncCooldown)
             {
-                DebugConsole.Log($"[SubEditor] ResyncClientState({sender.Name}): throttled (last={lastTime:F1}, now={now:F1})");
                 return;
             }
             subEditorLastResyncTime[sessionId] = now;
 
-            DebugConsole.NewMessage($"[SubEditor] ResyncClientState({sender.Name}): sending {subEditorStoredSubmarineCompressed.Length} bytes", Color.Yellow);
             IWriteMessage msg = new WriteOnlyMessage();
             msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
             msg.WriteByte((byte)SubEditorPacketHeader.SyncSubmarine);
@@ -132,10 +124,8 @@ namespace Barotrauma.Networking
             string entityXml = inc.ReadString();
 
             var perms = GetSenderPermissions(sender);
-            DebugConsole.NewMessage($"[SubEditor] HandleEntityPlaced from {sender.Name} (session={sender.SessionId}), perms={perms}", Color.Cyan);
             if (!perms.HasFlag(SubEditorPermissions.CanEditOwn))
             {
-                DebugConsole.NewMessage($"[SubEditor] DENIED entity placement from {sender.Name} — missing CanEditOwn", Color.Red);
                 ResyncClientState(sender);
                 return;
             }
@@ -369,22 +359,13 @@ namespace Barotrauma.Networking
         private void HandleSetPermissions(IReadMessage inc, Client sender)
         {
             if (!isSubEditorSessionActive || subEditorSession == null) return;
-            if (sender != subEditorHost)
-            {
-                DebugConsole.NewMessage($"[SubEditor] SetPermissions REJECTED: sender {sender.Name} (session={sender.SessionId}) is not host {subEditorHost?.Name} (session={subEditorHost?.SessionId})", Color.Red);
-                return;
-            }
+            if (sender != subEditorHost) return;
 
             byte targetSessionId = inc.ReadByte();
             uint permBits = inc.ReadUInt32();
             var permissions = (SubEditorPermissions)permBits;
 
-            DebugConsole.NewMessage($"[SubEditor] SetPermissions: target session={targetSessionId}, perms={permissions} (bits={permBits})", Color.Yellow);
             subEditorSession.SetPermissions(targetSessionId, permissions);
-
-            // Verify it stuck
-            var verify = subEditorSession.GetPermissions(targetSessionId);
-            DebugConsole.NewMessage($"[SubEditor] Verified permissions for session {targetSessionId}: {verify}", Color.Yellow);
 
             foreach (var client in connectedClients)
             {
@@ -416,7 +397,7 @@ namespace Barotrauma.Networking
             var hostUser = new SubEditorUser((byte)host.SessionId, host.Name, hostColorIndex);
             subEditorSession.AddUser(hostUser);
 
-            DebugConsole.NewMessage($"[SubEditor] Session started by {host.Name} (session={host.SessionId}), hostSessionId set to {subEditorSession.HostSessionId}", Color.Green);
+            DebugConsole.Log($"[SubEditor] Session started by {host.Name} (session={host.SessionId})");
 
             SendSubEditorClientList();
         }
@@ -459,7 +440,7 @@ namespace Barotrauma.Networking
             // Grant default permissions to new clients
             subEditorSession.SetPermissions(sessionId, SubEditorNetworkingShared.DefaultClientPermissions);
 
-            DebugConsole.NewMessage($"[SubEditor] {client.Name} joined (session={sessionId}, hostSession={subEditorSession.HostSessionId}), defaultPerms={SubEditorNetworkingShared.DefaultClientPermissions}", Color.Green);
+            DebugConsole.Log($"[SubEditor] {client.Name} joined (session={sessionId})");
 
             SendSubEditorClientList();
             
