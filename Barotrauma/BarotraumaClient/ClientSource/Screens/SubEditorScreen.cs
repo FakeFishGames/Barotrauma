@@ -2250,15 +2250,20 @@ namespace Barotrauma
                         Vector2 moveDelta = new Vector2(runtimeX - existingEntity.Rect.X, runtimeY - existingEntity.Rect.Y);
 
                         // Set rect directly — no Move(), no FindHull()
-                        existingEntity.Rect = new Rectangle(runtimeX, runtimeY, xmlRect.Width, xmlRect.Height);
+                        // Only update position (X,Y), keep existing Width/Height.
+                        // Item.Save() writes defaultRect.W/H for non-resizable axes,
+                        // which may differ from actual rect.W/H when Scale != 1.
+                        // Using wrong W/H breaks wire endpoint containment checks
+                        // in MoveConnectedWires and causes endpoint teleportation.
+                        existingEntity.Rect = new Rectangle(runtimeX, runtimeY, existingEntity.Rect.Width, existingEntity.Rect.Height);
 
                         // Update physics body to match new rect center (if item has a body)
                         if (existingItem.body != null)
                         {
                             // Position = center of rect = (rect.X + width/2, rect.Y - height/2)
                             Vector2 newCenter = new Vector2(
-                                runtimeX + xmlRect.Width / 2.0f,
-                                runtimeY - xmlRect.Height / 2.0f);
+                                runtimeX + existingEntity.Rect.Width / 2.0f,
+                                runtimeY - existingEntity.Rect.Height / 2.0f);
                             existingItem.body.SetTransformIgnoreContacts(
                                 FarseerPhysics.ConvertUnits.ToSimUnits(newCenter), existingItem.body.Rotation);
                             // Snap draw position immediately (no interpolation lag)
@@ -2354,9 +2359,19 @@ namespace Barotrauma
                             Rectangle xmlRect = element.GetAttributeRect("rect", Rectangle.Empty);
                             if (xmlRect != Rectangle.Empty)
                             {
-                                existingEntity.Rect = new Rectangle(
-                                    (int)(xmlRect.X + hsp.X), (int)(xmlRect.Y + hsp.Y),
-                                    xmlRect.Width, xmlRect.Height);
+                                int newX = (int)(xmlRect.X + hsp.X);
+                                int newY = (int)(xmlRect.Y + hsp.Y);
+                                // Use Move() instead of setting Rect directly for structures.
+                                // Structure.Rect setter rescales wall sections when W/H changes.
+                                // Structure.Save() writes defaultRect.W/H for non-resizable axes,
+                                // which may differ from rect.W/H when Scale != 1. Setting Rect
+                                // with different W/H corrupts section layout ("4x tiling" bug).
+                                // Move() is safe for structures (no FindHull/body corruption).
+                                Vector2 moveDelta = new Vector2(newX - existingEntity.Rect.X, newY - existingEntity.Rect.Y);
+                                if (moveDelta != Vector2.Zero)
+                                {
+                                    existingEntity.Move(moveDelta);
+                                }
                                 collaborativeEntityPositions[existingEntity.ID] = new Vector2(existingEntity.Rect.X, existingEntity.Rect.Y);
                             }
                         }
