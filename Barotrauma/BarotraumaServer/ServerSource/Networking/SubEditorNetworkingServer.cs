@@ -19,6 +19,7 @@ namespace Barotrauma.Networking
         private int subEditorStoredSubmarineUncompressedLength;
 
         private const double SubEditorResyncCooldown = 0.5;
+        private const byte HostResyncKey = 0;
         private readonly Dictionary<byte, double> subEditorLastResyncTime = new Dictionary<byte, double>();
         private readonly Dictionary<ushort, string> subEditorEntityXml = new Dictionary<ushort, string>();
 
@@ -104,11 +105,11 @@ namespace Barotrauma.Networking
             if (subEditorHost == null) return;
 
             double now = Timing.TotalTime;
-            if (subEditorLastResyncTime.TryGetValue(0, out double lastTime) && now - lastTime < SubEditorResyncCooldown)
+            if (subEditorLastResyncTime.TryGetValue(HostResyncKey, out double lastTime) && now - lastTime < SubEditorResyncCooldown)
             {
                 return;
             }
-            subEditorLastResyncTime[0] = now;
+            subEditorLastResyncTime[HostResyncKey] = now;
 
             IWriteMessage msg = new WriteOnlyMessage();
             msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
