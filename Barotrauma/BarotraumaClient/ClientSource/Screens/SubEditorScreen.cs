@@ -8562,7 +8562,18 @@ namespace Barotrauma
                 SubEditorNetworkingClient.Instance.UpdateCursor(worldPos, (float)deltaTime);
                 
                 UpdateCollaborativeEntityMoves();
-                UpdateCollaborativePropertyChanges();
+                // Only detect property changes when the user is NOT actively moving entities.
+                // Arrow keys call Move() per-frame, and each move can change properties that
+                // UpdateCollaborativePropertyChanges detects and broadcasts. The receiver applies
+                // these as full property updates (no transformSync flag), which can trigger
+                // Scale → UpdateTransform → FindHull → teleportation. We defer property detection
+                // until the movement is complete (arrow key released, drag finished).
+                bool isActivelyMoving = MapEntity.GetNudgeAmount() != Vector2.Zero 
+                    || MapEntity.StartMovingPos != Vector2.Zero;
+                if (!isActivelyMoving)
+                {
+                    UpdateCollaborativePropertyChanges();
+                }
                 
                 if (GameMain.Client?.ChatBox != null)
                 {
