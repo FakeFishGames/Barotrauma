@@ -126,6 +126,7 @@ namespace Barotrauma.Networking
             var perms = GetSenderPermissions(sender);
             if (!perms.HasFlag(SubEditorPermissions.CanEditOwn))
             {
+                DebugConsole.NewMessage($"[SubEditor] EntityPlaced DENIED for {sender.Name} (session={sender.SessionId}, perms={perms})", Color.Red);
                 ResyncClientState(sender);
                 return;
             }
@@ -358,14 +359,23 @@ namespace Barotrauma.Networking
 
         private void HandleSetPermissions(IReadMessage inc, Client sender)
         {
-            if (!isSubEditorSessionActive || subEditorSession == null) return;
-            if (sender != subEditorHost) return;
+            if (!isSubEditorSessionActive || subEditorSession == null)
+            {
+                DebugConsole.NewMessage($"[SubEditor] SetPermissions REJECTED: session not active", Color.Red);
+                return;
+            }
+            if (sender != subEditorHost)
+            {
+                DebugConsole.NewMessage($"[SubEditor] SetPermissions REJECTED: {sender.Name} (session={sender.SessionId}) is not the host (host={subEditorHost?.Name}, session={subEditorHost?.SessionId})", Color.Red);
+                return;
+            }
 
             byte targetSessionId = inc.ReadByte();
             uint permBits = inc.ReadUInt32();
             var permissions = (SubEditorPermissions)permBits;
 
             subEditorSession.SetPermissions(targetSessionId, permissions);
+            DebugConsole.NewMessage($"[SubEditor] Permissions SET: target={targetSessionId}, perms={permissions} (bits={permBits}). Broadcasting to {connectedClients.Count} clients.", Color.Yellow);
 
             foreach (var client in connectedClients)
             {

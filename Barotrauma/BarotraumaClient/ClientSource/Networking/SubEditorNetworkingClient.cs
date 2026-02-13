@@ -277,12 +277,15 @@ namespace Barotrauma.Networking
             HostSessionId = hostSessionId;
             IsHost = (localSessionId == hostSessionId);
 
+            DebugConsole.NewMessage($"[SubEditor] ClientList received: {users.Count} users, hostSession={hostSessionId}, mySession={localSessionId}, IsHost={IsHost}", Color.Cyan);
+
             // Apply default permissions for all non-host users if not already set
             foreach (var user in users)
             {
                 if (user.SessionId != hostSessionId && !UserPermissions.ContainsKey(user.SessionId))
                 {
                     SetPermissions(user.SessionId, DefaultClientPermissions);
+                    DebugConsole.NewMessage($"[SubEditor] Default perms for {user.Name} (session={user.SessionId}): {DefaultClientPermissions}", Color.Cyan);
                 }
             }
             
@@ -365,7 +368,11 @@ namespace Barotrauma.Networking
         public void NotifyEntityPlaced(string entityXml)
         {
             if (!IsActive) return;
-            if (!HasLocalPermission(SubEditorPermissions.CanEditOwn)) return;
+            if (!HasLocalPermission(SubEditorPermissions.CanEditOwn))
+            {
+                DebugConsole.NewMessage($"[SubEditor] EntityPlaced BLOCKED locally: perms={GetPermissions(localSessionId)}, session={localSessionId}, hostSession={HostSessionId}", Color.Red);
+                return;
+            }
             if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
 
             IWriteMessage msg = new WriteOnlyMessage();
@@ -469,10 +476,15 @@ namespace Barotrauma.Networking
 
         public void SendPermissionUpdate(byte targetSessionId, SubEditorPermissions permissions)
         {
-            if (!IsActive || !IsHost) return;
+            if (!IsActive || !IsHost)
+            {
+                DebugConsole.NewMessage($"[SubEditor] SendPermissionUpdate BLOCKED: IsActive={IsActive}, IsHost={IsHost}", Color.Red);
+                return;
+            }
             if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
 
             SetPermissions(targetSessionId, permissions);
+            DebugConsole.NewMessage($"[SubEditor] SendPermissionUpdate: target={targetSessionId}, perms={permissions} (bits={(uint)permissions}), mySession={localSessionId}", Color.Yellow);
 
             IWriteMessage msg = new WriteOnlyMessage();
             msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
@@ -485,9 +497,10 @@ namespace Barotrauma.Networking
         public void ReceivePermissionUpdate(byte targetSessionId, SubEditorPermissions permissions)
         {
             SetPermissions(targetSessionId, permissions);
+            DebugConsole.NewMessage($"[SubEditor] ReceivePermissionUpdate: target={targetSessionId}, perms={permissions}, mySession={localSessionId}", Color.Cyan);
             if (targetSessionId == localSessionId)
             {
-                DebugConsole.NewMessage($"[SubEditor] Your permissions changed to: {permissions}", Color.Yellow);
+                DebugConsole.NewMessage($"[SubEditor] YOUR permissions changed to: {permissions}", Color.Yellow);
             }
         }
 
