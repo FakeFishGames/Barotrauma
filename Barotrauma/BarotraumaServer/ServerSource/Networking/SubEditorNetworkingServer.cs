@@ -19,6 +19,7 @@ namespace Barotrauma.Networking
         private int subEditorStoredSubmarineUncompressedLength;
 
         private const double SubEditorResyncCooldown = 0.5;
+        private const byte ServerCorrectionSessionId = 0;
         private readonly Dictionary<byte, double> subEditorLastResyncTime = new Dictionary<byte, double>();
         private readonly Dictionary<ushort, string> subEditorEntityXml = new Dictionary<ushort, string>();
 
@@ -128,7 +129,6 @@ namespace Barotrauma.Networking
             if (!perms.HasFlag(SubEditorPermissions.CanEditOwn))
             {
                 DebugConsole.NewMessage($"[SubEditor] EntityPlaced DENIED for {sender.Name} (session={sender.SessionId}, perms={perms})", Color.Red);
-                // Send targeted removal back to the denied client to remove the ghost entity
                 try
                 {
                     var xElement = XElement.Parse(entityXml);
@@ -138,12 +138,15 @@ namespace Barotrauma.Networking
                         IWriteMessage denyMsg = new WriteOnlyMessage();
                         denyMsg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
                         denyMsg.WriteByte((byte)SubEditorPacketHeader.EntityRemoved);
-                        denyMsg.WriteByte(0); // session 0 = server correction, bypasses self-skip on client
+                        denyMsg.WriteByte(ServerCorrectionSessionId);
                         denyMsg.WriteUInt16((ushort)id);
                         serverPeer.Send(denyMsg, sender.Connection, DeliveryMethod.Reliable);
                     }
                 }
-                catch { }
+                catch (Exception e)
+                {
+                    DebugConsole.AddWarning($"[SubEditor] Failed to parse denied entity XML: {e.Message}");
+                }
                 return;
             }
 
@@ -160,7 +163,10 @@ namespace Barotrauma.Networking
                         subEditorEntityXml[(ushort)id] = entityXml;
                     }
                 }
-                catch { }
+                catch (Exception e)
+                {
+                    DebugConsole.AddWarning($"[SubEditor] Failed to parse entity XML for ownership: {e.Message}");
+                }
             }
 
             foreach (var client in connectedClients.Where(c => c != sender))
@@ -189,7 +195,7 @@ namespace Barotrauma.Networking
                         IWriteMessage denyMsg = new WriteOnlyMessage();
                         denyMsg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
                         denyMsg.WriteByte((byte)SubEditorPacketHeader.EntityPlaced);
-                        denyMsg.WriteByte(0); // session 0 = server correction
+                        denyMsg.WriteByte(ServerCorrectionSessionId);
                         denyMsg.WriteString(storedXml);
                         serverPeer.Send(denyMsg, sender.Connection, DeliveryMethod.Reliable);
                     }
