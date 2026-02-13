@@ -2296,8 +2296,12 @@ namespace Barotrauma
                     // FindHull → Submarine null → body/rect corruption → teleportation.
                     if (isTransformSync || isWireSync)
                     {
-                        // For wire sync, apply wire-specific data (nodes and connections)
-                        if (isWireSync)
+                        // For wire sync OR if this is a wire item being transform-synced,
+                        // apply wire-specific data (nodes and connections).
+                        // Wire nodes need updating during transform sync because when
+                        // "select all + move all", Wire.Move() moves all nodes locally
+                        // and the new node positions are in the XML.
+                        if (isWireSync || existingItem.GetComponent<Items.Components.Wire>() != null)
                         {
                             ApplyWireSyncData(existingItem, element, senderSessionId);
                         }
@@ -2328,14 +2332,33 @@ namespace Barotrauma
                     // Non-items: for transform sync, just update rect from XML
                     if (isTransformSync)
                     {
-                        Rectangle xmlRect = element.GetAttributeRect("rect", Rectangle.Empty);
-                        if (xmlRect != Rectangle.Empty)
+                        Vector2 hsp = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
+                        
+                        // WayPoints use x/y attributes (not rect)
+                        if (existingEntity is WayPoint)
                         {
-                            Vector2 hsp = Submarine.MainSub?.HiddenSubPosition ?? Vector2.Zero;
-                            existingEntity.Rect = new Rectangle(
-                                (int)(xmlRect.X + hsp.X), (int)(xmlRect.Y + hsp.Y),
-                                xmlRect.Width, xmlRect.Height);
-                            collaborativeEntityPositions[existingEntity.ID] = new Vector2(existingEntity.Rect.X, existingEntity.Rect.Y);
+                            string xAttr = element.GetAttributeString("x", null);
+                            string yAttr = element.GetAttributeString("y", null);
+                            if (xAttr != null && yAttr != null &&
+                                int.TryParse(xAttr, out int wx) && int.TryParse(yAttr, out int wy))
+                            {
+                                existingEntity.Rect = new Rectangle(
+                                    (int)(wx + hsp.X), (int)(wy + hsp.Y),
+                                    existingEntity.Rect.Width, existingEntity.Rect.Height);
+                                collaborativeEntityPositions[existingEntity.ID] = new Vector2(existingEntity.Rect.X, existingEntity.Rect.Y);
+                            }
+                        }
+                        else
+                        {
+                            // Other non-items (structures, hulls, gaps) use rect attribute
+                            Rectangle xmlRect = element.GetAttributeRect("rect", Rectangle.Empty);
+                            if (xmlRect != Rectangle.Empty)
+                            {
+                                existingEntity.Rect = new Rectangle(
+                                    (int)(xmlRect.X + hsp.X), (int)(xmlRect.Y + hsp.Y),
+                                    xmlRect.Width, xmlRect.Height);
+                                collaborativeEntityPositions[existingEntity.ID] = new Vector2(existingEntity.Rect.X, existingEntity.Rect.Y);
+                            }
                         }
                         return;
                     }
@@ -7935,54 +7958,19 @@ namespace Barotrauma
         
         private void UpdateCollaborativeEntityMoves()
         {
+            // Per-frame sync is DISABLED. Position sync only happens on mouse/key release
+            // via SendCollaborativeTransformUpdate (called from StoreCommand/TransformCommand).
+            // This prevents rapid arrow key presses from flooding the client with messages
+            // that cause tiling, box size changes, and ordering issues.
+            // We still track positions so SendCollaborativeTransformUpdate can update correctly.
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
             if (MainSub == null) return;
-            
             if (MapEntity.SelectedList.Count == 0) return;
             
             foreach (var entity in MapEntity.SelectedList)
             {
                 if (entity == null || entity.Removed) continue;
-                // NOTE: Do NOT filter by entity.Submarine here. After Item.Move() → FindHull(),
-                // items with physics bodies can have Submarine set to null, causing them to be
-                // silently skipped (no movement sync sent).
-                
-                // Skip wire items — their position is determined by nodes, not rect.
-                if (entity is Item wireCheck && wireCheck.GetComponent<Items.Components.Wire>() != null) continue;
-                
-                ushort entityId = entity.ID;
-                float currentX = entity.Rect.X;
-                float currentY = entity.Rect.Y;
-                
-                if (collaborativeEntityPositions.TryGetValue(entityId, out Vector2 lastPos))
-                {
-                    float dx = currentX - lastPos.X;
-                    float dy = currentY - lastPos.Y;
-                    if (dx * dx + dy * dy > 1f)
-                    {
-                        if (entity is Item)
-                        {
-                            // Items: send full XML with design-time rect (immutable sync)
-                            try
-                            {
-                                var element = SaveEntityForSync(entity);
-                                element.SetAttributeValue("transformSync", "true");
-                                SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entityId, element.ToString());
-                            }
-                            catch { }
-                        }
-                        else
-                        {
-                            // Non-items: send deltas
-                            SubEditorNetworkingClient.Instance.NotifyEntityMoved(entityId, dx, dy);
-                        }
-                        collaborativeEntityPositions[entityId] = new Vector2(currentX, currentY);
-                    }
-                }
-                else
-                {
-                    collaborativeEntityPositions[entityId] = new Vector2(currentX, currentY);
-                }
+                collaborativeEntityPositions[entity.ID] = new Vector2(entity.Rect.X, entity.Rect.Y);
             }
         }
 
