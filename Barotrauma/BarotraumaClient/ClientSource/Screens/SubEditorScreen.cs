@@ -298,6 +298,9 @@ namespace Barotrauma
         private GUIFrame collaborativeUsersPanel;
         private GUIListBox collaborativeUsersList;
         private GUIButton collaborativeToggleButton;
+        private GUIFrame serverLogPanel;
+        private GUIListBox serverLogList;
+        private GUIButton serverLogToggleButton;
         
         // Collaborative editing state
         private SubmarineInfo collaborativeEditingSubInfo;
@@ -2912,6 +2915,56 @@ namespace Barotrauma
                     return true;
                 }
             };
+
+            // Server activity log panel (below editors panel)
+            int logTopOffset = TopPanel.Rect.Height + (int)(5 * GUI.Scale) + collaborativeToggleButton.Rect.Height + (int)(2 * GUI.Scale) + (int)(collaborativeUsersPanel.RectTransform.MinSize.Y * 1.05f);
+            
+            serverLogToggleButton = new GUIButton(new RectTransform(new Vector2(0.06f, 0.025f), GUI.Canvas, Anchor.TopRight)
+            {
+                MinSize = new Point((int)(80 * GUI.Scale), (int)(20 * GUI.Scale)),
+                AbsoluteOffset = new Point((int)(10 * GUI.Scale), logTopOffset)
+            }, "Activity Log ▼", style: "GUIButtonSmall")
+            {
+                Visible = false,
+                OnClicked = (btn, userData) =>
+                {
+                    if (serverLogPanel != null)
+                    {
+                        serverLogPanel.Visible = !serverLogPanel.Visible;
+                        btn.Text = serverLogPanel.Visible ? "Activity Log ▲" : "Activity Log ▼";
+                    }
+                    return true;
+                }
+            };
+
+            serverLogPanel = new GUIFrame(new RectTransform(new Vector2(0.15f, 0.35f), GUI.Canvas, Anchor.TopRight)
+            {
+                MinSize = new Point((int)(180 * GUI.Scale), (int)(150 * GUI.Scale)),
+                AbsoluteOffset = new Point((int)(10 * GUI.Scale), logTopOffset + serverLogToggleButton.Rect.Height + (int)(2 * GUI.Scale))
+            }, "InnerFrame")
+            {
+                Visible = false
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), serverLogPanel.RectTransform, Anchor.TopCenter),
+                "Activity Log", font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center);
+
+            serverLogList = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.78f), serverLogPanel.RectTransform, Anchor.Center)
+            {
+                RelativeOffset = new Vector2(0, -0.03f)
+            });
+
+            new GUIButton(new RectTransform(new Vector2(0.8f, 0.08f), serverLogPanel.RectTransform, Anchor.BottomCenter)
+            {
+                RelativeOffset = new Vector2(0, 0.01f)
+            }, "Clear History", style: "GUIButtonSmall")
+            {
+                OnClicked = (btn, _) =>
+                {
+                    ClearPersistentUndoHistory();
+                    return true;
+                }
+            };
         }
 
         /// <summary>
@@ -2924,16 +2977,18 @@ namespace Barotrauma
 
             if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
 
+            bool isHost = SubEditorNetworkingClient.Instance.IsHost;
+
             foreach (var kvp in SubEditorNetworkingClient.Instance.ConnectedEditors)
             {
                 var user = kvp.Value;
-                var userFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), collaborativeUsersList.Content.RectTransform), style: null)
+                var userFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, isHost ? 0.25f : 0.2f), collaborativeUsersList.Content.RectTransform), style: null)
                 {
                     UserData = user
                 };
 
                 // Color indicator
-                new GUIFrame(new RectTransform(new Vector2(0.1f, 0.8f), userFrame.RectTransform, Anchor.CenterLeft)
+                new GUIFrame(new RectTransform(new Vector2(0.08f, 0.6f), userFrame.RectTransform, Anchor.CenterLeft)
                 {
                     RelativeOffset = new Vector2(0.02f, 0)
                 }, style: null)
@@ -2945,8 +3000,46 @@ namespace Barotrauma
                 // Username
                 var isLocal = user.SessionId == SubEditorNetworkingClient.Instance.LocalSessionId;
                 var displayName = isLocal ? $"{user.Name} (You)" : user.Name;
-                new GUITextBlock(new RectTransform(new Vector2(0.85f, 1.0f), userFrame.RectTransform, Anchor.CenterRight),
-                    displayName, font: GUIStyle.SmallFont);
+
+                float nameWidth = isHost && !isLocal ? 0.55f : 0.85f;
+                new GUITextBlock(new RectTransform(new Vector2(nameWidth, 1.0f), userFrame.RectTransform, Anchor.CenterLeft)
+                {
+                    RelativeOffset = new Vector2(0.12f, 0)
+                }, displayName, font: GUIStyle.SmallFont);
+
+                // Kick/Ban buttons for host (not for self)
+                if (isHost && !isLocal)
+                {
+                    byte targetSessionId = user.SessionId;
+                    
+                    var kickBtn = new GUIButton(new RectTransform(new Vector2(0.15f, 0.7f), userFrame.RectTransform, Anchor.CenterRight)
+                    {
+                        RelativeOffset = new Vector2(0.17f, 0)
+                    }, TextManager.Get("Kick").Fallback("Kick"), style: "GUIButtonSmall")
+                    {
+                        ToolTip = TextManager.Get("KickPlayer").Fallback("Kick this player"),
+                        OnClicked = (btn, _) =>
+                        {
+                            GameMain.Client?.KickPlayer(user.Name, "Kicked by host");
+                            return true;
+                        }
+                    };
+                    kickBtn.TextBlock.AutoScaleHorizontal = true;
+
+                    var banBtn = new GUIButton(new RectTransform(new Vector2(0.15f, 0.7f), userFrame.RectTransform, Anchor.CenterRight)
+                    {
+                        RelativeOffset = new Vector2(0.01f, 0)
+                    }, TextManager.Get("Ban").Fallback("Ban"), style: "GUIButtonSmall")
+                    {
+                        ToolTip = TextManager.Get("BanPlayer").Fallback("Ban this player"),
+                        OnClicked = (btn, _) =>
+                        {
+                            GameMain.Client?.BanPlayer(user.Name, "Banned by host");
+                            return true;
+                        }
+                    };
+                    banBtn.TextBlock.AutoScaleHorizontal = true;
+                }
             }
 
             // Update toggle button text to show user count
@@ -2957,6 +3050,158 @@ namespace Barotrauma
                 collaborativeToggleButton.Text = $"Editors ({userCount}) {arrow}";
                 collaborativeToggleButton.Visible = SubEditorNetworkingClient.Instance.IsActive;
             }
+
+            // Update server log toggle visibility
+            if (serverLogToggleButton != null)
+            {
+                serverLogToggleButton.Visible = SubEditorNetworkingClient.Instance?.IsActive == true;
+            }
+        }
+
+        /// <summary>
+        /// Add an entry to the server activity log.
+        /// Called whenever a command is stored in collaborative mode.
+        /// </summary>
+        private void AddServerLogEntry(Command command)
+        {
+            if (serverLogList == null) return;
+            if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
+
+            string authorName = "Unknown";
+            Color authorColor = Color.White;
+            if (!string.IsNullOrEmpty(command.AuthorSessionId))
+            {
+                var user = SubEditorNetworkingClient.Instance.GetUserBySessionId(command.AuthorSessionId);
+                if (user != null)
+                {
+                    authorName = user.Value.Name;
+                    authorColor = user.Value.GetColor();
+                }
+            }
+
+            string timestamp = DateTime.Now.ToString("HH:mm:ss");
+            string logText = $"[{timestamp}] {authorName}: {command.GetDescription().Value}";
+
+            var entry = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverLogList.Content.RectTransform) { MinSize = new Point(0, 18) },
+                ToolBox.LimitString(logText, GUIStyle.SmallFont, serverLogList.Content.Rect.Width),
+                font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft)
+            {
+                TextColor = authorColor,
+                ToolTip = logText,
+                CanBeFocused = false
+            };
+
+            // Auto-scroll to newest
+            serverLogList.ScrollBar.BarScrollValue = 1.0f;
+        }
+
+        /// <summary>
+        /// Save the undo history to a file alongside the .sub file.
+        /// Format: one line per command — "[timestamp] [author] description"
+        /// </summary>
+        private void SavePersistentUndoHistory(string subFilePath)
+        {
+            try
+            {
+                string historyPath = System.IO.Path.ChangeExtension(subFilePath, ".undohistory");
+                var lines = new List<string>();
+
+                // Load existing history if it exists (append new commands)
+                int existingCount = 0;
+                if (File.Exists(historyPath))
+                {
+                    var existing = File.ReadAllLines(historyPath);
+                    lines.AddRange(existing);
+                    existingCount = existing.Length;
+                }
+
+                // Add new commands that haven't been saved yet
+                int limit = Math.Min(commandIndex, Commands.Count);
+                for (int i = existingCount; i < limit; i++)
+                {
+                    Command cmd = Commands[i];
+                    string author = cmd.AuthorSessionId ?? "local";
+                    string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    string desc = cmd.GetDescription()?.Value ?? "unknown action";
+                    lines.Add($"[{timestamp}] [{author}] {desc}");
+                }
+
+                File.WriteAllLines(historyPath, lines);
+                DebugConsole.Log($"[SubEditor] Saved undo history ({lines.Count} entries) to {historyPath}");
+            }
+            catch (Exception e)
+            {
+                DebugConsole.AddWarning($"[SubEditor] Failed to save undo history: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Load persisted undo history from the history file and display in the server log.
+        /// Called when opening a submarine file.
+        /// </summary>
+        private void LoadPersistentUndoHistory(string subFilePath)
+        {
+            if (serverLogList == null) return;
+
+            try
+            {
+                string historyPath = System.IO.Path.ChangeExtension(subFilePath, ".undohistory");
+                if (!File.Exists(historyPath)) return;
+
+                var lines = File.ReadAllLines(historyPath);
+                foreach (string line in lines)
+                {
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+
+                    var entry = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverLogList.Content.RectTransform) { MinSize = new Point(0, 18) },
+                        ToolBox.LimitString(line, GUIStyle.SmallFont, serverLogList.Content.Rect.Width),
+                        font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft)
+                    {
+                        TextColor = Color.Gray,
+                        ToolTip = line,
+                        CanBeFocused = false
+                    };
+                }
+
+                DebugConsole.Log($"[SubEditor] Loaded undo history ({lines.Length} entries) from {historyPath}");
+            }
+            catch (Exception e)
+            {
+                DebugConsole.AddWarning($"[SubEditor] Failed to load undo history: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Clear the persistent undo history for the current submarine.
+        /// </summary>
+        public void ClearPersistentUndoHistory()
+        {
+            if (MainSub?.Info?.FilePath == null) return;
+
+            string historyPath = System.IO.Path.ChangeExtension(MainSub.Info.FilePath, ".undohistory");
+            if (!File.Exists(historyPath)) return;
+
+            var confirmBox = new GUIMessageBox(
+                TextManager.Get("Warning").Fallback("Warning"),
+                "Are you sure you want to clear the entire undo history for this submarine? This cannot be undone.",
+                new[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
+            confirmBox.Buttons[0].OnClicked = (_, _) =>
+            {
+                try
+                {
+                    File.Delete(historyPath);
+                    serverLogList?.Content.ClearChildren();
+                    DebugConsole.Log($"[SubEditor] Cleared undo history: {historyPath}");
+                    GUI.AddMessage("Undo history cleared.", GUIStyle.Green);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.AddWarning($"[SubEditor] Failed to clear undo history: {e.Message}");
+                }
+                confirmBox.Close();
+                return true;
+            };
+            confirmBox.Buttons[1].OnClicked = confirmBox.Close;
         }
 
         #endregion Collaborative Editing
@@ -3992,6 +4237,9 @@ namespace Barotrauma
                     MainSub.CheckForErrors();
 
                     GUI.AddMessage(TextManager.GetWithVariable("SubSavedNotification", "[filepath]", savePath), GUIStyle.Green);
+
+                    // Save persistent undo history alongside the .sub file
+                    SavePersistentUndoHistory(savePath);
 
                     if (savePath.StartsWith(newLocalModDir))
                     {
@@ -5876,6 +6124,11 @@ namespace Barotrauma
             {
                 ClearUndoBuffer();
             }
+            // Load persistent undo history when opening a submarine
+            if (info?.FilePath != null)
+            {
+                LoadPersistentUndoHistory(info.FilePath);
+            }
             CreateDummyCharacter();
 
             // After sub loading, Item.Move(HSP) → FindHull() sets Submarine=null
@@ -7638,6 +7891,9 @@ namespace Barotrauma
             {
                 GameMain.SubEditorScreen.SendCollaborativeTransformToolUpdate(transformToolCommand);
             }
+
+            // Add to server activity log
+            GameMain.SubEditorScreen?.AddServerLogEntry(command);
         }
 
         private string prevSelectedLayer;
@@ -7656,9 +7912,40 @@ namespace Barotrauma
                 var layerElement = layerList.Content.FindChild(selectedLayer);
                 layerElement?.Flash(GUIStyle.Green);
             }
-            
+
+            // Track entity ownership for blame/permissions
+            if (SubEditorNetworkingClient.Instance?.IsActive == true && !isApplyingRemoteChange)
+            {
+                string accountId = GetLocalAccountId();
+                foreach (var entity in entities)
+                {
+                    if (wasDeleted)
+                    {
+                        SubEditorNetworkingClient.Instance.RemoveEntityOwnership(entity.ID);
+                    }
+                    else
+                    {
+                        SubEditorNetworkingClient.Instance.SetEntityOwner(entity.ID, accountId);
+                    }
+                }
+            }
+
             // Send network notifications for collaborative editing
             SendCollaborativeEntityChanges(entities, wasDeleted);
+        }
+
+        /// <summary>
+        /// Get the local player's account identifier for ownership tracking.
+        /// Uses Steam/EOS account ID when available, falls back to player name.
+        /// </summary>
+        private static string GetLocalAccountId()
+        {
+            // Try to get a persistent account ID
+            var accountId = GameMain.Client?.SessionId.ToString();
+            if (!string.IsNullOrEmpty(accountId)) return accountId;
+            
+            // Fallback to player name (less reliable but better than nothing)
+            return MultiplayerPreferences.Instance?.PlayerName?.FallbackNullOrEmpty("local") ?? "local";
         }
 
         private void SendCollaborativeEntityChanges(IEnumerable<MapEntity> entities, bool wasDeleted)

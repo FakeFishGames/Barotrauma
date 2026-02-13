@@ -266,6 +266,109 @@ namespace Barotrauma.Networking
         }
 
         /// <summary>
+        /// Maps entity IDs to the AccountId of the player who placed them (for ownership/blame).
+        /// Uses AccountId (not username) because usernames can change.
+        /// </summary>
+        public Dictionary<UInt16, string> EntityOwnership { get; } = new Dictionary<UInt16, string>();
+
+        /// <summary>
+        /// Maps session IDs to their SubEditor-specific permissions.
+        /// Host always has all permissions.
+        /// </summary>
+        public Dictionary<byte, SubEditorPermissions> UserPermissions { get; } = new Dictionary<byte, SubEditorPermissions>();
+
+        /// <summary>
+        /// The mass edit threshold — how many entities must be affected for an action to count as "mass edit."
+        /// </summary>
+        public int MassEditThreshold { get; set; } = 20;
+
+        /// <summary>
+        /// Set entity ownership. Associates an entity ID with a player's account identifier.
+        /// </summary>
+        public void SetEntityOwner(UInt16 entityId, string accountId)
+        {
+            if (!string.IsNullOrEmpty(accountId))
+            {
+                EntityOwnership[entityId] = accountId;
+            }
+        }
+
+        /// <summary>
+        /// Get the account ID of the player who owns an entity.
+        /// </summary>
+        public string GetEntityOwner(UInt16 entityId)
+        {
+            return EntityOwnership.TryGetValue(entityId, out string owner) ? owner : null;
+        }
+
+        /// <summary>
+        /// Remove ownership tracking for an entity (e.g., when deleted).
+        /// </summary>
+        public void RemoveEntityOwnership(UInt16 entityId)
+        {
+            EntityOwnership.Remove(entityId);
+        }
+
+        /// <summary>
+        /// Get the permissions for a user. Host always has all permissions.
+        /// </summary>
+        public SubEditorPermissions GetPermissions(byte sessionId)
+        {
+            if (ConnectedEditors.TryGetValue(sessionId, out _) && sessionId == 0)
+            {
+                return SubEditorPermissions.All; // Host always has all permissions
+            }
+            return UserPermissions.TryGetValue(sessionId, out var perms) ? perms : SubEditorPermissions.None;
+        }
+
+        /// <summary>
+        /// Set permissions for a user.
+        /// </summary>
+        public void SetPermissions(byte sessionId, SubEditorPermissions permissions)
+        {
+            UserPermissions[sessionId] = permissions;
+        }
+
+        /// <summary>
+        /// Check if a user can perform an action on an entity, considering ownership and permissions.
+        /// </summary>
+        public bool CanUserEditEntity(byte sessionId, UInt16 entityId, string userAccountId)
+        {
+            var perms = GetPermissions(sessionId);
+            string owner = GetEntityOwner(entityId);
+            
+            // No owner means anyone with edit permission can edit
+            if (string.IsNullOrEmpty(owner) || owner == userAccountId)
+            {
+                return perms.HasFlag(SubEditorPermissions.CanEditOwn);
+            }
+            return perms.HasFlag(SubEditorPermissions.CanEditOthers);
+        }
+
+        /// <summary>
+        /// Check if a user can delete an entity, considering ownership and permissions.
+        /// </summary>
+        public bool CanUserDeleteEntity(byte sessionId, UInt16 entityId, string userAccountId)
+        {
+            var perms = GetPermissions(sessionId);
+            string owner = GetEntityOwner(entityId);
+            
+            if (string.IsNullOrEmpty(owner) || owner == userAccountId)
+            {
+                return perms.HasFlag(SubEditorPermissions.CanDeleteOwn);
+            }
+            return perms.HasFlag(SubEditorPermissions.CanDeleteOthers);
+        }
+
+        /// <summary>
+        /// Check if an action counts as a mass edit based on the number of affected entities.
+        /// </summary>
+        public bool IsMassEdit(int entityCount)
+        {
+            return entityCount >= MassEditThreshold;
+        }
+
+        /// <summary>
         /// Clear all session data.
         /// </summary>
         public virtual void Clear()
@@ -273,8 +376,40 @@ namespace Barotrauma.Networking
             ConnectedEditors.Clear();
             EntityLocks.Clear();
             CursorPositions.Clear();
+            EntityOwnership.Clear();
+            UserPermissions.Clear();
             IsActive = false;
             IsHost = false;
         }
+    }
+
+    /// <summary>
+    /// Permissions specific to the collaborative SubEditor.
+    /// These are separate from the standard ClientPermissions enum.
+    /// </summary>
+    [Flags]
+    public enum SubEditorPermissions : uint
+    {
+        None = 0x0,
+        /// <summary>Can add wires to own objects, edit/delete own wires</summary>
+        CanWireOwnInEditor = 0x1,
+        /// <summary>Can edit other players' wires and wire other players' devices</summary>
+        CanWireOthersInEditor = 0x2,
+        /// <summary>Can place and edit own objects</summary>
+        CanEditOwn = 0x4,
+        /// <summary>Can delete own objects</summary>
+        CanDeleteOwn = 0x8,
+        /// <summary>Can edit other players' objects</summary>
+        CanEditOthers = 0x10,
+        /// <summary>Can delete other players' objects</summary>
+        CanDeleteOthers = 0x20,
+        /// <summary>Can assign permissions, view/edit others' undo lists</summary>
+        CanManageOthers = 0x40,
+        /// <summary>Can undo own actions</summary>
+        CanUndoSelf = 0x80,
+        /// <summary>Can perform mass edits (select-all + delete, etc.)</summary>
+        CanMassEdit = 0x100,
+        /// <summary>All permissions</summary>
+        All = 0x1FF
     }
 }
