@@ -306,6 +306,9 @@ namespace Barotrauma
         private Dictionary<ushort, Dictionary<string, string>> collaborativePropertySnapshots = new Dictionary<ushort, Dictionary<string, string>>();
         /// <summary>Track entity flip states for Ctrl+M/Ctrl+N sync.</summary>
         private Dictionary<ushort, (bool flipX, bool flipY)> collaborativeFlipStates = new Dictionary<ushort, (bool, bool)>();
+        /// <summary>Timer to throttle property change detection (avoid per-frame overhead with many selected entities).</summary>
+        private float collaborativePropertyCheckTimer;
+        private const float CollaborativePropertyCheckInterval = 0.5f;
         /// <summary>Owner key used to authenticate host with the SubEditor server.</summary>
         private int collaborativeOwnerKey;
         /// <summary>Password used for the hosted SubEditor server (so host auto-authenticates).</summary>
@@ -8690,12 +8693,24 @@ namespace Barotrauma
                 // these as full property updates (no transformSync flag), which can trigger
                 // Scale → UpdateTransform → FindHull → teleportation. We defer property detection
                 // until the movement is complete (arrow key released, drag finished).
+                // Also throttle to avoid per-frame overhead when many entities are selected
+                // (each entity's serializable properties + component properties are checked).
                 bool isActivelyMoving = MapEntity.GetNudgeAmount() != Vector2.Zero 
                     || MapEntity.StartMovingPos != Vector2.Zero
                     || (transformWidget != null && transformWidget.IsSelected);
                 if (!isActivelyMoving)
                 {
-                    UpdateCollaborativePropertyChanges();
+                    collaborativePropertyCheckTimer -= (float)deltaTime;
+                    if (collaborativePropertyCheckTimer <= 0f)
+                    {
+                        collaborativePropertyCheckTimer = CollaborativePropertyCheckInterval;
+                        UpdateCollaborativePropertyChanges();
+                    }
+                }
+                else
+                {
+                    // Reset timer so property check runs immediately after movement ends
+                    collaborativePropertyCheckTimer = 0f;
                 }
                 
                 if (GameMain.Client?.ChatBox != null)

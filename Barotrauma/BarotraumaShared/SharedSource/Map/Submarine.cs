@@ -2118,7 +2118,7 @@ namespace Barotrauma
                 foreach (Submarine sub in _loaded)
                 {
                     sub.Remove();
-                    if (sub.Info.LazyLoad)
+                    if (sub.Info?.LazyLoad == true)
                     {
                         sub.Info.UnloadSubmarineElement();
                     }
@@ -2128,7 +2128,7 @@ namespace Barotrauma
 
                 visibleEntities = null;
 
-                if (GameMain.GameScreen.Cam != null) { GameMain.GameScreen.Cam.TargetPos = Vector2.Zero; }
+                if (GameMain.GameScreen?.Cam != null) { GameMain.GameScreen.Cam.TargetPos = Vector2.Zero; }
 
                 RemoveAll();
 
