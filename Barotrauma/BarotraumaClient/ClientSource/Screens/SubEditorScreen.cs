@@ -625,7 +625,7 @@ namespace Barotrauma
             // Right-aligned toolbar group (sibling of paddedTopPanel, both children of TopPanel)
             // Children added in reverse visual order because childAnchor:CenterRight lays out right-to-left
             // Visual order: Host | Join | AddSub || Edit | Wiring || Waypoints || Rotate | Scale
-            var rightToolbar = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), TopPanel.RectTransform, Anchor.CenterRight),
+            var rightToolbar = new GUILayoutGroup(new RectTransform(new Vector2(0.65f, 0.8f), TopPanel.RectTransform, Anchor.CenterRight),
                 isHorizontal: true, childAnchor: Anchor.CenterRight)
             {
                 RelativeSpacing = 0.005f
