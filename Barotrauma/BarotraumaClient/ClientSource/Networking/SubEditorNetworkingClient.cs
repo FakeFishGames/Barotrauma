@@ -479,6 +479,10 @@ namespace Barotrauma.Networking
         public void ReceivePermissionUpdate(byte targetSessionId, SubEditorPermissions permissions)
         {
             DebugConsole.NewMessage($"[SubEditor] ReceivePermissionUpdate: target={targetSessionId}, perms={permissions}", Color.Cyan);
+            if (targetSessionId == localSessionId)
+            {
+                DebugConsole.NewMessage($"[SubEditor] YOUR permissions changed to: {permissions}", Color.Yellow);
+            }
             SetPermissions(targetSessionId, permissions);
         }
 

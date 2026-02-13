@@ -102,16 +102,22 @@ namespace Barotrauma.Networking
 
         private void ResyncClientState(Client sender)
         {
-            if (subEditorStoredSubmarineCompressed == null || subEditorStoredSubmarineCompressed.Length == 0) return;
+            if (subEditorStoredSubmarineCompressed == null || subEditorStoredSubmarineCompressed.Length == 0)
+            {
+                DebugConsole.NewMessage($"[SubEditor] ResyncClientState({sender.Name}): NO stored submarine data to send!", Color.Red);
+                return;
+            }
 
             byte sessionId = (byte)sender.SessionId;
             double now = Timing.TotalTime;
             if (subEditorLastResyncTime.TryGetValue(sessionId, out double lastTime) && now - lastTime < SubEditorResyncCooldown)
             {
+                DebugConsole.Log($"[SubEditor] ResyncClientState({sender.Name}): throttled (last={lastTime:F1}, now={now:F1})");
                 return;
             }
             subEditorLastResyncTime[sessionId] = now;
 
+            DebugConsole.NewMessage($"[SubEditor] ResyncClientState({sender.Name}): sending {subEditorStoredSubmarineCompressed.Length} bytes", Color.Yellow);
             IWriteMessage msg = new WriteOnlyMessage();
             msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
             msg.WriteByte((byte)SubEditorPacketHeader.SyncSubmarine);
@@ -365,7 +371,7 @@ namespace Barotrauma.Networking
             if (!isSubEditorSessionActive || subEditorSession == null) return;
             if (sender != subEditorHost)
             {
-                DebugConsole.NewMessage($"[SubEditor] SetPermissions REJECTED: sender {sender.Name} is not host ({subEditorHost?.Name})", Color.Red);
+                DebugConsole.NewMessage($"[SubEditor] SetPermissions REJECTED: sender {sender.Name} (session={sender.SessionId}) is not host {subEditorHost?.Name} (session={subEditorHost?.SessionId})", Color.Red);
                 return;
             }
 
