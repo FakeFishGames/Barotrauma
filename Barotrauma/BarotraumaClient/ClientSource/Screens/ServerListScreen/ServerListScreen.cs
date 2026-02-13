@@ -537,7 +537,7 @@ namespace Barotrauma
             {
                 if (mode.IsSinglePlayer) { continue; }
 
-                // Use a fallback display name for modes whose localization key doesn't exist (e.g. SubEditor)
+                // Fallback display name for modes without localization
                 LocalizedString displayName = mode.Name;
                 if (string.IsNullOrWhiteSpace(displayName.Value))
                 {
@@ -1000,11 +1000,6 @@ namespace Barotrauma
             serverList.UpdateScrollBarSize();
         }
 
-        /// <summary>
-        /// Set game mode filters: uncheck all modes, then check only the specified ones.
-        /// Used by SubEditor's "Join" button to pre-filter for SubEditor mode servers.
-        /// </summary>
-        /// <param name="enabledModes">The game mode identifiers to enable in the filter.</param>
         public void SetGameModeFilter(params Identifier[] enabledModes)
         {
             if (gameModeTickBoxes == null) { return; }

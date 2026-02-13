@@ -48,10 +48,6 @@ namespace Barotrauma
 
         public static Thread MainThread { get; private set; }
 
-        /// <summary>
-        /// When true, the server is running in SubEditor collaborative mode.
-        /// Players connecting will be placed in SubEditor instead of the lobby.
-        /// </summary>
         public static bool IsSubEditorMode { get; internal set; }
 
         //only screens the server implements
@@ -237,8 +233,7 @@ namespace Barotrauma
                         IsSubEditorMode = subEditorMode;
                         if (IsSubEditorMode)
                         {
-                            DebugConsole.NewMessage("[SubEditor] Server starting in collaborative SubEditor mode", Color.Cyan);
-                            // Enable cheats in SubEditor mode - this is expected for editing
+                            DebugConsole.NewMessage("[SubEditor] Starting in collaborative mode", Color.Cyan);
                             DebugConsole.CheatsEnabled = true;
                         }
                         i++;
@@ -261,13 +256,11 @@ namespace Barotrauma
                 ownerKey,
                 ownerEndpoint);
             
-            // Set game mode to "subeditor" BEFORE server registration so browser filters work
             if (IsSubEditorMode)
             {
                 Server.ServerSettings.GameModeIdentifier = "subeditor".ToIdentifier();
             }
 
-            // Register to server list if public is enabled (including SubEditor mode)
             Server.StartServer(registerToServerList: publiclyVisible);
 
             for (int i = 0; i < CommandLineArgs.Length; i++)

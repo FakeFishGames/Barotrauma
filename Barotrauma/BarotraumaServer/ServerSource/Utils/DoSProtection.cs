@@ -47,9 +47,6 @@ namespace Barotrauma
             /// </summary>
             public int PacketCount;
 
-            /// <summary>
-            /// When true, packet counting is paused (e.g. during SubEditor processing).
-            /// </summary>
             public bool SkipPacketCount;
 
             /// <summary>

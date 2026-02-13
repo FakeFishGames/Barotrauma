@@ -379,7 +379,7 @@ namespace Barotrauma.Networking
                 CoroutineManager.StartCoroutine(SendClientPermissionsAfterClientListSynced(newClient, otherClient));
             }
             
-            // If server is in SubEditor mode, tell the client to enter SubEditor
+            // If server is in SubEditor mode, direct the client there
             if (GameMain.IsSubEditorMode)
             {
                 SendSubEditorModeMessage(newClient);
@@ -396,26 +396,22 @@ namespace Barotrauma.Networking
                         }
                     }
                     UpdateClientPermissions(newClient);
-                    DebugConsole.NewMessage($"[SubEditor] {newClient.Name} started as HOST (SessionId: {newClient.SessionId})", Color.Yellow);
+                    DebugConsole.NewMessage($"[SubEditor] {newClient.Name} started as host", Color.Yellow);
                 }
                 else
                 {
                     AddClientToSubEditorSession(newClient);
-                    DebugConsole.NewMessage($"[SubEditor] {newClient.Name} joined as collaborator (SessionId: {newClient.SessionId})", Color.Cyan);
+                    DebugConsole.NewMessage($"[SubEditor] {newClient.Name} joined as collaborator", Color.Cyan);
                 }
             }
         }
         
-        /// <summary>
-        /// Send a message to a client telling them to enter SubEditor mode.
-        /// </summary>
         private void SendSubEditorModeMessage(Client client)
         {
             IWriteMessage msg = new WriteOnlyMessage();
             msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
             msg.WriteByte((byte)SubEditorPacketHeader.EnterSubEditor);
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
-            DebugConsole.Log($"[SubEditor] Sent EnterSubEditor message to {client.Name}");
         }
 
         private void OnClientDisconnect(NetworkConnection connection, PeerDisconnectPacket peerDisconnectPacket)
@@ -1068,9 +1064,7 @@ namespace Barotrauma.Networking
                     SendBackupIndices(inc, connectedClient);
                     break;
                 case ClientPacketHeader.SUBEDITOR:
-                    // Pause DoS protection for SubEditor messages — collaborative editing
-                    // can produce a high volume of small packets (entity moves, property
-                    // changes, wire syncs) when many items are moved at once.
+                    // Pause DoS protection: collaborative editing produces high-volume small packets
                     using (dosProtection.Pause(connectedClient))
                     {
                         ReadSubEditorMessage(inc, connectedClient);
@@ -2606,13 +2600,10 @@ namespace Barotrauma.Networking
             {
                 Log("Starting SubEditor collaborative mode...", ServerLog.MessageType.ServerMessage);
                 GameMain.IsSubEditorMode = true;
-                
-                // Tell all clients to enter SubEditor
                 foreach (var client in connectedClients)
                 {
                     SendSubEditorModeMessage(client);
                 }
-                
                 return TryStartGameResult.Success;
             }
             
@@ -3488,7 +3479,7 @@ namespace Barotrauma.Networking
             entityEventManager.Clear();
             Submarine.Unload();
             
-            // In SubEditor mode, return to SubEditor instead of the lobby
+            // Return to SubEditor instead of lobby if session is active
             if (isSubEditorSessionActive)
             {
                 GameMain.IsSubEditorMode = true;

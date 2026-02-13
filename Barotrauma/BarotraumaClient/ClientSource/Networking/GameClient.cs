@@ -374,7 +374,6 @@ namespace Barotrauma.Networking
 
         private bool ReturnToPreviousMenu(GUIButton button, object obj)
         {
-            // If we were in SubEditor mode, return to SubEditor instead of main menu/server list
             bool wasInSubEditor = Screen.Selected is SubEditorScreen;
             
             Submarine.Unload();
@@ -749,7 +748,7 @@ namespace Barotrauma.Networking
                     GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
                     bool readyToStart;
                     
-                    // In SubEditor test mode, the sub is synced via XML - always ready
+                    // In SubEditor test mode, the sub is synced via XML
                     if (SubEditorScreen.IsSubEditorConnected())
                     {
                         Level.IsSubEditorTestMode = true;
@@ -972,9 +971,6 @@ namespace Barotrauma.Networking
             }
         }
 
-        /// <summary>
-        /// Handle incoming SubEditor messages from the server.
-        /// </summary>
         private void ReadSubEditorMessage(IReadMessage inc)
         {
             SubEditorPacketHeader subHeader = (SubEditorPacketHeader)inc.ReadByte();
@@ -982,11 +978,9 @@ namespace Barotrauma.Networking
             switch (subHeader)
             {
                 case SubEditorPacketHeader.EnterSubEditor:
-                    DebugConsole.Log("[SubEditor] Server requested SubEditor mode - switching screens");
+                    DebugConsole.Log("[SubEditor] Entering collaborative SubEditor");
                     
-                    // Don't switch screens while EndGame coroutine is still running —
-                    // it will call Submarine.Unload() which destroys anything we restore,
-                    // then it calls Select() itself after unloading. Let EndGame handle it.
+                    // Don't switch while EndGame coroutine is running (it calls Submarine.Unload + Select)
                     if (Screen.Selected != GameMain.SubEditorScreen && !CoroutineManager.IsCoroutineRunning("EndGame"))
                     {
                         Entity.Spawner?.Remove();
@@ -1022,7 +1016,6 @@ namespace Barotrauma.Networking
                     ReadSubEditorClientList(inc);
                     break;
                 case SubEditorPacketHeader.SyncSubmarine:
-                    // Read compressed submarine data
                     int compressedLen = inc.ReadInt32();
                     int uncompressedLen = inc.ReadInt32();
                     byte[] compressedData = inc.ReadBytes(compressedLen);
@@ -1096,12 +1089,11 @@ namespace Barotrauma.Networking
                     break;
                 case SubEditorPacketHeader.EditConfirm:
                     ushort confirmedEntityId = inc.ReadUInt16();
-                    DebugConsole.NewMessage($"[SubEditor] Edit confirmed for entity {confirmedEntityId}", Microsoft.Xna.Framework.Color.Green);
+                    DebugConsole.Log($"[SubEditor] Edit confirmed for entity {confirmedEntityId}");
                     break;
                 case SubEditorPacketHeader.EditDeny:
                     ushort deniedEntityId = inc.ReadUInt16();
-                    DebugConsole.NewMessage($"[SubEditor] Edit denied for entity {deniedEntityId} - locked by another user", Microsoft.Xna.Framework.Color.Orange);
-                    // Unlock locally since server denied
+                    DebugConsole.Log($"[SubEditor] Edit denied for entity {deniedEntityId}");
                     SubEditorNetworkingClient.Instance?.EntityLocks.Remove(deniedEntityId);
                     break;
                 case SubEditorPacketHeader.EntityUpdated:
@@ -1116,9 +1108,6 @@ namespace Barotrauma.Networking
             }
         }
 
-        /// <summary>
-        /// Read the list of connected editors from server.
-        /// </summary>
         private void ReadSubEditorClientList(IReadMessage inc)
         {
             byte count = inc.ReadByte();
@@ -1855,13 +1844,12 @@ namespace Barotrauma.Networking
                     yield return CoroutineStatus.Failure;
                 }
 
-                // In SubEditor test mode, use the current in-memory sub instead of the GUI selection
+                // In SubEditor test mode, use the in-memory sub
                 if (SubEditorScreen.IsSubEditorConnected())
                 {
                     var tempSubInfo = new SubmarineInfo(Submarine.MainSub);
                     tempSubInfo.Name = subName;
                     GameMain.NetLobbyScreen.SelectedSub = tempSubInfo;
-                    DebugConsole.Log($"[SubEditor] Using in-memory sub for test mode: {tempSubInfo.Name}");
                 }
 
                 var selectedMissions = missionHashes.Select(i => MissionPrefab.Prefabs.Find(p => p.UintIdentifier == i));
@@ -2211,12 +2199,11 @@ namespace Barotrauma.Networking
             Submarine.Unload();
             if (transitionType == CampaignMode.TransitionType.None)
             {
-                // If we're in SubEditor collaborative mode, return to SubEditor instead of lobby
+                // Return to SubEditor if in collaborative mode
                 if (SubEditorNetworkingClient.Instance?.IsActive == true)
                 {
                     Level.IsSubEditorTestMode = false;
                     GameMain.SubEditorScreen.Select(enableAutoSave: false);
-                    DebugConsole.Log("[SubEditor] Returned to SubEditor from test mode");
                 }
                 else
                 {

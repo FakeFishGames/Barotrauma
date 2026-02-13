@@ -111,7 +111,7 @@ namespace Barotrauma.Networking
                 GameMain.SoundManager.ForceStreamUpdate();
                 client.RadioNoise = 0.0f;
                 
-                // In SubEditor mode, disable radio filters and set generous audio range
+                // In SubEditor, disable radio filters
                 if (Screen.Selected is SubEditorScreen)
                 {
                     client.VoipSound.UsingRadio = false;

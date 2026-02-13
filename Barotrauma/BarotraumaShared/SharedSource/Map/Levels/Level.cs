@@ -17,7 +17,6 @@ namespace Barotrauma
 {
     partial class Level : Entity, IServerSerializable
     {
-        /// <summary>When true, level generation skips ruins, wrecks, beacons, and cave items (SubEditor test mode).</summary>
         public static bool IsSubEditorTestMode { get; set; }
 
         public enum PlacementType
@@ -530,7 +529,7 @@ namespace Barotrauma
             Loaded?.Remove();
             Loaded = this;
             Generating = true;
-            // SubEditor test mode: disable level content generation
+            // SubEditor test mode: skip content generation
             if (IsSubEditorTestMode)
             {
                 GenerationParams.CaveCount = 0;

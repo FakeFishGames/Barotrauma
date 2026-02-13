@@ -121,7 +121,6 @@ namespace Barotrauma
             }
             else
             {
-                // Scale link width with zoom so links stay visible when zoomed out (min 1px screen-space)
                 float waypointLinkWidth = Math.Max(1f, 2f / Screen.Selected.Cam.Zoom);
                 foreach (MapEntity e in linkedTo)
                 {
@@ -232,18 +231,15 @@ namespace Barotrauma
                         {
                             linkedTo.Remove(e);
                             e.linkedTo.Remove(this);
-                            // Store undo step for unlink
                             SubEditorScreen.StoreCommand(new LinkCommand(LinkCommand.LinkCommandType.Unlink, this.ID, e.ID));
                         }
                         else
                         {
                             linkedTo.Add(e);
                             e.linkedTo.Add(this);
-                            // Store undo step for link
                             SubEditorScreen.StoreCommand(new LinkCommand(LinkCommand.LinkCommandType.Link, this.ID, e.ID));
                         }
 
-                        // Sync link changes to other collaborative editors
                         GameMain.SubEditorScreen?.SyncLinkedEntityState(this);
                         GameMain.SubEditorScreen?.SyncLinkedEntityState(e);
                     }
@@ -280,7 +276,7 @@ namespace Barotrauma
                         }
                     }, inflate: 5);
                     FindStairs();
-                    // Sync waypoint state if ladder or gap association changed
+                    // Sync waypoint if ladder or gap association changed
                     if (ConnectedGap != prevGap || Ladders != prevLadders)
                     {
                         GameMain.SubEditorScreen?.SyncLinkedEntityState(this);

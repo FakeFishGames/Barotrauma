@@ -86,7 +86,7 @@ namespace Barotrauma.Networking
             float noiseGain = 0.0f;
             Vector3? position = null;
 
-            // In SubEditor mode, position voice relative to cursor positions
+            // In SubEditor, position voice relative to cursor positions
             var subEditorNet = SubEditorNetworkingClient.Instance;
             if (subEditorNet?.IsActive == true
                 && subEditorNet.CursorPositions.TryGetValue(SessionId, out Vector2 remoteCursorPos))

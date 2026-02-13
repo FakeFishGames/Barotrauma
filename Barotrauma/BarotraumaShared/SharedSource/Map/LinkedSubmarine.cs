@@ -167,10 +167,6 @@ namespace Barotrauma
             return sl;
         }
 
-        /// <summary>
-        /// Bounds of ALL entities in the sub XML (matches CalculateDimensions(false)).
-        /// Used to compute the correct scale ratio for the preview image.
-        /// </summary>
         private Rectangle allEntityBounds;
 
         private void GenerateWallVertices(XElement rootElement)
@@ -181,9 +177,7 @@ namespace Barotrauma
 
             foreach (XElement element in rootElement.Elements())
             {
-                // Compute all-entity bounds (for preview image scaling).
-                // Must match what CalculateDimensions(onlyHulls: false) includes:
-                // Items, Structures, Hulls — but NOT WayPoints, Gaps, LinkedSubmarines.
+                // Compute all-entity bounds for preview image scaling
                 XName elemName = element.Name;
                 if (elemName == "Item" || elemName == "Structure" || elemName == "Hull")
                 {
@@ -233,9 +227,7 @@ namespace Barotrauma
         {
             Vector2 pos = element.GetAttributeVector2("pos", Vector2.Zero);
             LinkedSubmarine linkedSub;
-            // In the SubEditor, use the ID from the XML if present (collaborative sync
-            // needs matching IDs between host and client). Outside the editor, or when
-            // no ID attribute exists, assign a new ID via IdRemap.
+            // In SubEditor, preserve IDs from XML for collaborative sync
             int xmlId = element.GetAttributeInt("ID", 0);
             ushort id;
             if (Screen.Selected == GameMain.SubEditorScreen && xmlId > 0)
@@ -248,8 +240,7 @@ namespace Barotrauma
             }
             if (Screen.Selected == GameMain.SubEditorScreen)
             {
-                // If this is a compact network sync (filepath but no child elements),
-                // load the submarine file locally to get Structure data for wallVertices.
+                // Load from local file if compact sync (filepath without child elements)
                 XElement dummyElement = element;
                 string fp = element.GetAttributeContentPath("filepath")?.Value ?? string.Empty;
                 if (!element.HasElements && !string.IsNullOrEmpty(fp))
@@ -263,7 +254,7 @@ namespace Barotrauma
                             dummyElement?.SetAttributeValue("filepath", fp);
                         }
                     }
-                    catch { /* file may not exist locally — fallback to compact element */ }
+                    catch { }
                 }
                 linkedSub = CreateDummy(submarine, dummyElement, pos, id);
                 linkedSub.saveElement = new XElement(dummyElement);

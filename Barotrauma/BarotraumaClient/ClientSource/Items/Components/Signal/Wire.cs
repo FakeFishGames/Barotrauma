@@ -24,22 +24,8 @@ namespace Barotrauma.Items.Components
         public static Color editorHighlightColor = Color.Yellow;
         public static Color editorSelectedColor = Color.Red;
 
-        /// <summary>
-        /// Callback invoked when a wire node is moved in the SubEditor.
-        /// Parameters: wire, nodeIndex, oldPosition, newPosition.
-        /// </summary>
         public static Action<Wire, int, Vector2, Vector2> OnSubEditorNodeMoved;
-
-        /// <summary>
-        /// Callback invoked when a wire node is added in the SubEditor.
-        /// Parameters: wire, nodeIndex, nodePosition.
-        /// </summary>
         public static Action<Wire, int, Vector2> OnSubEditorNodeAdded;
-
-        /// <summary>
-        /// Callback invoked when a wire node is removed in the SubEditor.
-        /// Parameters: wire, nodeIndex, nodePosition.
-        /// </summary>
         public static Action<Wire, int, Vector2> OnSubEditorNodeRemoved;
 
         public partial class WireSection
@@ -123,7 +109,6 @@ namespace Barotrauma.Items.Components
         private static Wire draggingWire;
         private static int? selectedNodeIndex;
         private static int? highlightedNodeIndex;
-        /// <summary>Stores the node position at the start of a drag, for undo tracking.</summary>
         private static Vector2 nodeDragStartPos;
 
         public Vector2 DrawSize
@@ -476,7 +461,6 @@ namespace Barotrauma.Items.Components
                 //cancel dragging
                 if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
-                    // Fire node move event for undo tracking if a node was actually moved
                     if (selectedNodeIndex.HasValue && selectedNodeIndex.Value < draggingWire.nodes.Count)
                     {
                         Vector2 finalPos = draggingWire.nodes[selectedNodeIndex.Value];
@@ -525,7 +509,6 @@ namespace Barotrauma.Items.Components
                             PlayerInput.IsShiftDown())
                         {
                             selectedNodeIndex = highlightedNodeIndex;
-                            // Capture start position for undo tracking
                             if (selectedNodeIndex.HasValue && selectedNodeIndex.Value < draggingWire.nodes.Count)
                             {
                                 nodeDragStartPos = draggingWire.nodes[selectedNodeIndex.Value];
