@@ -1547,7 +1547,6 @@ namespace Barotrauma
         private void ShowHostSessionPromptInner()
         {
             SubEditorNetworkingClient.Instance?.LeaveSession();
-            collaborativeEventHandlersSetup = false;
             
             var msgBox = new GUIMessageBox(
                 TextManager.Get("SubEditorHostSession").Fallback("Host Collaborative Session"), "",
@@ -1685,7 +1684,6 @@ namespace Barotrauma
         private void ShowJoinSessionPromptInner()
         {
             SubEditorNetworkingClient.Instance?.LeaveSession();
-            collaborativeEventHandlersSetup = false;
 
             // Open the server browser with SubEditor mode filter pre-checked
             if (GameMain.ServerListScreen != null)
@@ -1966,7 +1964,6 @@ namespace Barotrauma
             }
 
             SubEditorNetworkingClient.Instance?.LeaveSession();
-            collaborativeEventHandlersSetup = false;
             isApplyingRemoteChange = false;
             
             GameMain.Client?.Quit();
