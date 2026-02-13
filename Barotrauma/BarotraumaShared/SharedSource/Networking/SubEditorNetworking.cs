@@ -32,7 +32,8 @@ namespace Barotrauma.Networking
         EntityUpdated,
         FullState,
         EntitiesMovedBatch,
-        SetPermissions
+        SetPermissions,
+        RequestResync
     }
 
     [NetworkSerialize]

@@ -19,7 +19,6 @@ namespace Barotrauma.Networking
         private int subEditorStoredSubmarineUncompressedLength;
 
         private const double SubEditorResyncCooldown = 0.5;
-        private const byte ServerCorrectionSessionId = 0;
         private readonly Dictionary<byte, double> subEditorLastResyncTime = new Dictionary<byte, double>();
         private readonly Dictionary<ushort, string> subEditorEntityXml = new Dictionary<ushort, string>();
 
@@ -100,25 +99,21 @@ namespace Barotrauma.Networking
             return sender.AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : sender.Name;
         }
 
-        private void ResyncClientState(Client sender)
+        private void RequestHostResync()
         {
-            if (subEditorStoredSubmarineCompressed == null || subEditorStoredSubmarineCompressed.Length == 0) return;
+            if (subEditorHost == null) return;
 
-            byte sessionId = (byte)sender.SessionId;
             double now = Timing.TotalTime;
-            if (subEditorLastResyncTime.TryGetValue(sessionId, out double lastTime) && now - lastTime < SubEditorResyncCooldown)
+            if (subEditorLastResyncTime.TryGetValue(0, out double lastTime) && now - lastTime < SubEditorResyncCooldown)
             {
                 return;
             }
-            subEditorLastResyncTime[sessionId] = now;
+            subEditorLastResyncTime[0] = now;
 
             IWriteMessage msg = new WriteOnlyMessage();
             msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
-            msg.WriteByte((byte)SubEditorPacketHeader.SyncSubmarine);
-            msg.WriteInt32(subEditorStoredSubmarineCompressed.Length);
-            msg.WriteInt32(subEditorStoredSubmarineUncompressedLength);
-            msg.WriteBytes(subEditorStoredSubmarineCompressed, 0, subEditorStoredSubmarineCompressed.Length);
-            serverPeer.Send(msg, sender.Connection, DeliveryMethod.Reliable);
+            msg.WriteByte((byte)SubEditorPacketHeader.RequestResync);
+            serverPeer.Send(msg, subEditorHost.Connection, DeliveryMethod.Reliable);
         }
 
         private void HandleEntityPlaced(IReadMessage inc, Client sender)
@@ -129,28 +124,11 @@ namespace Barotrauma.Networking
             if (!perms.HasFlag(SubEditorPermissions.CanEditOwn))
             {
                 DebugConsole.NewMessage($"[SubEditor] EntityPlaced DENIED for {sender.Name} (session={sender.SessionId}, perms={perms})", Color.Red);
-                try
-                {
-                    var xElement = XElement.Parse(entityXml);
-                    int id = xElement.GetAttributeInt("ID", 0);
-                    if (id > 0)
-                    {
-                        IWriteMessage denyMsg = new WriteOnlyMessage();
-                        denyMsg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
-                        denyMsg.WriteByte((byte)SubEditorPacketHeader.EntityRemoved);
-                        denyMsg.WriteByte(ServerCorrectionSessionId);
-                        denyMsg.WriteUInt16((ushort)id);
-                        serverPeer.Send(denyMsg, sender.Connection, DeliveryMethod.Reliable);
-                    }
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.AddWarning($"[SubEditor] Failed to parse denied entity XML: {e.Message}");
-                }
+                RequestHostResync();
                 return;
             }
 
-            // Track ownership and store entity XML for potential denial undo
+            // Track ownership
             if (subEditorSession != null)
             {
                 try
@@ -189,16 +167,7 @@ namespace Barotrauma.Networking
                 string accountId = GetSenderAccountId(sender);
                 if (!subEditorSession.CanUserDeleteEntity((byte)sender.SessionId, entityId, accountId))
                 {
-                    // Send the entity back to the denied client so it reappears
-                    if (subEditorEntityXml.TryGetValue(entityId, out string storedXml))
-                    {
-                        IWriteMessage denyMsg = new WriteOnlyMessage();
-                        denyMsg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
-                        denyMsg.WriteByte((byte)SubEditorPacketHeader.EntityPlaced);
-                        denyMsg.WriteByte(ServerCorrectionSessionId);
-                        denyMsg.WriteString(storedXml);
-                        serverPeer.Send(denyMsg, sender.Connection, DeliveryMethod.Reliable);
-                    }
+                    RequestHostResync();
                     return;
                 }
                 subEditorSession.RemoveEntityOwnership(entityId);
@@ -227,7 +196,7 @@ namespace Barotrauma.Networking
                 string accountId = GetSenderAccountId(sender);
                 if (!subEditorSession.CanUserEditEntity((byte)sender.SessionId, entityId, accountId))
                 {
-                    ResyncClientState(sender);
+                    RequestHostResync();
                     return;
                 }
             }
@@ -262,14 +231,14 @@ namespace Barotrauma.Networking
                 var perms = GetSenderPermissions(sender);
                 if (subEditorSession.IsMassEdit(moves.Count) && !perms.HasFlag(SubEditorPermissions.CanMassEdit))
                 {
-                    ResyncClientState(sender);
+                    RequestHostResync();
                     return;
                 }
                 string accountId = GetSenderAccountId(sender);
                 moves.RemoveAll(m => !subEditorSession.CanUserEditEntity((byte)sender.SessionId, m.entityId, accountId));
                 if (moves.Count == 0)
                 {
-                    ResyncClientState(sender);
+                    RequestHostResync();
                     return;
                 }
             }
@@ -302,7 +271,7 @@ namespace Barotrauma.Networking
                 string accountId = GetSenderAccountId(sender);
                 if (!subEditorSession.CanUserEditEntity((byte)sender.SessionId, entityId, accountId))
                 {
-                    ResyncClientState(sender);
+                    RequestHostResync();
                     return;
                 }
             }
@@ -330,7 +299,7 @@ namespace Barotrauma.Networking
                 string accountId = GetSenderAccountId(sender);
                 if (!subEditorSession.CanUserEditEntity((byte)sender.SessionId, entityId, accountId))
                 {
-                    ResyncClientState(sender);
+                    RequestHostResync();
                     return;
                 }
             }

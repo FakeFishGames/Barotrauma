@@ -1110,6 +1110,12 @@ namespace Barotrauma.Networking
                     uint permBits = inc.ReadUInt32();
                     SubEditorNetworkingClient.Instance?.ReceivePermissionUpdate(permTarget, (SubEditorPermissions)permBits);
                     break;
+                case SubEditorPacketHeader.RequestResync:
+                    if (Screen.Selected is SubEditorScreen subEditor)
+                    {
+                        subEditor.HandleResyncRequest();
+                    }
+                    break;
             }
         }
 

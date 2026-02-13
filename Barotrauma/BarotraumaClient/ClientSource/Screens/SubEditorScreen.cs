@@ -5927,6 +5927,11 @@ namespace Barotrauma
             }
         }
 
+        public void HandleResyncRequest()
+        {
+            SyncSubmarineToClients();
+        }
+
         private static ContentPackage GetPackageThatOwnsSub(SubmarineInfo sub, IEnumerable<ContentPackage> packages)
             => packages.FirstOrDefault(package => package.Files.Any(f => f.Path == sub.FilePath));
 
