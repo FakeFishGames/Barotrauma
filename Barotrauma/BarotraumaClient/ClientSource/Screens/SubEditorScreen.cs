@@ -1502,50 +1502,84 @@ namespace Barotrauma
         /// </summary>
         private bool ShowHostSessionPrompt(GUIButton button, object obj)
         {
+            // Check for unsaved changes before hosting
+            if (Commands.Count > 0)
+            {
+                var confirmBox = new GUIMessageBox("", TextManager.Get("PauseMenuQuitVerificationEditor"), new[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                {
+                    UserData = "verificationprompt"
+                };
+                confirmBox.Buttons[0].OnClicked = (yesBtn, userdata) =>
+                {
+                    confirmBox.Close();
+                    ShowHostSessionPromptInner();
+                    return true;
+                };
+                confirmBox.Buttons[1].OnClicked = (_, userdata) =>
+                {
+                    confirmBox.Close();
+                    return true;
+                };
+                return true;
+            }
+            ShowHostSessionPromptInner();
+            return true;
+        }
+
+        private void ShowHostSessionPromptInner()
+        {
             SubEditorNetworkingClient.Instance?.LeaveSession();
             collaborativeEventHandlersSetup = false;
             
             var msgBox = new GUIMessageBox(
                 TextManager.Get("SubEditorHostSession").Fallback("Host Collaborative Session"), "",
                 new LocalizedString[] { TextManager.Get("Start").Fallback("Start"), TextManager.Get("Cancel") },
-                relativeSize: new Vector2(0.35f, 0.55f), minSize: new Point(450, 450));
+                relativeSize: new Vector2(0.35f, 0.6f), minSize: new Point(450, 520));
             
             msgBox.Content.ChildAnchor = Anchor.TopCenter;
 
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.75f), msgBox.Content.RectTransform), childAnchor: Anchor.TopCenter)
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), msgBox.Content.RectTransform), childAnchor: Anchor.TopCenter)
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
 
             // Server name
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.06f), content.RectTransform),
                 TextManager.Get("ServerName").Fallback("Server Name"), textAlignment: Alignment.CenterLeft);
-            var nameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform))
+            var nameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.06f), content.RectTransform))
             {
                 Text = $"{MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty("Editor")}'s Session",
                 MaxTextLength = NetConfig.ServerNameMaxLength
             };
 
+            // Server description
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.06f), content.RectTransform),
+                TextManager.Get("ServerDescription").Fallback("Description (optional)"), textAlignment: Alignment.CenterLeft);
+            var descriptionBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.06f), content.RectTransform))
+            {
+                MaxTextLength = 200
+            };
+
             // Password
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.06f), content.RectTransform),
                 TextManager.Get("Password").Fallback("Password (optional)"), textAlignment: Alignment.CenterLeft);
-            var passwordBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform))
+            var passwordBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.06f), content.RectTransform))
             {
                 Censor = true,
                 OverflowClip = true
             };
 
             // Port
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.06f), content.RectTransform),
                 TextManager.Get("Port").Fallback("Port"), textAlignment: Alignment.CenterLeft);
-            var portBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform))
+            var portBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.06f), content.RectTransform))
             {
                 Text = NetConfig.DefaultPort.ToString()
             };
 
             // Max players
-            var maxPlayersGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform), isHorizontal: true)
+            var maxPlayersGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f), content.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
@@ -1558,7 +1592,7 @@ namespace Barotrauma
             };
 
             // Public toggle
-            var publicGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform), isHorizontal: true)
+            var publicGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f), content.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
@@ -1571,7 +1605,7 @@ namespace Barotrauma
             };
 
             // Info text
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), content.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.12f), content.RectTransform),
                 TextManager.Get("SubEditorHostInfo").Fallback("Others can join using your IP address and port, or find your server in the server browser if public."), 
                 textAlignment: Alignment.Center, wrap: true, font: GUIStyle.SmallFont)
             {
@@ -1593,20 +1627,44 @@ namespace Barotrauma
                     return false;
                 }
 
-                StartHostingSession(nameBox.Text, port, passwordBox.Text, isPublicBox.Selected, maxPlayers);
+                StartHostingSession(nameBox.Text, port, passwordBox.Text, isPublicBox.Selected, maxPlayers, descriptionBox.Text);
                 msgBox.Close();
                 return true;
             };
 
             msgBox.Buttons[1].OnClicked = msgBox.Close;
-
-            return true;
         }
 
         /// <summary>
         /// Show the dialog for joining a collaborative editing session.
         /// </summary>
         private bool ShowJoinSessionPrompt(GUIButton button, object obj)
+        {
+            // Check for unsaved changes before joining
+            if (Commands.Count > 0)
+            {
+                var confirmBox = new GUIMessageBox("", TextManager.Get("PauseMenuQuitVerificationEditor"), new[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                {
+                    UserData = "verificationprompt"
+                };
+                confirmBox.Buttons[0].OnClicked = (yesBtn, userdata) =>
+                {
+                    confirmBox.Close();
+                    ShowJoinSessionPromptInner();
+                    return true;
+                };
+                confirmBox.Buttons[1].OnClicked = (_, userdata) =>
+                {
+                    confirmBox.Close();
+                    return true;
+                };
+                return true;
+            }
+            ShowJoinSessionPromptInner();
+            return true;
+        }
+
+        private void ShowJoinSessionPromptInner()
         {
             SubEditorNetworkingClient.Instance?.LeaveSession();
             collaborativeEventHandlersSetup = false;
@@ -1618,15 +1676,13 @@ namespace Barotrauma
                 GameMain.ServerListScreen.SetGameModeFilter("subeditor".ToIdentifier());
                 GameMain.ServerListScreen.Select();
             }
-            
-            return true;
         }
 
         /// <summary>
         /// Start hosting a collaborative editing session.
         /// Starts a DedicatedServer in SubEditor mode, then connects to it as a client.
         /// </summary>
-        private void StartHostingSession(string sessionName, int port, string password = "", bool isPublic = false, int maxPlayers = 16)
+        private void StartHostingSession(string sessionName, int port, string password = "", bool isPublic = false, int maxPlayers = 16, string description = "")
         {
             try
             {
@@ -1673,6 +1729,13 @@ namespace Barotrauma
                 else
                 {
                     arguments.Add("-nopassword");
+                }
+
+                // Add description if provided
+                if (!string.IsNullOrEmpty(description))
+                {
+                    arguments.Add("-servermessage");
+                    arguments.Add(description);
                 }
                 
                 // Configure the server process
@@ -1737,6 +1800,12 @@ namespace Barotrauma
         /// </summary>
         private IEnumerable<CoroutineStatus> ConnectToHostedServer(int port, string playerName)
         {
+            // Show a modal "connecting" overlay to prevent UI interaction
+            var connectingBox = new GUIMessageBox(
+                TextManager.Get("SubEditorConnecting").Fallback("Connecting..."),
+                TextManager.Get("SubEditorHostConnecting").Fallback("Starting server and connecting. Please wait..."),
+                Array.Empty<LocalizedString>());
+
             yield return new WaitForSeconds(1.0f);
             
             try
@@ -1766,6 +1835,8 @@ namespace Barotrauma
             {
                 DebugConsole.AddWarning("[SubEditor] Host failed to connect to own server: " + e.Message);
             }
+
+            connectingBox.Close();
             
             yield return CoroutineStatus.Success;
         }

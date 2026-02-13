@@ -661,6 +661,8 @@ namespace Barotrauma.Networking
 
             GameMain.IsSubEditorMode = false;
             GameMain.NetLobbyScreen.SelectedModeIdentifier = GameModePreset.Sandbox.Identifier;
+            // Keep reporting as SubEditor in server browser even during test mode
+            ServerSettings.GameModeIdentifier = "subeditor".ToIdentifier();
             ServerSettings.AllowSubVoting = false;
             ServerSettings.AllowModeVoting = false;
             ServerSettings.SelectedLevelDifficulty = 0;

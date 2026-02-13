@@ -261,8 +261,14 @@ namespace Barotrauma
                 ownerKey,
                 ownerEndpoint);
             
-            // In SubEditor mode, don't register to public server list
-            Server.StartServer(registerToServerList: !IsSubEditorMode && publiclyVisible);
+            // Register to server list if public is enabled (including SubEditor mode)
+            Server.StartServer(registerToServerList: publiclyVisible);
+
+            // Set game mode to "subeditor" so the server browser filters work
+            if (IsSubEditorMode)
+            {
+                Server.ServerSettings.GameModeIdentifier = "subeditor".ToIdentifier();
+            }
 
             for (int i = 0; i < CommandLineArgs.Length; i++)
             {
@@ -305,6 +311,10 @@ namespace Barotrauma
 #if DEBUG
                         CharacterCampaignData.RequireClientNameMatch = true;
 #endif
+                        i++;
+                        break;
+                    case "-servermessage":
+                        Server.ServerSettings.ServerMessageText = CommandLineArgs[i + 1];
                         i++;
                         break;
                 }
