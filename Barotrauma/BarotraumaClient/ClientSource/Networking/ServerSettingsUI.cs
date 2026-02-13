@@ -1073,12 +1073,14 @@ namespace Barotrauma.Networking
             if (perms == SubEditorPermissions.All) return "All";
             if (perms == SubEditorPermissions.None) return "None";
             int count = 0;
+            int total = 0;
             foreach (SubEditorPermissions p in Enum.GetValues(typeof(SubEditorPermissions)))
             {
                 if (p == SubEditorPermissions.None || p == SubEditorPermissions.All) continue;
+                total++;
                 if ((perms & p) != 0) count++;
             }
-            return $"Custom ({count}/9)";
+            return $"Custom ({count}/{total})";
         }
 
         private static void ShowPerUserPermissionsDialog(Client client)
