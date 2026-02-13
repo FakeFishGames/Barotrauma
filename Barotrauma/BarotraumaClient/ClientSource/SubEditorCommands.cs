@@ -32,26 +32,14 @@ namespace Barotrauma
     {
         public abstract LocalizedString GetDescription();
 
-        /// <summary>
-        /// Identifier of the user who created this command.
-        /// In collaborative mode, this is the session ID. Empty/null for local-only editing.
-        /// </summary>
         public string AuthorSessionId { get; set; }
 
-        /// <summary>
-        /// Get the entity IDs affected by this command, for dependency checking.
-        /// </summary>
         public virtual IEnumerable<ushort> GetAffectedEntityIds()
         {
             return Enumerable.Empty<ushort>();
         }
     }
 
-    /// <summary>
-    /// A command for setting and reverting a MapEntity rectangle
-    /// <see cref="SubEditorScreen"/>
-    /// <see cref="MapEntity"/>
-    /// </summary>
     internal class TransformCommand : Command
     {
         private readonly List<MapEntity> Receivers;
@@ -59,21 +47,8 @@ namespace Barotrauma
         private readonly List<Rectangle> OldData;
         private readonly bool Resized;
 
-        /// <summary>
-        /// Gets the entities affected by this transform command (for collaborative sync).
-        /// </summary>
         public IReadOnlyList<MapEntity> AffectedEntities => Receivers;
 
-        /// <summary>
-        /// A command for setting and reverting a MapEntity rectangle
-        /// </summary>
-        /// <param name="receivers">Entities whose rectangle has been altered</param>
-        /// <param name="newData">The new rectangle that is or will be applied to the map entity</param>
-        /// <param name="oldData">Old rectangle the map entity had before</param>
-        /// <param name="resized">If the transform was resized or not</param>
-        /// <remarks>
-        /// All lists should be equal in length, for every receiver there should be a corresponding entry at the same position in newData and oldData.
-        /// </remarks>
         public TransformCommand(List<MapEntity> receivers, List<Rectangle> newData, List<Rectangle> oldData, bool resized)
         {
             Receivers = receivers;
@@ -126,12 +101,6 @@ namespace Barotrauma
             => Receivers.Select(e => e.ID);
     }
 
-    /// <summary>
-    /// A command that removes and unremoves map entities
-    /// <see cref="ItemPrefab"/>
-    /// <see cref="StructurePrefab"/>
-    /// <seealso cref="SubEditorScreen"/>
-    /// </summary>
     internal class AddOrDeleteCommand : Command
     {
         private readonly Dictionary<InventorySlotItem, Inventory> PreviousInventories = new Dictionary<InventorySlotItem, Inventory>();
@@ -141,15 +110,9 @@ namespace Barotrauma
         public bool IsDeleteOperation => WasDeleted;
         private readonly List<AddOrDeleteCommand> ContainedItemsCommand = new List<AddOrDeleteCommand>();
 
-        // We need to 'snapshot' the state of the circuit box and the best way to do that is to save it to XML. 
+        // Snapshot circuit box state as XML
         private readonly List<XElement> CircuitBoxData = new List<XElement>();
 
-        /// <summary>
-        /// Creates a command where all entities share the same state.
-        /// </summary>
-        /// <param name="receivers">Entities that were deleted or added</param>
-        /// <param name="wasDeleted">Whether or not all entities are or are going to be deleted</param>
-        /// <param name="handleInventoryBehavior">Ignore item inventories when set to false, workaround for pasting</param>
         public AddOrDeleteCommand(List<MapEntity> receivers, bool wasDeleted, bool handleInventoryBehavior = true)
         {
             Debug.Assert(receivers.Count > 0, "Command has 0 receivers");
@@ -239,16 +202,8 @@ namespace Barotrauma
             ApplyCircuitBoxDataIfAny(items);
         }
 
-        /// <summary>
-        /// We need to manually copy over the circuit box data because of how the undo handles inventory items.
-        /// The undo system recursively deletes inventory items and creates a separate command for each one.
-        /// This causes the circuit box to lose its internal inventory when it's cloned and then restored and make it
-        /// unable to load the state from XML.
-        ///
-        /// The workaround to this is to ignore the XML that is being loaded when the item is created and instead
-        /// save the XML into the command and then load it back after the undo system has restored the items which
-        /// is what this function does.
-        /// </summary>
+        // Undo system recursively deletes inventory items, so circuit box loses its internal
+        // inventory when cloned/restored. Save XML here and reload after items are restored.
         private void ApplyCircuitBoxDataIfAny(ImmutableArray<Item> items)
         {
             int cbIndex = 0;
@@ -293,10 +248,8 @@ namespace Barotrauma
         {
             bool wasDeleted = WasDeleted;
 
-            // We are redoing instead of undoing, flip the behavior
             if (redo) { wasDeleted = !wasDeleted; }
 
-            // collect newly created items so we can update their circuit boxes if any
             var builder = ImmutableArray.CreateBuilder<Item>();
 
             if (wasDeleted)
@@ -402,11 +355,6 @@ namespace Barotrauma
             => Receivers.Select(e => e.ID);
     }
 
-    /// <summary>
-    /// A command that places or drops items out of inventories
-    /// </summary>
-    /// <see cref="Inventory"/>
-    /// <see cref="MapEntity"/>
     internal class InventoryPlaceCommand : Command
     {
         private readonly Inventory Inventory;
@@ -430,7 +378,6 @@ namespace Barotrauma
 
         private void ContainUncontain(bool drop)
         {
-            // flip the behavior if the item was dropped instead of inserted
             if (wasDropped) { drop = !drop; }
 
             foreach (var (slot, receiver) in Receivers)
@@ -468,9 +415,6 @@ namespace Barotrauma
         }
     }
 
-    /// <summary>
-    /// A command that sets item properties
-    /// </summary>
     internal class PropertyCommand : Command
     {
         private Dictionary<object, List<ISerializableEntity>> OldProperties;
@@ -481,28 +425,12 @@ namespace Barotrauma
 
         public readonly int PropertyCount;
 
-        /// <summary>
-        /// The entities affected by this property change.
-        /// </summary>
         public IReadOnlyList<ISerializableEntity> AffectedEntities => Receivers;
 
-        /// <summary>
-        /// The name of the property that was changed.
-        /// </summary>
         public Identifier ChangedPropertyName => PropertyName;
 
-        /// <summary>
-        /// String representation of the new property value.
-        /// </summary>
         public string SanitizedPropertyValue => sanitizedProperty;
 
-        /// <summary>
-        /// A command that sets item properties
-        /// </summary>
-        /// <param name="receivers">Affected entities</param>
-        /// <param name="propertyName">Real property name, not all lowercase</param>
-        /// <param name="newData"></param>
-        /// <param name="oldData"></param>
         public PropertyCommand(List<ISerializableEntity> receivers, Identifier propertyName, object newData, Dictionary<object, List<ISerializableEntity>> oldData)
         {
             Receivers = receivers;
@@ -589,7 +517,6 @@ namespace Barotrauma
                     if (props.TryGetValue(PropertyName, out SerializableProperty prop))
                     {
                         prop.TrySetValue(receiver, data);
-                        // Update the editing hud
                         if (MapEntity.EditingHUD == null || (MapEntity.EditingHUD.UserData != receiver && (receiver is ItemComponent ic && MapEntity.EditingHUD.UserData != ic.Item))) { continue; }
 
                         GUIListBox list = MapEntity.EditingHUD.GetChild<GUIListBox>();
@@ -634,11 +561,6 @@ namespace Barotrauma
         }
     }
 
-    /// <summary>
-    /// A command that moves items around in inventories
-    /// </summary>
-    /// <see cref="oldInventory"/>
-    /// <see cref="MapEntity"/>
     internal class InventoryMoveCommand : Command
     {
         private readonly Inventory oldInventory;
@@ -685,9 +607,6 @@ namespace Barotrauma
         }
     }
 
-    /// <summary>
-    /// A command for applying changes from the <see cref="SubEditorScreen.TransformWidget"/>.
-    /// </summary>
     internal class TransformToolCommand : Command
     {
         private readonly Dictionary<MapEntity, SubEditorScreen.TransformData> originalData;
@@ -770,56 +689,31 @@ namespace Barotrauma
             => originalData.Keys.Select(e => e.ID);
     }
 
-    /// <summary>
-    /// Tracks the type of wire change for undo purposes.
-    /// </summary>
     internal enum WireCommandType
     {
-        /// <summary>A wire was connected between two pins.</summary>
         Connect,
-        /// <summary>A wire was disconnected from a pin.</summary>
         Disconnect,
-        /// <summary>A wire node was moved to a new position.</summary>
         NodeMove,
-        /// <summary>A wire node was added.</summary>
         NodeAdd,
-        /// <summary>A wire node was removed.</summary>
         NodeRemove
     }
 
-    /// <summary>
-    /// Undo command for wire operations in the SubEditor's wiring mode.
-    /// Tracks connections, disconnections, and node edits for individual wires.
-    /// </summary>
     internal class WireCommand : Command
     {
         public readonly WireCommandType Type;
-        /// <summary>ID of the wire item.</summary>
         public readonly ushort WireId;
-        /// <summary>Prefab identifier of the wire (e.g. "redwire", "bluewire").</summary>
         public readonly Identifier WirePrefabId;
-        /// <summary>For Connect/Disconnect: the item ID of the connection panel's item.</summary>
         public readonly ushort TargetItemId;
-        /// <summary>For Connect/Disconnect: the connection (pin) name.</summary>
         public readonly string ConnectionName;
-        /// <summary>For Connect: the other end's item ID (if both ends connected).</summary>
         public readonly ushort OtherItemId;
-        /// <summary>For Connect: the other end's connection name.</summary>
         public readonly string OtherConnectionName;
-        /// <summary>For NodeMove: the node index that was moved.</summary>
         public readonly int NodeIndex;
-        /// <summary>For NodeMove: the original position before the move.</summary>
         public readonly Vector2 OldNodePos;
-        /// <summary>For NodeMove: the new position after the move.</summary>
         public readonly Vector2 NewNodePos;
-        /// <summary>For NodeAdd/NodeRemove: the index where the node was inserted/removed.</summary>
         public readonly int AddedNodeIndex;
-        /// <summary>For NodeAdd/NodeRemove: the position of the added/removed node.</summary>
         public readonly Vector2 AddedNodePos;
-        /// <summary>Snapshot of all node positions at the time of the command, for full restore.</summary>
         public readonly List<Vector2> NodeSnapshot;
 
-        /// <summary>Create a wire connection/disconnection command.</summary>
         public WireCommand(WireCommandType type, Wire wire, Connection connection, Connection otherConnection = null)
         {
             Type = type;
@@ -832,7 +726,6 @@ namespace Barotrauma
             NodeSnapshot = new List<Vector2>(wire.GetNodes());
         }
 
-        /// <summary>Create a wire node move command.</summary>
         public WireCommand(Wire wire, int nodeIndex, Vector2 oldPos, Vector2 newPos)
         {
             Type = WireCommandType.NodeMove;
@@ -844,7 +737,6 @@ namespace Barotrauma
             NodeSnapshot = new List<Vector2>(wire.GetNodes());
         }
 
-        /// <summary>Create a wire node add/remove command.</summary>
         public WireCommand(WireCommandType type, Wire wire, int nodeIndex, Vector2 nodePos)
         {
             Debug.Assert(type == WireCommandType.NodeAdd || type == WireCommandType.NodeRemove);
@@ -922,7 +814,7 @@ namespace Barotrauma
             switch (Type)
             {
                 case WireCommandType.Connect:
-                    // Undo connect = disconnect the wire from BOTH ends
+                    // disconnect from both ends
                     var conn = FindConnection(TargetItemId, ConnectionName);
                     if (conn != null)
                     {
@@ -935,11 +827,10 @@ namespace Barotrauma
                         otherConn.DisconnectWire(wire);
                         wire.RemoveConnection(otherConn);
                     }
-                    // Remove the wire entity entirely since this Connect command created it
+                    // this Connect command created the wire
                     wire.Item.Remove();
                     break;
                 case WireCommandType.Disconnect:
-                    // Undo disconnect = reconnect
                     var reconnConn = FindConnection(TargetItemId, ConnectionName);
                     if (reconnConn != null)
                     {
@@ -954,7 +845,6 @@ namespace Barotrauma
                     }
                     break;
                 case WireCommandType.NodeAdd:
-                    // Undo add = remove the node
                     if (AddedNodeIndex >= 0 && AddedNodeIndex < wire.GetNodes().Count)
                     {
                         var nodes = new List<Vector2>(wire.GetNodes());
@@ -963,7 +853,6 @@ namespace Barotrauma
                     }
                     break;
                 case WireCommandType.NodeRemove:
-                    // Undo remove = re-insert the node
                     {
                         var nodes = new List<Vector2>(wire.GetNodes());
                         if (AddedNodeIndex <= nodes.Count)
@@ -1012,9 +901,6 @@ namespace Barotrauma
         }
     }
 
-    /// <summary>
-    /// A command for creating or removing a link between two map entities (Space+Click linking).
-    /// </summary>
     internal class LinkCommand : Command
     {
         public enum LinkCommandType { Link, Unlink }
@@ -1056,13 +942,11 @@ namespace Barotrauma
 
             if (Type == LinkCommandType.Link)
             {
-                // Undo link = unlink
                 entity1.linkedTo.Remove(entity2);
                 entity2.linkedTo.Remove(entity1);
             }
             else
             {
-                // Undo unlink = link
                 if (!entity1.linkedTo.Contains(entity2)) entity1.linkedTo.Add(entity2);
                 if (!entity2.linkedTo.Contains(entity1)) entity2.linkedTo.Add(entity1);
             }
