@@ -7450,6 +7450,10 @@ namespace Barotrauma
             {
                 GameMain.SubEditorScreen.SendCollaborativeTransformUpdate(transformCmd);
             }
+            else if (command is TransformToolCommand transformToolCmd)
+            {
+                GameMain.SubEditorScreen.SendCollaborativeTransformToolUpdate(transformToolCmd);
+            }
             else if (command is WireCommand wireCmd)
             {
                 // After undo/redo of a wire command, sync the wire and its connected items.
@@ -7543,6 +7547,14 @@ namespace Barotrauma
             if (command is TransformCommand transformCommand)
             {
                 GameMain.SubEditorScreen.SendCollaborativeTransformUpdate(transformCommand);
+            }
+
+            // Sync scale/rotate tool updates to other collaborative editors.
+            // TransformToolCommand extends Command (not TransformCommand), so it
+            // needs its own handler.
+            if (command is TransformToolCommand transformToolCommand)
+            {
+                GameMain.SubEditorScreen.SendCollaborativeTransformToolUpdate(transformToolCommand);
             }
         }
 
@@ -7963,10 +7975,81 @@ namespace Barotrauma
                     element.SetAttributeValue("transformSync", "true");
                     SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entity.ID, element.ToString());
                     collaborativeEntityPositions[entity.ID] = new Vector2(entity.Rect.X, entity.Rect.Y);
+
+                    // Update property snapshots so UpdateCollaborativePropertyChanges
+                    // doesn't re-detect and re-send changes caused by the transform.
+                    if (entity is ISerializableEntity serializable && serializable.SerializableProperties != null)
+                    {
+                        if (!collaborativePropertySnapshots.TryGetValue(entity.ID, out var snapshot))
+                        {
+                            snapshot = new Dictionary<string, string>();
+                            collaborativePropertySnapshots[entity.ID] = snapshot;
+                        }
+                        foreach (var kvp in serializable.SerializableProperties)
+                        {
+                            if (kvp.Value.PropertyInfo?.SetMethod == null) continue;
+                            try
+                            {
+                                snapshot[kvp.Key.Value] = PropertyValueToXmlString(kvp.Value.GetValue(serializable));
+                            }
+                            catch { }
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
                     DebugConsole.AddWarning($"[SubEditor] Failed to serialize entity for transform sync: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Send scale/rotate tool updates to other collaborative editors.
+        /// TransformToolCommand extends Command (not TransformCommand), so it
+        /// needs its own sync method. Sends each affected entity's full XML
+        /// with transformSync flag, same as SendCollaborativeTransformUpdate.
+        /// Also updates property snapshots so UpdateCollaborativePropertyChanges
+        /// doesn't re-send the changes.
+        /// </summary>
+        internal void SendCollaborativeTransformToolUpdate(TransformToolCommand transformToolCommand)
+        {
+            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
+            if (isApplyingRemoteChange) return;
+
+            foreach (var entityId in transformToolCommand.GetAffectedEntityIds())
+            {
+                var entity = Entity.FindEntityByID(entityId) as MapEntity;
+                if (entity == null || entity.Removed) continue;
+
+                try
+                {
+                    var element = SaveEntityForSync(entity);
+                    element.SetAttributeValue("transformSync", "true");
+                    SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entity.ID, element.ToString());
+                    collaborativeEntityPositions[entity.ID] = new Vector2(entity.Rect.X, entity.Rect.Y);
+
+                    // Update property snapshots to prevent false change detection
+                    if (entity is ISerializableEntity serializable && serializable.SerializableProperties != null)
+                    {
+                        if (!collaborativePropertySnapshots.TryGetValue(entity.ID, out var snapshot))
+                        {
+                            snapshot = new Dictionary<string, string>();
+                            collaborativePropertySnapshots[entity.ID] = snapshot;
+                        }
+                        foreach (var kvp in serializable.SerializableProperties)
+                        {
+                            if (kvp.Value.PropertyInfo?.SetMethod == null) continue;
+                            try
+                            {
+                                snapshot[kvp.Key.Value] = PropertyValueToXmlString(kvp.Value.GetValue(serializable));
+                            }
+                            catch { }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    DebugConsole.AddWarning($"[SubEditor] Failed to serialize entity for transform tool sync: {ex.Message}");
                 }
             }
         }
