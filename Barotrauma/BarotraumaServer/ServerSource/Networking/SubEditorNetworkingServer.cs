@@ -95,6 +95,15 @@ namespace Barotrauma.Networking
             return sender.AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : sender.Name;
         }
 
+        private void SendEditDeny(Client sender)
+        {
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+            msg.WriteByte((byte)SubEditorPacketHeader.EditDeny);
+            msg.WriteUInt16(0);
+            serverPeer.Send(msg, sender.Connection, DeliveryMethod.Reliable);
+        }
+
         private void HandleEntityPlaced(IReadMessage inc, Client sender)
         {
             string entityXml = inc.ReadString();
@@ -102,6 +111,7 @@ namespace Barotrauma.Networking
             var perms = GetSenderPermissions(sender);
             if (!perms.HasFlag(SubEditorPermissions.CanEditOwn))
             {
+                SendEditDeny(sender);
                 return;
             }
 
@@ -140,6 +150,7 @@ namespace Barotrauma.Networking
                 string accountId = GetSenderAccountId(sender);
                 if (!subEditorSession.CanUserDeleteEntity((byte)sender.SessionId, entityId, accountId))
                 {
+                    SendEditDeny(sender);
                     return;
                 }
                 subEditorSession.RemoveEntityOwnership(entityId);
@@ -167,6 +178,7 @@ namespace Barotrauma.Networking
                 string accountId = GetSenderAccountId(sender);
                 if (!subEditorSession.CanUserEditEntity((byte)sender.SessionId, entityId, accountId))
                 {
+                    SendEditDeny(sender);
                     return;
                 }
             }
@@ -201,11 +213,17 @@ namespace Barotrauma.Networking
                 var perms = GetSenderPermissions(sender);
                 if (subEditorSession.IsMassEdit(moves.Count) && !perms.HasFlag(SubEditorPermissions.CanMassEdit))
                 {
+                    SendEditDeny(sender);
                     return;
                 }
                 string accountId = GetSenderAccountId(sender);
+                int originalCount = moves.Count;
                 moves.RemoveAll(m => !subEditorSession.CanUserEditEntity((byte)sender.SessionId, m.entityId, accountId));
-                if (moves.Count == 0) return;
+                if (moves.Count == 0)
+                {
+                    if (originalCount > 0) { SendEditDeny(sender); }
+                    return;
+                }
             }
 
             foreach (var client in connectedClients.Where(c => c != sender))
@@ -236,6 +254,7 @@ namespace Barotrauma.Networking
                 string accountId = GetSenderAccountId(sender);
                 if (!subEditorSession.CanUserEditEntity((byte)sender.SessionId, entityId, accountId))
                 {
+                    SendEditDeny(sender);
                     return;
                 }
             }
@@ -263,6 +282,7 @@ namespace Barotrauma.Networking
                 string accountId = GetSenderAccountId(sender);
                 if (!subEditorSession.CanUserEditEntity((byte)sender.SessionId, entityId, accountId))
                 {
+                    SendEditDeny(sender);
                     return;
                 }
             }
