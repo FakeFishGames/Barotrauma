@@ -2058,6 +2058,11 @@ namespace Barotrauma
 
         private void OnCollaborativeEntityPlaced(byte senderSessionId, string entityXml)
         {
+            // Skip our own placements — we already handled them locally in StoreCommand
+            if (SubEditorNetworkingClient.Instance != null && senderSessionId == SubEditorNetworkingClient.Instance.LocalSessionId)
+            {
+                return;
+            }
             DebugConsole.Log($"[SubEditor] Remote entity placed by session {senderSessionId}");
             
             try
@@ -2160,6 +2165,11 @@ namespace Barotrauma
 
         private void OnCollaborativeEntityRemoved(byte senderSessionId, ushort entityId)
         {
+            // Skip our own removals — we already handled them locally in StoreCommand
+            if (SubEditorNetworkingClient.Instance != null && senderSessionId == SubEditorNetworkingClient.Instance.LocalSessionId)
+            {
+                return;
+            }
             DebugConsole.Log($"[SubEditor] Remote entity removed: {entityId} by session {senderSessionId}");
             
             var entity = Entity.FindEntityByID(entityId) as MapEntity;
@@ -3173,7 +3183,7 @@ namespace Barotrauma
                 }
 
                 File.WriteAllLines(historyPath, lines);
-                DebugConsole.Log($"[SubEditor] Saved undo history ({lines.Count} entries) to {historyPath}");
+                DebugConsole.NewMessage($"[SubEditor] Saved undo history ({lines.Count} entries) to {historyPath}", Color.Cyan);
             }
             catch (Exception e)
             {
@@ -3187,9 +3197,11 @@ namespace Barotrauma
         /// </summary>
         private void LoadPersistentUndoHistory(string subFilePath)
         {
+            DebugConsole.NewMessage($"[SubEditor] Loading undo history for: {subFilePath}", Color.Cyan);
             try
             {
                 string historyPath = System.IO.Path.ChangeExtension(subFilePath, ".undohistory");
+                DebugConsole.NewMessage($"[SubEditor] Looking for history file: {historyPath} (exists: {File.Exists(historyPath)})", Color.Cyan);
                 
                 // Try multiple path resolutions since save uses full disk path
                 // but load may use relative path
@@ -3225,7 +3237,7 @@ namespace Barotrauma
 
                 if (!File.Exists(historyPath))
                 {
-                    DebugConsole.Log($"[SubEditor] No undo history file found. Tried: {System.IO.Path.ChangeExtension(subFilePath, ".undohistory")}");
+                    DebugConsole.NewMessage($"[SubEditor] No undo history file found. Tried: {System.IO.Path.ChangeExtension(subFilePath, ".undohistory")}", Color.Yellow);
                     return;
                 }
 
@@ -3265,7 +3277,7 @@ namespace Barotrauma
                     }
                 }
 
-                DebugConsole.Log($"[SubEditor] Loaded undo history ({lines.Length} entries) from {historyPath}");
+                DebugConsole.NewMessage($"[SubEditor] Loaded undo history ({lines.Length} entries) from {historyPath}", Color.Cyan);
             }
             catch (Exception e)
             {
@@ -3317,8 +3329,8 @@ namespace Barotrauma
                 new LocalizedString[] { TextManager.Get("Close") },
                 relativeSize: new Vector2(0.35f, 0.55f));
 
-            // Scrollable list inside the content area so the close button stays visible
-            var scrollList = new GUIListBox(new RectTransform(Vector2.One, msgBox.Content.RectTransform));
+            // Scrollable list inside the content area — leave room at bottom for the Close button
+            var scrollList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), msgBox.Content.RectTransform));
 
             int itemHeight = (int)(25 * GUI.Scale);
 
