@@ -24,16 +24,17 @@ echo ""
 
 # Clean if requested
 if [ "$1" = "clean" ]; then
-    echo "=== Cleaning build artifacts (preserving Content folder) ==="
-    # Only remove compiled outputs, NOT the Content folder which has game assets
+    echo "=== Cleaning build artifacts (preserving Content + settings) ==="
+    # Only remove intermediate build outputs
     rm -rf Barotrauma/BarotraumaClient/obj
     rm -rf Barotrauma/BarotraumaServer/obj
     rm -rf Barotrauma/BarotraumaShared/obj
-    # Clean compiled files from output but preserve Content
+    # Clean compiled files from output but preserve Content and user settings
     if [ -d "$OUTPUT_DIR" ]; then
-        find "$OUTPUT_DIR" -maxdepth 1 -type f -delete 2>/dev/null || true
-        # Remove non-Content subdirectories (ref, runtimes, etc.) but keep Content
-        find "$OUTPUT_DIR" -maxdepth 1 -mindepth 1 -type d ! -name "Content" -exec rm -rf {} + 2>/dev/null || true
+        # Remove build artifacts only (DLLs, PDBs, etc.), keep config/settings/saves
+        find "$OUTPUT_DIR" -maxdepth 1 -type f \( -name "*.dll" -o -name "*.pdb" -o -name "*.deps.json" -o -name "*.runtimeconfig.json" -o -name "Barotrauma" -o -name "DedicatedServer" \) -delete 2>/dev/null || true
+        # Remove non-Content, non-Data subdirectories (ref, runtimes, etc.)
+        find "$OUTPUT_DIR" -maxdepth 1 -mindepth 1 -type d ! -name "Content" ! -name "Data" ! -name "Submarines" ! -name "Mods" -exec rm -rf {} + 2>/dev/null || true
     fi
     echo "Clean complete."
     echo ""
