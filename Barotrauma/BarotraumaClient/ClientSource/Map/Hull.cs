@@ -452,8 +452,8 @@ namespace Barotrauma
                             (int)(Submarine.DrawPosition.Y + WorldPosition.Y),
                             WorldRect.Width, WorldRect.Height);
 
-                    // Scale link width with zoom so links stay visible when zoomed out (min 2px screen-space)
-                    float linkWidth = Math.Max(2f, 4f / Screen.Selected.Cam.Zoom);
+                    // Scale link width with zoom so links stay visible when zoomed out (min 1px screen-space)
+                    float linkWidth = Math.Max(1f, 2f / Screen.Selected.Cam.Zoom);
                     GUI.DrawLine(spriteBatch,
                         new Vector2(currentHullRect.X, -currentHullRect.Y),
                         new Vector2(connectedHullRect.X, -connectedHullRect.Y),

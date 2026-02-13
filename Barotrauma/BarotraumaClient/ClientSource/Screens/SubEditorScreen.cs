@@ -8660,18 +8660,10 @@ namespace Barotrauma
                 SubEditorNetworkingClient.Instance.UpdateCursor(worldPos, (float)deltaTime);
                 
                 UpdateCollaborativeEntityMoves();
-                // Only detect property changes when the user is NOT actively moving entities.
-                // Arrow keys call Move() per-frame, and each move can change properties that
-                // UpdateCollaborativePropertyChanges detects and broadcasts. The receiver applies
-                // these as full property updates (no transformSync flag), which can trigger
-                // Scale → UpdateTransform → FindHull → teleportation. We defer property detection
-                // until the movement is complete (arrow key released, drag finished).
-                bool isActivelyMoving = MapEntity.GetNudgeAmount() != Vector2.Zero 
-                    || MapEntity.StartMovingPos != Vector2.Zero;
-                if (!isActivelyMoving)
-                {
-                    UpdateCollaborativePropertyChanges();
-                }
+                // Property change detection is deferred to AFTER MapEntity.UpdateSelecting
+                // (which fires StoreCommand → SendCollaborativeTransformUpdate on key/mouse release).
+                // This ensures property snapshots are updated before detection runs,
+                // preventing false property changes from being sent after transforms.
                 
                 if (GameMain.Client?.ChatBox != null)
                 {
@@ -9275,6 +9267,22 @@ namespace Barotrauma
                 }
 
                 MapEntity.UpdateSelecting(cam);
+            }
+
+            // Run property change detection AFTER MapEntity.UpdateSelecting.
+            // MapEntity.UpdateSelecting fires StoreCommand on key/mouse release,
+            // which calls SendCollaborativeTransformUpdate and updates property snapshots.
+            // By running property detection AFTER, we avoid false positives from transform changes.
+            // Also suppress during active movement (arrow keys held or drag in progress).
+            if (SubEditorNetworkingClient.Instance != null && SubEditorNetworkingClient.Instance.IsActive)
+            {
+                bool isActivelyMoving = MapEntity.GetNudgeAmount() != Vector2.Zero 
+                    || MapEntity.StartMovingPos != Vector2.Zero
+                    || (transformWidget != null && transformWidget.IsSelected);
+                if (!isActivelyMoving)
+                {
+                    UpdateCollaborativePropertyChanges();
+                }
             }
 
             if (!PlayerInput.PrimaryMouseButtonHeld())

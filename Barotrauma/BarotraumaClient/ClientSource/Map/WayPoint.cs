@@ -117,12 +117,12 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch,
                     drawPos,
                     new Vector2(StartMovingPos.X, -StartMovingPos.Y),
-                    (IsTraversable ? GUIStyle.Green : Color.Gray) * 0.7f, width: 5, depth: 0.002f);
+                    (IsTraversable ? GUIStyle.Green : Color.Gray) * 0.7f, width: 2, depth: 0.002f);
             }
             else
             {
-                // Scale link width with zoom so links stay visible when zoomed out (min 5px screen-space)
-                float waypointLinkWidth = Math.Max(5f, 6f / Screen.Selected.Cam.Zoom);
+                // Scale link width with zoom so links stay visible when zoomed out (min 1px screen-space)
+                float waypointLinkWidth = Math.Max(1f, 2f / Screen.Selected.Cam.Zoom);
                 foreach (MapEntity e in linkedTo)
                 {
                     GUI.DrawLine(spriteBatch,
