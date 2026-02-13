@@ -1234,6 +1234,9 @@ namespace Barotrauma
             };
             snapToGridFrame.RectTransform.MinSize = new Point(snapToGridFrame.Rect.Width, (int)(saveStampButton.Rect.Height / saveStampButton.RectTransform.RelativeSize.Y));
 
+            // Activity Log panel (always available, even offline)
+            CreateActivityLogPanel();
+
             // Collaborative editing users panel
             CreateCollaborativeUsersPanel();
 
@@ -2864,97 +2867,12 @@ namespace Barotrauma
         /// <summary>
         /// Create the panel showing connected collaborative editors.
         /// </summary>
-        private void CreateCollaborativeUsersPanel()
+        /// <summary>
+        /// Create the Activity Log UI (always available, even offline).
+        /// Must be called before CreateCollaborativeUsersPanel.
+        /// </summary>
+        private void CreateActivityLogPanel()
         {
-            // --- Editors toggle button (multiplayer only) ---
-            collaborativeToggleButton = new GUIButton(new RectTransform(new Vector2(0.06f, 0.025f), GUI.Canvas, Anchor.TopRight)
-            {
-                MinSize = new Point((int)(80 * GUI.Scale), (int)(20 * GUI.Scale)),
-                AbsoluteOffset = new Point((int)(10 * GUI.Scale), TopPanel.Rect.Height + (int)(5 * GUI.Scale))
-            }, TextManager.Get("SubEditorCollaborators").Fallback("Editors ▼"), style: "GUIButtonSmall")
-            {
-                Visible = false,
-                OnClicked = (btn, userData) =>
-                {
-                    if (collaborativeUsersPanel != null)
-                    {
-                        collaborativeUsersPanel.Visible = !collaborativeUsersPanel.Visible;
-                        btn.Text = collaborativeUsersPanel.Visible
-                            ? TextManager.Get("SubEditorCollaborators").Fallback("Editors ▲")
-                            : TextManager.Get("SubEditorCollaborators").Fallback("Editors ▼");
-                    }
-                    return true;
-                }
-            };
-
-            // --- Editors panel (multiplayer only) ---
-            collaborativeUsersPanel = new GUIFrame(new RectTransform(new Vector2(0.14f, 0.45f), GUI.Canvas, Anchor.TopRight)
-            {
-                MinSize = new Point((int)(180 * GUI.Scale), (int)(200 * GUI.Scale)),
-                AbsoluteOffset = new Point((int)(10 * GUI.Scale), TopPanel.Rect.Height + (int)(5 * GUI.Scale) + collaborativeToggleButton.Rect.Height + (int)(2 * GUI.Scale))
-            }, "InnerFrame")
-            {
-                Visible = false
-            };
-
-            // Panel uses a vertical layout for proper stacking
-            var editorsPanelLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.92f, 0.96f), collaborativeUsersPanel.RectTransform, Anchor.Center))
-            {
-                Stretch = true,
-                RelativeSpacing = 0.01f
-            };
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.08f), editorsPanelLayout.RectTransform),
-                TextManager.Get("SubEditorCollaborators").Fallback("Editors"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center);
-
-            collaborativeUsersList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.40f), editorsPanelLayout.RectTransform));
-
-            // --- Action buttons (large enough to read) ---
-            new GUIButton(new RectTransform(new Vector2(1.0f, 0.09f), editorsPanelLayout.RectTransform), "Manage Users...", style: "GUIButtonSmall")
-            {
-                OnClicked = (btn, _) =>
-                {
-                    ShowManageUsersDialog();
-                    return true;
-                }
-            };
-
-            new GUIButton(new RectTransform(new Vector2(1.0f, 0.09f), editorsPanelLayout.RectTransform), "Server Settings...", style: "GUIButtonSmall")
-            {
-                OnClicked = (btn, _) =>
-                {
-                    ShowServerSettingsDialog();
-                    return true;
-                }
-            };
-
-            new GUIButton(new RectTransform(new Vector2(1.0f, 0.09f), editorsPanelLayout.RectTransform), "Activity Log...", style: "GUIButtonSmall")
-            {
-                OnClicked = (btn, _) =>
-                {
-                    if (serverLogPanel != null)
-                    {
-                        serverLogPanel.Visible = !serverLogPanel.Visible;
-                        if (serverLogToggleButton != null)
-                        {
-                            serverLogToggleButton.Text = serverLogPanel.Visible ? "Activity Log ▲" : "Activity Log ▼";
-                        }
-                    }
-                    return true;
-                }
-            };
-
-            new GUIButton(new RectTransform(new Vector2(1.0f, 0.09f), editorsPanelLayout.RectTransform),
-                TextManager.Get("SubEditorLeaveSession").Fallback("Leave Session"), style: "GUIButtonSmall")
-            {
-                OnClicked = (btn, userData) =>
-                {
-                    LeaveCollaborativeSession();
-                    return true;
-                }
-            };
-
-            // --- Activity Log toggle button (always visible, independent of editors panel) ---
             int logTopOffset = TopPanel.Rect.Height + (int)(5 * GUI.Scale);
             
             serverLogToggleButton = new GUIButton(new RectTransform(new Vector2(0.07f, 0.025f), GUI.Canvas, Anchor.TopRight)
@@ -3005,6 +2923,89 @@ namespace Barotrauma
             };
         }
 
+        private void CreateCollaborativeUsersPanel()
+        {
+            // --- Editors toggle button (multiplayer only) ---
+            collaborativeToggleButton = new GUIButton(new RectTransform(new Vector2(0.06f, 0.025f), GUI.Canvas, Anchor.TopRight)
+            {
+                MinSize = new Point((int)(80 * GUI.Scale), (int)(20 * GUI.Scale)),
+                AbsoluteOffset = new Point((int)(10 * GUI.Scale), TopPanel.Rect.Height + (int)(5 * GUI.Scale))
+            }, TextManager.Get("SubEditorCollaborators").Fallback("Editors ▼"), style: "GUIButtonSmall")
+            {
+                Visible = false,
+                OnClicked = (btn, userData) =>
+                {
+                    if (collaborativeUsersPanel != null)
+                    {
+                        collaborativeUsersPanel.Visible = !collaborativeUsersPanel.Visible;
+                        btn.Text = collaborativeUsersPanel.Visible
+                            ? TextManager.Get("SubEditorCollaborators").Fallback("Editors ▲")
+                            : TextManager.Get("SubEditorCollaborators").Fallback("Editors ▼");
+                    }
+                    return true;
+                }
+            };
+
+            // --- Editors panel (multiplayer only) ---
+            collaborativeUsersPanel = new GUIFrame(new RectTransform(new Vector2(0.14f, 0.45f), GUI.Canvas, Anchor.TopRight)
+            {
+                MinSize = new Point((int)(180 * GUI.Scale), (int)(200 * GUI.Scale)),
+                AbsoluteOffset = new Point((int)(10 * GUI.Scale), TopPanel.Rect.Height + (int)(5 * GUI.Scale) + collaborativeToggleButton.Rect.Height + (int)(2 * GUI.Scale))
+            }, "InnerFrame")
+            {
+                Visible = false
+            };
+
+            // Panel uses a vertical layout for proper stacking
+            var editorsPanelLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.92f, 0.96f), collaborativeUsersPanel.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.01f
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.06f), editorsPanelLayout.RectTransform),
+                TextManager.Get("SubEditorCollaborators").Fallback("Editors"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center);
+
+            collaborativeUsersList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.45f), editorsPanelLayout.RectTransform));
+
+            // --- Action buttons: use existing game systems ---
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.08f), editorsPanelLayout.RectTransform),
+                TextManager.Get("ServerSettingsButton").Fallback("Server Settings..."), style: "GUIButtonSmall")
+            {
+                OnClicked = (btn, _) =>
+                {
+                    GameMain.Client?.ServerSettings?.ToggleSettingsFrame(btn, null);
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.08f), editorsPanelLayout.RectTransform), "Activity Log...", style: "GUIButtonSmall")
+            {
+                OnClicked = (btn, _) =>
+                {
+                    if (serverLogPanel != null)
+                    {
+                        serverLogPanel.Visible = !serverLogPanel.Visible;
+                        if (serverLogToggleButton != null)
+                        {
+                            serverLogToggleButton.Text = serverLogPanel.Visible ? "Activity Log ▲" : "Activity Log ▼";
+                        }
+                    }
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.08f), editorsPanelLayout.RectTransform),
+                TextManager.Get("SubEditorLeaveSession").Fallback("Leave Session"), style: "GUIButtonSmall")
+            {
+                OnClicked = (btn, userData) =>
+                {
+                    LeaveCollaborativeSession();
+                    return true;
+                }
+            };
+        }
+
         /// <summary>
         /// Refresh the list of connected users in the panel.
         /// </summary>
@@ -3018,7 +3019,10 @@ namespace Barotrauma
             foreach (var kvp in SubEditorNetworkingClient.Instance.ConnectedEditors)
             {
                 var user = kvp.Value;
-                var userFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), collaborativeUsersList.Content.RectTransform), style: null)
+                var userFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), collaborativeUsersList.Content.RectTransform)
+                {
+                    MinSize = new Point(0, (int)(25 * GUI.Scale))
+                }, style: null)
                 {
                     UserData = user
                 };
@@ -3041,6 +3045,24 @@ namespace Barotrauma
                 {
                     RelativeOffset = new Vector2(0.12f, 0)
                 }, displayName, font: GUIStyle.SmallFont);
+
+                // Right-click context menu: reuse the existing multiplayer moderation menu
+                string userName = user.Name;
+                byte userSessionId = user.SessionId;
+                userFrame.OnSecondaryClicked = (component, data) =>
+                {
+                    // Find the Client object that matches this user
+                    if (GameMain.Client != null)
+                    {
+                        Client matchingClient = GameMain.Client.ConnectedClients?.FirstOrDefault(c => c.SessionId == userSessionId)
+                            ?? GameMain.Client.PreviouslyConnectedClients?.FirstOrDefault(c => c.SessionId == userSessionId);
+                        if (matchingClient != null)
+                        {
+                            NetLobbyScreen.CreateModerationContextMenu(matchingClient);
+                        }
+                    }
+                    return true;
+                };
             }
 
             // Update toggle button text to show user count
@@ -3199,143 +3221,6 @@ namespace Barotrauma
                 return true;
             };
             confirmBox.Buttons[1].OnClicked = confirmBox.Close;
-        }
-
-        /// <summary>
-        /// Show a dialog for managing connected users (kick/ban).
-        /// </summary>
-        private void ShowManageUsersDialog()
-        {
-            if (SubEditorNetworkingClient.Instance?.IsActive != true)
-            {
-                GUI.AddMessage("Not connected to a session.", GUIStyle.Red);
-                return;
-            }
-
-            bool isHost = SubEditorNetworkingClient.Instance.IsHost;
-
-            var msgBox = new GUIMessageBox("Manage Users", "", new[] { TextManager.Get("Close").Fallback("Close") },
-                relativeSize: new Vector2(0.3f, 0.4f));
-
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), msgBox.Content.RectTransform, Anchor.TopCenter))
-            {
-                Stretch = true,
-                RelativeSpacing = 0.02f
-            };
-
-            foreach (var kvp in SubEditorNetworkingClient.Instance.ConnectedEditors)
-            {
-                var user = kvp.Value;
-                var isLocal = user.SessionId == SubEditorNetworkingClient.Instance.LocalSessionId;
-
-                var userRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.12f), content.RectTransform), isHorizontal: true)
-                {
-                    Stretch = true,
-                    RelativeSpacing = 0.02f
-                };
-
-                // Color swatch
-                new GUIFrame(new RectTransform(new Vector2(0.05f, 0.8f), userRow.RectTransform), style: null)
-                {
-                    Color = user.GetColor(),
-                    OutlineColor = Color.White
-                };
-
-                // Name
-                string displayName = isLocal ? $"{user.Name} (You)" : user.Name;
-                new GUITextBlock(new RectTransform(new Vector2(isHost && !isLocal ? 0.55f : 0.9f, 1.0f), userRow.RectTransform),
-                    displayName, font: GUIStyle.SmallFont);
-
-                if (isHost && !isLocal)
-                {
-                    string userName = user.Name;
-                    new GUIButton(new RectTransform(new Vector2(0.18f, 0.9f), userRow.RectTransform), "Kick", style: "GUIButtonSmall")
-                    {
-                        OnClicked = (btn, _) =>
-                        {
-                            GameMain.Client?.KickPlayer(userName, "Kicked by host");
-                            msgBox.Close();
-                            return true;
-                        }
-                    };
-                    new GUIButton(new RectTransform(new Vector2(0.18f, 0.9f), userRow.RectTransform), "Ban", style: "GUIButtonSmall")
-                    {
-                        OnClicked = (btn, _) =>
-                        {
-                            GameMain.Client?.BanPlayer(userName, "Banned by host");
-                            msgBox.Close();
-                            return true;
-                        }
-                    };
-                }
-            }
-
-            msgBox.Buttons[0].OnClicked = msgBox.Close;
-        }
-
-        /// <summary>
-        /// Show a dialog for server settings (permissions, etc.).
-        /// </summary>
-        private void ShowServerSettingsDialog()
-        {
-            if (SubEditorNetworkingClient.Instance?.IsActive != true)
-            {
-                GUI.AddMessage("Not connected to a session.", GUIStyle.Red);
-                return;
-            }
-
-            bool isHost = SubEditorNetworkingClient.Instance.IsHost;
-            if (!isHost)
-            {
-                GUI.AddMessage("Only the host can change server settings.", GUIStyle.Red);
-                return;
-            }
-
-            var msgBox = new GUIMessageBox("Server Settings", "", new[] { TextManager.Get("Close").Fallback("Close") },
-                relativeSize: new Vector2(0.35f, 0.5f));
-
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), msgBox.Content.RectTransform, Anchor.TopCenter))
-            {
-                Stretch = true,
-                RelativeSpacing = 0.02f
-            };
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.08f), content.RectTransform),
-                "Default Client Permissions", font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft);
-
-            // Permission checkboxes
-            foreach (SubEditorPermissions perm in Enum.GetValues(typeof(SubEditorPermissions)))
-            {
-                if (perm == SubEditorPermissions.None || perm == SubEditorPermissions.All) continue;
-
-                var defaultPerms = SubEditorNetworkingShared.DefaultClientPermissions;
-                bool isSet = defaultPerms.HasFlag(perm);
-
-                var permRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), content.RectTransform), isHorizontal: true)
-                {
-                    Stretch = true,
-                    RelativeSpacing = 0.02f
-                };
-
-                SubEditorPermissions capturedPerm = perm;
-                var checkbox = new GUITickBox(new RectTransform(new Vector2(0.08f, 1.0f), permRow.RectTransform), "")
-                {
-                    Selected = isSet,
-                    OnSelected = (tb) =>
-                    {
-                        if (tb.Selected)
-                            SubEditorNetworkingShared.DefaultClientPermissions |= capturedPerm;
-                        else
-                            SubEditorNetworkingShared.DefaultClientPermissions &= ~capturedPerm;
-                        return true;
-                    }
-                };
-
-                new GUITextBlock(new RectTransform(new Vector2(0.88f, 1.0f), permRow.RectTransform),
-                    capturedPerm.ToString(), font: GUIStyle.SmallFont);
-            }
-
-            msgBox.Buttons[0].OnClicked = msgBox.Close;
         }
 
         #endregion Collaborative Editing
