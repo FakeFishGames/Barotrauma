@@ -331,6 +331,17 @@ namespace Barotrauma
         /// </summary>
         private bool isApplyingRemoteChange;
 
+        /// <summary>
+        /// Batch remote entity placements/removals from the same sender into a single undo command.
+        /// When a client places multiple entities at once (e.g., paste), the server sends them as
+        /// separate messages. Without batching, each creates a separate undo entry on the host.
+        /// </summary>
+        private byte pendingRemoteCommandSender;
+        private bool pendingRemoteCommandIsDelete;
+        private readonly List<MapEntity> pendingRemoteEntities = new List<MapEntity>();
+        private double pendingRemoteCommandTimer;
+        private const double RemoteCommandBatchWindow = 0.1; // 100ms window to batch
+
         private static GUIComponent autoSaveLabel;
         private static int MaxAutoSaves => GameSettings.CurrentConfig.MaxAutoSaves;
 
@@ -2118,14 +2129,15 @@ namespace Barotrauma
                         break;
                 }
 
-                // Add to host's undo stack so host can undo client changes
+                // Batch for host's undo stack — multiple entities from the same sender
+                // within 100ms get combined into a single undo command
                 if (loadedEntity != null && SubEditorNetworkingClient.Instance?.IsHost == true)
                 {
-                    isApplyingRemoteChange = true;
-                    var cmd = new AddOrDeleteCommand(new List<MapEntity> { loadedEntity }, wasDeleted: false);
-                    cmd.AuthorSessionId = senderSessionId.ToString();
-                    StoreCommand(cmd);
-                    isApplyingRemoteChange = false;
+                    FlushPendingRemoteCommandIfNeeded(senderSessionId, isDelete: false);
+                    pendingRemoteEntities.Add(loadedEntity);
+                    pendingRemoteCommandSender = senderSessionId;
+                    pendingRemoteCommandIsDelete = false;
+                    pendingRemoteCommandTimer = Timing.TotalTime + RemoteCommandBatchWindow;
                 }
 
                 // entity.Save() writes rect as (rect - HiddenSubPosition), i.e. design-time coordinates.
@@ -2175,9 +2187,11 @@ namespace Barotrauma
             var entity = Entity.FindEntityByID(entityId) as MapEntity;
             if (entity != null)
             {
-                // Add to host's undo stack BEFORE removing so the clone can be created
+                // Store to host's undo stack BEFORE removing (AddOrDeleteCommand needs entity alive)
                 if (SubEditorNetworkingClient.Instance?.IsHost == true)
                 {
+                    // Flush any pending placement batch first
+                    FlushPendingRemoteCommand();
                     isApplyingRemoteChange = true;
                     var cmd = new AddOrDeleteCommand(new List<MapEntity> { entity }, wasDeleted: true);
                     cmd.AuthorSessionId = senderSessionId.ToString();
@@ -2187,6 +2201,33 @@ namespace Barotrauma
                 
                 entity.Remove();
             }
+        }
+
+        /// <summary>
+        /// Flush pending remote entity batch if the new message is from a different sender.
+        /// </summary>
+        private void FlushPendingRemoteCommandIfNeeded(byte newSender, bool isDelete)
+        {
+            if (pendingRemoteEntities.Count > 0 && (newSender != pendingRemoteCommandSender || isDelete != pendingRemoteCommandIsDelete))
+            {
+                FlushPendingRemoteCommand();
+            }
+        }
+
+        /// <summary>
+        /// Flush batched remote entity placements into a single undo command.
+        /// </summary>
+        private void FlushPendingRemoteCommand()
+        {
+            if (pendingRemoteEntities.Count == 0) return;
+
+            isApplyingRemoteChange = true;
+            var cmd = new AddOrDeleteCommand(new List<MapEntity>(pendingRemoteEntities), wasDeleted: pendingRemoteCommandIsDelete);
+            cmd.AuthorSessionId = pendingRemoteCommandSender.ToString();
+            StoreCommand(cmd);
+            isApplyingRemoteChange = false;
+            pendingRemoteEntities.Clear();
+            pendingRemoteCommandTimer = 0;
         }
 
         private void OnCollaborativeEntityMoved(byte senderSessionId, ushort entityId, float x, float y)
@@ -9249,6 +9290,12 @@ namespace Barotrauma
                 {
                     // Reset timer so property check runs immediately after movement ends
                     collaborativePropertyCheckTimer = 0f;
+                }
+
+                // Flush pending batched remote entity commands after the batch window expires
+                if (pendingRemoteEntities.Count > 0 && Timing.TotalTime >= pendingRemoteCommandTimer)
+                {
+                    FlushPendingRemoteCommand();
                 }
                 
                 if (GameMain.Client?.ChatBox != null)
