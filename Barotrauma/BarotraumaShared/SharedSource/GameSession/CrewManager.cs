@@ -399,7 +399,6 @@ namespace Barotrauma
             return WayPoint.WayPointList.FindAll(wp =>
                     wp.SpawnType == SpawnType.Human &&
                     wp.Submarine == Level.Loaded.StartOutpost &&
-                    wp.CurrentHull != null &&
                     wp.CurrentHull.OutpostModuleTags.Contains("airlock".ToIdentifier()));
         }
 
