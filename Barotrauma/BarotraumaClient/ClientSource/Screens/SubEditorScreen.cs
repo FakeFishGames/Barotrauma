@@ -290,6 +290,8 @@ namespace Barotrauma
         private string undoActiveSubTab = "edits"; // "edits" or "wires"
         /// <summary>Tracks all users who have ever been in the session, for persistent tabs.</summary>
         private readonly Dictionary<string, string> undoTabUsers = new Dictionary<string, string>();
+        /// <summary>Persistent undo history lines loaded from .undohistory file.</summary>
+        private List<string> loadedPersistentHistory = new List<string>();
 
         private GUIDropDown linkedSubBox;
 
@@ -3281,16 +3283,24 @@ namespace Barotrauma
 
                 var lines = File.ReadAllLines(historyPath);
 
+                // Store loaded history for display in undo panel
+                loadedPersistentHistory.Clear();
+                foreach (string line in lines)
+                {
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        loadedPersistentHistory.Add(line);
+                    }
+                }
+
                 // Load into our custom offline panel
                 if (serverLogList != null)
                 {
                     // Clear previous entries before loading new ones
                     serverLogList.Content.ClearChildren();
 
-                    foreach (string line in lines)
+                    foreach (string line in loadedPersistentHistory)
                     {
-                        if (string.IsNullOrWhiteSpace(line)) continue;
-
                         new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverLogList.Content.RectTransform) { MinSize = new Point(0, 18) },
                             line, font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft, wrap: true)
                         {
@@ -3308,14 +3318,16 @@ namespace Barotrauma
                 // Also feed into the real server log if available
                 if (GameMain.Client?.ServerSettings?.ServerLog != null)
                 {
-                    foreach (string line in lines)
+                    foreach (string line in loadedPersistentHistory)
                     {
-                        if (string.IsNullOrWhiteSpace(line)) continue;
                         GameMain.Client.ServerSettings.ServerLog.WriteLine(line, Networking.ServerLog.MessageType.Chat);
                     }
                 }
 
-                DebugConsole.NewMessage($"[SubEditor] Loaded undo history ({lines.Length} entries) from {historyPath}", Color.Cyan);
+                // Rebuild the undo panel to show loaded history
+                UpdateUndoHistoryPanel();
+
+                DebugConsole.NewMessage($"[SubEditor] Loaded undo history ({loadedPersistentHistory.Count} entries) from {historyPath}", Color.Cyan);
             }
             catch (Exception e)
             {
@@ -3343,6 +3355,8 @@ namespace Barotrauma
                 {
                     File.Delete(historyPath);
                     serverLogList?.Content.ClearChildren();
+                    loadedPersistentHistory.Clear();
+                    UpdateUndoHistoryPanel();
                     DebugConsole.Log($"[SubEditor] Cleared undo history: {historyPath}");
                     GUI.AddMessage("Undo history cleared.", GUIStyle.Green);
                 }
@@ -8998,6 +9012,29 @@ namespace Barotrauma
 
             // "Beginning" marker at the bottom
             CreateUndoEntry(TextManager.Get("undo.beginning").Value, TextManager.Get("undo.beginningtooltip"), null, commandIndex == 0 ? GUIStyle.Green : Color.Gray);
+
+            // Add persistent history entries below the "Beginning" marker (read-only, not undoable)
+            if (loadedPersistentHistory.Count > 0)
+            {
+                // "Previous Session History" separator
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), undoBufferList.Content.RectTransform) { MinSize = new Point(0, 18) },
+                    "── Previous Session ──", font: GUIStyle.SmallFont, textAlignment: Alignment.Center)
+                {
+                    TextColor = Color.Gray * 0.7f,
+                    CanBeFocused = false
+                };
+
+                foreach (string line in loadedPersistentHistory)
+                {
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), undoBufferList.Content.RectTransform) { MinSize = new Point(0, 18) },
+                        line, font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft)
+                    {
+                        TextColor = Color.DarkGray,
+                        ToolTip = line + " (from previous session)",
+                        CanBeFocused = false
+                    };
+                }
+            }
 
             void CreateUndoEntry(string name, LocalizedString tooltip, Command command, Color textColor)
             {
