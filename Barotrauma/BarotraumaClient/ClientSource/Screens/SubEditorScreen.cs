@@ -3191,28 +3191,41 @@ namespace Barotrauma
             {
                 string historyPath = System.IO.Path.ChangeExtension(subFilePath, ".undohistory");
                 
-                // Try resolving content package paths (e.g., %ModDir%/sub.sub)
+                // Try multiple path resolutions since save uses full disk path
+                // but load may use relative path
                 if (!File.Exists(historyPath))
                 {
-                    // Try with the full resolved path from ContentPath
+                    // Try full path resolution
                     try
                     {
-                        var resolved = ContentPath.FromRaw(null, subFilePath);
-                        if (!resolved.IsNullOrEmpty())
+                        string fullPath = System.IO.Path.GetFullPath(historyPath);
+                        if (File.Exists(fullPath))
                         {
-                            string resolvedHistory = System.IO.Path.ChangeExtension(resolved.Value, ".undohistory");
-                            if (File.Exists(resolvedHistory))
-                            {
-                                historyPath = resolvedHistory;
-                            }
+                            historyPath = fullPath;
                         }
                     }
                     catch { /* fallthrough */ }
                 }
 
+                // Try the last saved path (savePath from SaveSub may differ from info.FilePath)
+                if (!File.Exists(historyPath) && MainSub?.Info?.FilePath != null)
+                {
+                    string altPath = System.IO.Path.ChangeExtension(MainSub.Info.FilePath, ".undohistory");
+                    if (File.Exists(altPath)) { historyPath = altPath; }
+                    else
+                    {
+                        try
+                        {
+                            string fullAlt = System.IO.Path.GetFullPath(altPath);
+                            if (File.Exists(fullAlt)) { historyPath = fullAlt; }
+                        }
+                        catch { /* fallthrough */ }
+                    }
+                }
+
                 if (!File.Exists(historyPath))
                 {
-                    DebugConsole.Log($"[SubEditor] No undo history file found at {historyPath}");
+                    DebugConsole.Log($"[SubEditor] No undo history file found. Tried: {System.IO.Path.ChangeExtension(subFilePath, ".undohistory")}");
                     return;
                 }
 
@@ -3302,15 +3315,14 @@ namespace Barotrauma
                 TextManager.Get("ServerSettingsButton").Fallback("Editor Permissions"),
                 "",
                 new LocalizedString[] { TextManager.Get("Close") },
-                relativeSize: new Vector2(0.35f, 0.6f));
+                relativeSize: new Vector2(0.35f, 0.55f));
 
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), msgBox.Content.RectTransform, Anchor.TopCenter))
-            {
-                Stretch = true,
-                RelativeSpacing = 0.015f
-            };
+            // Scrollable list inside the content area so the close button stays visible
+            var scrollList = new GUIListBox(new RectTransform(Vector2.One, msgBox.Content.RectTransform));
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.06f), content.RectTransform),
+            int itemHeight = (int)(25 * GUI.Scale);
+
+            new GUITextBlock(new RectTransform(new Point(scrollList.Content.Rect.Width, itemHeight), scrollList.Content.RectTransform),
                 "Default permissions for new clients:", font: GUIStyle.SmallFont);
 
             foreach (SubEditorPermissions perm in Enum.GetValues(typeof(SubEditorPermissions)))
@@ -3318,7 +3330,7 @@ namespace Barotrauma
                 if (perm == SubEditorPermissions.None || perm == SubEditorPermissions.All) continue;
 
                 bool isSet = (SubEditorNetworkingShared.DefaultClientPermissions & perm) != 0;
-                var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.06f), content.RectTransform),
+                var tickBox = new GUITickBox(new RectTransform(new Point(scrollList.Content.Rect.Width, itemHeight), scrollList.Content.RectTransform),
                     perm.ToString(), font: GUIStyle.SmallFont)
                 {
                     Selected = isSet,
@@ -3334,7 +3346,7 @@ namespace Barotrauma
             }
 
             // Mass Edit Threshold (numerical input)
-            var thresholdLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f), content.RectTransform), isHorizontal: true)
+            var thresholdLayout = new GUILayoutGroup(new RectTransform(new Point(scrollList.Content.Rect.Width, itemHeight), scrollList.Content.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
