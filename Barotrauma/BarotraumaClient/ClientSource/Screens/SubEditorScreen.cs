@@ -771,7 +771,11 @@ namespace Barotrauma
                 return selectedLayerText.Text;
             };
 
-            TopPanel.RectTransform.MinSize = new Point(0, (int)(paddedTopPanel.RectTransform.Children.Max(c => c.MinSize.Y) / paddedTopPanel.RectTransform.RelativeSize.Y));
+            int maxChildMinHeight = Math.Max(
+                paddedTopPanel.RectTransform.Children.Any() ? paddedTopPanel.RectTransform.Children.Max(c => c.MinSize.Y) : 0,
+                rightToolbar.RectTransform.Children.Any() ? rightToolbar.RectTransform.Children.Max(c => c.MinSize.Y) : 0);
+            int newMinHeight = maxChildMinHeight > 0 ? (int)(maxChildMinHeight / paddedTopPanel.RectTransform.RelativeSize.Y) : TopPanel.RectTransform.MinSize.Y;
+            TopPanel.RectTransform.MinSize = new Point(0, Math.Max(newMinHeight, 35));
             paddedTopPanel.Recalculate();
             rightToolbar.Recalculate();
 
