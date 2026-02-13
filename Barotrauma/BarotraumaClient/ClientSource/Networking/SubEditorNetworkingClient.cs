@@ -179,12 +179,29 @@ namespace Barotrauma.Networking
             }
         }
 
+        public bool HasPermission(SubEditorPermissions perm)
+        {
+            if (!IsActive) return true;
+            return GetPermissions(localSessionId).HasFlag(perm);
+        }
+
         public bool CanEditEntity(MapEntity entity)
         {
             if (!IsActive) return true;
             if (entity == null) return false;
-            
-            return !IsEntityLockedByOther(entity.ID, localSessionId);
+            if (IsEntityLockedByOther(entity.ID, localSessionId)) return false;
+
+            string myAccountId = GameMain.Client?.Name ?? "";
+            return CanUserEditEntity(localSessionId, entity.ID, myAccountId);
+        }
+
+        public bool CanDeleteEntity(MapEntity entity)
+        {
+            if (!IsActive) return true;
+            if (entity == null) return false;
+
+            string myAccountId = GameMain.Client?.Name ?? "";
+            return CanUserDeleteEntity(localSessionId, entity.ID, myAccountId);
         }
 
         public void DrawCursors(SpriteBatch spriteBatch, Camera cam)
@@ -249,7 +266,17 @@ namespace Barotrauma.Networking
             }
             
             lastKnownHostSessionId = hostSessionId;
+            HostSessionId = hostSessionId;
             IsHost = (localSessionId == hostSessionId);
+
+            // Apply default permissions for all non-host users if not already set
+            foreach (var user in users)
+            {
+                if (user.SessionId != hostSessionId && !UserPermissions.ContainsKey(user.SessionId))
+                {
+                    SetPermissions(user.SessionId, DefaultClientPermissions);
+                }
+            }
             
             OnClientListUpdated?.Invoke();
         }

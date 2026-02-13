@@ -174,7 +174,7 @@ namespace Barotrauma.Networking
         // Keyed by AccountId (not username) because usernames can change
         public Dictionary<UInt16, string> EntityOwnership { get; } = new Dictionary<UInt16, string>();
 
-        public static SubEditorPermissions DefaultClientPermissions { get; set; } = SubEditorPermissions.None;
+        public static SubEditorPermissions DefaultClientPermissions { get; set; } = SubEditorPermissions.All;
 
         // Host always has all permissions
         public Dictionary<byte, SubEditorPermissions> UserPermissions { get; } = new Dictionary<byte, SubEditorPermissions>();

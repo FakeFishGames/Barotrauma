@@ -81,9 +81,41 @@ namespace Barotrauma.Networking
             }
         }
 
+        private SubEditorPermissions GetSenderPermissions(Client sender)
+        {
+            if (subEditorSession == null) return SubEditorPermissions.None;
+            return subEditorSession.GetPermissions((byte)sender.SessionId);
+        }
+
+        private string GetSenderAccountId(Client sender)
+        {
+            return sender.AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : sender.Name;
+        }
+
         private void HandleEntityPlaced(IReadMessage inc, Client sender)
         {
             string entityXml = inc.ReadString();
+
+            var perms = GetSenderPermissions(sender);
+            if (!perms.HasFlag(SubEditorPermissions.CanEditOwn))
+            {
+                return;
+            }
+
+            // Track ownership: try to extract entity ID from XML
+            if (subEditorSession != null)
+            {
+                try
+                {
+                    var xElement = System.Xml.Linq.XElement.Parse(entityXml);
+                    int id = xElement.GetAttributeInt("ID", 0);
+                    if (id > 0)
+                    {
+                        subEditorSession.SetEntityOwner((ushort)id, GetSenderAccountId(sender));
+                    }
+                }
+                catch { }
+            }
 
             foreach (var client in connectedClients.Where(c => c != sender))
             {
@@ -99,6 +131,16 @@ namespace Barotrauma.Networking
         private void HandleEntityRemoved(IReadMessage inc, Client sender)
         {
             ushort entityId = inc.ReadUInt16();
+
+            if (subEditorSession != null)
+            {
+                string accountId = GetSenderAccountId(sender);
+                if (!subEditorSession.CanUserDeleteEntity((byte)sender.SessionId, entityId, accountId))
+                {
+                    return;
+                }
+                subEditorSession.RemoveEntityOwnership(entityId);
+            }
 
             foreach (var client in connectedClients.Where(c => c != sender))
             {
@@ -116,6 +158,15 @@ namespace Barotrauma.Networking
             ushort entityId = inc.ReadUInt16();
             float posX = inc.ReadSingle();
             float posY = inc.ReadSingle();
+
+            if (subEditorSession != null)
+            {
+                string accountId = GetSenderAccountId(sender);
+                if (!subEditorSession.CanUserEditEntity((byte)sender.SessionId, entityId, accountId))
+                {
+                    return;
+                }
+            }
 
             foreach (var client in connectedClients.Where(c => c != sender))
             {
@@ -142,6 +193,18 @@ namespace Barotrauma.Networking
                 moves.Add((entityId, dx, dy));
             }
 
+            if (subEditorSession != null)
+            {
+                var perms = GetSenderPermissions(sender);
+                if (subEditorSession.IsMassEdit(moves.Count) && !perms.HasFlag(SubEditorPermissions.CanMassEdit))
+                {
+                    return;
+                }
+                string accountId = GetSenderAccountId(sender);
+                moves.RemoveAll(m => !subEditorSession.CanUserEditEntity((byte)sender.SessionId, m.entityId, accountId));
+                if (moves.Count == 0) return;
+            }
+
             foreach (var client in connectedClients.Where(c => c != sender))
             {
                 IWriteMessage msg = new WriteOnlyMessage();
@@ -165,6 +228,15 @@ namespace Barotrauma.Networking
             string propName = inc.ReadString();
             string propValue = inc.ReadString();
 
+            if (subEditorSession != null)
+            {
+                string accountId = GetSenderAccountId(sender);
+                if (!subEditorSession.CanUserEditEntity((byte)sender.SessionId, entityId, accountId))
+                {
+                    return;
+                }
+            }
+
             foreach (var client in connectedClients.Where(c => c != sender))
             {
                 IWriteMessage msg = new WriteOnlyMessage();
@@ -182,6 +254,15 @@ namespace Barotrauma.Networking
         {
             ushort entityId = inc.ReadUInt16();
             string entityXml = inc.ReadString();
+
+            if (subEditorSession != null)
+            {
+                string accountId = GetSenderAccountId(sender);
+                if (!subEditorSession.CanUserEditEntity((byte)sender.SessionId, entityId, accountId))
+                {
+                    return;
+                }
+            }
 
             foreach (var client in connectedClients.Where(c => c != sender))
             {
@@ -250,6 +331,7 @@ namespace Barotrauma.Networking
             subEditorHost = host;
             isSubEditorSessionActive = true;
             
+            subEditorSession.HostSessionId = (byte)host.SessionId;
             ServerSettings.VoiceChatEnabled = true;
 
             byte hostColorIndex = 0;
@@ -295,6 +377,9 @@ namespace Barotrauma.Networking
             byte colorIndex = (byte)(subEditorSession.ConnectedEditors.Count % SubEditorUser.UserColors.Length);
             var user = new SubEditorUser(sessionId, client.Name, colorIndex);
             subEditorSession.AddUser(user);
+
+            // Grant default permissions to new clients
+            subEditorSession.SetPermissions(sessionId, SubEditorNetworkingShared.DefaultClientPermissions);
 
             DebugConsole.Log($"[SubEditor] {client.Name} joined");
 
