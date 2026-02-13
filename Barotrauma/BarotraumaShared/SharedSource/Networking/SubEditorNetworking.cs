@@ -31,7 +31,8 @@ namespace Barotrauma.Networking
         RequestSubmarineFile,
         EntityUpdated,
         FullState,
-        EntitiesMovedBatch
+        EntitiesMovedBatch,
+        SetPermissions
     }
 
     [NetworkSerialize]

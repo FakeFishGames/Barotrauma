@@ -456,6 +456,26 @@ namespace Barotrauma.Networking
             GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
         }
 
+        public void SendPermissionUpdate(byte targetSessionId, SubEditorPermissions permissions)
+        {
+            if (!IsActive || !IsHost) return;
+            if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
+
+            SetPermissions(targetSessionId, permissions);
+
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
+            msg.WriteByte((byte)SubEditorPacketHeader.SetPermissions);
+            msg.WriteByte(targetSessionId);
+            msg.WriteUInt32((uint)permissions);
+            GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
+        }
+
+        public void ReceivePermissionUpdate(byte targetSessionId, SubEditorPermissions permissions)
+        {
+            SetPermissions(targetSessionId, permissions);
+        }
+
         public void ReceiveEntityPlaced(byte senderSessionId, string entityXml)
         {
             OnEntityPlaced?.Invoke(senderSessionId, entityXml);

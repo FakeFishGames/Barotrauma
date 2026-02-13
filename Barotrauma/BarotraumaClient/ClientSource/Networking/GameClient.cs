@@ -1105,6 +1105,11 @@ namespace Barotrauma.Networking
                 case SubEditorPacketHeader.ReturnToEditor:
                     SubEditorNetworkingClient.Instance?.ReceiveTestModeEnd();
                     break;
+                case SubEditorPacketHeader.SetPermissions:
+                    byte permTarget = inc.ReadByte();
+                    uint permBits = inc.ReadUInt32();
+                    SubEditorNetworkingClient.Instance?.ReceivePermissionUpdate(permTarget, (SubEditorPermissions)permBits);
+                    break;
             }
         }
 

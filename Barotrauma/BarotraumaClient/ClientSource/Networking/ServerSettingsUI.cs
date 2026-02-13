@@ -1046,7 +1046,7 @@ namespace Barotrauma.Networking
                     permDropdown.OnSelected = (component, obj) =>
                     {
                         var selectedPerm = (SubEditorPermissions)obj;
-                        SubEditorNetworkingClient.Instance?.SetPermissions(sessionId, selectedPerm);
+                        SubEditorNetworkingClient.Instance?.SendPermissionUpdate(sessionId, selectedPerm);
                         permDropdown.Text = GetPermSummary(selectedPerm);
                         return true;
                     };
@@ -1111,7 +1111,7 @@ namespace Barotrauma.Networking
                             current |= capturedPerm;
                         else
                             current &= ~capturedPerm;
-                        SubEditorNetworkingClient.Instance?.SetPermissions(sessionId, current);
+                        SubEditorNetworkingClient.Instance?.SendPermissionUpdate(sessionId, current);
                         return true;
                     }
                 };

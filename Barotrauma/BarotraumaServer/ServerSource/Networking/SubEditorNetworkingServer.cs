@@ -75,6 +75,9 @@ namespace Barotrauma.Networking
                 case SubEditorPacketHeader.RequestSubmarineFile:
                     HandleRequestSubmarineFile(inc, sender);
                     break;
+                case SubEditorPacketHeader.SetPermissions:
+                    HandleSetPermissions(inc, sender);
+                    break;
                 default:
                     DebugConsole.AddWarning($"Unknown SubEditor packet header: {subHeader}");
                     break;
@@ -316,6 +319,28 @@ namespace Barotrauma.Networking
             else
             {
                 DebugConsole.AddWarning($"[SubEditor] Could not find submarine '{subName}' to send to {sender.Name}");
+            }
+        }
+
+        private void HandleSetPermissions(IReadMessage inc, Client sender)
+        {
+            if (!isSubEditorSessionActive || subEditorSession == null) return;
+            if (sender != subEditorHost) return;
+
+            byte targetSessionId = inc.ReadByte();
+            uint permBits = inc.ReadUInt32();
+            var permissions = (SubEditorPermissions)permBits;
+
+            subEditorSession.SetPermissions(targetSessionId, permissions);
+
+            foreach (var client in connectedClients)
+            {
+                IWriteMessage msg = new WriteOnlyMessage();
+                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+                msg.WriteByte((byte)SubEditorPacketHeader.SetPermissions);
+                msg.WriteByte(targetSessionId);
+                msg.WriteUInt32(permBits);
+                serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
             }
         }
 
