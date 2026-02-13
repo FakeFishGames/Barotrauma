@@ -458,9 +458,14 @@ namespace Barotrauma.Networking
 
         public void SendPermissionUpdate(byte targetSessionId, SubEditorPermissions permissions)
         {
-            if (!IsActive || !IsHost) return;
+            if (!IsActive || !IsHost)
+            {
+                DebugConsole.NewMessage($"[SubEditor] SendPermissionUpdate BLOCKED: IsActive={IsActive}, IsHost={IsHost}", Color.Red);
+                return;
+            }
             if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
 
+            DebugConsole.NewMessage($"[SubEditor] SendPermissionUpdate: target={targetSessionId}, perms={permissions} (bits={(uint)permissions})", Color.Yellow);
             SetPermissions(targetSessionId, permissions);
 
             IWriteMessage msg = new WriteOnlyMessage();
@@ -473,6 +478,7 @@ namespace Barotrauma.Networking
 
         public void ReceivePermissionUpdate(byte targetSessionId, SubEditorPermissions permissions)
         {
+            DebugConsole.NewMessage($"[SubEditor] ReceivePermissionUpdate: target={targetSessionId}, perms={permissions}", Color.Cyan);
             SetPermissions(targetSessionId, permissions);
         }
 

@@ -90,7 +90,9 @@ namespace Barotrauma.Networking
         private SubEditorPermissions GetSenderPermissions(Client sender)
         {
             if (subEditorSession == null) return SubEditorPermissions.None;
-            return subEditorSession.GetPermissions((byte)sender.SessionId);
+            var perms = subEditorSession.GetPermissions((byte)sender.SessionId);
+            DebugConsole.Log($"[SubEditor] GetSenderPermissions({sender.Name}, session={sender.SessionId}): hostSession={subEditorSession.HostSessionId}, result={perms}");
+            return perms;
         }
 
         private string GetSenderAccountId(Client sender)
@@ -124,8 +126,10 @@ namespace Barotrauma.Networking
             string entityXml = inc.ReadString();
 
             var perms = GetSenderPermissions(sender);
+            DebugConsole.NewMessage($"[SubEditor] HandleEntityPlaced from {sender.Name} (session={sender.SessionId}), perms={perms}", Color.Cyan);
             if (!perms.HasFlag(SubEditorPermissions.CanEditOwn))
             {
+                DebugConsole.NewMessage($"[SubEditor] DENIED entity placement from {sender.Name} — missing CanEditOwn", Color.Red);
                 ResyncClientState(sender);
                 return;
             }
@@ -359,13 +363,22 @@ namespace Barotrauma.Networking
         private void HandleSetPermissions(IReadMessage inc, Client sender)
         {
             if (!isSubEditorSessionActive || subEditorSession == null) return;
-            if (sender != subEditorHost) return;
+            if (sender != subEditorHost)
+            {
+                DebugConsole.NewMessage($"[SubEditor] SetPermissions REJECTED: sender {sender.Name} is not host ({subEditorHost?.Name})", Color.Red);
+                return;
+            }
 
             byte targetSessionId = inc.ReadByte();
             uint permBits = inc.ReadUInt32();
             var permissions = (SubEditorPermissions)permBits;
 
+            DebugConsole.NewMessage($"[SubEditor] SetPermissions: target session={targetSessionId}, perms={permissions} (bits={permBits})", Color.Yellow);
             subEditorSession.SetPermissions(targetSessionId, permissions);
+
+            // Verify it stuck
+            var verify = subEditorSession.GetPermissions(targetSessionId);
+            DebugConsole.NewMessage($"[SubEditor] Verified permissions for session {targetSessionId}: {verify}", Color.Yellow);
 
             foreach (var client in connectedClients)
             {
@@ -397,7 +410,7 @@ namespace Barotrauma.Networking
             var hostUser = new SubEditorUser((byte)host.SessionId, host.Name, hostColorIndex);
             subEditorSession.AddUser(hostUser);
 
-            DebugConsole.Log($"[SubEditor] Session started by {host.Name}");
+            DebugConsole.NewMessage($"[SubEditor] Session started by {host.Name} (session={host.SessionId}), hostSessionId set to {subEditorSession.HostSessionId}", Color.Green);
 
             SendSubEditorClientList();
         }
@@ -440,7 +453,7 @@ namespace Barotrauma.Networking
             // Grant default permissions to new clients
             subEditorSession.SetPermissions(sessionId, SubEditorNetworkingShared.DefaultClientPermissions);
 
-            DebugConsole.Log($"[SubEditor] {client.Name} joined");
+            DebugConsole.NewMessage($"[SubEditor] {client.Name} joined (session={sessionId}, hostSession={subEditorSession.HostSessionId}), defaultPerms={SubEditorNetworkingShared.DefaultClientPermissions}", Color.Green);
 
             SendSubEditorClientList();
             
