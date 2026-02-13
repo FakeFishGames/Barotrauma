@@ -1093,9 +1093,8 @@ namespace Barotrauma.Networking
                     break;
                 case SubEditorPacketHeader.EditDeny:
                     ushort deniedEntityId = inc.ReadUInt16();
-                    DebugConsole.NewMessage("[SubEditor] Action denied by server — reverting", Microsoft.Xna.Framework.Color.Orange);
+                    DebugConsole.Log($"[SubEditor] Edit denied for entity {deniedEntityId}");
                     SubEditorNetworkingClient.Instance?.EntityLocks.Remove(deniedEntityId);
-                    SubEditorScreen.ServerDenyUndo();
                     break;
                 case SubEditorPacketHeader.EntityUpdated:
                     byte updatedSender = inc.ReadByte();

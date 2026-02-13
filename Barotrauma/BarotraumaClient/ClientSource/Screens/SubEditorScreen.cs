@@ -7407,18 +7407,6 @@ namespace Barotrauma
             GameMain.SubEditorScreen.UpdateUndoHistoryPanel();
         }
 
-        /// <summary>
-        /// Called when the server denies an action. Undoes the last local command
-        /// without broadcasting (the server already rejected the action).
-        /// </summary>
-        public static void ServerDenyUndo()
-        {
-            if (commandIndex <= 0) return;
-            Command command = Commands[--commandIndex];
-            command.UnExecute();
-            GameMain.SubEditorScreen?.UpdateUndoHistoryPanel();
-        }
-
         private static void BroadcastCommandChanges(Command command, bool isUndo)
         {
             if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
