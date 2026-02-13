@@ -480,7 +480,8 @@ namespace Barotrauma
             GUILayoutGroup paddedTopPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.8f), TopPanel.RectTransform, Anchor.Center),
                 isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
-                RelativeSpacing = 0.005f
+                RelativeSpacing = 0.005f,
+                Stretch = true
             };
 
             new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonToggleLeft")
@@ -561,23 +562,7 @@ namespace Barotrauma
 
             new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
 
-            hostButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), 
-                TextManager.Get("SubEditorHostButton").Fallback("Host"), style: "GUIButtonSmall")
-            {
-                ToolTip = TextManager.Get("SubEditorHostButtonTooltip").Fallback("Host a collaborative editing session"),
-                OnClicked = ShowHostSessionPrompt
-            };
-
-            joinButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), 
-                TextManager.Get("SubEditorJoinButton").Fallback("Join"), style: "GUIButtonSmall")
-            {
-                ToolTip = TextManager.Get("SubEditorJoinButtonTooltip").Fallback("Join a collaborative editing session"),
-                OnClicked = ShowJoinSessionPrompt
-            };
-
-            new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
-
-            visibilityButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "SetupVisibilityButton")
+            visibilityButton= new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "SetupVisibilityButton")
             {
                 ToolTip = TextManager.Get("SubEditorVisibilityButton") + '\n' + TextManager.Get("SubEditorVisibilityToolTip"),
                 OnClicked = (btn, userData) =>
@@ -637,6 +622,28 @@ namespace Barotrauma
 
             subNameLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft),
                 TextManager.Get("unspecifiedsubfilename"), font: GUIStyle.LargeFont, textAlignment: Alignment.CenterLeft);
+
+            // Flexible spacer: Stretch=true compresses relative-width elements proportionally
+            // BothHeight buttons are exempt from compression (ScaleBasis != Normal)
+            // This spacer absorbs the excess, effectively pushing Host→Scale to the right
+            new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), paddedTopPanel.RectTransform), style: null)
+            {
+                CanBeFocused = false
+            };
+
+            hostButton = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform), 
+                TextManager.Get("SubEditorHostButton").Fallback("Host"), style: "GUIButtonSmall")
+            {
+                ToolTip = TextManager.Get("SubEditorHostButtonTooltip").Fallback("Host a collaborative editing session"),
+                OnClicked = ShowHostSessionPrompt
+            };
+
+            joinButton = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform), 
+                TextManager.Get("SubEditorJoinButton").Fallback("Join"), style: "GUIButtonSmall")
+            {
+                ToolTip = TextManager.Get("SubEditorJoinButtonTooltip").Fallback("Join a collaborative editing session"),
+                OnClicked = ShowJoinSessionPrompt
+            };
 
             linkedSubBox = new GUIDropDown(new RectTransform(new Vector2(0.15f, 0.9f), paddedTopPanel.RectTransform),
                 TextManager.Get("AddSubButton"), elementCount: 20)
