@@ -310,11 +310,16 @@ namespace Barotrauma.Networking
         }
 
         /// <summary>
+        /// The session ID of the host user. Set when the session starts.
+        /// </summary>
+        public byte HostSessionId { get; set; }
+
+        /// <summary>
         /// Get the permissions for a user. Host always has all permissions.
         /// </summary>
         public SubEditorPermissions GetPermissions(byte sessionId)
         {
-            if (ConnectedEditors.TryGetValue(sessionId, out _) && sessionId == 0)
+            if (sessionId == HostSessionId)
             {
                 return SubEditorPermissions.All; // Host always has all permissions
             }

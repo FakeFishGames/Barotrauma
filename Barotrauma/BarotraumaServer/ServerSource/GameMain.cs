@@ -261,14 +261,14 @@ namespace Barotrauma
                 ownerKey,
                 ownerEndpoint);
             
-            // Register to server list if public is enabled (including SubEditor mode)
-            Server.StartServer(registerToServerList: publiclyVisible);
-
-            // Set game mode to "subeditor" so the server browser filters work
+            // Set game mode to "subeditor" BEFORE server registration so browser filters work
             if (IsSubEditorMode)
             {
                 Server.ServerSettings.GameModeIdentifier = "subeditor".ToIdentifier();
             }
+
+            // Register to server list if public is enabled (including SubEditor mode)
+            Server.StartServer(registerToServerList: publiclyVisible);
 
             for (int i = 0; i < CommandLineArgs.Length; i++)
             {
