@@ -963,7 +963,6 @@ namespace Barotrauma.Networking
                 RelativeSpacing = 0.01f
             };
 
-            // --- Default permissions for new clients ---
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.04f), layout.RectTransform),
                 "Default Editor Permissions for New Clients:", font: GUIStyle.SubHeadingFont);
 
@@ -1010,13 +1009,11 @@ namespace Barotrauma.Networking
                 SubEditorNetworkingShared.MassEditThreshold = input.IntValue;
             };
 
-            // --- Per-user permissions ---
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.04f), layout.RectTransform),
                 "Per-User Permissions:", font: GUIStyle.SubHeadingFont);
 
             var userPermList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.35f), layout.RectTransform));
 
-            // Populate with connected clients
             if (GameMain.Client?.ConnectedClients != null)
             {
                 foreach (var client in GameMain.Client.ConnectedClients)
