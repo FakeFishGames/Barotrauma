@@ -7763,6 +7763,16 @@ namespace Barotrauma
                                     wire.UpdateSections();
                                     if (SubEditorNetworkingClient.Instance?.IsHost == true)
                                     {
+                                        // Deduplicate: remove prior Connect command for same wire
+                                        for (int ci = Commands.Count - 1; ci >= 0; ci--)
+                                        {
+                                            if (Commands[ci] is WireCommand wc && wc.Type == WireCommandType.Connect && wc.WireId == wireItem.ID)
+                                            {
+                                                Commands.RemoveAt(ci);
+                                                if (ci < commandIndex) commandIndex--;
+                                                break;
+                                            }
+                                        }
                                         var otherConn = wire.OtherConnection(conn);
                                         var connectCmd = new WireCommand(WireCommandType.Connect, wire, conn, otherConn);
                                         connectCmd.AuthorSessionId = senderSessionId.ToString();
@@ -8186,7 +8196,10 @@ namespace Barotrauma
 
             bool filterWires = undoActiveSubTab == "wires";
 
-            // Only show commands up to commandIndex (undone commands are hidden)
+            // "Beginning" marker at the bottom (created first, newest items will be prepended above)
+            CreateUndoEntry(TextManager.Get("undo.beginning").Value, TextManager.Get("undo.beginningtooltip"), null, commandIndex == 0 ? GUIStyle.Green : Color.Gray);
+
+            // Show commands from oldest to newest, each prepended to top
             int limit = Math.Min(commandIndex, Commands.Count);
             for (int i = 0; i < limit; i++)
             {
@@ -8232,9 +8245,6 @@ namespace Barotrauma
 
                 CreateUndoEntry(prefix + description.Value, description, command, textColor);
             }
-
-            // "Beginning" marker at the bottom
-            CreateUndoEntry(TextManager.Get("undo.beginning").Value, TextManager.Get("undo.beginningtooltip"), null, commandIndex == 0 ? GUIStyle.Green : Color.Gray);
 
             void CreateUndoEntry(string name, LocalizedString tooltip, Command command, Color textColor)
             {
