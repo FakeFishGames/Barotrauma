@@ -2085,8 +2085,8 @@ namespace Barotrauma
                 }
                 
                 isApplyingRemoteChange = true;
-                entity.Remove();
-                isApplyingRemoteChange = false;
+                try { entity.Remove(); }
+                finally { isApplyingRemoteChange = false; }
             }
         }
 
