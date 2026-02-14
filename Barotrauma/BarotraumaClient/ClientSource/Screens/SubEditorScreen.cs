@@ -7345,7 +7345,7 @@ namespace Barotrauma
 
         private static void BroadcastCommandChanges(Command command, bool isUndo)
         {
-            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
+            if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
 
             if (command is AddOrDeleteCommand addOrDelete)
             {
@@ -7516,7 +7516,7 @@ namespace Barotrauma
 
         private void SendCollaborativeEntityChanges(IEnumerable<MapEntity> entities, bool wasDeleted)
         {
-            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
+            if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
             if (isApplyingRemoteChange) return;
             
             foreach (var entity in entities)
@@ -7572,7 +7572,7 @@ namespace Barotrauma
 
         internal void SyncLinkedEntityState(MapEntity entity)
         {
-            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
+            if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
             if (isApplyingRemoteChange) return;
             if (entity == null || entity.Removed) return;
 
@@ -7623,7 +7623,7 @@ namespace Barotrauma
 
         internal void SyncWireAndConnectedItems(Wire wire, Connection conn1, Connection conn2)
         {
-            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
+            if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
             if (isApplyingRemoteChange) return;
 
             try
@@ -7771,7 +7771,7 @@ namespace Barotrauma
 
         private void SyncWireNodeState(Wire wire)
         {
-            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
+            if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
             if (isApplyingRemoteChange) return;
             if (wire?.Item == null || wire.Item.Removed) return;
 
@@ -7789,7 +7789,7 @@ namespace Barotrauma
 
         internal void SendCollaborativePropertyChange(PropertyCommand propertyCommand)
         {
-            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
+            if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
             if (isApplyingRemoteChange) return;
 
             // Collect unique entities affected by this property change
@@ -7844,37 +7844,33 @@ namespace Barotrauma
 
         internal void SendCollaborativeTransformUpdate(TransformCommand transformCommand)
         {
-            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
-            if (isApplyingRemoteChange) return;
+            SendCollaborativeTransformSync(transformCommand.AffectedEntities);
+        }
 
-            foreach (var entity in transformCommand.AffectedEntities)
+        internal void SendCollaborativeTransformToolUpdate(TransformToolCommand transformToolCommand)
+        {
+            var entities = new List<MapEntity>();
+            foreach (var id in transformToolCommand.GetAffectedEntityIds())
+            {
+                if (Entity.FindEntityByID(id) is MapEntity me && !me.Removed) { entities.Add(me); }
+            }
+            SendCollaborativeTransformSync(entities, sendTransformToolProperties: true);
+        }
+
+        private void SendCollaborativeTransformSync(IEnumerable<MapEntity> entities, bool sendTransformToolProperties = false)
+        {
+            if (SubEditorNetworkingClient.Instance?.IsActive != true || isApplyingRemoteChange) return;
+
+            foreach (var entity in entities)
             {
                 if (entity == null || entity.Removed) continue;
-
                 try
                 {
                     var element = SaveEntityForSync(entity);
                     element.SetAttributeValue("transformSync", "true");
                     SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entity.ID, element.ToString());
                     collaborativeEntityPositions[entity.ID] = new Vector2(entity.Rect.X, entity.Rect.Y);
-
-                    if (entity is ISerializableEntity serializable && serializable.SerializableProperties != null)
-                    {
-                        if (!collaborativePropertySnapshots.TryGetValue(entity.ID, out var snapshot))
-                        {
-                            snapshot = new Dictionary<string, string>();
-                            collaborativePropertySnapshots[entity.ID] = snapshot;
-                        }
-                        foreach (var kvp in serializable.SerializableProperties)
-                        {
-                            if (kvp.Value.PropertyInfo?.SetMethod == null) continue;
-                            try
-                            {
-                                snapshot[kvp.Key.Value] = PropertyValueToXmlString(kvp.Value.GetValue(serializable));
-                            }
-                            catch { }
-                        }
-                    }
+                    UpdatePropertySnapshot(entity, sendTransformToolProperties);
                 }
                 catch (Exception ex)
                 {
@@ -7883,64 +7879,45 @@ namespace Barotrauma
             }
         }
 
-        internal void SendCollaborativeTransformToolUpdate(TransformToolCommand transformToolCommand)
+        private void UpdatePropertySnapshot(MapEntity entity, bool sendChangedTransformProps = false)
         {
-            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
-            if (isApplyingRemoteChange) return;
+            if (entity is not ISerializableEntity serializable || serializable.SerializableProperties == null) return;
 
-            foreach (var entityId in transformToolCommand.GetAffectedEntityIds())
+            if (!collaborativePropertySnapshots.TryGetValue(entity.ID, out var snapshot))
             {
-                var entity = Entity.FindEntityByID(entityId) as MapEntity;
-                if (entity == null || entity.Removed) continue;
+                snapshot = new Dictionary<string, string>();
+                collaborativePropertySnapshots[entity.ID] = snapshot;
+            }
 
-                try
+            foreach (var kvp in serializable.SerializableProperties)
+            {
+                if (kvp.Value.PropertyInfo?.SetMethod == null) continue;
+                string propName = kvp.Key.Value;
+                string currentValue;
+                try { currentValue = PropertyValueToXmlString(kvp.Value.GetValue(serializable)); }
+                catch { continue; }
+
+                if (sendChangedTransformProps && IsTransformToolProperty(propName))
                 {
-                    var element = SaveEntityForSync(entity);
-                    element.SetAttributeValue("transformSync", "true");
-                    SubEditorNetworkingClient.Instance.NotifyEntityUpdated(entity.ID, element.ToString());
-                    collaborativeEntityPositions[entity.ID] = new Vector2(entity.Rect.X, entity.Rect.Y);
-
-                    if (entity is ISerializableEntity serializable && serializable.SerializableProperties != null)
+                    if (!snapshot.TryGetValue(propName, out string lastValue) || currentValue != lastValue)
                     {
-                        if (!collaborativePropertySnapshots.TryGetValue(entity.ID, out var snapshot))
-                        {
-                            snapshot = new Dictionary<string, string>();
-                            collaborativePropertySnapshots[entity.ID] = snapshot;
-                        }
-                        
-                        string[] transformToolProps = { "scale", "rotation", "textureoffset" };
-                        foreach (var kvp in serializable.SerializableProperties)
-                        {
-                            if (kvp.Value.PropertyInfo?.SetMethod == null) continue;
-                            string propName = kvp.Key.Value;
-                            string currentValue;
-                            try { currentValue = PropertyValueToXmlString(kvp.Value.GetValue(serializable)); }
-                            catch { continue; }
-                            
-                            // Send property change for transform-tool-affected properties
-                            if (transformToolProps.Contains(propName.ToLowerInvariant()))
-                            {
-                                if (!snapshot.TryGetValue(propName, out string lastValue) || currentValue != lastValue)
-                                {
-                                    SubEditorNetworkingClient.Instance.NotifyEntityPropertyChanged(entity.ID, propName, currentValue);
-                                }
-                            }
-                            
-                            // Update all snapshots to prevent false change detection
-                            snapshot[propName] = currentValue;
-                        }
+                        SubEditorNetworkingClient.Instance?.NotifyEntityPropertyChanged(entity.ID, propName, currentValue);
                     }
                 }
-                catch (Exception ex)
-                {
-                    DebugConsole.AddWarning($"[SubEditor] Failed to serialize entity for transform tool sync: {ex.Message}");
-                }
+                snapshot[propName] = currentValue;
             }
+        }
+
+        private static bool IsTransformToolProperty(string propName)
+        {
+            return propName.Equals("scale", StringComparison.OrdinalIgnoreCase)
+                || propName.Equals("rotation", StringComparison.OrdinalIgnoreCase)
+                || propName.Equals("textureoffset", StringComparison.OrdinalIgnoreCase);
         }
         
         private void UpdateCollaborativeEntityMoves()
         {
-            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
+            if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
             if (MainSub == null) return;
             if (MapEntity.SelectedList.Count == 0) return;
             
@@ -7968,25 +7945,21 @@ namespace Barotrauma
         
         private void UpdateCollaborativePropertyChanges()
         {
-            if (SubEditorNetworkingClient.Instance == null || !SubEditorNetworkingClient.Instance.IsActive) return;
-            if (MainSub == null || isApplyingRemoteChange) return;
-            if (MapEntity.SelectedList.Count == 0) return;
+            if (SubEditorNetworkingClient.Instance?.IsActive != true || isApplyingRemoteChange) return;
+            if (MainSub == null || MapEntity.SelectedList.Count == 0) return;
             
             foreach (var entity in MapEntity.SelectedList)
             {
                 if (entity == null || entity.Removed) continue;
-                // NOTE: Do NOT filter by entity.Submarine — FindHull() can null it.
                 
                 ushort entityId = entity.ID;
                 
-                // Check flip state changes
-                bool currentFlipX = entity.FlippedX;
-                bool currentFlipY = entity.FlippedY;
+                // Check flip state
+                bool currentFlipX = entity.FlippedX, currentFlipY = entity.FlippedY;
                 if (collaborativeFlipStates.TryGetValue(entityId, out var lastFlip))
                 {
                     if (currentFlipX != lastFlip.flipX || currentFlipY != lastFlip.flipY)
                     {
-                        // Flip changed — send full entity XML
                         try
                         {
                             var element = SaveEntityForSync(entity);
@@ -8001,7 +7974,6 @@ namespace Barotrauma
                     collaborativeFlipStates[entityId] = (currentFlipX, currentFlipY);
                 }
                 
-                // Check SerializableProperty values for changes
                 if (entity is not ISerializableEntity serializable) continue;
                 
                 if (!collaborativePropertySnapshots.TryGetValue(entityId, out var snapshot))
@@ -8010,70 +7982,51 @@ namespace Barotrauma
                     collaborativePropertySnapshots[entityId] = snapshot;
                 }
                 
-                bool anyChanged = false;
-                foreach (var kvp in serializable.SerializableProperties)
-                {
-                    if (kvp.Value.PropertyInfo?.SetMethod == null) continue; // Skip read-only
-                    
-                    // Skip non-serializable types (Hull, Character, Item, etc.)
-                    var propType = kvp.Value.PropertyInfo.PropertyType;
-                    if (propType != typeof(string) && propType != typeof(bool) && propType != typeof(int) && 
-                        propType != typeof(float) && propType != typeof(double) && propType != typeof(Color) &&
-                        propType != typeof(Vector2) && propType != typeof(Vector4) && propType != typeof(Rectangle) &&
-                        propType != typeof(Point) && propType != typeof(Identifier) && !propType.IsEnum) continue;
-                    
-                    string propName = kvp.Key.Value;
-                    string currentValue;
-                    try { currentValue = PropertyValueToXmlString(kvp.Value.GetValue(serializable)); }
-                    catch { continue; }
-                    
-                    if (snapshot.TryGetValue(propName, out string lastValue))
-                    {
-                        if (currentValue != lastValue)
-                        {
-                            // Property changed — send individual property update
-                            SubEditorNetworkingClient.Instance.NotifyEntityPropertyChanged(entityId, propName, currentValue);
-                            snapshot[propName] = currentValue;
-                            anyChanged = true;
-                        }
-                    }
-                    else
-                    {
-                        snapshot[propName] = currentValue;
-                    }
-                }
+                DetectAndSendPropertyChanges(entityId, serializable, snapshot);
                 
-                // Also check ItemComponent properties for Items
                 if (entity is Item item)
                 {
                     foreach (var component in item.Components)
                     {
-                        foreach (var kvp in component.SerializableProperties)
-                        {
-                            if (kvp.Value.PropertyInfo?.SetMethod == null) continue;
-                            
-                            string propName = $"{component.GetType().Name}.{kvp.Key.Value}";
-                            string currentValue;
-                            try { currentValue = PropertyValueToXmlString(kvp.Value.GetValue(component)); }
-                            catch { continue; }
-                            
-                            if (snapshot.TryGetValue(propName, out string lastValue))
-                            {
-                                if (currentValue != lastValue)
-                                {
-                                    SubEditorNetworkingClient.Instance.NotifyEntityPropertyChanged(entityId, propName, currentValue);
-                                    snapshot[propName] = currentValue;
-                                    anyChanged = true;
-                                }
-                            }
-                            else
-                            {
-                                snapshot[propName] = currentValue;
-                            }
-                        }
+                        DetectAndSendPropertyChanges(entityId, component, snapshot, $"{component.GetType().Name}.");
                     }
                 }
             }
+        }
+
+        private void DetectAndSendPropertyChanges(ushort entityId, ISerializableEntity serializable, Dictionary<string, string> snapshot, string prefix = "")
+        {
+            foreach (var kvp in serializable.SerializableProperties)
+            {
+                if (kvp.Value.PropertyInfo?.SetMethod == null) continue;
+                if (!IsTrackablePropertyType(kvp.Value.PropertyInfo.PropertyType)) continue;
+                
+                string propName = prefix + kvp.Key.Value;
+                string currentValue;
+                try { currentValue = PropertyValueToXmlString(kvp.Value.GetValue(serializable)); }
+                catch { continue; }
+                
+                if (snapshot.TryGetValue(propName, out string lastValue))
+                {
+                    if (currentValue != lastValue)
+                    {
+                        SubEditorNetworkingClient.Instance?.NotifyEntityPropertyChanged(entityId, propName, currentValue);
+                        snapshot[propName] = currentValue;
+                    }
+                }
+                else
+                {
+                    snapshot[propName] = currentValue;
+                }
+            }
+        }
+
+        private static bool IsTrackablePropertyType(Type t)
+        {
+            return t == typeof(string) || t == typeof(bool) || t == typeof(int)
+                || t == typeof(float) || t == typeof(double) || t == typeof(Color)
+                || t == typeof(Vector2) || t == typeof(Vector4) || t == typeof(Rectangle)
+                || t == typeof(Point) || t == typeof(Identifier) || t.IsEnum;
         }
 
         private void UpdateLayerPanel()
