@@ -368,11 +368,6 @@ namespace Barotrauma.Networking
         public void NotifyEntityPlaced(string entityXml)
         {
             if (!IsActive) return;
-            if (!HasLocalPermission(SubEditorPermissions.CanEditOwn))
-            {
-                DebugConsole.NewMessage($"[SubEditor] EntityPlaced BLOCKED locally: perms={GetPermissions(localSessionId)}, session={localSessionId}, hostSession={HostSessionId}", Color.Red);
-                return;
-            }
             if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
 
             IWriteMessage msg = new WriteOnlyMessage();
@@ -385,7 +380,6 @@ namespace Barotrauma.Networking
         public void NotifyEntityRemoved(ushort entityId)
         {
             if (!IsActive) return;
-            if (!HasLocalPermission(SubEditorPermissions.CanDeleteOwn | SubEditorPermissions.CanDeleteOthers)) return;
             if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
 
             IWriteMessage msg = new WriteOnlyMessage();
@@ -398,7 +392,6 @@ namespace Barotrauma.Networking
         public void NotifyEntityMoved(ushort entityId, float x, float y)
         {
             if (!IsActive) return;
-            if (!HasLocalPermission(SubEditorPermissions.CanEditOwn | SubEditorPermissions.CanEditOthers)) return;
             if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
 
             IWriteMessage msg = new WriteOnlyMessage();
@@ -414,7 +407,6 @@ namespace Barotrauma.Networking
         public void NotifyEntitiesMovedBatch(List<(ushort entityId, float dx, float dy)> moves)
         {
             if (!IsActive) return;
-            if (!HasLocalPermission(SubEditorPermissions.CanEditOwn | SubEditorPermissions.CanEditOthers)) return;
             if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
             if (moves.Count == 0) return;
 
@@ -436,7 +428,6 @@ namespace Barotrauma.Networking
         public void NotifyEntityPropertyChanged(ushort entityId, string propertyName, string value)
         {
             if (!IsActive) return;
-            if (!HasLocalPermission(SubEditorPermissions.CanEditOwn | SubEditorPermissions.CanEditOthers)) return;
             if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
 
             IWriteMessage msg = new WriteOnlyMessage();
@@ -451,7 +442,6 @@ namespace Barotrauma.Networking
         public void NotifyEntityUpdated(ushort entityId, string entityXml)
         {
             if (!IsActive) return;
-            if (!HasLocalPermission(SubEditorPermissions.CanEditOwn | SubEditorPermissions.CanEditOthers)) return;
             if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
 
             IWriteMessage msg = new WriteOnlyMessage();
