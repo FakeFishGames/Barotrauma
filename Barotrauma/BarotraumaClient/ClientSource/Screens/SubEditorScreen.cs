@@ -2299,11 +2299,9 @@ namespace Barotrauma
                     // Skip property application for transform/wire sync to avoid rect corruption
                     if (isTransformSync || isWireSync)
                     {
-                        // apply wire-specific data (nodes and connections).
-                        // "select all + move all", Wire.Move() moves all nodes locally
-                        // and the new node positions are in the XML.
                         if (isWireSync || existingItem.GetComponent<Items.Components.Wire>() != null)
                         {
+                            DebugConsole.Log($"[SubEditor] Received wireSync for entity {entityId} from session {senderSessionId}");
                             ApplyWireSyncData(existingItem, element, senderSessionId);
                         }
                         return;
@@ -7597,6 +7595,7 @@ namespace Barotrauma
 
         private void OnWireConnected(Wire wire, Connection thisConnection, Connection otherConnection)
         {
+            DebugConsole.Log($"[SubEditor] OnWireConnected: wire={wire?.Item?.ID}, conn={thisConnection?.Name}, other={otherConnection?.Name}");
             // Replace single-ended connect with the full two-sided connection
             if (otherConnection != null)
             {
@@ -7620,6 +7619,7 @@ namespace Barotrauma
 
         private void OnWireDisconnected(Wire wire, Connection disconnectedConnection)
         {
+            DebugConsole.Log($"[SubEditor] OnWireDisconnected: wire={wire?.Item?.ID}, conn={disconnectedConnection?.Name}");
             var cmd = new WireCommand(WireCommandType.Disconnect, wire, disconnectedConnection);
             cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
             StoreCommand(cmd);
@@ -7635,6 +7635,7 @@ namespace Barotrauma
             try
             {
                 var wireElement = SaveEntityForSync(wire.Item);
+                DebugConsole.Log($"[SubEditor] SyncWire: sending EntityPlaced for wire {wire.Item.ID}");
                 SubEditorNetworkingClient.Instance.NotifyEntityPlaced(wireElement.ToString());
 
                 if (conn1?.Item != null && !conn1.Item.Removed)
@@ -7652,6 +7653,7 @@ namespace Barotrauma
             }
             catch (Exception ex)
             {
+                DebugConsole.AddWarning($"[SubEditor] SyncWireAndConnectedItems failed: {ex.Message}");
             }
         }
 
