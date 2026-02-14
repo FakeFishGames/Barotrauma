@@ -7668,6 +7668,36 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Called from Inventory.cs when a wire is dropped in wiring mode (dragged off panel).
+        /// Captures connections, creates undo step, syncs deletion, then removes the wire.
+        /// </summary>
+        internal void HandleWireDeletion(Item wireItem)
+        {
+            var wire = wireItem.GetComponent<Wire>();
+            if (wire == null) { return; }
+
+            var conn0 = wire.Connections[0];
+            var conn1 = wire.Connections[1];
+
+            if (conn0 != null || conn1 != null)
+            {
+                var cmd = new WireCommand(WireCommandType.Disconnect, wire, conn0 ?? conn1);
+                cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
+                StoreCommand(cmd);
+
+                SendItemWireSync(conn0?.Item);
+                if (conn1?.Item != null && conn1.Item != conn0?.Item)
+                {
+                    SendItemWireSync(conn1.Item);
+                }
+            }
+
+            ushort wireId = wireItem.ID;
+            wireItem.Remove();
+            SubEditorNetworkingClient.Instance?.NotifyEntityRemoved(wireId);
+        }
+
         private void OnWireNodeMoved(Wire wire, int nodeIndex, Vector2 oldPos, Vector2 newPos)
         {
             if (isApplyingRemoteChange) { return; }

@@ -1297,7 +1297,12 @@ namespace Barotrauma
                     {
                         if (DraggingItems.First()?.ParentInventory != null)
                         {
-                            SubEditorScreen.StoreCommand(new InventoryPlaceCommand(DraggingItems.First().ParentInventory, new List<Item>(DraggingItems), true));
+                            // Don't create InventoryPlaceCommand for wires in wiring mode — HandleWireDeletion creates WireCommand instead
+                            bool isWireInWiringMode = GameMain.SubEditorScreen.WiringMode && DraggingItems.First().GetComponent<Wire>() != null;
+                            if (!isWireInWiringMode)
+                            {
+                                SubEditorScreen.StoreCommand(new InventoryPlaceCommand(DraggingItems.First().ParentInventory, new List<Item>(DraggingItems), true));
+                            }
                         }
                     }
                         
@@ -1314,7 +1319,17 @@ namespace Barotrauma
                         {
                             if (editor.WiringMode)
                             {
-                                DraggingItems.ForEachMod(it => it.Remove());
+                                DraggingItems.ForEachMod(it =>
+                                {
+                                    if (it.GetComponent<Wire>() != null)
+                                    {
+                                        editor.HandleWireDeletion(it);
+                                    }
+                                    else
+                                    {
+                                        it.Remove();
+                                    }
+                                });
                                 removed = true;
                             }
                             else
