@@ -7622,21 +7622,43 @@ namespace Barotrauma
         {
             if (isApplyingRemoteChange) { return; }
 
-            var cmd = new WireCommand(WireCommandType.Disconnect, wire, disconnectedConnection);
-            cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
-            StoreCommand(cmd);
-
+            string sessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
             var remainingConnection = wire.Connections[0] ?? wire.Connections[1];
 
-            // Send affected items' connection state so receivers can disconnect the wire
-            SyncWireAndConnectedItems(null, disconnectedConnection, remainingConnection ?? otherConnection);
-
-            // If both ends are now disconnected, remove the wire entity entirely
             if (remainingConnection == null && wire?.Item != null && !wire.Item.Removed)
             {
+                // Full deletion (both ends disconnected, e.g. drag off panel)
+                var wireCmd = new WireCommand(WireCommandType.Disconnect, wire, disconnectedConnection, otherConnection);
+                wireCmd.AuthorSessionId = sessionId;
+                StoreCommand(wireCmd);
+
+                // Store AddOrDeleteCommand for Edits tab, but suppress auto-sync
+                // (we handle sync manually below in the correct order)
+                isApplyingRemoteChange = true;
+                var deleteCmd = new AddOrDeleteCommand(new List<MapEntity> { wire.Item }, wasDeleted: true);
+                deleteCmd.AuthorSessionId = sessionId;
+                StoreCommand(deleteCmd);
+
+                // Remove wire BEFORE sending wireSync so items' XML reflects disconnection
                 ushort wireId = wire.Item.ID;
-                wire.Item.Remove();
+                try { wire.Item.Remove(); }
+                finally { isApplyingRemoteChange = false; }
+
+                SendItemWireSync(disconnectedConnection?.Item);
+                if (otherConnection?.Item != null && otherConnection.Item != disconnectedConnection?.Item)
+                {
+                    SendItemWireSync(otherConnection.Item);
+                }
                 SubEditorNetworkingClient.Instance?.NotifyEntityRemoved(wireId);
+            }
+            else
+            {
+                // One-end disconnect (drag off pin, wire stays)
+                var cmd = new WireCommand(WireCommandType.Disconnect, wire, disconnectedConnection);
+                cmd.AuthorSessionId = sessionId;
+                StoreCommand(cmd);
+
+                SyncWireAndConnectedItems(null, disconnectedConnection, remainingConnection ?? otherConnection);
             }
         }
 
@@ -7690,14 +7712,15 @@ namespace Barotrauma
                 StoreCommand(wireCmd);
             }
 
-            // AddOrDeleteCommand for Edits tab (matches what host creates via OnCollaborativeEntityRemoved)
+            // AddOrDeleteCommand for Edits tab — suppress auto-sync
+            // (we handle sync manually below in the correct order: wireSync THEN EntityRemoved)
+            isApplyingRemoteChange = true;
             var deleteCmd = new AddOrDeleteCommand(new List<MapEntity> { wireItem }, wasDeleted: true);
             deleteCmd.AuthorSessionId = sessionId;
             StoreCommand(deleteCmd);
 
             // Remove wire FIRST so items' XML no longer contains the wire link
             ushort wireId = wireItem.ID;
-            isApplyingRemoteChange = true;
             try { wireItem.Remove(); }
             finally { isApplyingRemoteChange = false; }
 
