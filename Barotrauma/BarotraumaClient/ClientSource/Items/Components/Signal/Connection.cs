@@ -23,6 +23,7 @@ namespace Barotrauma.Items.Components
 
         public static Action<Wire, Connection, Connection> OnSubEditorWireConnected;
         public static Action<Wire, Connection> OnSubEditorWireDisconnected;
+        public static Action<Wire, Connection, Connection> OnSubEditorWireRemoved;
 
         private static float ConnectionSpriteSize => 35.0f * GUI.Scale;
 
@@ -167,26 +168,41 @@ namespace Barotrauma.Items.Components
                             DraggingConnected.Connections[1]?.ConnectionPanel == panel)
                         {
                             Connection disconnectedFrom = null;
+                            Connection otherConnection = null;
                             if (Screen.Selected == GameMain.SubEditorScreen)
                             {
                                 disconnectedFrom = DraggingConnected.Connections[0]?.ConnectionPanel == panel
                                     ? DraggingConnected.Connections[0]
                                     : DraggingConnected.Connections[1];
+                                otherConnection = DraggingConnected.OtherConnection(disconnectedFrom);
                             }
 
                             DraggingConnected.RemoveConnection(panel.Item);
-                            if (DraggingConnected.Item.ParentInventory == null)
-                            {
-                                panel.DisconnectedWires.Add(DraggingConnected);
-                            }
-                            else if (DraggingConnected.Connections[0] == null && DraggingConnected.Connections[1] == null)
-                            {
-                                DraggingConnected.ClearConnections(user: Character.Controlled);
-                            }
 
-                            if (disconnectedFrom != null)
+                            // In SubEditor: dragging outside the panel deletes the wire entirely
+                            if (Screen.Selected == GameMain.SubEditorScreen && !mouseInRect)
                             {
-                                OnSubEditorWireDisconnected?.Invoke(DraggingConnected, disconnectedFrom);
+                                if (otherConnection != null)
+                                {
+                                    DraggingConnected.RemoveConnection(otherConnection.Item);
+                                }
+                                OnSubEditorWireRemoved?.Invoke(DraggingConnected, disconnectedFrom, otherConnection);
+                            }
+                            else
+                            {
+                                if (DraggingConnected.Item.ParentInventory == null)
+                                {
+                                    panel.DisconnectedWires.Add(DraggingConnected);
+                                }
+                                else if (DraggingConnected.Connections[0] == null && DraggingConnected.Connections[1] == null)
+                                {
+                                    DraggingConnected.ClearConnections(user: Character.Controlled);
+                                }
+
+                                if (disconnectedFrom != null)
+                                {
+                                    OnSubEditorWireDisconnected?.Invoke(DraggingConnected, disconnectedFrom);
+                                }
                             }
                         }
                     }
