@@ -7628,7 +7628,7 @@ namespace Barotrauma
             var remainingConnection = wire.Connections[0] ?? wire.Connections[1];
 
             // Send affected items' connection state so receivers can disconnect the wire
-            SyncWireConnectionItems(disconnectedConnection, remainingConnection);
+            SyncWireAndConnectedItems(null, disconnectedConnection, remainingConnection);
 
             // If both ends are now disconnected, remove the wire entity entirely
             if (remainingConnection == null && wire?.Item != null && !wire.Item.Removed)
@@ -7655,48 +7655,15 @@ namespace Barotrauma
                     SubEditorNetworkingClient.Instance.NotifyEntityRemoved(wire.Item.ID);
                 }
 
-                if (conn1?.Item != null && !conn1.Item.Removed)
+                SendItemWireSync(conn1?.Item);
+                if (conn2?.Item != null && conn2.Item != conn1?.Item)
                 {
-                    var itemElement = SaveEntityForSync(conn1.Item);
-                    itemElement.SetAttributeValue("wireSync", "true");
-                    SubEditorNetworkingClient.Instance.NotifyEntityUpdated(conn1.Item.ID, itemElement.ToString());
-                }
-                if (conn2?.Item != null && !conn2.Item.Removed && conn2.Item != conn1?.Item)
-                {
-                    var itemElement = SaveEntityForSync(conn2.Item);
-                    itemElement.SetAttributeValue("wireSync", "true");
-                    SubEditorNetworkingClient.Instance.NotifyEntityUpdated(conn2.Item.ID, itemElement.ToString());
+                    SendItemWireSync(conn2.Item);
                 }
             }
             catch (Exception ex)
             {
                 DebugConsole.AddWarning($"[SubEditor] SyncWireAndConnectedItems failed: {ex.Message}");
-            }
-        }
-
-        private void SyncWireConnectionItems(Connection conn1, Connection conn2)
-        {
-            if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
-            if (isApplyingRemoteChange) return;
-
-            try
-            {
-                if (conn1?.Item != null && !conn1.Item.Removed)
-                {
-                    var itemElement = SaveEntityForSync(conn1.Item);
-                    itemElement.SetAttributeValue("wireSync", "true");
-                    SubEditorNetworkingClient.Instance.NotifyEntityUpdated(conn1.Item.ID, itemElement.ToString());
-                }
-                if (conn2?.Item != null && !conn2.Item.Removed && conn2.Item != conn1?.Item)
-                {
-                    var itemElement = SaveEntityForSync(conn2.Item);
-                    itemElement.SetAttributeValue("wireSync", "true");
-                    SubEditorNetworkingClient.Instance.NotifyEntityUpdated(conn2.Item.ID, itemElement.ToString());
-                }
-            }
-            catch (Exception ex)
-            {
-                DebugConsole.AddWarning($"[SubEditor] SyncWireConnectionItems failed: {ex.Message}");
             }
         }
 
@@ -7829,17 +7796,15 @@ namespace Barotrauma
             if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
             if (isApplyingRemoteChange) return;
             if (wire?.Item == null || wire.Item.Removed) return;
+            SendItemWireSync(wire.Item);
+        }
 
-            try
-            {
-                var element = SaveEntityForSync(wire.Item);
-                element.SetAttributeValue("wireSync", "true");
-                SubEditorNetworkingClient.Instance.NotifyEntityUpdated(wire.Item.ID, element.ToString());
-            }
-            catch (Exception ex)
-            {
-                DebugConsole.AddWarning($"[SubEditor] Failed to sync wire node state: {ex.Message}");
-            }
+        private void SendItemWireSync(Item item)
+        {
+            if (item == null || item.Removed) return;
+            var element = SaveEntityForSync(item);
+            element.SetAttributeValue("wireSync", "true");
+            SubEditorNetworkingClient.Instance.NotifyEntityUpdated(item.ID, element.ToString());
         }
 
         internal void SendCollaborativePropertyChange(PropertyCommand propertyCommand)
