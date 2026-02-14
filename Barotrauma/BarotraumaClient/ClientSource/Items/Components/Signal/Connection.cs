@@ -22,8 +22,7 @@ namespace Barotrauma.Items.Components
         public static Wire DraggingConnected { get; private set; }
 
         public static Action<Wire, Connection, Connection> OnSubEditorWireConnected;
-        public static Action<Wire, Connection> OnSubEditorWireDisconnected;
-        public static Action<Wire, Connection, Connection> OnSubEditorWireRemoved;
+        public static Action<Wire, Connection, Connection> OnSubEditorWireDisconnected;
 
         private static float ConnectionSpriteSize => 35.0f * GUI.Scale;
 
@@ -168,41 +167,36 @@ namespace Barotrauma.Items.Components
                             DraggingConnected.Connections[1]?.ConnectionPanel == panel)
                         {
                             Connection disconnectedFrom = null;
-                            Connection otherConnection = null;
                             if (Screen.Selected == GameMain.SubEditorScreen)
                             {
                                 disconnectedFrom = DraggingConnected.Connections[0]?.ConnectionPanel == panel
                                     ? DraggingConnected.Connections[0]
                                     : DraggingConnected.Connections[1];
-                                otherConnection = DraggingConnected.OtherConnection(disconnectedFrom);
                             }
+
+                            // In SubEditor, dragging outside the panel removes the wire entirely
+                            var otherConnection = Screen.Selected == GameMain.SubEditorScreen && !mouseInRect
+                                ? DraggingConnected.OtherConnection(disconnectedFrom)
+                                : null;
 
                             DraggingConnected.RemoveConnection(panel.Item);
-
-                            // In SubEditor: dragging outside the panel deletes the wire entirely
-                            if (Screen.Selected == GameMain.SubEditorScreen && !mouseInRect)
+                            if (otherConnection != null)
                             {
-                                if (otherConnection != null)
-                                {
-                                    DraggingConnected.RemoveConnection(otherConnection.Item);
-                                }
-                                OnSubEditorWireRemoved?.Invoke(DraggingConnected, disconnectedFrom, otherConnection);
+                                DraggingConnected.RemoveConnection(otherConnection.Item);
                             }
-                            else
-                            {
-                                if (DraggingConnected.Item.ParentInventory == null)
-                                {
-                                    panel.DisconnectedWires.Add(DraggingConnected);
-                                }
-                                else if (DraggingConnected.Connections[0] == null && DraggingConnected.Connections[1] == null)
-                                {
-                                    DraggingConnected.ClearConnections(user: Character.Controlled);
-                                }
 
-                                if (disconnectedFrom != null)
-                                {
-                                    OnSubEditorWireDisconnected?.Invoke(DraggingConnected, disconnectedFrom);
-                                }
+                            if (DraggingConnected.Item.ParentInventory == null)
+                            {
+                                panel.DisconnectedWires.Add(DraggingConnected);
+                            }
+                            else if (DraggingConnected.Connections[0] == null && DraggingConnected.Connections[1] == null)
+                            {
+                                DraggingConnected.ClearConnections(user: Character.Controlled);
+                            }
+
+                            if (disconnectedFrom != null)
+                            {
+                                OnSubEditorWireDisconnected?.Invoke(DraggingConnected, disconnectedFrom, otherConnection);
                             }
                         }
                     }

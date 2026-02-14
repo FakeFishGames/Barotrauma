@@ -3181,7 +3181,6 @@ namespace Barotrauma
 
             Connection.OnSubEditorWireConnected = OnWireConnected;
             Connection.OnSubEditorWireDisconnected = OnWireDisconnected;
-            Connection.OnSubEditorWireRemoved = OnWireRemoved;
             Wire.OnSubEditorNodeMoved = OnWireNodeMoved;
             Wire.OnSubEditorNodeAdded = OnWireNodeAdded;
             Wire.OnSubEditorNodeRemoved = OnWireNodeRemoved;
@@ -7618,7 +7617,7 @@ namespace Barotrauma
             SyncWireAndConnectedItems(wire, thisConnection, otherConnection);
         }
 
-        private void OnWireDisconnected(Wire wire, Connection disconnectedConnection)
+        private void OnWireDisconnected(Wire wire, Connection disconnectedConnection, Connection otherConnection)
         {
             if (isApplyingRemoteChange) { return; }
 
@@ -7629,7 +7628,7 @@ namespace Barotrauma
             var remainingConnection = wire.Connections[0] ?? wire.Connections[1];
 
             // Send affected items' connection state so receivers can disconnect the wire
-            SyncWireAndConnectedItems(null, disconnectedConnection, remainingConnection);
+            SyncWireAndConnectedItems(null, disconnectedConnection, remainingConnection ?? otherConnection);
 
             // If both ends are now disconnected, remove the wire entity entirely
             if (remainingConnection == null && wire?.Item != null && !wire.Item.Removed)
@@ -7638,25 +7637,6 @@ namespace Barotrauma
                 wire.Item.Remove();
                 SubEditorNetworkingClient.Instance?.NotifyEntityRemoved(wireId);
             }
-        }
-
-        private void OnWireRemoved(Wire wire, Connection conn1, Connection conn2)
-        {
-            if (isApplyingRemoteChange) { return; }
-            if (wire?.Item == null || wire.Item.Removed) { return; }
-
-            var cmd = new WireCommand(WireCommandType.Disconnect, wire, conn1);
-            cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
-            StoreCommand(cmd);
-
-            // Send both items' updated connection state (wire removed from both)
-            SendItemWireSync(conn1?.Item);
-            SendItemWireSync(conn2?.Item);
-
-            // Delete the wire entity and sync
-            ushort wireId = wire.Item.ID;
-            wire.Item.Remove();
-            SubEditorNetworkingClient.Instance?.NotifyEntityRemoved(wireId);
         }
 
         internal void SyncWireAndConnectedItems(Wire wire, Connection conn1, Connection conn2)
