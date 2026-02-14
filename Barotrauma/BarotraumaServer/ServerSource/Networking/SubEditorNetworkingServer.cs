@@ -101,6 +101,31 @@ namespace Barotrauma.Networking
             return sender.AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : sender.Name;
         }
 
+        private void RelayToOthers(Client sender, SubEditorPacketHeader header, Action<IWriteMessage> writePayload, DeliveryMethod delivery = DeliveryMethod.Reliable)
+        {
+            foreach (var client in connectedClients.Where(c => c != sender))
+            {
+                IWriteMessage msg = new WriteOnlyMessage();
+                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+                msg.WriteByte((byte)header);
+                msg.WriteByte((byte)sender.SessionId);
+                writePayload(msg);
+                serverPeer.Send(msg, client.Connection, delivery);
+            }
+        }
+
+        private void BroadcastToAll(SubEditorPacketHeader header, Action<IWriteMessage> writePayload)
+        {
+            foreach (var client in connectedClients)
+            {
+                IWriteMessage msg = new WriteOnlyMessage();
+                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
+                msg.WriteByte((byte)header);
+                writePayload(msg);
+                serverPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
+            }
+        }
+
         private void RequestHostResync()
         {
             if (subEditorHost == null) return;
@@ -151,15 +176,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            foreach (var client in connectedClients.Where(c => c != sender))
-            {
-                IWriteMessage msg = new WriteOnlyMessage();
-                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
-                msg.WriteByte((byte)SubEditorPacketHeader.EntityPlaced);
-                msg.WriteByte((byte)sender.SessionId);
-                msg.WriteString(entityXml);
-                serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
-            }
+            RelayToOthers(sender, SubEditorPacketHeader.EntityPlaced, msg => msg.WriteString(entityXml));
         }
 
         private void HandleEntityRemoved(IReadMessage inc, Client sender)
@@ -177,15 +194,7 @@ namespace Barotrauma.Networking
                 subEditorSession.RemoveEntityOwnership(entityId);
             }
 
-            foreach (var client in connectedClients.Where(c => c != sender))
-            {
-                IWriteMessage msg = new WriteOnlyMessage();
-                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
-                msg.WriteByte((byte)SubEditorPacketHeader.EntityRemoved);
-                msg.WriteByte((byte)sender.SessionId);
-                msg.WriteUInt16(entityId);
-                serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
-            }
+            RelayToOthers(sender, SubEditorPacketHeader.EntityRemoved, msg => msg.WriteUInt16(entityId));
         }
 
         private void HandleEntityMoved(IReadMessage inc, Client sender)
@@ -204,17 +213,12 @@ namespace Barotrauma.Networking
                 }
             }
 
-            foreach (var client in connectedClients.Where(c => c != sender))
+            RelayToOthers(sender, SubEditorPacketHeader.EntityMoved, msg =>
             {
-                IWriteMessage msg = new WriteOnlyMessage();
-                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
-                msg.WriteByte((byte)SubEditorPacketHeader.EntityMoved);
-                msg.WriteByte((byte)sender.SessionId);
                 msg.WriteUInt16(entityId);
                 msg.WriteSingle(posX);
                 msg.WriteSingle(posY);
-                serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
-            }
+            });
         }
 
         private void HandleEntitiesMovedBatch(IReadMessage inc, Client sender)
@@ -251,12 +255,8 @@ namespace Barotrauma.Networking
                 }
             }
 
-            foreach (var client in connectedClients.Where(c => c != sender))
+            RelayToOthers(sender, SubEditorPacketHeader.EntitiesMovedBatch, msg =>
             {
-                IWriteMessage msg = new WriteOnlyMessage();
-                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
-                msg.WriteByte((byte)SubEditorPacketHeader.EntitiesMovedBatch);
-                msg.WriteByte((byte)sender.SessionId);
                 msg.WriteUInt16((ushort)moves.Count);
                 foreach (var (entityId, dx, dy) in moves)
                 {
@@ -264,8 +264,7 @@ namespace Barotrauma.Networking
                     msg.WriteSingle(dx);
                     msg.WriteSingle(dy);
                 }
-                serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
-            }
+            });
         }
 
         private void HandleEntityPropertyChanged(IReadMessage inc, Client sender)
@@ -290,17 +289,12 @@ namespace Barotrauma.Networking
                 }
             }
 
-            foreach (var client in connectedClients.Where(c => c != sender))
+            RelayToOthers(sender, SubEditorPacketHeader.EntityPropertyChanged, msg =>
             {
-                IWriteMessage msg = new WriteOnlyMessage();
-                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
-                msg.WriteByte((byte)SubEditorPacketHeader.EntityPropertyChanged);
-                msg.WriteByte((byte)sender.SessionId);
                 msg.WriteUInt16(entityId);
                 msg.WriteString(propName);
                 msg.WriteString(propValue);
-                serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
-            }
+            });
         }
 
         private void HandleEntityUpdated(IReadMessage inc, Client sender)
@@ -323,16 +317,11 @@ namespace Barotrauma.Networking
                 }
             }
 
-            foreach (var client in connectedClients.Where(c => c != sender))
+            RelayToOthers(sender, SubEditorPacketHeader.EntityUpdated, msg =>
             {
-                IWriteMessage msg = new WriteOnlyMessage();
-                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
-                msg.WriteByte((byte)SubEditorPacketHeader.EntityUpdated);
-                msg.WriteByte((byte)sender.SessionId);
                 msg.WriteUInt16(entityId);
                 msg.WriteString(entityXml);
-                serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
-            }
+            });
         }
 
         private void HandleCursorMoved(IReadMessage inc, Client sender)
@@ -347,16 +336,11 @@ namespace Barotrauma.Networking
                 subEditorSession.CursorPositions[senderSessionId] = new Vector2(posX, posY);
             }
 
-            foreach (var client in connectedClients.Where(c => c != sender))
+            RelayToOthers(sender, SubEditorPacketHeader.CursorMoved, msg =>
             {
-                IWriteMessage msg = new WriteOnlyMessage();
-                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
-                msg.WriteByte((byte)SubEditorPacketHeader.CursorMoved);
-                msg.WriteByte(senderSessionId);
                 msg.WriteSingle(posX);
                 msg.WriteSingle(posY);
-                serverPeer.Send(msg, client.Connection, DeliveryMethod.Unreliable);
-            }
+            }, DeliveryMethod.Unreliable);
         }
 
         private void HandleSetPermissions(IReadMessage inc, Client sender)
@@ -370,15 +354,11 @@ namespace Barotrauma.Networking
 
             subEditorSession.SetPermissions(targetSessionId, permissions);
 
-            foreach (var client in connectedClients)
+            BroadcastToAll(SubEditorPacketHeader.SetPermissions, msg =>
             {
-                IWriteMessage msg = new WriteOnlyMessage();
-                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
-                msg.WriteByte((byte)SubEditorPacketHeader.SetPermissions);
                 msg.WriteByte(targetSessionId);
                 msg.WriteUInt32(permBits);
-                serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
-            }
+            });
         }
 
         public void StartSubEditorSession(Client host)
@@ -409,13 +389,7 @@ namespace Barotrauma.Networking
         {
             if (!isSubEditorSessionActive) return;
 
-            foreach (var client in connectedClients)
-            {
-                IWriteMessage msg = new WriteOnlyMessage();
-                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
-                msg.WriteByte((byte)SubEditorPacketHeader.EndTestMode);
-                serverPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
-            }
+            BroadcastToAll(SubEditorPacketHeader.EndTestMode, msg => { });
 
             subEditorSession?.Clear();
             subEditorSession = null;
@@ -497,21 +471,12 @@ namespace Barotrauma.Networking
             var users = subEditorSession.ConnectedEditors.Values.ToList();
             byte hostSessionId = subEditorHost != null ? (byte)subEditorHost.SessionId : (byte)0;
 
-            foreach (var client in connectedClients)
+            BroadcastToAll(SubEditorPacketHeader.ClientList, msg =>
             {
-                IWriteMessage msg = new WriteOnlyMessage();
-                msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
-                msg.WriteByte((byte)SubEditorPacketHeader.ClientList);
                 msg.WriteByte((byte)users.Count);
                 msg.WriteByte(hostSessionId);
-
-                foreach (var user in users)
-                {
-                    msg.WriteNetSerializableStruct(user);
-                }
-
-                serverPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
-            }
+                foreach (var user in users) { msg.WriteNetSerializableStruct(user); }
+            });
         }
 
         private void HandleCursorPosition(IReadMessage inc, Client sender)
