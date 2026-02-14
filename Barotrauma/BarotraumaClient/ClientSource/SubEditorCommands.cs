@@ -789,6 +789,11 @@ namespace Barotrauma
                     {
                         disconnConn.DisconnectWire(wire);
                     }
+                    var disconnOther = FindConnection(OtherItemId, OtherConnectionName);
+                    if (disconnOther != null)
+                    {
+                        disconnOther.DisconnectWire(wire);
+                    }
                     break;
                 case WireCommandType.NodeMove:
                     if (NodeIndex >= 0 && NodeIndex < wire.GetNodes().Count)
@@ -809,11 +814,11 @@ namespace Barotrauma
         public override void UnExecute()
         {
             Wire wire = FindWire();
-            if (wire == null) return;
 
             switch (Type)
             {
                 case WireCommandType.Connect:
+                    if (wire == null) return;
                     // disconnect from both ends
                     var conn = FindConnection(TargetItemId, ConnectionName);
                     if (conn != null)
@@ -831,11 +836,29 @@ namespace Barotrauma
                     wire.Item.Remove();
                     break;
                 case WireCommandType.Disconnect:
+                    if (wire == null)
+                    {
+                        // Wire was deleted — recreate it from prefab
+                        var prefab = MapEntityPrefab.FindByIdentifier(WirePrefabId) as ItemPrefab;
+                        if (prefab == null) return;
+                        var sub = Submarine.MainSub;
+                        if (sub == null) return;
+                        var newItem = new Item(prefab, Vector2.Zero, sub, WireId);
+                        wire = newItem.GetComponent<Wire>();
+                        if (wire == null) return;
+                        if (NodeSnapshot != null) { wire.SetNodes(NodeSnapshot); }
+                    }
                     var reconnConn = FindConnection(TargetItemId, ConnectionName);
                     if (reconnConn != null)
                     {
                         reconnConn.ConnectWire(wire);
                         wire.TryConnect(reconnConn, false);
+                    }
+                    var reconnOther = FindConnection(OtherItemId, OtherConnectionName);
+                    if (reconnOther != null)
+                    {
+                        reconnOther.ConnectWire(wire);
+                        wire.TryConnect(reconnOther, false);
                     }
                     break;
                 case WireCommandType.NodeMove:
@@ -881,6 +904,12 @@ namespace Barotrauma
                     string otherName = otherItem?.Name ?? $"Item#{OtherItemId}";
                     return new RawLString($"{targetName} [{ConnectionName}] wired to {otherName} [{OtherConnectionName}] using {wireName}");
                 case WireCommandType.Disconnect:
+                    if (OtherItemId != 0)
+                    {
+                        Item otherDisc = Entity.FindEntityByID(OtherItemId) as Item;
+                        string otherDiscName = otherDisc?.Name ?? $"Item#{OtherItemId}";
+                        return new RawLString($"{wireName} deleted ({targetName} [{ConnectionName}] — {otherDiscName} [{OtherConnectionName}])");
+                    }
                     return new RawLString($"{wireName} disconnected from {targetName} [{ConnectionName}]");
                 case WireCommandType.NodeMove:
                     return new RawLString($"Node on {wireName} moved");

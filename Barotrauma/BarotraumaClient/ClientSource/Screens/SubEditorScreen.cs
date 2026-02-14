@@ -7354,8 +7354,9 @@ namespace Barotrauma
             if (command is AddOrDeleteCommand addOrDelete)
             {
                 // After undo/redo of an add/delete, figure out which entities appeared/disappeared
-                foreach (var entity in addOrDelete.Receivers)
+                foreach (var receiver in addOrDelete.Receivers)
                 {
+                    var entity = receiver.GetReplacementOrThis();
                     if (entity.Removed)
                     {
                         SubEditorNetworkingClient.Instance.NotifyEntityRemoved(entity.ID);
@@ -7682,7 +7683,7 @@ namespace Barotrauma
 
             if (conn0 != null || conn1 != null)
             {
-                var cmd = new WireCommand(WireCommandType.Disconnect, wire, conn0 ?? conn1);
+                var cmd = new WireCommand(WireCommandType.Disconnect, wire, conn0 ?? conn1, conn0 != null ? conn1 : null);
                 cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
                 StoreCommand(cmd);
 
