@@ -23,6 +23,12 @@ namespace Barotrauma.Networking
         private readonly Dictionary<byte, double> subEditorLastResyncTime = new Dictionary<byte, double>();
         private readonly Dictionary<ushort, string> subEditorEntityXml = new Dictionary<ushort, string>();
 
+        // Size limits to prevent memory exhaustion from malicious clients
+        private const int MaxEntityXmlLength = 1024 * 256; // 256 KB
+        private const int MaxPropertyStringLength = 1024 * 64; // 64 KB
+        private const int MaxBatchEntityCount = 500;
+        private const int MaxSubmarineSyncSize = 1024 * 1024 * 32; // 32 MB
+
         public bool IsSubEditorSessionActive => isSubEditorSessionActive;
         
         public Client SubEditorHost => subEditorHost;
@@ -120,6 +126,7 @@ namespace Barotrauma.Networking
         private void HandleEntityPlaced(IReadMessage inc, Client sender)
         {
             string entityXml = inc.ReadString();
+            if (string.IsNullOrEmpty(entityXml) || entityXml.Length > MaxEntityXmlLength) return;
 
             var perms = GetSenderPermissions(sender);
             if (!perms.HasFlag(SubEditorPermissions.CanEditOwn))
@@ -218,6 +225,7 @@ namespace Barotrauma.Networking
         private void HandleEntitiesMovedBatch(IReadMessage inc, Client sender)
         {
             ushort count = inc.ReadUInt16();
+            if (count > MaxBatchEntityCount) return;
             var moves = new List<(ushort entityId, float dx, float dy)>(count);
             for (int i = 0; i < count; i++)
             {
@@ -266,6 +274,8 @@ namespace Barotrauma.Networking
             ushort entityId = inc.ReadUInt16();
             string propName = inc.ReadString();
             string propValue = inc.ReadString();
+            if (string.IsNullOrEmpty(propName) || propName.Length > MaxPropertyStringLength) return;
+            if (propValue != null && propValue.Length > MaxPropertyStringLength) return;
 
             if (subEditorSession != null)
             {
@@ -294,6 +304,7 @@ namespace Barotrauma.Networking
         {
             ushort entityId = inc.ReadUInt16();
             string entityXml = inc.ReadString();
+            if (string.IsNullOrEmpty(entityXml) || entityXml.Length > MaxEntityXmlLength) return;
 
             if (subEditorSession != null)
             {
@@ -344,6 +355,7 @@ namespace Barotrauma.Networking
         private void HandleRequestSubmarineFile(IReadMessage inc, Client sender)
         {
             string subName = inc.ReadString();
+            if (string.IsNullOrEmpty(subName) || subName.Length > 256) return;
             
             var subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
             if (subInfo != null && System.IO.File.Exists(subInfo.FilePath))
@@ -557,8 +569,9 @@ namespace Barotrauma.Networking
             if (!isSubEditorSessionActive || subEditorSession == null) return;
 
             var selectionData = INetSerializableStruct.Read<SubEditorSelectionData>(inc);
+            var correctedData = new SubEditorSelectionData((byte)sender.SessionId, selectionData.EntityId);
 
-            if (subEditorSession.TryLockEntity(selectionData.EntityId, (byte)sender.SessionId))
+            if (subEditorSession.TryLockEntity(correctedData.EntityId, (byte)sender.SessionId))
             {
                 foreach (var client in connectedClients)
                 {
@@ -567,7 +580,7 @@ namespace Barotrauma.Networking
                     IWriteMessage msg = new WriteOnlyMessage();
                     msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
                     msg.WriteByte((byte)SubEditorPacketHeader.EntitySelection);
-                    msg.WriteNetSerializableStruct(selectionData);
+                    msg.WriteNetSerializableStruct(correctedData);
                     serverPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
                 }
 
@@ -592,8 +605,9 @@ namespace Barotrauma.Networking
             if (!isSubEditorSessionActive || subEditorSession == null) return;
 
             var selectionData = INetSerializableStruct.Read<SubEditorSelectionData>(inc);
+            var correctedData = new SubEditorSelectionData((byte)sender.SessionId, selectionData.EntityId);
 
-            subEditorSession.UnlockEntity(selectionData.EntityId, (byte)sender.SessionId);
+            subEditorSession.UnlockEntity(correctedData.EntityId, (byte)sender.SessionId);
 
             foreach (var client in connectedClients)
             {
@@ -602,7 +616,7 @@ namespace Barotrauma.Networking
                 IWriteMessage msg = new WriteOnlyMessage();
                 msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
                 msg.WriteByte((byte)SubEditorPacketHeader.EntityDeselection);
-                msg.WriteNetSerializableStruct(selectionData);
+                msg.WriteNetSerializableStruct(correctedData);
                 serverPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
             }
         }
@@ -803,7 +817,9 @@ namespace Barotrauma.Networking
             }
 
             int compressedLength = inc.ReadInt32();
+            if (compressedLength <= 0 || compressedLength > MaxSubmarineSyncSize) return;
             int uncompressedLength = inc.ReadInt32();
+            if (uncompressedLength <= 0 || uncompressedLength > MaxSubmarineSyncSize) return;
             byte[] compressedBytes = inc.ReadBytes(compressedLength);
 
             // Store for newly joining clients
@@ -851,6 +867,8 @@ namespace Barotrauma.Networking
 
             string subName = inc.ReadString();
             string subHash = inc.ReadString();
+            if (string.IsNullOrEmpty(subName) || subName.Length > 256) return;
+            if (string.IsNullOrEmpty(subHash) || subHash.Length > 256) return;
 
             subEditorCurrentSubName = subName;
 
