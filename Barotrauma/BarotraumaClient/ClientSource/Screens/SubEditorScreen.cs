@@ -1968,6 +1968,7 @@ namespace Barotrauma
                 return;
             }
             
+            isApplyingRemoteChange = true;
             try
             {
                 // Parse XML and wrap in ContentXElement for Load methods
@@ -2052,8 +2053,11 @@ namespace Barotrauma
             }
             catch (Exception ex)
             {
-                isApplyingRemoteChange = false;
                 DebugConsole.AddWarning($"[SubEditor] Failed to load entity from XML: {ex.Message}");
+            }
+            finally
+            {
+                isApplyingRemoteChange = false;
             }
         }
 
@@ -2080,7 +2084,9 @@ namespace Barotrauma
                     isApplyingRemoteChange = false;
                 }
                 
+                isApplyingRemoteChange = true;
                 entity.Remove();
+                isApplyingRemoteChange = false;
             }
         }
 
@@ -2575,6 +2581,7 @@ namespace Barotrauma
             if (CoroutineManager.IsCoroutineRunning("EndGame")) { return; }
             if (ignoreSubmarineSync) { return; }
             LoadSubmarineFromXml(submarineXml, "sync");
+            ClearUndoBuffer();
         }
         
         internal void LoadSubmarineFromXml(string submarineXml, string source)
@@ -3191,6 +3198,8 @@ namespace Barotrauma
                 preTestSubmarineXml = null;
                 backedUpSubInfo = null;
                 collaborativeEditingSubName = null;
+                // Entities were reloaded — old undo Command references are stale
+                ClearUndoBuffer();
                 // with the old stored XML immediately after test mode ends, but we've already
                 // restored the correct pre-test state. Clear the flag after a brief delay so
                 ignoreSubmarineSync = true;
