@@ -7391,7 +7391,7 @@ namespace Barotrauma
                     var wire = wireItem.GetComponent<Wire>();
                     if (wire != null)
                     {
-                        GameMain.SubEditorScreen.SyncWireState(wire, wire.Connections[0]?.Item, wire.Connections[1]?.Item);
+                        GameMain.SubEditorScreen.SyncWireAndConnectedItems(wire, wire.Connections[0], wire.Connections[1]);
                     }
                 }
                 else
@@ -7614,54 +7614,54 @@ namespace Barotrauma
             cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
             StoreCommand(cmd);
 
-            SyncWireState(wire, thisConnection?.Item, otherConnection?.Item);
+            SyncWireAndConnectedItems(wire, thisConnection, otherConnection);
         }
 
         private void OnWireDisconnected(Wire wire, Connection disconnectedConnection)
         {
             if (isApplyingRemoteChange) { return; }
+
             var cmd = new WireCommand(WireCommandType.Disconnect, wire, disconnectedConnection);
             cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
             StoreCommand(cmd);
 
-            // Send updated connection state for all affected items
-            var disconnectedItem = disconnectedConnection?.Item;
             var remainingConnection = wire.Connections[0] ?? wire.Connections[1];
-            var remainingItem = remainingConnection?.Item;
-
-            SyncWireState(wire, disconnectedItem, remainingItem);
+            SyncWireAndConnectedItems(wire, disconnectedConnection, remainingConnection);
         }
 
-        internal void SyncWireState(Wire wire, Item affectedItem1, Item affectedItem2)
+        internal void SyncWireAndConnectedItems(Wire wire, Connection conn1, Connection conn2)
         {
             if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
             if (isApplyingRemoteChange) return;
-            if (wire?.Item == null || wire.Item.Removed) return;
 
             try
             {
-                // Send wire as EntityUpdated(wireSync) — preserves wire entity, just updates node/connection state
-                var wireElement = SaveEntityForSync(wire.Item);
-                wireElement.SetAttributeValue("wireSync", "true");
-                SubEditorNetworkingClient.Instance.NotifyEntityUpdated(wire.Item.ID, wireElement.ToString());
-
-                // Send affected items' connection panel state
-                if (affectedItem1 != null && !affectedItem1.Removed)
+                if (wire?.Item != null && !wire.Item.Removed)
                 {
-                    var itemElement = SaveEntityForSync(affectedItem1);
-                    itemElement.SetAttributeValue("wireSync", "true");
-                    SubEditorNetworkingClient.Instance.NotifyEntityUpdated(affectedItem1.ID, itemElement.ToString());
+                    var wireElement = SaveEntityForSync(wire.Item);
+                    SubEditorNetworkingClient.Instance.NotifyEntityPlaced(wireElement.ToString());
                 }
-                if (affectedItem2 != null && !affectedItem2.Removed && affectedItem2 != affectedItem1)
+                else if (wire?.Item != null)
                 {
-                    var itemElement = SaveEntityForSync(affectedItem2);
+                    SubEditorNetworkingClient.Instance.NotifyEntityRemoved(wire.Item.ID);
+                }
+
+                if (conn1?.Item != null && !conn1.Item.Removed)
+                {
+                    var itemElement = SaveEntityForSync(conn1.Item);
                     itemElement.SetAttributeValue("wireSync", "true");
-                    SubEditorNetworkingClient.Instance.NotifyEntityUpdated(affectedItem2.ID, itemElement.ToString());
+                    SubEditorNetworkingClient.Instance.NotifyEntityUpdated(conn1.Item.ID, itemElement.ToString());
+                }
+                if (conn2?.Item != null && !conn2.Item.Removed && conn2.Item != conn1?.Item)
+                {
+                    var itemElement = SaveEntityForSync(conn2.Item);
+                    itemElement.SetAttributeValue("wireSync", "true");
+                    SubEditorNetworkingClient.Instance.NotifyEntityUpdated(conn2.Item.ID, itemElement.ToString());
                 }
             }
             catch (Exception ex)
             {
-                DebugConsole.AddWarning($"[SubEditor] SyncWireState failed: {ex.Message}");
+                DebugConsole.AddWarning($"[SubEditor] SyncWireAndConnectedItems failed: {ex.Message}");
             }
         }
 
