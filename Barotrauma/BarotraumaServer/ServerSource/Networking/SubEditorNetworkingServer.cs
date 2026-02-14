@@ -28,6 +28,7 @@ namespace Barotrauma.Networking
         private const int MaxPropertyStringLength = 1024 * 64; // 64 KB
         private const int MaxBatchEntityCount = 500;
         private const int MaxSubmarineSyncSize = 1024 * 1024 * 32; // 32 MB
+        private const int MaxNameLength = 256;
 
         public bool IsSubEditorSessionActive => isSubEditorSessionActive;
         
@@ -126,7 +127,11 @@ namespace Barotrauma.Networking
         private void HandleEntityPlaced(IReadMessage inc, Client sender)
         {
             string entityXml = inc.ReadString();
-            if (string.IsNullOrEmpty(entityXml) || entityXml.Length > MaxEntityXmlLength) return;
+            if (string.IsNullOrEmpty(entityXml) || entityXml.Length > MaxEntityXmlLength)
+            {
+                DebugConsole.AddWarning($"[SubEditor] EntityPlaced rejected from {sender.Name}: size {entityXml?.Length ?? 0} exceeds {MaxEntityXmlLength}");
+                return;
+            }
 
             var perms = GetSenderPermissions(sender);
             if (!perms.HasFlag(SubEditorPermissions.CanEditOwn))
@@ -225,7 +230,11 @@ namespace Barotrauma.Networking
         private void HandleEntitiesMovedBatch(IReadMessage inc, Client sender)
         {
             ushort count = inc.ReadUInt16();
-            if (count > MaxBatchEntityCount) return;
+            if (count > MaxBatchEntityCount)
+            {
+                DebugConsole.AddWarning($"[SubEditor] EntitiesMovedBatch rejected from {sender.Name}: count {count} exceeds {MaxBatchEntityCount}");
+                return;
+            }
             var moves = new List<(ushort entityId, float dx, float dy)>(count);
             for (int i = 0; i < count; i++)
             {
@@ -274,8 +283,12 @@ namespace Barotrauma.Networking
             ushort entityId = inc.ReadUInt16();
             string propName = inc.ReadString();
             string propValue = inc.ReadString();
-            if (string.IsNullOrEmpty(propName) || propName.Length > MaxPropertyStringLength) return;
-            if (propValue != null && propValue.Length > MaxPropertyStringLength) return;
+            if (string.IsNullOrEmpty(propName) || propName.Length > MaxPropertyStringLength ||
+                (propValue != null && propValue.Length > MaxPropertyStringLength))
+            {
+                DebugConsole.AddWarning($"[SubEditor] EntityPropertyChanged rejected from {sender.Name}: property string too large");
+                return;
+            }
 
             if (subEditorSession != null)
             {
@@ -304,7 +317,11 @@ namespace Barotrauma.Networking
         {
             ushort entityId = inc.ReadUInt16();
             string entityXml = inc.ReadString();
-            if (string.IsNullOrEmpty(entityXml) || entityXml.Length > MaxEntityXmlLength) return;
+            if (string.IsNullOrEmpty(entityXml) || entityXml.Length > MaxEntityXmlLength)
+            {
+                DebugConsole.AddWarning($"[SubEditor] EntityUpdated rejected from {sender.Name}: size {entityXml?.Length ?? 0} exceeds {MaxEntityXmlLength}");
+                return;
+            }
 
             if (subEditorSession != null)
             {
@@ -355,7 +372,7 @@ namespace Barotrauma.Networking
         private void HandleRequestSubmarineFile(IReadMessage inc, Client sender)
         {
             string subName = inc.ReadString();
-            if (string.IsNullOrEmpty(subName) || subName.Length > 256) return;
+            if (string.IsNullOrEmpty(subName) || subName.Length > MaxNameLength) return;
             
             var subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
             if (subInfo != null && System.IO.File.Exists(subInfo.FilePath))
@@ -867,8 +884,8 @@ namespace Barotrauma.Networking
 
             string subName = inc.ReadString();
             string subHash = inc.ReadString();
-            if (string.IsNullOrEmpty(subName) || subName.Length > 256) return;
-            if (string.IsNullOrEmpty(subHash) || subHash.Length > 256) return;
+            if (string.IsNullOrEmpty(subName) || subName.Length > MaxNameLength) return;
+            if (string.IsNullOrEmpty(subHash) || subHash.Length > MaxNameLength) return;
 
             subEditorCurrentSubName = subName;
 
