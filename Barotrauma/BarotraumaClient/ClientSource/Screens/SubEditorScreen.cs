@@ -7681,12 +7681,19 @@ namespace Barotrauma
             var conn0 = wire.Connections[0];
             var conn1 = wire.Connections[1];
 
+            string sessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
+
             if (conn0 != null || conn1 != null)
             {
-                var cmd = new WireCommand(WireCommandType.Disconnect, wire, conn0 ?? conn1, conn0 != null ? conn1 : null);
-                cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
-                StoreCommand(cmd);
+                var wireCmd = new WireCommand(WireCommandType.Disconnect, wire, conn0 ?? conn1, conn0 != null ? conn1 : null);
+                wireCmd.AuthorSessionId = sessionId;
+                StoreCommand(wireCmd);
             }
+
+            // AddOrDeleteCommand for Edits tab (matches what host creates via OnCollaborativeEntityRemoved)
+            var deleteCmd = new AddOrDeleteCommand(new List<MapEntity> { wireItem }, wasDeleted: true);
+            deleteCmd.AuthorSessionId = sessionId;
+            StoreCommand(deleteCmd);
 
             // Remove wire FIRST so items' XML no longer contains the wire link
             ushort wireId = wireItem.ID;
@@ -7793,8 +7800,7 @@ namespace Barotrauma
                         {
                             if (!xmlWireIds.Contains(existingWire.Item.ID))
                             {
-                                var otherConn = existingWire.OtherConnection(conn);
-                                var disconnCmd = new WireCommand(WireCommandType.Disconnect, existingWire, conn, otherConn);
+                                var disconnCmd = new WireCommand(WireCommandType.Disconnect, existingWire, conn);
                                 disconnCmd.AuthorSessionId = senderSessionId.ToString();
                                 StoreCommand(disconnCmd);
                                 conn.DisconnectWire(existingWire);
