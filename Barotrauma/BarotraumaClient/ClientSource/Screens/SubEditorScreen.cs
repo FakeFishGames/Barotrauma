@@ -7633,8 +7633,9 @@ namespace Barotrauma
             // If both ends are now disconnected, remove the wire entity entirely
             if (remainingConnection == null && wire?.Item != null && !wire.Item.Removed)
             {
+                ushort wireId = wire.Item.ID;
                 wire.Item.Remove();
-                SubEditorNetworkingClient.Instance?.NotifyEntityRemoved(wire.Item.ID);
+                SubEditorNetworkingClient.Instance?.NotifyEntityRemoved(wireId);
             }
         }
 
@@ -7669,6 +7670,7 @@ namespace Barotrauma
 
         private void OnWireNodeMoved(Wire wire, int nodeIndex, Vector2 oldPos, Vector2 newPos)
         {
+            if (isApplyingRemoteChange) { return; }
             var cmd = new WireCommand(wire, nodeIndex, oldPos, newPos);
             cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
             StoreCommand(cmd);
@@ -7678,6 +7680,7 @@ namespace Barotrauma
 
         private void OnWireNodeAdded(Wire wire, int nodeIndex, Vector2 nodePos)
         {
+            if (isApplyingRemoteChange) { return; }
             var cmd = new WireCommand(WireCommandType.NodeAdd, wire, nodeIndex, nodePos);
             cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
             StoreCommand(cmd);
@@ -7687,6 +7690,7 @@ namespace Barotrauma
 
         private void OnWireNodeRemoved(Wire wire, int nodeIndex, Vector2 nodePos)
         {
+            if (isApplyingRemoteChange) { return; }
             var cmd = new WireCommand(WireCommandType.NodeRemove, wire, nodeIndex, nodePos);
             cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
             StoreCommand(cmd);
@@ -7706,11 +7710,16 @@ namespace Barotrauma
                         string nodesAttr = subElem.Attribute("nodes")?.Value;
                         if (nodesAttr != null)
                         {
+                            var oldNodes = wire.GetNodes().ToList();
                             var newNodes = Items.Components.Wire.ExtractNodes(subElem).ToList();
-                            if (newNodes.Count > 0)
+                            if (newNodes.Count > 0 && !oldNodes.SequenceEqual(newNodes))
                             {
                                 wire.SetNodes(newNodes);
                                 wire.UpdateSections();
+                                // Create node undo step so host can undo remote node changes
+                                var cmd = new WireCommand(wire, 0, oldNodes.Count > 0 ? oldNodes[0] : Vector2.Zero, newNodes.Count > 0 ? newNodes[0] : Vector2.Zero);
+                                cmd.AuthorSessionId = senderSessionId.ToString();
+                                StoreCommand(cmd);
                             }
                             break;
                         }
