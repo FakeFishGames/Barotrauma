@@ -368,7 +368,6 @@ namespace Barotrauma.Networking
             GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
         }
 
-        /// <summary>Batched move to avoid DoS rate limit kicks.</summary>
         public void NotifyEntitiesMovedBatch(List<(ushort entityId, float dx, float dy)> moves)
         {
             if (!IsActive) return;
