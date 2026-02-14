@@ -1878,7 +1878,7 @@ namespace Barotrauma
                     MainSub.SaveToXElement(element);
                     preservedSubXml = element.ToString();
                 }
-                catch { /* best-effort */ }
+                catch { }
             }
 
             SubEditorNetworkingClient.Instance?.LeaveSession();

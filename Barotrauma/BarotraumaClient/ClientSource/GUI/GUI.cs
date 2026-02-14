@@ -2647,7 +2647,6 @@ namespace Barotrauma
                             GameMain.GameSession?.EndRound("");
                         });
                     }
-                    // Collaborative SubEditor: return to editor for all clients
                     else if (Networking.SubEditorNetworkingClient.Instance?.IsActive == true && GameMain.Client != null)
                     {
                         CreateButton("PauseMenuReturnToEditor", buttonContainer, action: () =>

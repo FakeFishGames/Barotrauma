@@ -519,14 +519,11 @@ namespace Barotrauma.Networking
             if (!isSubEditorSessionActive || subEditorSession == null) return;
 
             var cursorData = INetSerializableStruct.Read<SubEditorCursorData>(inc);
-
-            // Use server-assigned SessionId (authoritative)
             byte senderSessionId = (byte)sender.SessionId;
 
             subEditorSession.CursorPositions[senderSessionId] = 
                 new Microsoft.Xna.Framework.Vector2(cursorData.WorldX, cursorData.WorldY);
 
-            // Rebuild with authoritative SessionId
             var correctedCursorData = new SubEditorCursorData(senderSessionId, cursorData.WorldX, cursorData.WorldY);
 
             foreach (var client in connectedClients)
@@ -598,7 +595,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        /// <summary>Force all clients to return from test mode to SubEditor.</summary>
+        /// <summary>Force all clients to return from test mode.</summary>
         public void ReturnToSubEditor()
         {
             Level.IsSubEditorTestMode = false;

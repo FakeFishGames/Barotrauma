@@ -1344,7 +1344,7 @@ namespace Barotrauma.Networking
                             Submarine.MainSub.SaveToXElement(subElement);
                             preservedSubXml = subElement.ToString();
                         }
-                        catch { /* best-effort */ }
+                        catch { }
                     }
                     SubEditorNetworkingClient.Instance.LeaveSession();
                     GameMain.SubEditorScreen.UpdateCollaborativeSessionUI();
