@@ -7686,16 +7686,20 @@ namespace Barotrauma
                 var cmd = new WireCommand(WireCommandType.Disconnect, wire, conn0 ?? conn1, conn0 != null ? conn1 : null);
                 cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
                 StoreCommand(cmd);
-
-                SendItemWireSync(conn0?.Item);
-                if (conn1?.Item != null && conn1.Item != conn0?.Item)
-                {
-                    SendItemWireSync(conn1.Item);
-                }
             }
 
+            // Remove wire FIRST so items' XML no longer contains the wire link
             ushort wireId = wireItem.ID;
-            wireItem.Remove();
+            isApplyingRemoteChange = true;
+            try { wireItem.Remove(); }
+            finally { isApplyingRemoteChange = false; }
+
+            // Send items' connection state AFTER removal — XML now reflects disconnection
+            SendItemWireSync(conn0?.Item);
+            if (conn1?.Item != null && conn1.Item != conn0?.Item)
+            {
+                SendItemWireSync(conn1.Item);
+            }
             SubEditorNetworkingClient.Instance?.NotifyEntityRemoved(wireId);
         }
 
