@@ -2754,16 +2754,6 @@ namespace Barotrauma
             };
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.08f), editorsPanelLayout.RectTransform),
-                "Editor Permissions...", style: "GUIButtonSmall")
-            {
-                OnClicked = (btn, _) =>
-                {
-                    ShowSubEditorPermissionsDialog();
-                    return true;
-                }
-            };
-
-            new GUIButton(new RectTransform(new Vector2(1.0f, 0.08f), editorsPanelLayout.RectTransform),
                 TextManager.Get("SubEditorLeaveSession").Fallback("Leave Session"), style: "GUIButtonSmall")
             {
                 OnClicked = (btn, userData) =>
@@ -2842,65 +2832,6 @@ namespace Barotrauma
                 collaborativeToggleButton.Text = $"Editors ({userCount}) {arrow}";
                 collaborativeToggleButton.Visible = SubEditorNetworkingClient.Instance.IsActive;
             }
-        }
-
-        private void ShowSubEditorPermissionsDialog()
-        {
-            var msgBox = new GUIMessageBox(
-                TextManager.Get("ServerSettingsButton").Fallback("Editor Permissions"),
-                "",
-                new LocalizedString[] { TextManager.Get("Close") },
-                relativeSize: new Vector2(0.35f, 0.55f));
-
-            // Scrollable list inside the content area — leave room at bottom for the Close button
-            var scrollList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), msgBox.Content.RectTransform));
-
-            int itemHeight = (int)(25 * GUI.Scale);
-
-            new GUITextBlock(new RectTransform(new Point(scrollList.Content.Rect.Width, itemHeight), scrollList.Content.RectTransform),
-                "Default permissions for new clients:", font: GUIStyle.SmallFont);
-
-            foreach (SubEditorPermissions perm in Enum.GetValues(typeof(SubEditorPermissions)))
-            {
-                if (perm == SubEditorPermissions.None || perm == SubEditorPermissions.All) continue;
-
-                bool isSet = (SubEditorNetworkingShared.DefaultClientPermissions & perm) != 0;
-                var tickBox = new GUITickBox(new RectTransform(new Point(scrollList.Content.Rect.Width, itemHeight), scrollList.Content.RectTransform),
-                    perm.ToString(), font: GUIStyle.SmallFont)
-                {
-                    Selected = isSet,
-                    OnSelected = (tb) =>
-                    {
-                        if (tb.Selected)
-                            SubEditorNetworkingShared.DefaultClientPermissions |= perm;
-                        else
-                            SubEditorNetworkingShared.DefaultClientPermissions &= ~perm;
-                        return true;
-                    }
-                };
-            }
-
-            // Mass Edit Threshold (numerical input)
-            var thresholdLayout = new GUILayoutGroup(new RectTransform(new Point(scrollList.Content.Rect.Width, itemHeight), scrollList.Content.RectTransform), isHorizontal: true)
-            {
-                Stretch = true,
-                RelativeSpacing = 0.02f
-            };
-            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), thresholdLayout.RectTransform),
-                "Mass Edit Threshold:", font: GUIStyle.SmallFont);
-            var thresholdInput = new GUINumberInput(new RectTransform(new Vector2(0.35f, 1.0f), thresholdLayout.RectTransform),
-                NumberType.Int)
-            {
-                IntValue = SubEditorNetworkingShared.MassEditThreshold,
-                MinValueInt = 1,
-                MaxValueInt = 9999
-            };
-            thresholdInput.OnValueChanged += (input) =>
-            {
-                SubEditorNetworkingShared.MassEditThreshold = input.IntValue;
-            };
-
-            msgBox.Buttons[0].OnClicked = msgBox.Close;
         }
 
         #endregion Collaborative Editing
