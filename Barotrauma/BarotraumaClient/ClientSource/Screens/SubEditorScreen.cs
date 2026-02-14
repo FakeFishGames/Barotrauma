@@ -8264,7 +8264,7 @@ namespace Barotrauma
                         prefix = $"[{user.Value.Name}] ";
                         if (command.AuthorSessionId != localAuthorId)
                         {
-                            textColor = SubEditorNetworkingShared.GetUserColor(user.Value.ColorIndex);
+                            textColor = user.Value.GetColor();
                         }
                     }
                 }

@@ -14,20 +14,17 @@ namespace Barotrauma.Networking
         private Client subEditorHost;
         private string subEditorCurrentSubPath;
         private string subEditorCurrentSubName;
-        private string subEditorStoredSubmarineXml;
         private byte[] subEditorStoredSubmarineCompressed;
         private int subEditorStoredSubmarineUncompressedLength;
 
         private const double SubEditorResyncCooldown = 0.5;
         private const byte HostResyncKey = 0;
         private readonly Dictionary<byte, double> subEditorLastResyncTime = new Dictionary<byte, double>();
-        private readonly Dictionary<ushort, string> subEditorEntityXml = new Dictionary<ushort, string>();
 
-        // Size limits to prevent memory exhaustion from malicious clients
-        private const int MaxEntityXmlLength = 1024 * 256; // 256 KB
-        private const int MaxPropertyStringLength = 1024 * 64; // 64 KB
+        private const int MaxEntityXmlLength = 256 * 1024;
+        private const int MaxPropertyStringLength = 64 * 1024;
         private const int MaxBatchEntityCount = 500;
-        private const int MaxSubmarineSyncSize = 1024 * 1024 * 32; // 32 MB
+        private const int MaxSubmarineSyncSize = 32 * 1024 * 1024;
         private const int MaxNameLength = 256;
 
         public bool IsSubEditorSessionActive => isSubEditorSessionActive;
@@ -84,9 +81,6 @@ namespace Barotrauma.Networking
                 case SubEditorPacketHeader.CursorMoved:
                     HandleCursorMoved(inc, sender);
                     break;
-                case SubEditorPacketHeader.RequestSubmarineFile:
-                    HandleRequestSubmarineFile(inc, sender);
-                    break;
                 case SubEditorPacketHeader.SetPermissions:
                     HandleSetPermissions(inc, sender);
                     break;
@@ -136,12 +130,10 @@ namespace Barotrauma.Networking
             var perms = GetSenderPermissions(sender);
             if (!perms.HasFlag(SubEditorPermissions.CanEditOwn))
             {
-                DebugConsole.NewMessage($"[SubEditor] EntityPlaced DENIED for {sender.Name} (session={sender.SessionId}, perms={perms})", Color.Red);
                 RequestHostResync();
                 return;
             }
 
-            // Track ownership
             if (subEditorSession != null)
             {
                 try
@@ -151,7 +143,6 @@ namespace Barotrauma.Networking
                     if (id > 0)
                     {
                         subEditorSession.SetEntityOwner((ushort)id, GetSenderAccountId(sender));
-                        subEditorEntityXml[(ushort)id] = entityXml;
                     }
                 }
                 catch (Exception e)
@@ -184,7 +175,6 @@ namespace Barotrauma.Networking
                     return;
                 }
                 subEditorSession.RemoveEntityOwnership(entityId);
-                subEditorEntityXml.Remove(entityId);
             }
 
             foreach (var client in connectedClients.Where(c => c != sender))
@@ -369,45 +359,16 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void HandleRequestSubmarineFile(IReadMessage inc, Client sender)
-        {
-            string subName = inc.ReadString();
-            if (string.IsNullOrEmpty(subName) || subName.Length > MaxNameLength) return;
-            
-            var subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
-            if (subInfo != null && System.IO.File.Exists(subInfo.FilePath))
-            {
-                FileSender.StartTransfer(sender.Connection, FileTransferType.Submarine, subInfo.FilePath);
-            }
-            else if (!string.IsNullOrEmpty(subEditorCurrentSubPath) && System.IO.File.Exists(subEditorCurrentSubPath))
-            {
-                FileSender.StartTransfer(sender.Connection, FileTransferType.Submarine, subEditorCurrentSubPath);
-            }
-            else
-            {
-                DebugConsole.AddWarning($"[SubEditor] Could not find submarine '{subName}' to send to {sender.Name}");
-            }
-        }
-
         private void HandleSetPermissions(IReadMessage inc, Client sender)
         {
-            if (!isSubEditorSessionActive || subEditorSession == null)
-            {
-                DebugConsole.NewMessage($"[SubEditor] SetPermissions REJECTED: session not active", Color.Red);
-                return;
-            }
-            if (sender != subEditorHost)
-            {
-                DebugConsole.NewMessage($"[SubEditor] SetPermissions REJECTED: {sender.Name} (session={sender.SessionId}) is not the host (host={subEditorHost?.Name}, session={subEditorHost?.SessionId})", Color.Red);
-                return;
-            }
+            if (!isSubEditorSessionActive || subEditorSession == null) return;
+            if (sender != subEditorHost) return;
 
             byte targetSessionId = inc.ReadByte();
             uint permBits = inc.ReadUInt32();
             var permissions = (SubEditorPermissions)permBits;
 
             subEditorSession.SetPermissions(targetSessionId, permissions);
-            DebugConsole.NewMessage($"[SubEditor] Permissions SET: target={targetSessionId}, perms={permissions} (bits={permBits}). Broadcasting to {connectedClients.Count} clients.", Color.Yellow);
 
             foreach (var client in connectedClients)
             {
@@ -460,7 +421,6 @@ namespace Barotrauma.Networking
             subEditorSession = null;
             subEditorHost = null;
             isSubEditorSessionActive = false;
-            subEditorEntityXml.Clear();
 
             DebugConsole.Log("[SubEditor] Session ended");
         }
@@ -842,21 +802,6 @@ namespace Barotrauma.Networking
             // Store for newly joining clients
             subEditorStoredSubmarineCompressed = compressedBytes;
             subEditorStoredSubmarineUncompressedLength = uncompressedLength;
-            // Decompress and store XML for backward compat
-            try
-            {
-                using (var ms = new System.IO.MemoryStream(compressedBytes))
-                using (var gzip = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionMode.Decompress))
-                using (var reader = new System.IO.StreamReader(gzip, System.Text.Encoding.UTF8))
-                {
-                    subEditorStoredSubmarineXml = reader.ReadToEnd();
-                }
-            }
-            catch (Exception ex)
-            {
-                DebugConsole.AddWarning($"[SubEditor] Failed to decompress submarine XML for storage: {ex.Message}");
-                subEditorStoredSubmarineXml = "";
-            }
 
             foreach (var client in connectedClients)
             {

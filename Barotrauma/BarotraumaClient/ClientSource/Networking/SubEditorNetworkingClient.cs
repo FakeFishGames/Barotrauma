@@ -2,7 +2,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -19,10 +18,6 @@ namespace Barotrauma.Networking
         private float cursorSyncTimer;
         private Vector2 lastSentCursorPos;
         private byte localSessionId;
-        private byte lastKnownHostSessionId;
-        private bool wasInitiallyHost;
-        private bool isRequestingSubmarineFile;
-        private string requestedSubmarineName = "";
 
         public byte LocalSessionId => localSessionId;
 
@@ -62,7 +57,6 @@ namespace Barotrauma.Networking
             localSessionId = sessionId;
             IsActive = true;
             IsHost = false;
-            wasInitiallyHost = false;
             
             var localUser = new SubEditorUser(sessionId, playerName, colorIndex);
             AddUser(localUser);
@@ -73,7 +67,6 @@ namespace Barotrauma.Networking
             localSessionId = sessionId;
             IsActive = true;
             IsHost = true;
-            wasInitiallyHost = true;
             
             var localUser = new SubEditorUser(sessionId, playerName, 0);
             AddUser(localUser);
@@ -94,16 +87,7 @@ namespace Barotrauma.Networking
             }
             
             localSessionId = newSessionId;
-            
-            if (wasInitiallyHost)
-            {
-                IsHost = true;
-                lastKnownHostSessionId = newSessionId;
-            }
-            else
-            {
-                IsHost = (localSessionId == lastKnownHostSessionId);
-            }
+            IsHost = (localSessionId == HostSessionId);
             
             OnClientListUpdated?.Invoke();
         }
@@ -273,19 +257,14 @@ namespace Barotrauma.Networking
                 AddUser(user);
             }
             
-            lastKnownHostSessionId = hostSessionId;
             HostSessionId = hostSessionId;
             IsHost = (localSessionId == hostSessionId);
 
-            DebugConsole.NewMessage($"[SubEditor] ClientList received: {users.Count} users, hostSession={hostSessionId}, mySession={localSessionId}, IsHost={IsHost}", Color.Cyan);
-
-            // Apply default permissions for all non-host users if not already set
             foreach (var user in users)
             {
                 if (user.SessionId != hostSessionId && !UserPermissions.ContainsKey(user.SessionId))
                 {
                     SetPermissions(user.SessionId, DefaultClientPermissions);
-                    DebugConsole.NewMessage($"[SubEditor] Default perms for {user.Name} (session={user.SessionId}): {DefaultClientPermissions}", Color.Cyan);
                 }
             }
             
@@ -308,14 +287,7 @@ namespace Barotrauma.Networking
 
         public void ReceiveSubmarineInfo(string subName, string subHash)
         {
-            // State is synced via XML packets, not file transfers
             OnSubmarineInfoReceived?.Invoke(subName, subHash);
-        }
-
-        public void OnSubmarineFileTransferComplete()
-        {
-            isRequestingSubmarineFile = false;
-            requestedSubmarineName = "";
         }
 
         public void ReceiveTestModeStart()
@@ -356,13 +328,6 @@ namespace Barotrauma.Networking
             cursorSyncTimer = 0;
             lastSentCursorPos = Vector2.Zero;
             localSessionId = 0;
-            isRequestingSubmarineFile = false;
-            requestedSubmarineName = "";
-        }
-
-        public bool HasLocalPermission(SubEditorPermissions flag)
-        {
-            return (GetPermissions(localSessionId) & flag) != 0;
         }
 
         public void NotifyEntityPlaced(string entityXml)
@@ -452,29 +417,12 @@ namespace Barotrauma.Networking
             GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
         }
 
-        public void RequestSubmarineFile(string subName)
-        {
-            if (!IsActive) return;
-            if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
-
-            IWriteMessage msg = new WriteOnlyMessage();
-            msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
-            msg.WriteByte((byte)SubEditorPacketHeader.RequestSubmarineFile);
-            msg.WriteString(subName);
-            GameMain.Client.ClientPeer.Send(msg, DeliveryMethod.Reliable);
-        }
-
         public void SendPermissionUpdate(byte targetSessionId, SubEditorPermissions permissions)
         {
-            if (!IsActive || !IsHost)
-            {
-                DebugConsole.NewMessage($"[SubEditor] SendPermissionUpdate BLOCKED: IsActive={IsActive}, IsHost={IsHost}", Color.Red);
-                return;
-            }
+            if (!IsActive || !IsHost) return;
             if (GameMain.Client?.ClientPeer == null || !GameMain.Client.ClientPeer.IsActive) return;
 
             SetPermissions(targetSessionId, permissions);
-            DebugConsole.NewMessage($"[SubEditor] SendPermissionUpdate: target={targetSessionId}, perms={permissions} (bits={(uint)permissions}), mySession={localSessionId}", Color.Yellow);
 
             IWriteMessage msg = new WriteOnlyMessage();
             msg.WriteByte((byte)ClientPacketHeader.SUBEDITOR);
@@ -487,11 +435,6 @@ namespace Barotrauma.Networking
         public void ReceivePermissionUpdate(byte targetSessionId, SubEditorPermissions permissions)
         {
             SetPermissions(targetSessionId, permissions);
-            DebugConsole.NewMessage($"[SubEditor] ReceivePermissionUpdate: target={targetSessionId}, perms={permissions}, mySession={localSessionId}", Color.Cyan);
-            if (targetSessionId == localSessionId)
-            {
-                DebugConsole.NewMessage($"[SubEditor] YOUR permissions changed to: {permissions}", Color.Yellow);
-            }
         }
 
         public void ReceiveEntityPlaced(byte senderSessionId, string entityXml)

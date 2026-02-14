@@ -11,10 +11,6 @@ namespace Barotrauma.Networking
         CursorPosition,
         EntitySelection,
         EntityDeselection,
-        EntityCreated,
-        EntityDeleted,
-        EntityTransform,
-        EntityProperty,
         StartTestMode,
         EndTestMode,
         ClientList,
@@ -28,9 +24,7 @@ namespace Barotrauma.Networking
         EntityMoved,
         EntityPropertyChanged,
         CursorMoved,
-        RequestSubmarineFile,
         EntityUpdated,
-        FullState,
         EntitiesMovedBatch,
         SetPermissions,
         RequestResync
@@ -97,13 +91,6 @@ namespace Barotrauma.Networking
         public Dictionary<UInt16, byte> EntityLocks { get; } = new Dictionary<UInt16, byte>();
 
         public Dictionary<byte, Vector2> CursorPositions { get; } = new Dictionary<byte, Vector2>();
-
-        public static Color GetUserColor(byte colorIndex)
-        {
-            return colorIndex < SubEditorUser.UserColors.Length
-                ? SubEditorUser.UserColors[colorIndex]
-                : Color.White;
-        }
 
         public bool IsActive { get; protected set; }
 
@@ -173,12 +160,10 @@ namespace Barotrauma.Networking
             UnlockAllEntitiesForUser(sessionId);
         }
 
-        // Keyed by AccountId (not username) because usernames can change
         public Dictionary<UInt16, string> EntityOwnership { get; } = new Dictionary<UInt16, string>();
 
         public static SubEditorPermissions DefaultClientPermissions { get; set; } = SubEditorPermissions.All;
 
-        // Host always has all permissions
         public Dictionary<byte, SubEditorPermissions> UserPermissions { get; } = new Dictionary<byte, SubEditorPermissions>();
 
         public static int MassEditThreshold { get; set; } = 20;
@@ -258,7 +243,6 @@ namespace Barotrauma.Networking
         }
     }
 
-    // Separate from the standard ClientPermissions enum
     [Flags]
     public enum SubEditorPermissions : uint
     {
