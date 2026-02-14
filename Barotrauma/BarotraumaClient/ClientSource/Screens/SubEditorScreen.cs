@@ -7624,7 +7624,9 @@ namespace Barotrauma
             cmd.AuthorSessionId = SubEditorNetworkingClient.Instance?.LocalSessionId.ToString();
             StoreCommand(cmd);
 
-            SyncWireAndConnectedItems(wire, disconnectedConnection, null);
+            // Get the remaining connection (the end still connected)
+            var remainingConnection = wire.Connections[0] ?? wire.Connections[1];
+            SyncWireAndConnectedItems(wire, disconnectedConnection, remainingConnection);
         }
 
         internal void SyncWireAndConnectedItems(Wire wire, Connection conn1, Connection conn2)
@@ -7739,12 +7741,9 @@ namespace Barotrauma
                         {
                             if (!xmlWireIds.Contains(existingWire.Item.ID))
                             {
-                                if (SubEditorNetworkingClient.Instance?.IsHost == true)
-                                {
-                                    var disconnCmd = new WireCommand(WireCommandType.Disconnect, existingWire, conn);
-                                    disconnCmd.AuthorSessionId = senderSessionId.ToString();
-                                    StoreCommand(disconnCmd);
-                                }
+                                var disconnCmd = new WireCommand(WireCommandType.Disconnect, existingWire, conn);
+                                disconnCmd.AuthorSessionId = senderSessionId.ToString();
+                                StoreCommand(disconnCmd);
                                 conn.DisconnectWire(existingWire);
                                 existingWire.RemoveConnection(conn);
                             }
@@ -7761,23 +7760,20 @@ namespace Barotrauma
                                     conn.ConnectWire(wire);
                                     wire.TryConnect(conn, addNode: false);
                                     wire.UpdateSections();
-                                    if (SubEditorNetworkingClient.Instance?.IsHost == true)
+                                    // Deduplicate: remove prior Connect command for same wire
+                                    for (int ci = Commands.Count - 1; ci >= 0; ci--)
                                     {
-                                        // Deduplicate: remove prior Connect command for same wire
-                                        for (int ci = Commands.Count - 1; ci >= 0; ci--)
+                                        if (Commands[ci] is WireCommand wc && wc.Type == WireCommandType.Connect && wc.WireId == wireItem.ID)
                                         {
-                                            if (Commands[ci] is WireCommand wc && wc.Type == WireCommandType.Connect && wc.WireId == wireItem.ID)
-                                            {
-                                                Commands.RemoveAt(ci);
-                                                if (ci < commandIndex) commandIndex--;
-                                                break;
-                                            }
+                                            Commands.RemoveAt(ci);
+                                            if (ci < commandIndex) commandIndex--;
+                                            break;
                                         }
-                                        var otherConn = wire.OtherConnection(conn);
-                                        var connectCmd = new WireCommand(WireCommandType.Connect, wire, conn, otherConn);
-                                        connectCmd.AuthorSessionId = senderSessionId.ToString();
-                                        StoreCommand(connectCmd);
                                     }
+                                    var otherConn = wire.OtherConnection(conn);
+                                    var connectCmd = new WireCommand(WireCommandType.Connect, wire, conn, otherConn);
+                                    connectCmd.AuthorSessionId = senderSessionId.ToString();
+                                    StoreCommand(connectCmd);
                                 }
                             }
                         }
