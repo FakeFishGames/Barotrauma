@@ -814,6 +814,7 @@ namespace Barotrauma
         public override void UnExecute()
         {
             Wire wire = FindWire();
+            if (wire == null && Type != WireCommandType.Disconnect) return;
 
             switch (Type)
             {
@@ -886,7 +887,7 @@ namespace Barotrauma
                     }
                     break;
             }
-            if (!wire.Item.Removed) { wire.UpdateSections(); }
+            if (wire != null && !wire.Item.Removed) { wire.UpdateSections(); }
         }
 
         public override void Cleanup() { }
