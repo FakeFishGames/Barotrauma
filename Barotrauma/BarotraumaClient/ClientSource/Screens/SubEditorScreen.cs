@@ -7626,7 +7626,16 @@ namespace Barotrauma
             StoreCommand(cmd);
 
             var remainingConnection = wire.Connections[0] ?? wire.Connections[1];
-            SyncWireAndConnectedItems(wire, disconnectedConnection, remainingConnection);
+
+            // Send affected items' connection state so receivers can disconnect the wire
+            SyncWireConnectionItems(disconnectedConnection, remainingConnection);
+
+            // If both ends are now disconnected, remove the wire entity entirely
+            if (remainingConnection == null && wire?.Item != null && !wire.Item.Removed)
+            {
+                wire.Item.Remove();
+                SubEditorNetworkingClient.Instance?.NotifyEntityRemoved(wire.Item.ID);
+            }
         }
 
         internal void SyncWireAndConnectedItems(Wire wire, Connection conn1, Connection conn2)
@@ -7662,6 +7671,32 @@ namespace Barotrauma
             catch (Exception ex)
             {
                 DebugConsole.AddWarning($"[SubEditor] SyncWireAndConnectedItems failed: {ex.Message}");
+            }
+        }
+
+        private void SyncWireConnectionItems(Connection conn1, Connection conn2)
+        {
+            if (SubEditorNetworkingClient.Instance?.IsActive != true) return;
+            if (isApplyingRemoteChange) return;
+
+            try
+            {
+                if (conn1?.Item != null && !conn1.Item.Removed)
+                {
+                    var itemElement = SaveEntityForSync(conn1.Item);
+                    itemElement.SetAttributeValue("wireSync", "true");
+                    SubEditorNetworkingClient.Instance.NotifyEntityUpdated(conn1.Item.ID, itemElement.ToString());
+                }
+                if (conn2?.Item != null && !conn2.Item.Removed && conn2.Item != conn1?.Item)
+                {
+                    var itemElement = SaveEntityForSync(conn2.Item);
+                    itemElement.SetAttributeValue("wireSync", "true");
+                    SubEditorNetworkingClient.Instance.NotifyEntityUpdated(conn2.Item.ID, itemElement.ToString());
+                }
+            }
+            catch (Exception ex)
+            {
+                DebugConsole.AddWarning($"[SubEditor] SyncWireConnectionItems failed: {ex.Message}");
             }
         }
 
