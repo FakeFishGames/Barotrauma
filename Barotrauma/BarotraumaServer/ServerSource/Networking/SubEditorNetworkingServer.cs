@@ -114,14 +114,14 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void BroadcastToAll(SubEditorPacketHeader header, Action<IWriteMessage> writePayload)
+        private void BroadcastToAll(SubEditorPacketHeader header, Action<IWriteMessage> writePayload = null)
         {
             foreach (var client in connectedClients)
             {
                 IWriteMessage msg = new WriteOnlyMessage();
                 msg.WriteByte((byte)ServerPacketHeader.SUBEDITOR);
                 msg.WriteByte((byte)header);
-                writePayload(msg);
+                writePayload?.Invoke(msg);
                 serverPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
             }
         }
@@ -389,7 +389,7 @@ namespace Barotrauma.Networking
         {
             if (!isSubEditorSessionActive) return;
 
-            BroadcastToAll(SubEditorPacketHeader.EndTestMode, msg => { });
+            BroadcastToAll(SubEditorPacketHeader.EndTestMode);
 
             subEditorSession?.Clear();
             subEditorSession = null;
@@ -475,7 +475,10 @@ namespace Barotrauma.Networking
             {
                 msg.WriteByte((byte)users.Count);
                 msg.WriteByte(hostSessionId);
-                foreach (var user in users) { msg.WriteNetSerializableStruct(user); }
+                foreach (var user in users)
+                {
+                    msg.WriteNetSerializableStruct(user);
+                }
             });
         }
 
