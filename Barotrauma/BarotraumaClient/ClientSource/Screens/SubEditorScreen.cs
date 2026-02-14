@@ -7789,7 +7789,8 @@ namespace Barotrauma
                         {
                             if (!xmlWireIds.Contains(existingWire.Item.ID))
                             {
-                                var disconnCmd = new WireCommand(WireCommandType.Disconnect, existingWire, conn);
+                                var otherConn = existingWire.OtherConnection(conn);
+                                var disconnCmd = new WireCommand(WireCommandType.Disconnect, existingWire, conn, otherConn);
                                 disconnCmd.AuthorSessionId = senderSessionId.ToString();
                                 StoreCommand(disconnCmd);
                                 conn.DisconnectWire(existingWire);
