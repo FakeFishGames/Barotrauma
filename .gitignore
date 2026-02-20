@@ -56,5 +56,8 @@ Barotrauma/**/GameAnalyticsKeys.cs
 Deploy/DeployAll/PrivateKey.*
 .github/ISSUE_TEMPLATE/release-checklist.md
 
-#Rider
+# Rider
 *.DotSettings.user
+
+# VSCode
+.vscode/
