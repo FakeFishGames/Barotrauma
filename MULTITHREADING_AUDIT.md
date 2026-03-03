@@ -1,7 +1,7 @@
 # Barotrauma Multithreading Audit
 
 **Date**: 2026-03-03
-**Scope**: Full codebase audit of threading model, synchronization mechanisms, and potential issues
+**Scope**: Full codebase audit of threading model, synchronization mechanisms, and performance bottlenecks on complex submarines
 
 ---
 
@@ -206,3 +206,146 @@ The game logic is intentionally kept single-threaded to avoid complexity, while 
 | Entity counter (TODO) | `Barotrauma/BarotraumaShared/SharedSource/Map/Entity.cs` |
 | Farseer spinlock | `Libraries/Farseer Physics Engine 3.5/Dynamics/Contacts/ContactSolver.cs` |
 | Server relay threads | `Barotrauma/BarotraumaShared/SharedSource/Networking/ChildServerRelay.cs` |
+
+---
+
+## Performance Bottleneck Analysis — Why Complex Submarines Drop FPS
+
+### The Core Problem: Everything Runs Sequentially on One Thread
+
+The main update loop in `GameScreen.Update()` is a **fully sequential pipeline**. On a complex submarine this becomes the FPS killer because every subsystem runs one after the other with no parallelism:
+
+```
+GameScreen.Update() — MAIN THREAD ONLY
+  ├── PhysicsBody.List foreach → Update() for every body
+  ├── GameSession.Update()
+  ├── Character.UpdateAll()      → all NPCs/players, AI, pathfinding
+  ├── StatusEffect.UpdateAll()
+  ├── MapEntity.UpdateAll()
+  │     ├── Hull.HullList foreach → wave sim per hull
+  │     ├── Structure.WallList foreach
+  │     ├── Gap.GapList.OrderBy(Rand) → gaps in random order (ALLOCATES every frame)
+  │     ├── Powered.UpdatePower() → electrical grid solver
+  │     └── Item.ItemList foreach → every item component
+  ├── Character.UpdateAnimAll()  → all ragdoll animations
+  ├── Ragdoll.UpdateAll()
+  ├── Submarine.Loaded foreach → sub.Update()
+  └── GameMain.World.Step()     → Farseer physics (single step)
+```
+
+There is **zero `Parallel.For` or `Task.Run`** anywhere in this game-logic pipeline. The only parallelism is inside Farseer's contact constraint solver (internal library code).
+
+---
+
+### Bottleneck 1 — Hull Water Simulation: O(hulls × width)
+
+**File**: `BarotraumaShared/SharedSource/Map/Hull.cs:881`
+
+Each hull runs a discrete wave simulation every frame. The cost scales with hull width:
+- Wave resolution: 1 point per 32px (`WaveWidth = 32`)
+- Operations per hull per frame: ~7 × (width/32) — two spread passes of left/right propagation
+- A 1024px hull = 33 wave points ≈ 231 operations
+- A large submarine with 100 hulls averaging 512px wide = ~3,600 operations/frame just for wave math
+
+All hulls are updated sequentially in `MapEntity.UpdateAll()` with no skipping unless `WaterVolume == 0` and waves have fully settled.
+
+**These are independent per-hull — a perfect candidate for `Parallel.For`.**
+
+---
+
+### Bottleneck 2 — Gap Shuffle Allocates Garbage Every Frame
+
+**File**: `BarotraumaShared/SharedSource/Map/MapEntity.cs:665`
+
+```csharp
+foreach (Gap gap in Gap.GapList.OrderBy(g => Rand.Int(int.MaxValue)))
+{
+    gap.Update(deltaTime, cam);
+}
+```
+
+`LINQ .OrderBy()` allocates a new sorted array every single frame. On a large submarine with 200+ gaps, this is a heap allocation + GC pressure every tick. The comment explains the intent (avoid water always draining through the first gap), but the implementation is expensive. A pre-shuffled list or a frame-seeded Fisher-Yates shuffle would avoid allocation.
+
+---
+
+### Bottleneck 3 — Electrical Grid Solver: O(devices)
+
+**File**: `BarotraumaShared/SharedSource/Items/Components/Power/Powered.cs:455`
+
+`Powered.UpdatePower()` runs every frame and:
+1. `UpdateGrids()` — BFS-traverses the entire connection graph to rebuild or patch grids
+2. Iterates all `poweredList` entries to compute load/supply per device
+3. Resolves power output in priority stages (reactors → relays → batteries)
+
+All sequential. On a submarine with 150+ powered devices (lights, pumps, engines, terminals, reactors, batteries, junction boxes) this is a sizeable serial scan every tick.
+
+**Grids are independent of each other — cross-grid work could run in parallel.**
+
+---
+
+### Bottleneck 4 — Item Update Loop: O(items)
+
+**File**: `BarotraumaShared/SharedSource/Map/MapEntity.cs:680`
+
+```csharp
+foreach (Item item in Item.ItemList)
+{
+    item.Update(deltaTime, cam);
+}
+```
+
+Every item in the world (including all items inside the submarine) is updated sequentially. A complex submarine easily has 500–2000 items (wires, components, containers, weapons, etc.). Each `item.Update()` runs all active `ItemComponent.Update()` methods on that item.
+
+Many item components are stateless or read-only relative to other items — but the shared `Item.ItemList` and component state make naive parallelization risky without analysis.
+
+---
+
+### Bottleneck 5 — Physics: Disabled Parallel Thread
+
+**File**: `BarotraumaShared/SharedSource/Screens/GameScreen.cs:1,300-311`
+
+```csharp
+//#define RUN_PHYSICS_IN_SEPARATE_THREAD   // ← COMMENTED OUT
+```
+
+The physics thread infrastructure exists but is disabled. When enabled, `World.Step()` would run on a background thread while game logic runs in the `lock(updateLock)` block. However the synchronization is incomplete:
+
+- **Inside Farseer**: `ContactSolver` uses `ThreadPool` / `Parallel.For` with spinlocks on `_velocities[]` for constraint solving — this internal parallelism works
+- **Between game logic and physics**: `PhysicsBody.SimPosition`, `LinearVelocity`, `FarseerBody.Position` etc. are read directly without locks in the main thread loop (`GameScreen.cs:142-151`). If the physics thread writes these while the main thread reads them, data races occur
+
+This is why the thread was disabled — enabling it requires fencing all physics state reads in game logic.
+
+---
+
+### Bottleneck 6 — Character + AI: O(characters)
+
+**File**: `BarotraumaShared/SharedSource/Characters/Character.cs:3318`
+
+`Character.UpdateAll()` iterates every character sequentially. Each character tick runs:
+- AI controller update (pathfinding decisions, behavior tree)
+- Animation controller update
+- Health/affliction updates
+- Inventory updates
+
+On servers with many bots the AI cost accumulates. Pathfinding via `IndoorsSteeringManager` issues raycasts into the physics world — these are potentially the heaviest per-character calls.
+
+---
+
+### Summary Table — Main Thread Bottlenecks
+
+| System | Location | Scales With | Parallelizable? | Notes |
+|--------|----------|-------------|-----------------|-------|
+| Hull wave sim | `Hull.cs:881` | # hulls × width | **Yes** — hulls are independent | ~100-300 hulls on large subs |
+| Gap update shuffle | `MapEntity.cs:665` | # gaps | Yes, but simpler fix | LINQ alloc every frame |
+| Power grid solver | `Powered.cs:455` | # powered devices | **Partially** — grids are independent | ~150+ devices typical |
+| Item update loop | `MapEntity.cs:680` | # items | Risky — shared state | ~500-2000 items |
+| Farseer physics | `GameScreen.cs:303` | # contacts | **Already parallel** internally | Thread exists but disabled |
+| Character/AI | `Character.cs:3318` | # characters | Partially — AI is mostly independent | Raycasts touch physics world |
+| PhysicsBody loop | `GameScreen.cs:142` | # physics bodies | Partially — draw update only | Reads physics state unsafely |
+
+### Lowest-Hanging Fruit (Safest to Parallelize)
+
+1. **Hull wave simulation** — no cross-hull writes except through `ConnectedGaps` (which only touch edge wave points); could use double-buffering and `Parallel.For`
+2. **Gap random ordering** — replace `LINQ .OrderBy()` with a pre-allocated shuffled list using Fisher-Yates; eliminates the per-frame heap allocation entirely
+3. **Power grids** — each `GridInfo` is independent; updating multiple grids in parallel is safe as long as no device appears in two grids (it can't by definition)
+4. **Re-enable physics thread** — requires adding `Volatile.Read` / `Interlocked` fences on `FarseerBody.Position` and `LinearVelocity` getters in `PhysicsBody.cs`
