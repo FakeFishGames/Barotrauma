@@ -592,45 +592,57 @@ namespace Barotrauma.Items.Components
             // NOTE: GridResolved is kept sequential below because some devices (e.g. RelayComponent)
             // read Voltage from the grid on the *other* side of the relay, which may not have
             // finished its parallel task yet.
-            Parallel.ForEach(Grids.Values, grid =>
+            try
             {
-                //Iterate through the priority src groups lowest first
-                foreach (PowerSourceGroup scrGroup in grid.PowerSourceGroups.Values)
+                Parallel.ForEach(Grids.Values, grid =>
                 {
-                    scrGroup.MinMaxPower = PowerRange.Zero;
-
-                    //Iterate through all connections in the group to get their minmax power and sum them
-                    foreach (Connection c in scrGroup.Connections)
+                    //Iterate through the priority src groups lowest first
+                    foreach (PowerSourceGroup scrGroup in grid.PowerSourceGroups.Values)
                     {
-                        foreach (var device in c.Item.GetComponents<Powered>())
+                        scrGroup.MinMaxPower = PowerRange.Zero;
+
+                        //Iterate through all connections in the group to get their minmax power and sum them
+                        foreach (Connection c in scrGroup.Connections)
                         {
-                            scrGroup.MinMaxPower += device.MinMaxPowerOut(c, grid.Load);
+                            foreach (var device in c.Item.GetComponents<Powered>())
+                            {
+                                scrGroup.MinMaxPower += device.MinMaxPowerOut(c, grid.Load);
+                            }
                         }
+
+                        //Iterate through all connections to get their final power out provided the min max information
+                        float addedPower = 0;
+                        foreach (Connection c in scrGroup.Connections)
+                        {
+                            foreach (var device in c.Item.GetComponents<Powered>())
+                            {
+                                addedPower += device.GetConnectionPowerOut(c, grid.Power, scrGroup.MinMaxPower, grid.Load);
+                            }
+                        }
+
+                        //Add the power to the grid
+                        grid.Power += addedPower;
                     }
 
-                    //Iterate through all connections to get their final power out provided the min max information
-                    float addedPower = 0;
-                    foreach (Connection c in scrGroup.Connections)
+                    //Calculate Grid voltage, limit between 0 - 1000
+                    float newVoltage = MathHelper.Min(grid.Power / MathHelper.Max(grid.Load, 1E-10f), 1000);
+                    if (float.IsNegative(newVoltage))
                     {
-                        foreach (var device in c.Item.GetComponents<Powered>())
-                        {
-                            addedPower += device.GetConnectionPowerOut(c, grid.Power, scrGroup.MinMaxPower, grid.Load);
-                        }
+                        newVoltage = 0.0f;
                     }
 
-                    //Add the power to the grid
-                    grid.Power += addedPower;
-                }
-
-                //Calculate Grid voltage, limit between 0 - 1000
-                float newVoltage = MathHelper.Min(grid.Power / MathHelper.Max(grid.Load, 1E-10f), 1000);
-                if (float.IsNegative(newVoltage))
-                {
-                    newVoltage = 0.0f;
-                }
-
-                grid.Voltage = newVoltage;
-            });
+                    grid.Voltage = newVoltage;
+                });
+            }
+            catch (AggregateException ae)
+            {
+                // Parallel.ForEach wraps task exceptions in AggregateException.
+                // Flatten and re-throw the first inner exception so callers see the
+                // same exception type they would have seen with a sequential loop.
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo
+                    .Capture(ae.Flatten().InnerExceptions[0])
+                    .Throw();
+            }
 
             // Phase 2B — notify devices that their grid has resolved.
             // Kept sequential: RelayComponent.GridResolved reads Voltage from the opposite grid,
