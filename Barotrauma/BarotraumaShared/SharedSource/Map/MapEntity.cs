@@ -14,6 +14,10 @@ namespace Barotrauma
     {
         public readonly static List<MapEntity> MapEntityList = new List<MapEntity>();
 
+        // Pre-allocated scratch buffer for gap update shuffling (main-thread only).
+        // Avoids the per-frame heap allocation caused by LINQ OrderBy in UpdateAll.
+        private static readonly List<Gap> gapUpdateBuffer = new List<Gap>();
+
         public readonly MapEntityPrefab Prefab;
 
         protected List<ushort> linkedToID;
@@ -661,8 +665,17 @@ namespace Barotrauma
             //update gaps in random order, because otherwise in rooms with multiple gaps
             //the water/air will always tend to flow through the first gap in the list,
             //which may lead to weird behavior like water draining down only through
-            //one gap in a room even if there are several
-            foreach (Gap gap in Gap.GapList.OrderBy(g => Rand.Int(int.MaxValue)))
+            //one gap in a room even if there are several.
+            //Fisher-Yates shuffle on a pre-allocated buffer to avoid the per-frame
+            //heap allocation that LINQ OrderBy would produce.
+            gapUpdateBuffer.Clear();
+            gapUpdateBuffer.AddRange(Gap.GapList);
+            for (int i = gapUpdateBuffer.Count - 1; i > 0; i--)
+            {
+                int j = Rand.Int(i + 1);
+                (gapUpdateBuffer[i], gapUpdateBuffer[j]) = (gapUpdateBuffer[j], gapUpdateBuffer[i]);
+            }
+            foreach (Gap gap in gapUpdateBuffer)
             {
                 gap.Update(deltaTime, cam);
             }

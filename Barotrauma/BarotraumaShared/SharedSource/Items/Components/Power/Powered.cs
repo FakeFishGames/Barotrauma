@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Barotrauma.Extensions;
 #if CLIENT
 using Barotrauma.Sounds;
@@ -585,8 +586,13 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            //Iterate through all grids to determine the power on the grid
-            foreach (GridInfo grid in Grids.Values)
+            // Phase 2A — compute power and voltage per grid.
+            // Each GridInfo is fully independent (connections cannot belong to two grids),
+            // so the work can run in parallel across grids.
+            // NOTE: GridResolved is kept sequential below because some devices (e.g. RelayComponent)
+            // read Voltage from the grid on the *other* side of the relay, which may not have
+            // finished its parallel task yet.
+            Parallel.ForEach(Grids.Values, grid =>
             {
                 //Iterate through the priority src groups lowest first
                 foreach (PowerSourceGroup scrGroup in grid.PowerSourceGroups.Values)
@@ -624,8 +630,13 @@ namespace Barotrauma.Items.Components
                 }
 
                 grid.Voltage = newVoltage;
+            });
 
-                //Iterate through all connections on that grid and run their gridResolved function
+            // Phase 2B — notify devices that their grid has resolved.
+            // Kept sequential: RelayComponent.GridResolved reads Voltage from the opposite grid,
+            // which would race with Phase 2A if called inside the parallel block.
+            foreach (GridInfo grid in Grids.Values)
+            {
                 foreach (Connection c in grid.Connections)
                 {
                     foreach (var device in c.Item.GetComponents<Powered>())
