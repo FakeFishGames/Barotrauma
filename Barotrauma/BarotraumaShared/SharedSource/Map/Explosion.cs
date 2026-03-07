@@ -589,7 +589,7 @@ namespace Barotrauma
                             //only play the damage sound on the closest limb (playing it on all just sounds like a mess)
                             bool playSound = PlayDamageSounds && limb == closestLimb;
 
-                            AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, playSound: playSound, attacker: attacker, damageMultiplier: attack.DamageMultiplier * attackData.DamageMultiplier);
+                            AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, playSound: playSound, attacker: attacker, damageMultiplier: attack.DamageMultiplier * attackData.DamageMultiplier,penetration: attack.Penetration * distFactor);
                             damages.Add(limb, attackResult.Damage);
                         }
                     }
@@ -657,7 +657,6 @@ namespace Barotrauma
             bool createWallDamageProjectiles = false, 
             bool distanceFalloff = true)
         {
-            float dist = 600.0f;
             damagedStructures.Clear();
             foreach (Structure structure in Structure.WallList)
             {
@@ -665,7 +664,7 @@ namespace Barotrauma
 
                 if (structure.HasBody &&
                     !structure.IsPlatform &&
-                    Vector2.Distance(structure.WorldPosition, worldPosition) < dist * 3.0f)
+                    Vector2.Distance(structure.WorldPosition, worldPosition) < worldRange)
                 {
                     for (int i = 0; i < structure.SectionCount; i++)
                     {

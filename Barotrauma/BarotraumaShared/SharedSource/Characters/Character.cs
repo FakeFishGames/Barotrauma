@@ -4543,12 +4543,12 @@ namespace Barotrauma
             }            
         }
 
-        public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, Vector2? attackImpulse = null, Character attacker = null, float damageMultiplier = 1f)
+        public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, Vector2? attackImpulse = null, Character attacker = null, float damageMultiplier = 1f, float penetration = 0f)
         {
-            return AddDamage(worldPosition, afflictions, stun, playSound, attackImpulse ?? Vector2.Zero, out _, attacker, damageMultiplier: damageMultiplier);
+            return AddDamage(worldPosition, afflictions, stun, playSound, attackImpulse ?? Vector2.Zero, out _, attacker, damageMultiplier: damageMultiplier,penetration: penetration);
         }
 
-        public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, Vector2 attackImpulse, out Limb hitLimb, Character attacker = null, float damageMultiplier = 1)
+        public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, Vector2 attackImpulse, out Limb hitLimb, Character attacker = null, float damageMultiplier = 1f, float penetration = 0f)
         {
             hitLimb = null;
 
@@ -4565,7 +4565,7 @@ namespace Barotrauma
                 }
             }
 
-            return DamageLimb(worldPosition, hitLimb, afflictions, stun, playSound, attackImpulse, attacker, damageMultiplier);
+            return DamageLimb(worldPosition, hitLimb, afflictions, stun, playSound, attackImpulse, attacker, damageMultiplier,penetration: penetration);
         }
 
         public void RecordKill(Character target)
