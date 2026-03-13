@@ -89,6 +89,7 @@ namespace Barotrauma.Networking
         {
             byte queueId = msg.ReadByte();
             float distanceFactor = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+            bool isRadio = msg.ReadBoolean();
             VoipQueue queue = queues.Find(q => q.QueueID == queueId);
 
             if (queue == null)
@@ -117,11 +118,7 @@ namespace Barotrauma.Networking
                     float rangeMultiplier = spectating ? 2.0f : 1.0f;
                     WifiComponent senderRadio = null;
 
-                    var messageType = 
-                        !client.VoipQueue.ForceLocal && 
-                        ChatMessage.CanUseRadio(client.Character, out senderRadio) && 
-                        (spectating || (ChatMessage.CanUseRadio(Character.Controlled, out var recipientRadio) && senderRadio.CanReceive(recipientRadio)))
-                            ? ChatMessageType.Radio : ChatMessageType.Default;
+                    var messageType = isRadio ? ChatMessageType.Radio : ChatMessageType.Default;
                     client.Character.ShowTextlessSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
 
                     client.VoipSound.UseRadioFilter = messageType == ChatMessageType.Radio && !GameSettings.CurrentConfig.Audio.DisableVoiceChatFilters;
