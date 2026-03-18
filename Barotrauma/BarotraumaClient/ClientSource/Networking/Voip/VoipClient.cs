@@ -118,7 +118,8 @@ namespace Barotrauma.Networking
                     float rangeMultiplier = spectating ? 2.0f : 1.0f;
                     WifiComponent senderRadio = null;
 
-                    var messageType = isRadio ? ChatMessageType.Radio : ChatMessageType.Default;
+                    //Checks if the radio noise filter should be applied. CanUseRadio is there because the code after uses senderRadio.
+                    var messageType = ChatMessage.CanUseRadio(client.Character, out senderRadio) && isRadio ? ChatMessageType.Radio : ChatMessageType.Default;
                     client.Character.ShowTextlessSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
 
                     client.VoipSound.UseRadioFilter = messageType == ChatMessageType.Radio && !GameSettings.CurrentConfig.Audio.DisableVoiceChatFilters;
