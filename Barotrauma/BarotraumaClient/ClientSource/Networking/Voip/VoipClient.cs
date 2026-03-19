@@ -118,16 +118,22 @@ namespace Barotrauma.Networking
                     float rangeMultiplier = spectating ? 2.0f : 1.0f;
                     WifiComponent senderRadio = null;
 
-                    //Checks if the radio noise filter should be applied. CanUseRadio is there because the code after uses senderRadio.
-                    var messageType = ChatMessage.CanUseRadio(client.Character, out senderRadio) && isRadio ? ChatMessageType.Radio : ChatMessageType.Default;
+                    //Checks if the radio noise filter should be applied.
+                    var messageType = isRadio ? ChatMessageType.Radio : ChatMessageType.Default;
+                    
                     client.Character.ShowTextlessSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
 
                     client.VoipSound.UseRadioFilter = messageType == ChatMessageType.Radio && !GameSettings.CurrentConfig.Audio.DisableVoiceChatFilters;
                     client.RadioNoise = 0.0f;
                     if (messageType == ChatMessageType.Radio)
                     {
+                        //If the client cannot establish a radio, use a headsets default range as a fallback to calculate the radio noise.
+                        //This cannot happen in an un-modded setting as CanUseRadio is part of the server side check for isRadio to be true.
+                        ChatMessage.CanUseRadio(client.Character, out senderRadio);
+                        float senderRadioRange = (senderRadio == null) ? 35000.0f : senderRadio.Range;
+                    
                         client.VoipSound.UsingRadio = true;
-                        client.VoipSound.SetRange(senderRadio.Range * RangeNear * speechImpedimentMultiplier * rangeMultiplier, senderRadio.Range * speechImpedimentMultiplier * rangeMultiplier);
+                        client.VoipSound.SetRange(senderRadioRange * RangeNear * speechImpedimentMultiplier * rangeMultiplier, senderRadioRange * speechImpedimentMultiplier * rangeMultiplier);
                         if (distanceFactor > RangeNear && !spectating)
                         {
                             //noise starts increasing exponentially after 40% range
