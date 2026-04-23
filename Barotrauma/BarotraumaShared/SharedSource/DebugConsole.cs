@@ -270,7 +270,7 @@ namespace Barotrauma
                 };
             }, isCheat: true));
             
-            commands.Add(new Command("give|giveitem", "give|giveitem [itemname/itemidentifier] [amount] [condition]: Spawn an item in the inventory of the controlled character",
+            commands.Add(new Command("give|giveitem", "give|giveitem [itemname/itemidentifier] [amount] [condition] [quality]: Spawn an item in the inventory of the controlled character",
             (string[] args) =>
             {
                 if (Character.Controlled == null)
@@ -310,7 +310,7 @@ namespace Barotrauma
                 };
             }, isCheat: true));
 
-            commands.Add(new Command("spawnitem", "spawnitem [itemname/itemidentifier] [cursor/inventory/cargo/random/[name]] [amount] [condition]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the location parameter is omitted or \"random\".",
+            commands.Add(new Command("spawnitem", "spawnitem [itemname/itemidentifier] [cursor/inventory/cargo/random/[name]] [amount] [condition] [quality]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the location parameter is omitted or \"random\".",
             (string[] args) =>
             {
                 TrySpawnItem(args);
@@ -3200,6 +3200,7 @@ namespace Barotrauma
 
             int amount = 1;
             int conditionPrc = 100;
+            int itemQuality = 0;
             
             if (TryGetSpawnPosParam(out string spawnLocation, out int spawnLocationIndex))
             {
@@ -3232,12 +3233,18 @@ namespace Barotrauma
                 
                 if (args.Length > spawnLocationIndex + 2)
                 {
-                    if (!int.TryParse(args[^1], NumberStyles.Any, CultureInfo.InvariantCulture, out conditionPrc)) { conditionPrc = 100; }
+                    if (!int.TryParse(args[spawnLocationIndex + 2], NumberStyles.Any, CultureInfo.InvariantCulture, out conditionPrc)) { conditionPrc = 100; }
+                }
+
+                if (args.Length > spawnLocationIndex + 3)
+                {
+                    if (!int.TryParse(args[spawnLocationIndex + 3],NumberStyles.Any, CultureInfo.InvariantCulture, out itemQuality)) { itemQuality = 0; }
+                    itemQuality = Math.Min(itemQuality, 3);
                 }
             }
             
             float itemCondition = itemPrefab.Health * Math.Clamp(conditionPrc / 100f, 0f, 1f);
-            
+
             if ((spawnPos == null || spawnPos == Vector2.Zero) && spawnInventory == null)
             {
                 var wp = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
@@ -3254,7 +3261,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, spawnPos.Value, condition: itemCondition);
+                        Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, spawnPos.Value, condition: itemCondition, quality: itemQuality);
                     }
                 }
                 else if (spawnInventory != null)
@@ -3281,6 +3288,7 @@ namespace Barotrauma
                         }
 
                         item.Condition = item.Health * Math.Clamp(conditionPrc / 100f, 0f, 1f);
+                        item.Quality = itemQuality;
                     }
                 }
             }
