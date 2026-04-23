@@ -3244,7 +3244,7 @@ namespace Barotrauma
             }
             
             float itemCondition = itemPrefab.Health * Math.Clamp(conditionPrc / 100f, 0f, 1f);
-
+            
             if ((spawnPos == null || spawnPos == Vector2.Zero) && spawnInventory == null)
             {
                 var wp = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
