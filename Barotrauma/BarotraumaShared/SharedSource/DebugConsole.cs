@@ -293,7 +293,10 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    GetItemNameOrIdParams().ToArray()
+                    GetItemNameOrIdParams().ToArray(),
+                    new string[] { "1" },
+                    new string[] { "100" },
+                    GetQualityParams().ToArray()
                 };
             }, isCheat: true));
 
@@ -320,7 +323,10 @@ namespace Barotrauma
                 return new string[][]
                 {
                     GetItemNameOrIdParams().ToArray(),
-                    GetSpawnPosParams().ToArray()
+                    GetSpawnPosParams().ToArray(),
+                    new string[] { "1" },
+                    new string[] { "100" },
+                    GetQualityParams().ToArray()
                 };
             }, isCheat: true));
             
@@ -3140,6 +3146,14 @@ namespace Barotrauma
             }
         }
 
+        private static IEnumerable<string> GetQualityParams()
+        {
+            yield return "normal";
+            yield return "good";
+            yield return "excellent";
+            yield return "masterwork";
+        }
+
         private static void TrySpawnItem(string[] args)
         {
             try
@@ -3200,6 +3214,7 @@ namespace Barotrauma
 
             int amount = 1;
             int conditionPrc = 100;
+            string itemQualityName = "normal";
             int itemQuality = 0;
             
             if (TryGetSpawnPosParam(out string spawnLocation, out int spawnLocationIndex))
@@ -3238,8 +3253,25 @@ namespace Barotrauma
 
                 if (args.Length > spawnLocationIndex + 3)
                 {
-                    if (!int.TryParse(args[spawnLocationIndex + 3],NumberStyles.Any, CultureInfo.InvariantCulture, out itemQuality)) { itemQuality = 0; }
-                    itemQuality = Math.Min(itemQuality, 3);
+                    itemQualityName = args[spawnLocationIndex + 3];
+                    switch (itemQualityName.ToLower())
+                    {
+                        case "normal":
+                            itemQuality = 0;
+                            break;
+                        case "good":
+                            itemQuality = 1;
+                            break;
+                        case "excellent":
+                            itemQuality = 2;
+                            break;
+                        case "masterwork":
+                            itemQuality = 3;
+                            break;
+                        default:
+                            itemQuality = 0;
+                            break;
+                    }
                 }
             }
             
