@@ -4205,6 +4205,7 @@ namespace Barotrauma
                 }
                 else
                 {
+                    if (GameMain.GameSession?.GameMode is CampaignMode campaign) { NewMessage("Map seed: " + GameMain.GameSession.Campaign.Map.Seed); };
                     NewMessage("Level seed: " + Level.Loaded.Seed);
                     NewMessage("Level generation params: " + Level.Loaded.GenerationParams.Identifier);
                     NewMessage("Adjacent locations: " + (Level.Loaded.StartLocation?.Type.Identifier ?? "none".ToIdentifier()) + ", " + (Level.Loaded.StartLocation?.Type.Identifier ?? "none".ToIdentifier()));
