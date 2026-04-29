@@ -251,7 +251,7 @@ namespace Barotrauma
                 GameMain.NetworkMember.ShowNetStats = !GameMain.NetworkMember.ShowNetStats;
             }));
 
-            commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename/jobname] [near/inside/outside/cursor] [team] [add to crew (true/false)]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine). You can also enter the name of a job (e.g. \"Mechanic\") to spawn a character with a specific job and the appropriate equipment.", null,
+            commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename/jobname] [near/inside/outside/cursor] [team] [add to crew (true/false)] [name]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine). You can also enter the name of a job (e.g. \"Mechanic\") to spawn a character with a specific job and the appropriate equipment.", null,
             () =>
             {
                 string[] creatureAndJobNames =
@@ -2950,7 +2950,7 @@ namespace Barotrauma
                 isHuman = job != null || characterLowerCase == CharacterPrefab.HumanSpeciesName;
             }
 
-            ParseOptionalArgs(out Vector2 spawnPosition, out WayPoint spawnPoint, out CharacterTeamType? teamType, out bool addToCrew);
+            ParseOptionalArgs(out Vector2 spawnPosition, out WayPoint spawnPoint, out CharacterTeamType? teamType, out bool addToCrew, out string renameCharacter);
 
             if (usePreConfiguredNPC)
             {
@@ -2981,6 +2981,14 @@ namespace Barotrauma
                 CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, variant: variant);
                 Entity.Spawner.AddCharacterToSpawnQueue(CharacterPrefab.HumanSpeciesName, spawnPosition, characterInfo, onSpawn: newCharacter =>
                 {
+                    if (renameCharacter != null)
+                    {
+                        if (renameCharacter.Length > 31)
+                        {
+                            renameCharacter = renameCharacter.Substring(0, 32);
+                        }
+                        newCharacter.Info.Name = renameCharacter; 
+                    } 
                     SetTeamAndCrew(newCharacter);
                     newCharacter.GiveJobItems(isPvPMode: GameMain.GameSession?.GameMode is PvPMode, spawnPoint);
                     newCharacter.GiveIdCardTags(spawnPoint);
@@ -3008,7 +3016,7 @@ namespace Barotrauma
                 }
             }
 
-            void ParseOptionalArgs(out Vector2 spawnPosition, out WayPoint spawnPoint, out CharacterTeamType? teamType, out bool addToCrew)
+            void ParseOptionalArgs(out Vector2 spawnPosition, out WayPoint spawnPoint, out CharacterTeamType? teamType, out bool addToCrew, out string renameCharacter)
             {
                 spawnPosition = Vector2.Zero;
                 spawnPoint = null;
@@ -3093,6 +3101,13 @@ namespace Barotrauma
                     {
                         ThrowError($"Could not parse the \"add to crew\" argument ({args[argIndex]}). Defaulting to {addToCrew}.");
                     }
+                }
+
+                argIndex++;
+                renameCharacter = null;
+                if (args.Length > argIndex)
+                {
+                    renameCharacter = args[argIndex];
                 }
             }
         }
