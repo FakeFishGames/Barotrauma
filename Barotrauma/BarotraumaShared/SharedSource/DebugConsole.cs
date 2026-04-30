@@ -1339,27 +1339,21 @@ namespace Barotrauma
                 }
             },null));
             
-            commands.Add(new Command("teleportsub", "teleportsub [submarine] [start/end/endoutpost/cursor]: Teleport a submarine to the position of the cursor, or the start or end of the level. The 'endoutpost' argument also automatically docks the sub with the outpost at the end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", 
+            commands.Add(new Command("teleportsub", "teleportsub [start/end/endoutpost/cursor] [submarine]: Teleport a submarine to the position of the cursor, or the start or end of the level. The 'endoutpost' argument also automatically docks the sub with the outpost at the end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", 
             onExecute:(string[] args) =>
             {
                 if (Submarine.MainSub == null) { return; } 
                 Submarine submarineToTeleport = Submarine.MainSub;
                 if (args.Length > 0)
                 {
-                    submarineToTeleport = Submarine.Loaded.FirstOrDefault(s => s.Info.Name == args[0]);
-                }
-                else
-                {
-#if SERVER
-                    ThrowError("Cannot teleport the sub to the position of the cursor. Use \"start\" or \"end\", or execute the command as a client.");
-#else
-                    submarineToTeleport.SetPosition(Screen.Selected.Cam.ScreenToWorld(PlayerInput.MousePosition));
-#endif
-                    return;
-                }
-                if (args.Length > 1)
-                {
-                    switch (args[1].ToLowerInvariant())
+                    if (args.Length > 1)
+                    {
+                        foreach(Submarine sub in Submarine.Loaded.Where(s => (!s.Info.IsBeacon && !s.Info.IsOutpost && !s.Info.IsRuin && !s.Info.IsWreck)))
+                        {
+                            if (sub.Info.Name == args[1]) { submarineToTeleport = sub; }
+                        }
+                    }
+                    switch (args[0].ToLowerInvariant())
                     {
                         case "cursor":
 #if SERVER
@@ -1431,8 +1425,8 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    ListAvailableSubmarines(),
-                    new string[] { "start", "end", "endoutpost", "cursor" }
+                    new string[] { "start", "end", "endoutpost", "cursor" },
+                    ListAvailableSubmarines()
                 };
             }, isCheat: true));
 
@@ -2611,7 +2605,10 @@ namespace Barotrauma
             List<string> submarineNames = new();
             foreach (var submarine in Submarine.Loaded)
             {
-                submarineNames.Add(submarine.Info.Name);
+                if(!submarine.Info.IsBeacon && !submarine.Info.IsRuin && !submarine.Info.IsWreck && !submarine.Info.IsOutpost)
+                {
+                    submarineNames.Add(submarine.Info.Name);
+                }
             }
             return submarineNames.ToArray();
         }

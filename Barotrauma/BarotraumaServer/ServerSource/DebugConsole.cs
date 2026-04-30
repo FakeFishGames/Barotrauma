@@ -1800,11 +1800,11 @@ namespace Barotrauma
                     Submarine submarineToTeleport = Submarine.MainSub;
                     if (args.Length > 0)
                     {
-                        submarineToTeleport = Submarine.Loaded.FirstOrDefault(s => s.Info.Name == args[0]);
-                    }
-                    if (args.Length > 1)
-                    {
-                        switch (args[1].ToLowerInvariant())
+                        if (args.Length > 1)
+                        {
+                            submarineToTeleport = Submarine.Loaded.FirstOrDefault(s => s.Info.Name == args[1]);
+                        }
+                        switch (args[0].ToLowerInvariant())
                         {
                             case "cursor":
                                 submarineToTeleport.SetPosition(cursorWorldPos);
