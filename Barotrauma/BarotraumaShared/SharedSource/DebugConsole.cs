@@ -1344,81 +1344,63 @@ namespace Barotrauma
             {
                 if (Submarine.MainSub == null) { return; } 
                 Submarine submarineToTeleport = Submarine.MainSub;
-                if (args.Length > 0)
+                if (args.Length > 1)
                 {
-                    if (args.Length > 1)
+                    foreach(Submarine sub in Submarine.Loaded.Where(s => (!s.Info.IsBeacon && !s.Info.IsOutpost && !s.Info.IsRuin && !s.Info.IsWreck)))
                     {
-                        foreach(Submarine sub in Submarine.Loaded.Where(s => (!s.Info.IsBeacon && !s.Info.IsOutpost && !s.Info.IsRuin && !s.Info.IsWreck)))
-                        {
-                            if (sub.Info.Name == args[1]) { submarineToTeleport = sub; }
-                        }
-                    }
-                    switch (args[0].ToLowerInvariant())
-                    {
-                        case "cursor":
-#if SERVER
-                            ThrowError("Cannot teleport the sub to the position of the cursor. Use \"start\" or \"end\", or execute the command as a client.");
-#else
-                            submarineToTeleport.SetPosition(Screen.Selected.Cam.ScreenToWorld(PlayerInput.MousePosition));
-#endif
-                            break;
-                        case "start":
-                            if (Level.Loaded == null)
-                            {
-                                NewMessage("Can't teleport the sub to the start of the level (no level loaded).", Color.Red);
-                                return;
-                            }
-                            Vector2 startPos = Level.Loaded.StartPosition;
-                            if (Level.Loaded.StartOutpost != null)
-                            {
-                                startPos -= Vector2.UnitY * (submarineToTeleport.Borders.Height + Level.Loaded.StartOutpost.Borders.Height) / 2;
-                            }
-                            submarineToTeleport.SetPosition(startPos);
-                            break;
-                        case "end":
-                            if (Level.Loaded == null)
-                            {
-                                NewMessage("Can't teleport the sub to the end of the level (no level loaded).", Color.Red);
-                                return;
-                            }
-                            Vector2 endPos = Level.Loaded.EndPosition;
-                            if (Level.Loaded.EndOutpost != null)
-                            {
-                                endPos -= Vector2.UnitY * (submarineToTeleport.Borders.Height + Level.Loaded.EndOutpost.Borders.Height) / 2;
-                            }
-                            submarineToTeleport.SetPosition(endPos);
-                            break;
-                        case "endoutpost":
-                            if (Level.Loaded?.EndOutpost == null)
-                            {
-                                NewMessage("Can't teleport the sub to the end outpost (no outpost at the end of the level).", Color.Red);
-                                return;
-                            }
-                            submarineToTeleport.SetPosition(Level.Loaded.EndExitPosition - Vector2.UnitY * submarineToTeleport.Borders.Height);
-                            var submarineDockingPort = DockingPort.List.FirstOrDefault(d => d.Item.Submarine == submarineToTeleport);
-                            var outpostDockingPort = DockingPort.List.FirstOrDefault(d => d.Item.Submarine == Level.Loaded.EndOutpost);
-                            if (submarineDockingPort != null && outpostDockingPort != null)
-                            {
-                                submarineDockingPort.Dock(outpostDockingPort);
-                            }
-                            break;
-                        default:
-#if SERVER
-                            ThrowError("Cannot teleport the sub to the position of the cursor. Use \"start\" or \"end\", or execute the command as a client.");
-#else
-                            submarineToTeleport.SetPosition(Screen.Selected.Cam.ScreenToWorld(PlayerInput.MousePosition));
-#endif
-                        break;
+                        if (sub.Info.Name == args[1]) { submarineToTeleport = sub; }
                     }
                 }
-                else
+                if (args.Length == 0 || args[0].Equals("cursor", StringComparison.OrdinalIgnoreCase))
                 {
 #if SERVER
                     ThrowError("Cannot teleport the sub to the position of the cursor. Use \"start\" or \"end\", or execute the command as a client.");
 #else
                     submarineToTeleport.SetPosition(Screen.Selected.Cam.ScreenToWorld(PlayerInput.MousePosition));
 #endif
-                    return;
+                }
+                else if (args[0].Equals("start", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (Level.Loaded == null)
+                    {
+                        NewMessage("Can't teleport the sub to the start of the level (no level loaded).", Color.Red);
+                        return;
+                    }
+                    Vector2 pos = Level.Loaded.StartPosition;
+                    if (Level.Loaded.StartOutpost != null)
+                    {
+                        pos -= Vector2.UnitY * (submarineToTeleport.Borders.Height + Level.Loaded.StartOutpost.Borders.Height) / 2;
+                    }
+                    submarineToTeleport.SetPosition(pos);
+                }
+                else if (args[0].Equals("end", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (Level.Loaded == null)
+                    {
+                        NewMessage("Can't teleport the sub to the end of the level (no level loaded).", Color.Red);
+                        return;
+                    }
+                    Vector2 pos = Level.Loaded.EndPosition;
+                    if (Level.Loaded.EndOutpost != null)
+                    {
+                        pos -= Vector2.UnitY * (submarineToTeleport.Borders.Height + Level.Loaded.EndOutpost.Borders.Height) / 2;
+                    }
+                    submarineToTeleport.SetPosition(pos);
+                }                
+                else if (args[0].Equals("endoutpost", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (Level.Loaded?.EndOutpost == null)
+                    {
+                        NewMessage("Can't teleport the sub to the end outpost (no outpost at the end of the level).", Color.Red);
+                        return;
+                    }
+                    submarineToTeleport.SetPosition(Level.Loaded.EndExitPosition - Vector2.UnitY * submarineToTeleport.Borders.Height);
+                    var submarineDockingPort = DockingPort.List.FirstOrDefault(d => d.Item.Submarine == submarineToTeleport);
+                    var outpostDockingPort = DockingPort.List.FirstOrDefault(d => d.Item.Submarine == Level.Loaded.EndOutpost);
+                    if (submarineDockingPort != null && outpostDockingPort != null)
+                    {
+                        submarineDockingPort.Dock(outpostDockingPort);
+                    }
                 }
             },
             getValidArgs:() =>
