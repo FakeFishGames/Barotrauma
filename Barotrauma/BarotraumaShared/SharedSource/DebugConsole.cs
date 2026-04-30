@@ -270,7 +270,7 @@ namespace Barotrauma
                 };
             }, isCheat: true));
             
-            commands.Add(new Command("give|giveitem", "give|giveitem [itemname/itemidentifier] [amount] [condition]: Spawn an item in the inventory of the controlled character",
+            commands.Add(new Command("give|giveitem", "give|giveitem [itemname/itemidentifier] [amount] [condition] [quality]: Spawn an item in the inventory of the controlled character",
             (string[] args) =>
             {
                 if (Character.Controlled == null)
@@ -293,7 +293,10 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    GetItemNameOrIdParams().ToArray()
+                    GetItemNameOrIdParams().ToArray(),
+                    new string[] { "1" },
+                    new string[] { "100" },
+                    GetQualityParams().ToArray()
                 };
             }, isCheat: true));
 
@@ -310,7 +313,7 @@ namespace Barotrauma
                 };
             }, isCheat: true));
 
-            commands.Add(new Command("spawnitem", "spawnitem [itemname/itemidentifier] [cursor/inventory/cargo/random/[name]] [amount] [condition]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the location parameter is omitted or \"random\".",
+            commands.Add(new Command("spawnitem", "spawnitem [itemname/itemidentifier] [cursor/inventory/cargo/random/[name]] [amount] [condition] [quality]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the location parameter is omitted or \"random\".",
             (string[] args) =>
             {
                 TrySpawnItem(args);
@@ -320,7 +323,10 @@ namespace Barotrauma
                 return new string[][]
                 {
                     GetItemNameOrIdParams().ToArray(),
-                    GetSpawnPosParams().ToArray()
+                    GetSpawnPosParams().ToArray(),
+                    new string[] { "1" },
+                    new string[] { "100" },
+                    GetQualityParams().ToArray()
                 };
             }, isCheat: true));
             
@@ -3197,6 +3203,14 @@ namespace Barotrauma
             }
         }
 
+        private static IEnumerable<string> GetQualityParams()
+        {
+            yield return "normal";
+            yield return "good";
+            yield return "excellent";
+            yield return "masterwork";
+        }
+
         private static void TrySpawnItem(string[] args)
         {
             try
@@ -3257,6 +3271,8 @@ namespace Barotrauma
 
             int amount = 1;
             int conditionPrc = 100;
+            string itemQualityName = "normal";
+            int itemQuality = 0;
             
             if (TryGetSpawnPosParam(out string spawnLocation, out int spawnLocationIndex))
             {
@@ -3289,7 +3305,30 @@ namespace Barotrauma
                 
                 if (args.Length > spawnLocationIndex + 2)
                 {
-                    if (!int.TryParse(args[^1], NumberStyles.Any, CultureInfo.InvariantCulture, out conditionPrc)) { conditionPrc = 100; }
+                    if (!int.TryParse(args[spawnLocationIndex + 2], NumberStyles.Any, CultureInfo.InvariantCulture, out conditionPrc)) { conditionPrc = 100; }
+                }
+
+                if (args.Length > spawnLocationIndex + 3)
+                {
+                    itemQualityName = args[spawnLocationIndex + 3];
+                    switch (itemQualityName.ToLower())
+                    {
+                        case "normal":
+                            itemQuality = 0;
+                            break;
+                        case "good":
+                            itemQuality = 1;
+                            break;
+                        case "excellent":
+                            itemQuality = 2;
+                            break;
+                        case "masterwork":
+                            itemQuality = 3;
+                            break;
+                        default:
+                            itemQuality = 0;
+                            break;
+                    }
                 }
             }
             
@@ -3311,7 +3350,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, spawnPos.Value, condition: itemCondition);
+                        Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, spawnPos.Value, condition: itemCondition, quality: itemQuality);
                     }
                 }
                 else if (spawnInventory != null)
@@ -3338,6 +3377,7 @@ namespace Barotrauma
                         }
 
                         item.Condition = item.Health * Math.Clamp(conditionPrc / 100f, 0f, 1f);
+                        item.Quality = itemQuality;
                     }
                 }
             }
