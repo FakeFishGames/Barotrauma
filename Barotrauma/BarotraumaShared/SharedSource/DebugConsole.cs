@@ -3142,6 +3142,7 @@ namespace Barotrauma
         {
             yield return "cursor";
             yield return "inventory";
+            yield return "cargo";
 
 #if SERVER
             if (GameMain.Server != null)
