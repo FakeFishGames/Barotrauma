@@ -1800,10 +1800,10 @@ namespace Barotrauma
                     Submarine submarineToTeleport = Submarine.MainSub;
                     if (args.Length > 1)
                     {
-                        foreach(Submarine sub in Submarine.Loaded.Where(s => (!s.Info.IsBeacon && !s.Info.IsOutpost && !s.Info.IsRuin && !s.Info.IsWreck)))
-                        {
-                            if (sub.Info.Name == args[1]) { submarineToTeleport = sub; }
-                        }
+                    foreach(Submarine sub in Submarine.Loaded.Where(s => (!s.Info.IsBeacon && !s.Info.IsOutpost && !s.Info.IsRuin && !s.Info.IsWreck)))
+                    {
+                        if ((sub.Info.Name+"_"+sub.TeamID) == args[1]) { submarineToTeleport = sub; }
+                    }
                     }
 
                     if (args.Length == 0 || args[0].Equals("cursor", StringComparison.OrdinalIgnoreCase))

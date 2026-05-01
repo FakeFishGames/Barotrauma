@@ -1348,7 +1348,7 @@ namespace Barotrauma
                 {
                     foreach(Submarine sub in Submarine.Loaded.Where(s => (!s.Info.IsBeacon && !s.Info.IsOutpost && !s.Info.IsRuin && !s.Info.IsWreck)))
                     {
-                        if (sub.Info.Name == args[1]) { submarineToTeleport = sub; }
+                        if ((sub.Info.Name+"_"+sub.TeamID) == args[1]) { submarineToTeleport = sub; }
                     }
                 }
                 if (args.Length == 0 || args[0].Equals("cursor", StringComparison.OrdinalIgnoreCase))
@@ -2585,12 +2585,9 @@ namespace Barotrauma
         private static string[] ListAvailableSubmarines()
         {
             List<string> submarineNames = new();
-            foreach (var submarine in Submarine.Loaded)
+            foreach (var submarine in Submarine.Loaded.Where(s => (!s.Info.IsBeacon && !s.Info.IsOutpost && !s.Info.IsRuin && !s.Info.IsWreck)))
             {
-                if(!submarine.Info.IsBeacon && !submarine.Info.IsRuin && !submarine.Info.IsWreck && !submarine.Info.IsOutpost)
-                {
-                    submarineNames.Add(submarine.Info.Name);
-                }
+                submarineNames.Add(submarine.Info.Name+"_"+submarine.TeamID);
             }
             return submarineNames.ToArray();
         }
