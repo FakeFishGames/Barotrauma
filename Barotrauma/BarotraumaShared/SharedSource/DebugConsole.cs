@@ -296,7 +296,7 @@ namespace Barotrauma
                     GetItemNameOrIdParams().ToArray(),
                     new string[] { "1" },
                     new string[] { "100" },
-                    GetQualityParams().ToArray()
+                    GetQualityParams.ToArray()
                 };
             }, isCheat: true));
 
@@ -326,7 +326,7 @@ namespace Barotrauma
                     GetSpawnPosParams().ToArray(),
                     new string[] { "1" },
                     new string[] { "100" },
-                    GetQualityParams().ToArray()
+                    GetQualityParams.ToArray()
                 };
             }, isCheat: true));
             
@@ -1329,7 +1329,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (GameMain.GameSession?.GameMode is CampaignMode campaign) { NewMessage("Map seed: " + GameMain.GameSession.Campaign.Map.Seed); };
+                    if (GameMain.GameSession?.Map is Map map) { NewMessage("Map seed: " + map.Seed); };
                     NewMessage("Level seed: " + Level.Loaded.Seed);
                     NewMessage("Level generation params: " + Level.Loaded.GenerationParams.Identifier);
                     NewMessage("Adjacent locations: " + (Level.Loaded.StartLocation?.Type.Identifier ?? "none".ToIdentifier()) + ", " + (Level.Loaded.StartLocation?.Type.Identifier ?? "none".ToIdentifier()));
@@ -1339,16 +1339,20 @@ namespace Barotrauma
                 }
             },null));
             
-            commands.Add(new Command("teleportsub", "teleportsub [start/end/endoutpost/cursor] [submarine]: Teleport a submarine to the position of the cursor, or the start or end of the level. The 'endoutpost' argument also automatically docks the sub with the outpost at the end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", 
+            commands.Add(new Command("teleportsub", "teleportsub [start/end/endoutpost/cursor] [submarine_team]: Teleport a submarine to the position of the cursor, or the start or end of the level. The 'endoutpost' argument also automatically docks the sub with the outpost at the end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", 
             onExecute:(string[] args) =>
             {
                 if (Submarine.MainSub == null) { return; } 
                 Submarine submarineToTeleport = Submarine.MainSub;
                 if (args.Length > 1)
                 {
-                    foreach(Submarine sub in Submarine.Loaded.Where(s => (!s.Info.IsBeacon && !s.Info.IsOutpost && !s.Info.IsRuin && !s.Info.IsWreck)))
+                    foreach(Submarine sub in Submarine.Loaded.Where(s => s.PhysicsBody.BodyType == FarseerPhysics.BodyType.Dynamic))
                     {
-                        if ((sub.Info.Name+"_"+sub.TeamID) == args[1]) { submarineToTeleport = sub; }
+                        if ((sub.Info.Name+"_"+sub.TeamID) == args[1])
+                        {
+                            submarineToTeleport = sub;
+                            break;
+                        }
                     }
                 }
                 if (args.Length == 0 || args[0].Equals("cursor", StringComparison.OrdinalIgnoreCase))
@@ -2585,7 +2589,7 @@ namespace Barotrauma
         private static string[] ListAvailableSubmarines()
         {
             List<string> submarineNames = new();
-            foreach (var submarine in Submarine.Loaded.Where(s => (!s.Info.IsBeacon && !s.Info.IsOutpost && !s.Info.IsRuin && !s.Info.IsWreck)))
+            foreach (var submarine in Submarine.Loaded.Where(s => s.PhysicsBody.BodyType == FarseerPhysics.BodyType.Dynamic))
             {
                 submarineNames.Add(submarine.Info.Name+"_"+submarine.TeamID);
             }
@@ -3180,14 +3184,7 @@ namespace Barotrauma
             }
         }
 
-        private static IEnumerable<string> GetQualityParams()
-        {
-            yield return "normal";
-            yield return "good";
-            yield return "excellent";
-            yield return "masterwork";
-        }
-
+        private static ImmutableArray<string> GetQualityParams = [ "normal", "good", "excellent", "masterwork" ];
         private static void TrySpawnItem(string[] args)
         {
             try
@@ -3248,7 +3245,6 @@ namespace Barotrauma
 
             int amount = 1;
             int conditionPrc = 100;
-            string itemQualityName = "normal";
             int itemQuality = 0;
             
             if (TryGetSpawnPosParam(out string spawnLocation, out int spawnLocationIndex))
@@ -3287,24 +3283,12 @@ namespace Barotrauma
 
                 if (args.Length > spawnLocationIndex + 3)
                 {
-                    itemQualityName = args[spawnLocationIndex + 3];
-                    switch (itemQualityName.ToLower())
+                    for(int i = 0; i <= Quality.MaxQuality; i++)
                     {
-                        case "normal":
-                            itemQuality = 0;
-                            break;
-                        case "good":
-                            itemQuality = 1;
-                            break;
-                        case "excellent":
-                            itemQuality = 2;
-                            break;
-                        case "masterwork":
-                            itemQuality = 3;
-                            break;
-                        default:
-                            itemQuality = 0;
-                            break;
+                        if (args[spawnLocationIndex + 3].ToLowerInvariant() == GetQualityParams[i])
+                        {
+                            itemQuality = i;
+                        }
                     }
                 }
             }
