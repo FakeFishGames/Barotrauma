@@ -58,3 +58,4 @@ Deploy/DeployAll/PrivateKey.*
 
 #Rider
 *.DotSettings.user
+*.patch
