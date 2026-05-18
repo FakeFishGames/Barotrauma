@@ -137,9 +137,48 @@ namespace Microsoft.Xna.Framework
                 {
                     var key = KeyboardUtil.ToXna(ev.Key.Keysym.Sym);
 
-                    if (!_keys.Contains(key)) _keys.Add(key);
+                    // On non-Latin layouts SDL keycode can be a Cyrillic/Unicode symbol
+                    // that MonoGame's key map does not recognize. In that case, fall back
+                    // to the physical scancode so gameplay bindings like WASD still work.
+                    if (key == Keys.None)
+                    {
+                        key = KeyboardUtil.ToXnaFromScancode(ev.Key.Keysym.Scancode);
+                    }
 
-                    //TODO: rethink all of this
+                    if (key != Keys.None && !_keys.Contains(key))
+                    {
+                        _keys.Add(key);
+                    }
+
+                    // Keep text input layout-aware. This must not use scancode,
+                    // otherwise chat/text fields would break for non-English input.
+                    char character = (char)KeyboardUtil.ApplyModifiers(ev.Key.Keysym.Sym, ev.Key.Keysym.Mod);
+
+                    if ((int)((char)ev.Key.Keysym.Sym) != ev.Key.Keysym.Sym)
+                    {
+                        character = '\0';
+                    }
+
+                    _view.CallKeyDown(character, key);
+                }else if (ev.Type == Sdl.EventType.KeyDown)
+                {
+                    var key = KeyboardUtil.ToXna(ev.Key.Keysym.Sym);
+
+                    // On non-Latin layouts SDL keycode can be a Cyrillic/Unicode symbol
+                    // that MonoGame's key map does not recognize. In that case, fall back
+                    // to the physical scancode so gameplay bindings like WASD still work.
+                    if (key == Keys.None)
+                    {
+                        key = KeyboardUtil.ToXnaFromScancode(ev.Key.Keysym.Scancode);
+                    }
+
+                    if (key != Keys.None && !_keys.Contains(key))
+                    {
+                        _keys.Add(key);
+                    }
+
+                    // Keep text input layout-aware. This must not use scancode,
+                    // otherwise chat/text fields would break for non-English input.
                     char character = (char)KeyboardUtil.ApplyModifiers(ev.Key.Keysym.Sym, ev.Key.Keysym.Mod);
 
                     if ((int)((char)ev.Key.Keysym.Sym) != ev.Key.Keysym.Sym)
@@ -152,7 +191,16 @@ namespace Microsoft.Xna.Framework
                 else if (ev.Type == Sdl.EventType.KeyUp)
                 {
                     var key = KeyboardUtil.ToXna(ev.Key.Keysym.Sym);
-                    _keys.Remove(key);
+
+                    if (key == Keys.None)
+                    {
+                        key = KeyboardUtil.ToXnaFromScancode(ev.Key.Keysym.Scancode);
+                    }
+
+                    if (key != Keys.None)
+                    {
+                        _keys.Remove(key);
+                    }
                 }
                 else if (ev.Type == Sdl.EventType.TextEditing)
                 {
