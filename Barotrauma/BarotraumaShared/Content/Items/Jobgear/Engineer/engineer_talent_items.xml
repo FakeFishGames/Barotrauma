@@ -390,7 +390,7 @@
       <Price storeidentifier="merchantcity" multiplier="1.25" />
       <Price storeidentifier="merchantresearch" multiplier="1" minavailable="1" maxavailable="2" sold="true">
         <Reputation faction="coalition" min="90"/>
-        <Reputation faction="separatist" min="90"/>
+        <Reputation faction="separatists" min="90"/>
       </Price>
       <Price storeidentifier="merchantmilitary" multiplier="1.25" />
       <Price storeidentifier="merchantmine" multiplier="1.25" />
