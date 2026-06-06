@@ -46,7 +46,7 @@ namespace Barotrauma
             
             public Action<string[]> OnExecute;
 
-            public Func<string[][]> GetValidArgs;
+            public Func<string[], string[][]> GetValidArgs;
 
             /// <summary>
             /// Using a command that's considered a cheat disables achievements
@@ -63,7 +63,7 @@ namespace Barotrauma
 
                 this.OnExecute = onExecute;
                 
-                this.GetValidArgs = getValidArgs;
+                this.GetValidArgs = args => getValidArgs();
                 this.IsCheat = isCheat;
             }
 
@@ -84,6 +84,14 @@ namespace Barotrauma
                 }
 
                 OnExecute(args);
+            }
+
+            // Used to chain method calls when initializing commands.
+            // Overloading the constructor in a tidy way was not possible without running into ambiguity or partial backwards incompatibility.
+            public Command SetGetValidArgs(Func<string[], string[][]> getValidArgs)
+            {
+                this.GetValidArgs = getValidArgs;
+                return this;
             }
 
             public override int GetHashCode()
@@ -2377,7 +2385,7 @@ namespace Barotrauma
                 int autoCompletedArgIndex = args.Length > 0 && command.Last() != ' ' ? args.Length - 1 : args.Length;
 
                 //get all valid arguments for the given command
-                string[][] allArgs = matchingCommand.GetValidArgs();
+                string[][] allArgs = matchingCommand.GetValidArgs(args);
                 if (allArgs == null || allArgs.GetLength(0) < autoCompletedArgIndex + 1) { return command; }
 
                 if (string.IsNullOrEmpty(currentAutoCompletedCommand))
