@@ -2046,6 +2046,16 @@ namespace Barotrauma.Items.Components
                         UpdateLightComponents();
                     }
                     break;
+                case "set_color":
+                    if (lightComponents != null)
+                    {
+                        foreach (var light in lightComponents)
+                        {
+                            light.LightColor = XMLExtensions.ParseColor(signal.value, false);
+                        }
+                        UpdateLightComponents();
+                    }
+                    break;
                 case SetAutoOperateConnection:
                     if (!AllowAutoOperateWithWiring) { return; }
                     AutoOperate = signal.value != "0";
