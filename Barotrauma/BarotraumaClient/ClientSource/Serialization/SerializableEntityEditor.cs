@@ -445,7 +445,7 @@ namespace Barotrauma
                     {
                         DebugConsole.NewMessage("Missing Localization for property: " + propertyTag);
                         MissingLocalizations.Add($"sp.{propertyTag}.name|{displayName}");
-                        MissingLocalizations.Add($"sp.{propertyTag}.description|{property.GetAttribute<Serialize>().Description}");
+                        MissingLocalizations.Add($"sp.{propertyTag}.description|{property.GetAttribute<Serialize>()?.Description}");
                     }
                 }
 #endif
@@ -467,7 +467,7 @@ namespace Barotrauma
             }
             if (toolTip.IsNullOrEmpty())
             {
-                toolTip = property.GetAttribute<Serialize>().Description;
+                toolTip = property.GetAttribute<Serialize>()?.Description;
             }
 
             GUIComponent propertyField = null;

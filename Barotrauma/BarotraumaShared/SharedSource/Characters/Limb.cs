@@ -1022,6 +1022,15 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime);
 
+#if SERVER
+        /// <summary>
+        /// How often the server can send messages about attacks being executed. Note that the timer is per-limb: if one limb executes an attack immediately after another, an network event can still be created.
+        /// Mainly relevant for attacks with no cooldown, e.g. fractal guardian's steam cannons which run continuously over time (we can't send events every frame)
+        /// </summary>
+        private const double MinExecuteAttackEventInterval = 0.5f;
+        private double lastExecuteAttackEventTime;
+#endif
+
         private readonly List<Body> contactBodies = new List<Body>();
         /// <summary>
         /// Returns true if the attack successfully hit something. If the distance is not given, it will be calculated.
@@ -1142,9 +1151,13 @@ namespace Barotrauma
                     ExecuteAttack(damageTarget, targetLimb, out attackResult);
                 }
 #if SERVER
-                GameMain.NetworkMember.CreateEntityEvent(character, new Character.ExecuteAttackEventData(
-                    attackLimb: this, targetEntity: damageTarget, targetLimb: targetLimb,
-                    targetSimPos: attackSimPos));
+                if (Timing.TotalTime > lastExecuteAttackEventTime + MinExecuteAttackEventInterval)
+                {
+                    GameMain.NetworkMember.CreateEntityEvent(character, new Character.ExecuteAttackEventData(
+                        attackLimb: this, targetEntity: damageTarget, targetLimb: targetLimb,
+                        targetSimPos: attackSimPos));
+                    lastExecuteAttackEventTime = Timing.TotalTime;
+                }
 #endif
             }
 

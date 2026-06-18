@@ -1179,6 +1179,7 @@ namespace Barotrauma
             NetWalletTransfer transfer = INetSerializableStruct.Read<NetWalletTransfer>(msg);
 
             if (GameMain.Server is null) { return; }
+            if (transfer.Amount <= 0) { return; }
 
             if (transfer.Sender.TryUnwrap(out var id))
             {

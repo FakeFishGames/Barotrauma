@@ -896,7 +896,10 @@ namespace Barotrauma.Networking
                         string subHash = inc.ReadString();
                         CampaignSettings settings = INetSerializableStruct.Read<CampaignSettings>(inc);
 
-                        var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.StringRepresentation == subHash);
+                        var matchingSub =
+                            ServerSettings.AllowSubVoting ? 
+                                Voting.HighestVoted<SubmarineInfo>(VoteType.Sub, connectedClients) : 
+                                SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.StringRepresentation == subHash);
 
                         if (GameStarted)
                         {

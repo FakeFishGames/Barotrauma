@@ -43,14 +43,14 @@ namespace Barotrauma.Abilities
                 {
                     foreach (Identifier identifier in option.TalentIdentifiers)
                     {
-                        if (IsShowCaseTalent(identifier, option) || TalentTree.IsTalentLocked(identifier, characters)) { continue; }
+                        if (IsShowCaseTalent(identifier, option) || Character.IsTalentLocked(identifier)) { continue; }
 
                         identifiers.Add(identifier);
                     }
 
                     foreach (var (_, value) in option.ShowCaseTalents)
                     {
-                        var ids = value.Where(i => !TalentTree.IsTalentLocked(i, characters)).ToImmutableHashSet();
+                        var ids = value.Where(i => !Character.IsTalentLocked(i)).ToImmutableHashSet();
                         if (ids.Count is 0) { continue; }
 
                         identifiers.Add(value.GetRandomUnsynced());

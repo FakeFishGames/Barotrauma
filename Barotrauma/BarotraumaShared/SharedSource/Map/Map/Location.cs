@@ -348,11 +348,22 @@ namespace Barotrauma
                     {
                         price *= 1f - characters.Max(static c => c.GetStatValue(StatTypes.StoreBuyMultiplierAffiliated, includeSaved: false));
                         price *= 1f - characters.Max(static c => c.Info.GetSavedStatValue(StatTypes.StoreBuyMultiplierAffiliated, Tags.StatIdentifierTargetAll));
-                        price *= 1f - characters.Max(c => item.Tags.Sum(tag => c.Info.GetSavedStatValue(StatTypes.StoreBuyMultiplierAffiliated, tag)));
+                        price *= 1f - characters.Max(c => GetStatValuesForItem(c, item, StatTypes.StoreBuyMultiplierAffiliated));
                     }
                     price *= 1f - characters.Max(static c => c.GetStatValue(StatTypes.StoreBuyMultiplier, includeSaved: false));
-                    price *= 1f - characters.Max(c => item.Tags.Sum(tag => c.Info.GetSavedStatValue(StatTypes.StoreBuyMultiplier, tag)));
+                    price *= 1f - characters.Max(c => GetStatValuesForItem(c, item, StatTypes.StoreBuyMultiplier));
                 }
+
+                static float GetStatValuesForItem(Character character, ItemPrefab item, StatTypes statType)
+                {
+                    float statValueSum = 0.0f;
+                    foreach (Identifier itemTag in item.Tags)
+                    {
+                        statValueSum += character.Info.GetSavedStatValue(statType, itemTag);
+                    }
+                    return statValueSum;
+                }
+
                 // Price should never go below 1 mk
                 return Math.Max((int)price, 1);
             }

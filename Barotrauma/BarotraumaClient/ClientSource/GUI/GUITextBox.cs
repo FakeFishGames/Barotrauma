@@ -374,14 +374,14 @@ namespace Barotrauma
             CaretIndex = forcedCaretIndex == - 1 ? textBlock.GetCaretIndexFromScreenPos(PlayerInput.MousePosition) : forcedCaretIndex;
             CalculateCaretPos();
             ClearSelection();
-            bool wasSelected = selected;
-            selected = true;
-            GUI.KeyboardDispatcher.Subscriber = this;
             OnSelected?.Invoke(this, Keys.None);
-            if (!wasSelected && PlaySoundOnSelect && !ignoreSelectSound)
+            if (!selected && PlaySoundOnSelect && !ignoreSelectSound)
             {
                 SoundPlayer.PlayUISound(GUISoundType.Select);
             }
+            selected = true;
+            //set this after we've set selected to true -> otherwise the textbox taking keyboard focus will trigger Select again
+            GUI.KeyboardDispatcher.Subscriber = this;
         }
 
         public void Deselect()

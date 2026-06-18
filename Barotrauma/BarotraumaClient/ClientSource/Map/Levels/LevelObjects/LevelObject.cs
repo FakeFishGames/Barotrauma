@@ -12,7 +12,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class LevelObject
+    partial class LevelObject : ILevelRenderableObject
     {
         public float SwingTimer;
         public float ScaleOscillateTimer;

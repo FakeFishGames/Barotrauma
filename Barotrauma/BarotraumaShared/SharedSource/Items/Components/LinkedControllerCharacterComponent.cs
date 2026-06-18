@@ -42,6 +42,9 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(true, IsPropertySaveable.No, description: $"Should this item be removed if the linked character is null?")]
+        public bool RemoveItemIfCharacterNull { get; set; }
+
         public Character? Character { get; private set; }
 
         public bool DoesBleed => Character?.DoesBleed == true;
@@ -50,12 +53,24 @@ namespace Barotrauma.Items.Components
 
         public LinkedControllerCharacterComponent(Item item, ContentXElement element) : base(item, element)
         {
+            IsActive = true;
+
 #if CLIENT
             spriteOverrides = element.Elements()
                 .Where(static e => e.Name.LocalName.ToLowerInvariant() == "spriteoverride")
                 .Select(static e => new SpriteOverride(e))
                 .ToImmutableArray();
 #endif
+        }
+
+        public override void Update(float deltaTime, Camera cam)
+        {
+            base.Update(deltaTime, cam);
+
+            if (RemoveItemIfCharacterNull && GameMain.NetworkMember is not { IsClient: true } && (Character == null || Character.Removed))
+            {
+                Entity.Spawner?.AddEntityToRemoveQueue(Item);
+            }
         }
 
         public void UpdateLinkedCharacter(Character? character)

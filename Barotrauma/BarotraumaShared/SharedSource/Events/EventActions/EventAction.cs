@@ -31,11 +31,16 @@ namespace Barotrauma
                 Actions = new List<EventAction>();
                 foreach (var e in element.Elements())
                 {
-                    if (e.Name.ToString().Equals("statuseffect", StringComparison.OrdinalIgnoreCase))
+                    if (e.NameAsIdentifier().Equals("statuseffect"))
                     {
                         DebugConsole.ThrowError($"Error in event prefab \"{scriptedEvent.Prefab.Identifier}\". Status effect configured as a sub action. Please configure status effects as child elements of a StatusEffectAction.",
                             contentPackage: element.ContentPackage);
                         continue;
+                    }
+                    else if (e.NameAsIdentifier().Equals(nameof(OnRoundEndAction)))
+                    {
+                        DebugConsole.ThrowError($"Error in event prefab \"{scriptedEvent.Prefab.Identifier}\". {nameof(OnRoundEndAction)} configured as a sub action. Please configure it as an action at the end of the event.",
+                            contentPackage: element.ContentPackage);
                     }
                     var action = Instantiate(scriptedEvent, e);
                     if (action != null) { Actions.Add(action); }

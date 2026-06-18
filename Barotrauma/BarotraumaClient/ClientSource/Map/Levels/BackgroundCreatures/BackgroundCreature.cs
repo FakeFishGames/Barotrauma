@@ -8,7 +8,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
 
-    class BackgroundCreature : ISteerable
+    class BackgroundCreature : ISteerable, ILevelRenderableObject
     {
         const float MaxDepth = 10000.0f;
 
@@ -75,6 +75,8 @@ namespace Barotrauma
             get;
             set;
         }
+
+        public Vector3 Position => new Vector3(position.X, position.Y, Depth);
 
         public BackgroundCreature(BackgroundCreaturePrefab prefab, Vector2 position)
         {

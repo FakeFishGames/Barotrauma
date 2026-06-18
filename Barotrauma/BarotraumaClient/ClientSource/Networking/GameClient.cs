@@ -2546,7 +2546,7 @@ namespace Barotrauma.Networking
                 segmentTable.StartNewSegment(ClientNetSegment.SyncIds);
                 //outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
                 outmsg.WriteUInt16(ChatMessage.LastID);
-                outmsg.WriteUInt16(EntityEventManager.LastReceivedID);
+                outmsg.WriteUInt16(SpoofEntityManagerReceivedId ? (ushort)1 : EntityEventManager.LastReceivedID);
                 outmsg.WriteUInt16(LastClientListUpdateID);
 
                 if (!(GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign) || campaign.LastSaveID == 0)
@@ -3365,6 +3365,12 @@ namespace Barotrauma.Networking
         {
             get { return votingInterface; }
         }
+
+        /// <summary>
+        /// Forces the client to report the last received event ID as always being 1, making the server believe the client is always behind.
+        /// </summary>
+        public bool SpoofEntityManagerReceivedId { get; set; }
+
         private VotingInterface votingInterface;
 
         public bool TypingChatMessage(GUITextBox textBox, string text)

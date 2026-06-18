@@ -214,8 +214,9 @@ namespace Barotrauma
             //calculate the sum of the forces of nearby level triggers
             //and use it to move the water texture and water distortion effect
             Vector2 currentWaterParticleVel = level.GenerationParams.WaterParticleVelocity;
-            foreach (LevelObject levelObject in level.LevelObjectManager.GetAllVisibleObjects())
+            foreach (ILevelRenderableObject obj in level.LevelObjectManager.GetAllVisibleObjects())
             {
+                if (obj is not LevelObject levelObject) { continue; }
                 if (levelObject.Triggers == null) { continue; }
                 //use the largest water flow velocity of all the triggers
                 Vector2 objectMaxFlow = Vector2.Zero;
@@ -274,11 +275,7 @@ namespace Barotrauma
                 SamplerState.LinearWrap, DepthStencilState.DepthRead, null, null,
                 cam.Transform);
 
-            backgroundSpriteManager?.DrawObjectsBack(spriteBatch, cam);
-            if (cam.Zoom > 0.05f)
-            {
-                backgroundCreatureManager?.Draw(spriteBatch, cam);
-            }
+            backgroundSpriteManager?.DrawObjectsBack(spriteBatch, backgroundCreatureManager, cam);
 
             level.GenerationParams.DrawWaterParticles(spriteBatch, cam, waterParticleOffset);
 
@@ -292,17 +289,18 @@ namespace Barotrauma
                 BlendState.NonPremultiplied,
                 SamplerState.LinearClamp, DepthStencilState.DepthRead, null, null,
                 cam.Transform);
-            backgroundSpriteManager?.DrawObjectsMid(spriteBatch, cam);
+            backgroundSpriteManager?.DrawObjectsMid(spriteBatch, backgroundCreatureManager, cam);
             spriteBatch.End();
         }
 
-        public void DrawForeground(SpriteBatch spriteBatch, Camera cam, LevelObjectManager backgroundSpriteManager = null)
+        public void DrawForeground(SpriteBatch spriteBatch, Camera cam, 
+            BackgroundCreatureManager backgroundCreatureManager, LevelObjectManager backgroundSpriteManager = null)
         {
             spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.NonPremultiplied,
                 SamplerState.LinearClamp, DepthStencilState.DepthRead, null, null,
                 cam.Transform);
-            backgroundSpriteManager?.DrawObjectsFront(spriteBatch, cam);
+            backgroundSpriteManager?.DrawObjectsFront(spriteBatch, backgroundCreatureManager, cam);
             spriteBatch.End();
         }
 

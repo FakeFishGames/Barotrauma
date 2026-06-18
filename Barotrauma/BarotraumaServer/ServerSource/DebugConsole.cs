@@ -1797,22 +1797,35 @@ namespace Barotrauma
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
                     if (Submarine.MainSub == null || Level.Loaded == null) { return; }
+                    Submarine submarineToTeleport = Submarine.MainSub;
+                    if (args.Length > 1)
+                    {
+                        foreach (Submarine sub in Submarine.Loaded.Where(s => s.PhysicsBody.BodyType == FarseerPhysics.BodyType.Dynamic))
+                        {
+                            if ((sub.Info.Name + "_" + sub.TeamID) == args[1])
+                            {
+                                submarineToTeleport = sub;
+                                break;
+                            }
+                        }
+                    }
+
                     if (args.Length == 0 || args[0].Equals("cursor", StringComparison.OrdinalIgnoreCase))
                     {
-                        Submarine.MainSub.SetPosition(cursorWorldPos);
+                        submarineToTeleport.SetPosition(cursorWorldPos);
                     }
                     else if (args[0].Equals("start", StringComparison.OrdinalIgnoreCase))
                     {
-                        Submarine.MainSub.SetPosition(Level.Loaded.StartPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
+                        submarineToTeleport.SetPosition(Level.Loaded.StartPosition - Vector2.UnitY * submarineToTeleport.Borders.Height);
                     }
                     else if (args[0].Equals("end", StringComparison.OrdinalIgnoreCase))
                     {
-                        Submarine.MainSub.SetPosition(Level.Loaded.EndPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
+                        submarineToTeleport.SetPosition(Level.Loaded.EndPosition - Vector2.UnitY * submarineToTeleport.Borders.Height);
                     }
                     else if (args[0].Equals("endoutpost", StringComparison.OrdinalIgnoreCase))
                     {
-                        Submarine.MainSub.SetPosition(Level.Loaded.EndExitPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
-                        var submarineDockingPort = DockingPort.List.FirstOrDefault(d => d.Item.Submarine == Submarine.MainSub);
+                        submarineToTeleport.SetPosition(Level.Loaded.EndExitPosition - Vector2.UnitY * submarineToTeleport.Borders.Height);
+                        var submarineDockingPort = DockingPort.List.FirstOrDefault(d => d.Item.Submarine == submarineToTeleport);
                         if (Level.Loaded?.EndOutpost == null)
                         {
                             NewMessage("Can't teleport the sub to the end outpost (no outpost at the end of the level).", Color.Red);

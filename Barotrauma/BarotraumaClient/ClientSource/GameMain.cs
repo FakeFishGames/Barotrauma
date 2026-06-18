@@ -277,6 +277,12 @@ namespace Barotrauma
                 GameClient.MultiClientTestMode = true;
             }
 #endif
+
+            if (ConsoleArguments.Contains("-lenienthandshake"))
+            {
+                NetConfig.UseLenientHandshake = true;
+            }
+
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
             PerformanceCounter = new PerformanceCounter();

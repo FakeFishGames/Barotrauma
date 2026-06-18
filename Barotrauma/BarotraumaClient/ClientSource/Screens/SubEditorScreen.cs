@@ -1,18 +1,21 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.IO;
 using Barotrauma.Items.Components;
+using Barotrauma.Sounds;
 using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
+using System.Xml;
 using System.Xml.Linq;
-using Barotrauma.Sounds;
 
 namespace Barotrauma
 {
@@ -2043,6 +2046,8 @@ namespace Barotrauma
 
         private bool SaveSubToFile(string name, ContentPackage packageToSaveTo)
         {
+            bool remoteStorageWasEnabled = Submarine.MainSub.Info.SaveToRemoteStorage;
+
             Type subFileType = DetermineSubFileType(MainSub?.Info.Type ?? SubmarineType.Player);
 
             static string getExistingFilePath(ContentPackage package, string fileName)
@@ -2271,6 +2276,16 @@ namespace Barotrauma
                         linkedSubBox.AddItem(sub.Name, sub);
                     }
                     subNameLabel.Text = ToolBox.LimitString(MainSub.Info.Name, subNameLabel.Font, subNameLabel.Rect.Width);
+
+                    if (remoteStorageWasEnabled)
+                    {
+                        Submarine.MainSub.Info.SaveToRemoteStorage = true;
+
+                        RemoteStorageHelper.TryWrite(
+                            localPath: MainSub.Info.FilePath, 
+                            saveAs: MainSub.Info.FilePath.CleanUpPathCrossPlatform(correctFilenameCase: false), 
+                            allowOverwrite: true);
+                    }
                 }
             }
         }
@@ -3222,6 +3237,42 @@ namespace Barotrauma
 
             previewImageButtonHolder.RectTransform.MinSize = new Point(0, previewImageButtonHolder.RectTransform.Children.Max(c => c.MinSize.Y));
 
+            if (SteamManager.IsInitialized)
+            {
+                GUILayoutGroup remoteStorageArea = new(
+                    new RectTransform(new Vector2(1f, 0.05f), rightColumn.RectTransform, 
+                    minSize: new Point(0, minHeight)), 
+                    isHorizontal: true, 
+                    childAnchor: Anchor.CenterLeft)
+                {
+                    Stretch = true,
+                    AbsoluteSpacing = 5
+                };
+
+                new GUITextBlock(new RectTransform(Vector2.One, remoteStorageArea.RectTransform), 
+                    TextManager.Get("RemoteStorageToggle.Title"), textAlignment: Alignment.CenterLeft, wrap: true);
+
+                new GUITickBox(new RectTransform(Vector2.One, remoteStorageArea.RectTransform), label: "")
+                {
+                    OnAddedToGUIUpdateList = component =>
+                    {
+                        // Values may change outside of game.
+                        component.Enabled = SteamRemoteStorage.IsCloudEnabledForAccount;
+                        component.ToolTip = !SteamRemoteStorage.IsCloudEnabledForAccount ? TextManager.Get("RemoteStorageToggle.Disabled") : "";
+                        ((GUITickBox)component).SetSelected(SteamRemoteStorage.IsCloudEnabled && MainSub.Info.SaveToRemoteStorage, callOnSelected: false);
+                    },
+                    OnSelected = tickBox =>
+                    {
+                        if (tickBox.Selected && !SteamRemoteStorage.IsCloudEnabledForApp)
+                        {
+                            RemoteStorageHelper.AskToEnable(onAccepted: () => MainSub.Info.SaveToRemoteStorage = true);
+                            return false;
+                        }
+                        return MainSub.Info.SaveToRemoteStorage = tickBox.Selected;
+                    }
+                };
+            }
+
             var contentPackageTabber = new GUILayoutGroup(new RectTransform((1.0f, 0.075f), rightColumn.RectTransform), isHorizontal: true);
 
             GUIButton createTabberBtn(string labelTag)
@@ -3745,7 +3796,7 @@ namespace Barotrauma
                         }
 
                         var package = GetLocalPackageThatOwnsSub(subInfo);
-                        if (package != null)
+                        if (package != null || subInfo.IsFromRemoteStorage)
                         {
                             deleteBtn.Enabled = true;
                         }
@@ -3770,13 +3821,29 @@ namespace Barotrauma
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = sender.Text.IsNullOrEmpty(); };
             searchBox.OnTextChanged += (textBox, text) => { FilterSubs(subList, text); return true; };
 
-            var sortedSubs = GetLoadableSubs()
-                .OrderBy(s => s.Type)
-                .ThenBy(s => s.Name)
-                .ToList();
+            List<SubmarineInfo> allSubs = [.. SubmarineInfo.SavedSubmarines];
+            foreach (SteamRemoteStorage.RemoteFile remoteFile in SteamRemoteStorage.Files.Where(file => file.Filename.EndsWith(".sub")))
+            {
+                if (!remoteFile.TryRead(out byte[] bytes)) { continue; }
+
+                using System.IO.MemoryStream stream = new(bytes);
+                using GZipStream zipStream = new(stream, CompressionMode.Decompress);
+                if (XMLExtensions.TryLoadXml(zipStream) is not XDocument doc)
+                {
+                    DebugConsole.ThrowError($"{RemoteStorageHelper.DebugPrefix} Failed to load submarine \"{remoteFile.Filename}\" from remote storage: file is not a valid XML document.");
+                    continue;
+                }
+
+                SubmarineInfo subInfo = new(remoteFile.Filename, element: doc.Root, tryLoad: false) { IsFromRemoteStorage = true };
+                allSubs.Add(subInfo);
+            }
+
+            IOrderedEnumerable<SubmarineInfo> sortedSubs = allSubs
+                .OrderBy(kvp => kvp.Type)
+                .ThenBy(kvp => kvp.Name)
+                .ThenBy(kvp => kvp.IsFromRemoteStorage);
 
             SubmarineInfo prevSub = null;
-
             foreach (SubmarineInfo sub in sortedSubs)
             {
                 if (prevSub == null || prevSub.Type != sub.Type)
@@ -3794,35 +3861,44 @@ namespace Barotrauma
                     prevSub = sub;
                 }
 
-                string pathWithoutUserName = Path.GetFullPath(sub.FilePath);
-                string saveFolder = Path.GetFullPath(SaveUtil.DefaultSaveFolder);
-                if (pathWithoutUserName.StartsWith(saveFolder))
+                string displayPath = sub.FilePath;
+                if (sub.IsFromRemoteStorage)
                 {
-                    pathWithoutUserName = "..." + pathWithoutUserName[saveFolder.Length..];
+                    displayPath += $" {TextManager.Get("RemoteStorage")}";
                 }
                 else
                 {
-                    pathWithoutUserName = sub.FilePath;
+                    string saveFolder = Path.GetFullPath(SaveUtil.DefaultSaveFolder);
+                    string fullPath = Path.GetFullPath(displayPath);
+                    if (fullPath.StartsWith(saveFolder))
+                    {
+                        displayPath = $"...{fullPath[saveFolder.Length..]}";
+                    }
                 }
 
-                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), subList.Content.RectTransform) { MinSize = new Point(0, 30) },
-                    ToolBox.LimitString(sub.Name, GUIStyle.Font, subList.Rect.Width - 80))
+                LocalizedString limitedName = ToolBox.LimitString(sub.Name, GUIStyle.Font, subList.Rect.Width - 80);
+                GUITextBlock textBlock = new(new RectTransform(Vector2.UnitX, subList.Content.RectTransform) { MinSize = new Point(0, 30) }, limitedName)
                 {
                     UserData = sub,
-                    ToolTip = pathWithoutUserName
+                    ToolTip = displayPath
                 };
 
-                if (!(ContentPackageManager.VanillaCorePackage?.Files.Any(f => f.Path == sub.FilePath) ?? false))
+                if (sub.IsFromRemoteStorage)
+                {
+                    // remote storage
+                    textBlock.OverrideTextColor(RemoteStorageHelper.SteamColor);
+                }
+                else if (ContentPackageManager.VanillaCorePackage == null || ContentPackageManager.VanillaCorePackage.Files.None(f => f.Path == sub.FilePath))
                 {
                     if (GetLocalPackageThatOwnsSub(sub) == null &&
                         ContentPackageManager.AllPackages.FirstOrDefault(p => p.Files.Any(f => f.Path == sub.FilePath)) is ContentPackage subPackage)
                     {
-                        //workshop mod
+                        // workshop mod
                         textBlock.OverrideTextColor(Color.MediumPurple);
                     }
                     else
                     {
-                        //local mod
+                        // local mod
                         textBlock.OverrideTextColor(GUIStyle.TextColorBright);
                     }
                 }
@@ -4017,10 +4093,9 @@ namespace Barotrauma
                 return false;
             }
 
-            if (!(subList.SelectedComponent?.UserData is SubmarineInfo selectedSubInfo)) { return false; }
+            if (subList.SelectedComponent?.UserData is not SubmarineInfo selectedSubInfo) { return false; }
 
-            var ownerPackage = GetLocalPackageThatOwnsSub(selectedSubInfo);
-            if (ownerPackage is null)
+            if (!selectedSubInfo.IsFromRemoteStorage && GetLocalPackageThatOwnsSub(selectedSubInfo) is null)
             {
                 if (IsVanillaSub(selectedSubInfo))
                 {
@@ -4182,21 +4257,23 @@ namespace Barotrauma
         {
             if (sub == null) { return; }
 
-            //If the sub is included in a content package that only defines that one sub,
-            //check that it's a local content package and only allow deletion if it is.
-            //(deleting from the Submarines folder is also currently allowed, but this is temporary)
-            var subPackage = GetLocalPackageThatOwnsSub(sub);
-            if (!ContentPackageManager.LocalPackages.Regular.Contains(subPackage)) { return; }
-            
-            var msgBox = new GUIMessageBox(
-                TextManager.Get("DeleteDialogLabel"),
-                TextManager.GetWithVariable("DeleteDialogQuestion", "[file]", sub.Name),
-                new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
+            // If the sub is included in a content package that only defines that one sub,
+            // check that it's a local content package and only allow deletion if it is.
+            // (deleting from the Submarines folder is also currently allowed, but this is temporary)
+            ContentPackage subPackage = GetLocalPackageThatOwnsSub(sub);
+            if (!ContentPackageManager.LocalPackages.Regular.Contains(subPackage)) { subPackage = null; }
+            if (!sub.IsFromRemoteStorage && subPackage == null) { return; }
+
+            GUIMessageBox msgBox = new(TextManager.Get("DeleteDialogLabel"), TextManager.GetWithVariable("DeleteDialogQuestion", "[file]", sub.Name), [TextManager.Get("Yes"), TextManager.Get("Cancel")]);
             msgBox.Buttons[0].OnClicked += (btn, userData) =>
             {
-                try
+                if (sub.IsFromRemoteStorage)
                 {
-                    if (subPackage != null)
+                    RemoteStorageHelper.TryDelete(sub.FilePath);
+                }
+                else if (subPackage != null)
+                {
+                    try
                     {
                         File.Delete(sub.FilePath, catchUnauthorizedAccessExceptions: false);
                         ModProject modProject = new ModProject(subPackage);
@@ -4207,17 +4284,17 @@ namespace Barotrauma
                         {
                             MainSub.Info.FilePath = null;
                         }
-                    }                    
-                    sub.Dispose();
-                    CreateLoadScreen();
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowErrorLocalized(TextManager.GetWithVariable("DeleteFileError", "[file]", sub.FilePath), e);
+                    }
                 }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowErrorLocalized(TextManager.GetWithVariable("DeleteFileError", "[file]", sub.FilePath), e);
-                }
-                return true;
+
+                sub.Dispose();
+                CreateLoadScreen();
+                return msgBox.Close(btn, userData);
             };
-            msgBox.Buttons[0].OnClicked += msgBox.Close;
             msgBox.Buttons[1].OnClicked += msgBox.Close;
         }
 

@@ -11,7 +11,7 @@ namespace Barotrauma
     partial class LevelObject : ISpatialEntity, IDamageable, ISerializableEntity
     {
         public readonly LevelObjectPrefab Prefab;
-        public Vector3 Position;
+        public Vector3 Position { get; set; }
 
         public float NetworkUpdateTimer;
 

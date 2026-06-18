@@ -1,4 +1,58 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.13.3.1 (Summer Update 2026)
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+Submarine reworks:
+- Humpback, Orca 2, Azimuth, Typhon, and Herja have received their visual and gameplay reworks.
+- The command room of the Orca 2 is now located at the center of the submarine.
+- Typhon now comes with valves and pipe weakpoints.
+- Herja has been upgraded with a power distributor, befitting its high-tech theme.
+
+Changes and additions:
+- Added an option to back up your custom submarines in the Steam Cloud. Can be enabled per-submarine using a checkbox in the sub editor's save dialog.
+- Added quality parameter to the give/spawnitem console commands. Allows spawning in items with non-default quality.
+- The teleportsub console command has a parameter for choosing which submarine to teleport.
+- The spawncharacter console command has a parameter for renaming the spawned character.
+- The showseed console command displays the map seed too if used in campaign mode.
+
+Multiplayer:
+- Fixed monster attacks that run over time (e.g. when fractal guardians fire the steam cannon) causing an excessive amount of network usage in multiplayer.
+- Fixed an exploit that allowed modified clients to cause other clients to eventually get out of sync and disconnect.
+- Fixed inability to drag and drop stacks of items to other players in multiplayer.
+- Fixed submarine voting not working in campaign mode.
+
+Miscellaneous fixes:
+- Fixed security (or anyone else) not reacting to attacking stunned/incapacitated characters. 
+- Fixed the item pickup sound playing multiple times, for every item in a stack you're picking up.
+- Fixed the item dropping sound playing twice when dropping an item.
+- Fixed being unable to fabricate certain items with specific combinations of materials. Happened in some cases where the recipe accepted multiple different materials as ingredients: the fabricator would got through the requirements in order, and always take the first available items without considering that the item could've been necessary for another, more strict requirement.
+- Followup to the "infinite explosion" fix in Summer Update 2025: the previous fix only applied to oxygen tank shelves, but it turned out oxygen generators could also cause the same kind of "explosion loop" where tanks keep exploding and getting refilled by the oxygen generator.
+- Fixed "inspirational leader" talent not giving bonus XP like the description says it should. 
+- Fixed characters being able to drop off platforms while using a periscope (inconsistent with other movement inputs being disabled while on a periscope).
+- Fixed bots being unable to extinguish fires in connected subs (e.g. in Remora's drone).
+- Fixed parts of the CPR button not being clickable on the health HUD on certain resolutions (was getting blocked by the limb indicators).
+- Fixed nuclear shells fabricated with the cheaper recipe variant not giving the "I am become death" achievement.
+- Fixed gravity spheres (or more generally, any items with a triggercomponent) taking damage when you cut their trigger area with a plasma cutter, rather than the actual collider of the item.
+- Fixed equip buttons being clickable despite the slot being hidden. Meant that when you had equipped an item in your hand, you could click an invisible button at the left side of the inventory where the hand slots would appear.
+- Fixed turrets not showing the ammo on the HUD if the ammo is inside the turret itself, rather than a linked loader.
+- If one of the unique hireable characters (e.g. Ignatius May, Aunt Doris) dies in the outpost before you hire them, they can no longer appear elsewhere or be hired.
+- Fixed cargo scooter lights working, but not draining the battery, when the battery is in another slot than the battery slot.
+- Fixed custom interaction messages set on items in the sub editor no longer appearing in-game.
+- Allow combining defense bot ammo boxes the same way as other ammo boxes and magazines (merging their ammo together).
+- Fixed the character deconstruction bag staying in the deconstructor if you do a level transition while a character is inside the deconstructor.
+- Fixed items duplicating if a character gets deconstructed without dying first (possible e.g. by taking advantage of the Miracle Worker talent).
+- Fixed crafting blueprint tooltips not showing whether the recipe has been unlocked or not.
+- Fixed valves potentially getting stuck in a non-interactable state if the round ends immediately after one's been toggled.
+
+Modding:
+- Fixed "LockedTalents" PermanentStat locking the talent for everyone (not used in any vanilla talent).
+- Clients are allowed to use colored text in their chat messages when they have the "chat spam immunity" permission. Colored text was disabled in client-sent chat messages in the previous update due to some ways in which it can be abused, but turns out there were some users relying on this functionality.
+- Fixed OnDeconstructed status effect triggering when the item is not deconstructed in some cases (e.g. researching unidentified genetic material without stabilozine).
+- Fixed the special locations at the end of the campaign map generating incorrectly on very short maps.
+- Fixed status effects using OffsetCopiesEntityTransform not taking physics body rotation into account.
+- Fixed TagAction's Team setting being ignored when tagging characters in certain ways (e.g. traitors, non-traitors, bots, human prefab tags).
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.12.7.0
 -------------------------------------------------------------------------------------------------------------------------------------------------
 

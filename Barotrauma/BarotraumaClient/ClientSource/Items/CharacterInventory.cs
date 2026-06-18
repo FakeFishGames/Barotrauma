@@ -127,12 +127,6 @@ namespace Barotrauma
                     (int)SlotPositions[i].X, 
                     (int)SlotPositions[i].Y,
                     (int)(slotSprite.size.X * multiplier), (int)(slotSprite.size.Y * multiplier));
-
-                if (SlotTypes[i] == InvSlotType.HealthInterface &&
-                    character.CharacterHealth?.InventorySlotContainer != null)
-                {
-                    slotRect.Width = slotRect.Height = (int)(character.CharacterHealth.InventorySlotContainer.Rect.Width * 1.2f);
-                }
              
                 ItemContainer itemContainer = slots[i].FirstOrDefault()?.GetComponent<ItemContainer>();
                 if (itemContainer != null)
@@ -622,6 +616,7 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
+                if (HideSlot(i)) { continue; }
                 var item = slots[i].FirstOrDefault();
                 if (item != null)
                 {

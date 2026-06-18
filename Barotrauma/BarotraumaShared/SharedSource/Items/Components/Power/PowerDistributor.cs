@@ -36,7 +36,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            public LocalizedString? DisplayName { get; private set; }
+            public LocalizedString DisplayName { get; private set; }
 
             private float supplyRatio = 1f;
             public float SupplyRatio
@@ -80,6 +80,7 @@ namespace Barotrauma.Items.Components
                     SupplyRatio = element.GetAttributeFloat("ratio", SupplyRatio);
                 }
 
+                DisplayName = TextManager.Get(name).Fallback(name);
 #if CLIENT
                 CreateGUI();
                 if (Screen.Selected is not { IsEditor: true })

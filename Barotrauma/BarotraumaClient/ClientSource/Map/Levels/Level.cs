@@ -140,7 +140,7 @@ namespace Barotrauma
 
         public void DrawFront(SpriteBatch spriteBatch, Camera cam)
         {
-            renderer?.DrawForeground(spriteBatch, cam, LevelObjectManager);
+            renderer?.DrawForeground(spriteBatch, cam, backgroundCreatureManager, LevelObjectManager);
         }
         public void ClientEventRead(IReadMessage msg, float sendingTime)
         {

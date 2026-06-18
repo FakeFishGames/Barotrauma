@@ -113,7 +113,10 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, samplerState: GUI.SamplerState);
 
-            GUI.DrawBackgroundSprite(spriteBatch, currentBackgroundTexture, Color.White, drawArea);
+            if (currentBackgroundTexture.Texture != null)
+            {
+                GUI.DrawBackgroundSprite(spriteBatch, currentBackgroundTexture, Color.White, drawArea);
+            }
             overlay.Draw(spriteBatch, Vector2.Zero, scale: overlayScale);
 
             double noiseT = Timing.TotalTime * 0.02f;

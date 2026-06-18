@@ -8,13 +8,20 @@ using System.Linq;
 
 namespace Barotrauma
 {
+    public interface ILevelRenderableObject
+    {
+        public Vector3 Position { get; }
+
+    }
+
     partial class LevelObjectManager
     {
+
         // Pre-initialized to the max size, so that we don't have to resize the lists at runtime. TODO: Could the capacity (of some collections?) be lower?
-        private readonly List<LevelObject> visibleObjectsBack = new List<LevelObject>(MaxVisibleObjects);
-        private readonly List<LevelObject> visibleObjectsMid = new List<LevelObject>(MaxVisibleObjects);
-        private readonly List<LevelObject> visibleObjectsFront = new List<LevelObject>(MaxVisibleObjects);
-        private readonly HashSet<LevelObject> allVisibleObjects = new HashSet<LevelObject>(MaxVisibleObjects);
+        private readonly List<ILevelRenderableObject> visibleObjectsBack = new List<ILevelRenderableObject>(MaxVisibleObjects);
+        private readonly List<ILevelRenderableObject> visibleObjectsMid = new List<ILevelRenderableObject>(MaxVisibleObjects);
+        private readonly List<ILevelRenderableObject> visibleObjectsFront = new List<ILevelRenderableObject>(MaxVisibleObjects);
+        private readonly HashSet<ILevelRenderableObject> allVisibleObjects = new HashSet<ILevelRenderableObject>(MaxVisibleObjects);
 
         private double NextRefreshTime;
 
@@ -35,35 +42,44 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
-            foreach (LevelObject obj in visibleObjectsBack)
+            foreach (ILevelRenderableObject obj in visibleObjectsBack)
             {
-                obj.Update(deltaTime, cam);
+                if (obj is LevelObject levelObj)
+                {
+                    levelObj.Update(deltaTime, cam);
+                }
             }
-            foreach (LevelObject obj in visibleObjectsMid)
+            foreach (ILevelRenderableObject obj in visibleObjectsMid)
             {
-                obj.Update(deltaTime, cam);
+                if (obj is LevelObject levelObj)
+                {
+                    levelObj.Update(deltaTime, cam);
+                }
             }
-            foreach (LevelObject obj in visibleObjectsFront)
+            foreach (ILevelRenderableObject obj in visibleObjectsFront)
             {
-                obj.Update(deltaTime, cam);
+                if (obj is LevelObject levelObj)
+                {
+                    levelObj.Update(deltaTime, cam);
+                }
             }
         }
         
         /// <summary>
         /// Returns all visible objects, but not in order, because internally uses a HashSet.
         /// </summary>
-        public IEnumerable<LevelObject> GetAllVisibleObjects()
+        public IEnumerable<ILevelRenderableObject> GetAllVisibleObjects()
         {
             allVisibleObjects.Clear();
-            foreach (LevelObject obj in visibleObjectsBack)
+            foreach (ILevelRenderableObject obj in visibleObjectsBack)
             {
                 allVisibleObjects.Add(obj);
             }
-            foreach (LevelObject obj in visibleObjectsMid)
+            foreach (ILevelRenderableObject obj in visibleObjectsMid)
             {
                 allVisibleObjects.Add(obj);
             }
-            foreach (LevelObject obj in visibleObjectsFront)
+            foreach (ILevelRenderableObject obj in visibleObjectsFront)
             {
                 allVisibleObjects.Add(obj);
             }
@@ -73,7 +89,7 @@ namespace Barotrauma
         /// <summary>
         /// Checks which level objects are in camera view and adds them to the visibleObjects lists
         /// </summary>
-        private void RefreshVisibleObjects(Rectangle currentIndices, float zoom)
+        private void RefreshVisibleObjects(Rectangle currentIndices, BackgroundCreatureManager backgroundCreatureManager, float zoom)
         {
             visibleObjectsBack.Clear();
             visibleObjectsMid.Clear();
@@ -152,6 +168,27 @@ namespace Barotrauma
                 }
             }
 
+            foreach (var backgroundCreature in backgroundCreatureManager.VisibleCreatures)
+            {
+                int drawOrderIndex = 0;
+                for (int i = 0; i < visibleObjectsBack.Count; i++)
+                {
+                    if (visibleObjectsBack[i].Position.Z > backgroundCreature.Position.Z)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        drawOrderIndex = i + 1;
+                        if (drawOrderIndex >= MaxVisibleObjects) { break; }
+                    }
+                }
+                if (drawOrderIndex >= 0 && drawOrderIndex < MaxVisibleObjects)
+                {
+                    visibleObjectsBack.Insert(drawOrderIndex, backgroundCreature);
+                }
+            }
+
             //object grid is sorted in an ascending order
             //(so we prefer the objects in the foreground instead of ones in the background if some need to be culled)
             //rendering needs to be done in a descending order though to get the background objects to be drawn first -> reverse the lists
@@ -165,28 +202,28 @@ namespace Barotrauma
         /// <summary>
         /// Draw the objects behind the level walls
         /// </summary>
-        public void DrawObjectsBack(SpriteBatch spriteBatch, Camera cam)
+        public void DrawObjectsBack(SpriteBatch spriteBatch, BackgroundCreatureManager backgroundCreatureManager, Camera cam)
         {
-            DrawObjects(spriteBatch, cam, visibleObjectsBack);
+            DrawObjects(spriteBatch, cam, backgroundCreatureManager, visibleObjectsBack);
         }
 
         /// <summary>
         /// Draw the objects in front of the level walls, but behind characters
         /// </summary>
-        public void DrawObjectsMid(SpriteBatch spriteBatch, Camera cam)
+        public void DrawObjectsMid(SpriteBatch spriteBatch, BackgroundCreatureManager backgroundCreatureManager, Camera cam)
         {
-            DrawObjects(spriteBatch, cam, visibleObjectsMid);
+            DrawObjects(spriteBatch, cam, backgroundCreatureManager, visibleObjectsMid);
         }
 
         /// <summary>
         /// Draw the objects in front of the level walls and characters
         /// </summary>
-        public void DrawObjectsFront(SpriteBatch spriteBatch, Camera cam)
+        public void DrawObjectsFront(SpriteBatch spriteBatch, BackgroundCreatureManager backgroundCreatureManager, Camera cam)
         {
-            DrawObjects(spriteBatch, cam, visibleObjectsFront);
+            DrawObjects(spriteBatch, cam, backgroundCreatureManager, visibleObjectsFront);
         }
 
-        private void DrawObjects(SpriteBatch spriteBatch, Camera cam, List<LevelObject> objectList)
+        private void DrawObjects(SpriteBatch spriteBatch, Camera cam, BackgroundCreatureManager backgroundCreatureManager, List<ILevelRenderableObject> objectList)
         {
             Rectangle indices = Rectangle.Empty;
             indices.X = (int)Math.Floor(cam.WorldView.X / (float)GridSize);
@@ -207,7 +244,7 @@ namespace Barotrauma
             float z = 0.0f;
             if (ForceRefreshVisibleObjects || (currentGridIndices != indices && Timing.TotalTime > NextRefreshTime))
             {
-                RefreshVisibleObjects(indices, cam.Zoom);
+                RefreshVisibleObjects(indices, backgroundCreatureManager, cam.Zoom);
                 ForceRefreshVisibleObjects = false;
                 if (cam.Zoom < 0.1f)
                 {
@@ -216,61 +253,93 @@ namespace Barotrauma
                 }
             }
 
-            foreach (LevelObject obj in objectList)
+            bool prevObjectHasDeformableSprite = false;
+            foreach (ILevelRenderableObject obj2 in objectList)
             {              
-                Vector2 camDiff = new Vector2(obj.Position.X, obj.Position.Y) - cam.WorldViewCenter;
+                Vector2 camDiff = new Vector2(obj2.Position.X, obj2.Position.Y) - cam.WorldViewCenter;
                 camDiff.Y = -camDiff.Y;
-                
-                Sprite activeSprite = obj.Sprite;
-                activeSprite?.Draw(
-                    spriteBatch,
-                    new Vector2(obj.Position.X, -obj.Position.Y) - camDiff * obj.Position.Z * ParallaxStrength,
-                    Color.Lerp(obj.Prefab.SpriteColor, obj.Prefab.SpriteColor.Multiply(Level.Loaded.BackgroundTextureColor), obj.Position.Z / obj.Prefab.FadeOutDepth),
-                    activeSprite.Origin,
-                    obj.CurrentRotation,
-                    obj.CurrentScale,
-                    SpriteEffects.None,
-                    z);
 
-                if (obj.ActivePrefab.DeformableSprite != null)
+                bool hasDeformableSprite = false;
+                if (obj2 is LevelObject levelObject)
                 {
-                    if (obj.CurrentSpriteDeformation != null)
+                    hasDeformableSprite = levelObject.ActivePrefab.DeformableSprite != null;
+                    if (hasDeformableSprite != prevObjectHasDeformableSprite)
                     {
-                        obj.ActivePrefab.DeformableSprite.Deform(obj.CurrentSpriteDeformation);
+                        spriteBatch.End();
+                        spriteBatch.Begin(SpriteSortMode.Deferred,
+                            BlendState.NonPremultiplied,
+                            SamplerState.LinearWrap, DepthStencilState.DepthRead,
+                            transformMatrix: cam.Transform);
                     }
-                    else
+
+                    Sprite activeSprite = levelObject.Sprite;
+                    activeSprite?.Draw(
+                        spriteBatch,
+                        new Vector2(levelObject.Position.X, -levelObject.Position.Y) - camDiff * levelObject.Position.Z * ParallaxStrength,
+                        Color.Lerp(levelObject.Prefab.SpriteColor, levelObject.Prefab.SpriteColor.Multiply(Level.Loaded.BackgroundTextureColor), levelObject.Position.Z / levelObject.Prefab.FadeOutDepth),
+                        activeSprite.Origin,
+                        levelObject.CurrentRotation,
+                        levelObject.CurrentScale,
+                        SpriteEffects.None,
+                        z);
+
+                    if (hasDeformableSprite)
                     {
-                        obj.ActivePrefab.DeformableSprite.Reset();
-                    }
-                    obj.ActivePrefab.DeformableSprite?.Draw(cam,
-                        new Vector3(new Vector2(obj.Position.X, obj.Position.Y) - camDiff * obj.Position.Z * ParallaxStrength, z * 10.0f),
-                        obj.ActivePrefab.DeformableSprite.Origin,
-                        obj.CurrentRotation,
-                        obj.CurrentScale,
-                        Color.Lerp(obj.Prefab.SpriteColor, obj.Prefab.SpriteColor.Multiply(Level.Loaded.BackgroundTextureColor), obj.Position.Z / 5000.0f));
-                }
-
-                
-                if (GameMain.DebugDraw)
-                {
-                    GUI.DrawRectangle(spriteBatch, new Vector2(obj.Position.X, -obj.Position.Y), new Vector2(10.0f, 10.0f), GUIStyle.Red, true);
-
-                    if (obj.Triggers == null) { continue; }
-                    foreach (LevelTrigger trigger in obj.Triggers)
-                    {
-                        if (trigger.PhysicsBody == null) continue;
-                        GUI.DrawLine(spriteBatch, new Vector2(obj.Position.X, -obj.Position.Y), new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y), Color.Cyan, 0, 3);
-
-                        Vector2 flowForce = trigger.GetWaterFlowVelocity();
-                        if (flowForce.LengthSquared() > 1)
+                        if (levelObject.CurrentSpriteDeformation != null)
                         {
-                            flowForce.Y = -flowForce.Y;
-                            GUI.DrawLine(spriteBatch, new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y), new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y) + flowForce * 10, GUIStyle.Orange, 0, 5);
+                            levelObject.ActivePrefab.DeformableSprite.Deform(levelObject.CurrentSpriteDeformation);
                         }
-                        trigger.PhysicsBody.UpdateDrawPosition();
-                        trigger.PhysicsBody.DebugDraw(spriteBatch, trigger.IsTriggered ? Color.Cyan : Color.DarkCyan);
+                        else
+                        {
+                            levelObject.ActivePrefab.DeformableSprite.Reset();
+                        }
+                        levelObject.ActivePrefab.DeformableSprite?.Draw(cam,
+                            new Vector3(new Vector2(levelObject.Position.X, levelObject.Position.Y) - camDiff * levelObject.Position.Z * ParallaxStrength, z * 10.0f),
+                            levelObject.ActivePrefab.DeformableSprite.Origin,
+                            levelObject.CurrentRotation,
+                            levelObject.CurrentScale,
+                            Color.Lerp(levelObject.Prefab.SpriteColor, levelObject.Prefab.SpriteColor.Multiply(Level.Loaded.BackgroundTextureColor), levelObject.Position.Z / 5000.0f));
                     }
+                    prevObjectHasDeformableSprite = hasDeformableSprite;
+
+                    if (GameMain.DebugDraw)
+                    {
+                        GUI.DrawRectangle(spriteBatch, new Vector2(levelObject.Position.X, -levelObject.Position.Y), new Vector2(10.0f, 10.0f), GUIStyle.Red, true);
+
+                        if (levelObject.Triggers == null) { continue; }
+                        foreach (LevelTrigger trigger in levelObject.Triggers)
+                        {
+                            if (trigger.PhysicsBody == null) continue;
+                            GUI.DrawLine(spriteBatch, new Vector2(levelObject.Position.X, -levelObject.Position.Y), new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y), Color.Cyan, 0, 3);
+
+                            Vector2 flowForce = trigger.GetWaterFlowVelocity();
+                            if (flowForce.LengthSquared() > 1)
+                            {
+                                flowForce.Y = -flowForce.Y;
+                                GUI.DrawLine(spriteBatch, new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y), new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y) + flowForce * 10, GUIStyle.Orange, 0, 5);
+                            }
+                            trigger.PhysicsBody.UpdateDrawPosition();
+                            trigger.PhysicsBody.DebugDraw(spriteBatch, trigger.IsTriggered ? Color.Cyan : Color.DarkCyan);
+                        }
+                    }
+
                 }
+                else if (obj2 is BackgroundCreature backgroundCreature && cam.Zoom > 0.05f)
+                {
+                    hasDeformableSprite = backgroundCreature.Prefab.DeformableSprite != null;
+                    if (hasDeformableSprite != prevObjectHasDeformableSprite)
+                    {
+                        spriteBatch.End();
+                        spriteBatch.Begin(SpriteSortMode.Deferred,
+                            BlendState.NonPremultiplied,
+                            SamplerState.LinearWrap, DepthStencilState.DepthRead,
+                            transformMatrix: cam.Transform);
+                    }
+
+                    backgroundCreature.Draw(spriteBatch, cam);
+                }
+                prevObjectHasDeformableSprite = hasDeformableSprite;
+
 
                 z += 0.0001f;
             }

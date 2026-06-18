@@ -51,13 +51,14 @@ namespace Barotrauma.Networking
                 {
                     if (recipient == sender) { continue; }
 
-                    if (!CanReceive(sender, recipient, out float distanceFactor)) { continue; }
+                    if (!CanReceive(sender, recipient, out float distanceFactor, out bool isRadio)) { continue; }
 
                     IWriteMessage msg = new WriteOnlyMessage();
 
                     msg.WriteByte((byte)ServerPacketHeader.VOICE);
                     msg.WriteByte((byte)queue.QueueID);
                     msg.WriteRangedSingle(distanceFactor, 0.0f, 1.0f, 8);
+                    msg.WriteBoolean(isRadio);
                     queue.Write(msg);
                     
                     netServer.Send(msg, recipient.Connection, DeliveryMethod.Unreliable);
@@ -65,15 +66,17 @@ namespace Barotrauma.Networking
             }
         }
 
-        private static bool CanReceive(Client sender, Client recipient, out float distanceFactor)
+        private static bool CanReceive(Client sender, Client recipient, out float distanceFactor, out bool isRadio)
         {
             if (Screen.Selected != GameMain.GameScreen) 
             {
                 distanceFactor = 0.0f;
+                isRadio = false;
                 return true; 
             }
 
             distanceFactor = 0.0f;
+            isRadio = false;
 
             //no-one can hear muted players
             if (sender.Muted) { return false; }
@@ -98,12 +101,14 @@ namespace Barotrauma.Networking
             {
                 if (recipientSpectating)
                 {
+                    isRadio = true;
                     if (recipient.SpectatePos == null) { return true; }
                     distanceFactor = MathHelper.Clamp(Vector2.Distance(sender.Character.WorldPosition, recipient.SpectatePos.Value) / senderRadio.Range, 0.0f, 1.0f);
                     return distanceFactor < 1.0f;
                 }
                 else if (recipientRadio != null && recipientRadio.CanReceive(senderRadio))
                 {
+                    isRadio = true;
                     distanceFactor = MathHelper.Clamp(Vector2.Distance(sender.Character.WorldPosition, recipient.Character.WorldPosition) / senderRadio.Range, 0.0f, 1.0f);
                     return true;
                 }

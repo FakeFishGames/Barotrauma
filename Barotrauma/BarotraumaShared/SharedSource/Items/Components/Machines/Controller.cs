@@ -525,7 +525,7 @@ namespace Barotrauma.Items.Components
                 return true;
             }
 
-            if (containerToSpawnOnSelectedItem.Inventory.AllItems.Any(x => x.Prefab == spawnItemOnSelectedPrefab))
+            if (containerToSpawnOnSelectedItem.Inventory.AllItems.Any(item => item == spawnedItemOnSelected))
             {
                 return true;
             }

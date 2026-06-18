@@ -457,7 +457,7 @@ namespace Barotrauma
             if (newObject.NeedsUpdate) { updateableObjects.Add(newObject); }
             //add some variance to the Z position to prevent z-fighting
             //(based on the x and y position of the object, scaled to be visually insignificant)
-            newObject.Position.Z += (minX + minY) % 100.0f * 0.00001f;
+            newObject.Position += new Vector3(0, 0, (minX + minY) % 100.0f * 0.00001f);
 
             int xStart = (int)Math.Floor(minX / GridSize);
             int xEnd = (int)Math.Floor(maxX / GridSize);

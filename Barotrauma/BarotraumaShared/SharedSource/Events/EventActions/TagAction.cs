@@ -123,7 +123,7 @@ namespace Barotrauma
             AddTargetPredicate(
                 Tags.Traitor,
                 ScriptedEvent.TargetPredicate.EntityType.Character, 
-                e => e is Character c && (c.IsPlayer || c.IsBot) && c.IsTraitor && !c.IsIncapacitated);
+                e => e is Character c && (c.IsPlayer || c.IsBot) && c.IsTraitor && !c.IsIncapacitated && CharacterTeamMatches(c));
         }
 
         private void TagNonTraitors()
@@ -131,7 +131,7 @@ namespace Barotrauma
             AddTargetPredicate(
                 Tags.NonTraitor,
                 ScriptedEvent.TargetPredicate.EntityType.Character,
-                e => e is Character c && (c.IsPlayer || c.IsBot) && !c.IsTraitor && c.IsOnPlayerTeam && !c.IsIncapacitated);
+                e => e is Character c && (c.IsPlayer || c.IsBot) && !c.IsTraitor && c.IsOnPlayerTeam && !c.IsIncapacitated && CharacterTeamMatches(c));
         }
 
         private void TagNonTraitorPlayers()
@@ -139,7 +139,7 @@ namespace Barotrauma
             AddTargetPredicate(
                 Tags.NonTraitorPlayer,
                 ScriptedEvent.TargetPredicate.EntityType.Character,
-                e => e is Character c && c.IsPlayer && !c.IsTraitor && c.IsOnPlayerTeam && !c.IsIncapacitated);
+                e => e is Character c && c.IsPlayer && !c.IsTraitor && c.IsOnPlayerTeam && !c.IsIncapacitated && CharacterTeamMatches(c));
         }
 
         private void TagBots(bool playerCrewOnly)
@@ -151,7 +151,8 @@ namespace Barotrauma
                     e is Character c &&
                     c.IsBot && 
                     (!c.IsIncapacitated || !IgnoreIncapacitatedCharacters) && 
-                    (!playerCrewOnly || c.TeamID == CharacterTeamType.Team1));
+                    (!playerCrewOnly || c.TeamID == CharacterTeamType.Team1) && 
+                    CharacterTeamMatches(c));
         }
 
         private void TagCrew()
@@ -171,7 +172,7 @@ namespace Barotrauma
 
         private void TagHumansByTag(Identifier tag)
         {
-            AddTarget(Tag, Character.CharacterList.Where(c => c.HumanPrefab != null && c.HumanPrefab.GetTags().Contains(tag)));
+            AddTarget(Tag, Character.CharacterList.Where(c => c.HumanPrefab != null && c.HumanPrefab.GetTags().Contains(tag) && CharacterTeamMatches(c)));
         }
 
         private void TagHumansByJobIdentifier(Identifier jobIdentifier)

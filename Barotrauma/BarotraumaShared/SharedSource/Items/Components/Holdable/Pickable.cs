@@ -119,7 +119,7 @@ namespace Barotrauma.Items.Components
             return OnPicked(picker, pickDroppedStack: true);
         }
 
-        public virtual bool OnPicked(Character picker, bool pickDroppedStack)
+        public bool OnPicked(Character picker, bool pickDroppedStack, bool playSound = true)
         {
             //if the item has multiple Pickable components (e.g. Holdable and Wearable, check that we don't equip it in hands when the item is worn or vice versa)
             if (item.GetComponents<Pickable>().Any())
@@ -156,7 +156,7 @@ namespace Barotrauma.Items.Components
 
                 ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
 #if CLIENT
-                if (!GameMain.Instance.LoadingScreenOpen && picker == Character.Controlled) { SoundPlayer.PlayUISound(GUISoundType.PickItem); }
+                if (!GameMain.Instance.LoadingScreenOpen && playSound && picker == Character.Controlled) { SoundPlayer.PlayUISound(GUISoundType.PickItem); }
                 PlaySound(ActionType.OnPicked,  picker);
 #endif
                 if (pickDroppedStack)
@@ -164,7 +164,7 @@ namespace Barotrauma.Items.Components
                     foreach (var droppedItem in droppedStack)
                     {
                         if (droppedItem == item) { continue; }
-                        droppedItem.GetComponent<Pickable>().OnPicked(picker, pickDroppedStack: false);
+                        droppedItem.GetComponent<Pickable>().OnPicked(picker, pickDroppedStack: false, playSound: false);
                     }
                 }
                 return true;

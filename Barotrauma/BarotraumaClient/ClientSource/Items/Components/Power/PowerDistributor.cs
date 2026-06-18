@@ -12,9 +12,12 @@ namespace Barotrauma.Items.Components
         private partial class PowerGroup
         {
             private GUIFrame? frame;
+            private GUIFrame? groupContent;
+            private GUILayoutGroup? nameGroup;
             private GUITextBox? nameBox;
+            private GUITextBlock? loadDisplayNameLabel;
             private GUIScrollBar? ratioSlider;
-            private readonly List<GUITextBlock> powerUnitLabels = new List<GUITextBlock>();
+            private readonly List<GUITextBlock> powerUnitLabels = [];
             private GUIFrame? divider;
 
             public bool IsVisible { get; private set; } = true;
@@ -22,9 +25,9 @@ namespace Barotrauma.Items.Components
             public void CreateGUI()
             {
                 frame = new GUIFrame(new RectTransform(new Vector2(1f, 0.25f), distributor.groupList!.Content.RectTransform, minSize: (0, 130)), style: null);
-                GUIFrame groupContent = new(new RectTransform(frame.Rect.Size - new Point(10), frame.RectTransform, Anchor.Center), style: null);
+                groupContent = new GUIFrame(new RectTransform(frame.Rect.Size - new Point(10), frame.RectTransform, Anchor.Center), style: null);
 
-                GUILayoutGroup nameGroup = new(new RectTransform(new Vector2(0.65f, 0.33f), groupContent.RectTransform, Anchor.TopLeft), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                nameGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.65f, 0.33f), groupContent.RectTransform, Anchor.TopLeft), isHorizontal: true, childAnchor: Anchor.CenterLeft)
                 {
                     Stretch = true
                 };
@@ -37,7 +40,7 @@ namespace Barotrauma.Items.Components
                         return true;
                     }
                 };
-                nameBox = new GUITextBox(new RectTransform(Vector2.One, nameGroup.RectTransform), Name, font: GUIStyle.SubHeadingFont, style: "GUITextBoxNoStyle")
+                nameBox = new GUITextBox(new RectTransform(Vector2.One, nameGroup.RectTransform), Screen.Selected == GameMain.SubEditorScreen ? Name : DisplayName.Value, font: GUIStyle.SubHeadingFont, style: "GUITextBoxNoStyle")
                 {
                     MaxTextLength = MaxNameLength,
                     OverflowClip = true,
@@ -48,16 +51,39 @@ namespace Barotrauma.Items.Components
                         return true;
                     }
                 };
+                nameBox.OnSelected += (tb, _) =>
+                {
+                    if (tb.Selected) { return; }
+                    tb.Text = Name;
+                };
                 nameBox.OnDeselected += (tb, _) =>
                 {
                     Name = tb.Text;
+                    tb.CaretIndex = 0;
                     if (GameMain.Client == null) { return; }
                     distributor.item.CreateClientEvent(distributor, new EventData(this, EventType.NameChange));
                 };
+                nameBox.GetChild<GUIFrame>().GetChild<GUICustomComponent>().OnDrawToolTip = comp =>
+                {
+                    if (Screen.Selected != GameMain.SubEditorScreen && !nameBox.Selected)
+                    {
+                        comp.ToolTip = null;
+                        return;
+                    }
+
+                    LocalizedString localizedText = TextManager.Get(nameBox.Text);
+                    comp.ToolTip = localizedText.IsNullOrEmpty()
+                        ? TextManager.GetWithVariable("StringPropertyCannotTranslate", "[tag]", nameBox.Text)
+                        : TextManager.GetWithVariable("StringPropertyTranslate", "[translation]", localizedText);
+                };
 
                 GUITextBlock loadDisplay = GUI.CreateDigitalDisplay(new RectTransform(new Vector2(0.35f, 0.33f), groupContent.RectTransform, Anchor.TopRight) { AbsoluteOffset = (5, 0) },
-                    out GUITextBlock? _, out GUITextBlock loadDisplayUnitLabel, TextManager.Get("PowerTransferLoadLabel"), tooltip: TextManager.Get("PowerTransferTipLoad"), leftLabelFont: GUIStyle.Font);
+                    out loadDisplayNameLabel, out GUITextBlock loadDisplayUnitLabel, TextManager.Get("PowerTransferLoadLabel"), tooltip: TextManager.Get("PowerTransferTipLoad"), leftLabelFont: GUIStyle.Font);
                 loadDisplay.TextGetter = () => MathUtils.RoundToInt(Load).ToString();
+
+                float textAndPaddingWidth = loadDisplayNameLabel!.Font.MeasureString(loadDisplayNameLabel!.Text).X + loadDisplayNameLabel.Padding.X + loadDisplayNameLabel.Padding.Z;
+                float availableWidth = groupContent!.Rect.Width - loadDisplayNameLabel.Parent.Rect.Width + loadDisplayNameLabel.Rect.Width - textAndPaddingWidth;
+                nameGroup!.RectTransform.Resize(new Point((int)availableWidth, nameGroup.Rect.Height));
 
                 ratioSlider = new GUIScrollBar(new RectTransform(new Vector2(1f, 0.33f), groupContent.RectTransform, Anchor.Center), barSize: 0.15f, style: "DeviceSlider")
                 {
@@ -78,16 +104,17 @@ namespace Barotrauma.Items.Components
                 ratioSlider.Bar.RectTransform.MaxSize = new Point(ratioSlider.Bar.Rect.Height);
 
                 GUITextBlock ratioDisplay = GUI.CreateDigitalDisplay(new RectTransform(new Vector2(0.2f, 0.33f), groupContent.RectTransform, Anchor.BottomLeft),
-                    out GUITextBlock? _, out GUITextBlock _,
+                    out GUITextBlock? _, out GUITextBlock ratioDisplayUnitLabel,
                     rightLabelText: "%");
                 ratioDisplay.TextGetter = () => DisplayRatio.ToString();
 
                 GUITextBlock outputDisplay = GUI.CreateDigitalDisplay(new RectTransform(new Vector2(0.35f, 0.33f), groupContent.RectTransform, Anchor.BottomRight) { AbsoluteOffset = (5, 0) },
-                    out GUITextBlock? _, out GUITextBlock outputDisplayUnitLabel,
+                    out GUITextBlock? outputDisplayNameLabel, out GUITextBlock outputDisplayUnitLabel,
                     TextManager.Get("powerdistributor.supplylabel"), tooltip: TextManager.Get("PowerTransferTipPower"), leftLabelFont: GUIStyle.Font);
                 outputDisplay.TextGetter = () => distributor.IsShortCircuited(PowerOut) ? "err" : MathUtils.RoundToInt(distributor.CalculatePowerOut(this)).ToString();
 
                 powerUnitLabels.Add(loadDisplayUnitLabel);
+                powerUnitLabels.Add(ratioDisplayUnitLabel);
                 powerUnitLabels.Add(outputDisplayUnitLabel);
                 GUITextBlock.AutoScaleAndNormalize(powerUnitLabels);
 
@@ -111,7 +138,14 @@ namespace Barotrauma.Items.Components
                 IsVisible = PowerOut.Wires.Count >= 1;
                 frame!.Visible = IsVisible;
                 divider!.Visible = IsVisible && distributor.powerGroups.Last(group => group.frame!.Visible) != this;
-                if (distributor.prevLanguage != GameSettings.CurrentConfig.Language) { GUITextBlock.AutoScaleAndNormalize(powerUnitLabels); }
+                if (distributor.prevLanguage != GameSettings.CurrentConfig.Language)
+                {
+                    GUITextBlock.AutoScaleAndNormalize(powerUnitLabels);
+
+                    float textAndPaddingWidth = loadDisplayNameLabel!.Font.MeasureString(loadDisplayNameLabel!.Text).X + loadDisplayNameLabel.Padding.X + loadDisplayNameLabel.Padding.Z;
+                    float availableWidth = groupContent!.Rect.Width - loadDisplayNameLabel.Parent.Rect.Width + loadDisplayNameLabel.Rect.Width - textAndPaddingWidth;
+                    nameGroup!.RectTransform.Resize(new Point((int)availableWidth, nameGroup.Rect.Height));
+                }
             }
         }
 

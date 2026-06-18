@@ -261,15 +261,7 @@ namespace Barotrauma
                 }
             }
 
-            foreach (var endLocation in EndLocations)
-            {
-                if (endLocation.Type?.ForceLocationName is { IsEmpty: false })
-                {
-                    endLocation.ForceName(endLocation.Type.ForceLocationName);
-                }
-            }
-
-            AssignEndLocationLevelData();
+            AssignEndLocationLevelData(campaign);
 
             //backwards compatibility: if locations go out of bounds (map saved with different generation parameters before width/height were included in the xml)
             float maxX = Locations.Select(l => l.MapPosition.X).Max();
@@ -973,13 +965,43 @@ namespace Barotrauma
             previousToEndLocation.Connections.Add(endConnection);
             endLocation.Connections.Add(endConnection);
 
-            AssignEndLocationLevelData();
+            AssignEndLocationLevelData(campaign);
         }
 
-        private void AssignEndLocationLevelData()
+        /// <summary>
+        /// Assigns the correct outpost generation parameters to the end locations. Also checks and ensures that all of them are correctly assigned to the end biome, and have a location type that can be generated in the end biome.
+        /// Strangely shaped custom maps may sometimes generate in a way that there aren't enough locations in the last biome to assign as the end locations, and we may end up choosing locations in the second-to-last biome instead - let's correct that here.
+        /// </summary>
+        /// <param name="campaign"></param>
+        /// <exception cref="InvalidOperationException"></exception>
+        private void AssignEndLocationLevelData(CampaignMode campaign)
         {
+            Biome endBiome =  Biome.Prefabs.OrderBy(p => p.UintIdentifier).FirstOrDefault(b => b.IsEndBiome) ?? throw new InvalidOperationException("Could not find an end biome to assign to the end locations.");
+            LocationType endLocationType =
+                LocationType.Prefabs
+                    .OrderBy(p => p.UintIdentifier)
+                    .FirstOrDefault(IsSuitableEndLocationType)
+                        ?? throw new InvalidOperationException("Could not find an a location type to assign to the end locations.");
+
+            bool IsSuitableEndLocationType(LocationType lt)
+            {
+                return lt.AreaSettings.Any(s => 
+                    s.Commonness > 0 && 
+                    (s.MatchesBiome(endBiome.Identifier) || s.MatchesZone(generationParams.DifficultyZones)));
+            }
+
             for (int i = 0; i < endLocations.Count; i++)
             {
+                if (endLocations[i].Biome != endBiome)
+                {
+                    endLocations[i].Biome = endBiome;
+                    endLocations[i].LevelData = new LevelData(endLocations[i], this, endLocations[i].LevelData.Difficulty);
+                }
+                endLocations[i].ChangeType(campaign: campaign, endLocationType);
+                if (endLocationType.ForceLocationName is { IsEmpty: false })
+                {
+                    endLocations[i].ForceName(endLocationType.ForceLocationName);
+                }
                 endLocations[i].LevelData.ReassignGenerationParams(Seed);
                 var outpostParams = OutpostGenerationParams.OutpostParams.FirstOrDefault(p => p.ForceToEndLocationIndex == i);
                 if (outpostParams != null)
