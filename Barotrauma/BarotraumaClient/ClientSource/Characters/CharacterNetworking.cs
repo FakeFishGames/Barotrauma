@@ -813,6 +813,7 @@ namespace Barotrauma
 
         private void ReadStatus(IReadMessage msg)
         {
+            TriggerDeathEffects = msg.ReadBoolean();
             bool isDead = msg.ReadBoolean();
             if (isDead)
             {
