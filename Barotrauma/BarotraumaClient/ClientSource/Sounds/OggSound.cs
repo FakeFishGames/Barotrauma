@@ -1,6 +1,7 @@
 ﻿using NVorbis;
 using OpenAL;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -8,6 +9,9 @@ namespace Barotrauma.Sounds
 {
     sealed class OggSound : Sound
     {
+        private static readonly ArrayPool<float> FloatPool = ArrayPool<float>.Shared;
+        private static readonly ArrayPool<short> ShortPool = ArrayPool<short>.Shared;
+
         private readonly VorbisReader streamReader;
 
         public long MaxStreamSamplePos => streamReader == null ? 0 : streamReader.TotalSamples * streamReader.Channels * 2;
@@ -66,10 +70,15 @@ namespace Barotrauma.Sounds
 
             int bufferSize = (int)reader.TotalSamples * reader.Channels;
 
+            /*
             float[] floatBuffer = new float[bufferSize];
             var sampleBuffer = new short[bufferSize];
             var muffledBuffer = new short[bufferSize];
-
+            */
+            //by using ArrayPool for short lived buffers we don't hammer the GC!
+            float[] floatBuffer = FloatPool.Rent(bufferSize);
+            short[] sampleBuffer = ShortPool.Rent(bufferSize);
+            short[] muffledBuffer = ShortPool.Rent(bufferSize);
             int readSamples = await Task.Run(() =>  reader.ReadSamples(floatBuffer, 0, bufferSize));
 
             var playbackAmplitude = new List<float>();

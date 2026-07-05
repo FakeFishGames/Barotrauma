@@ -1,13 +1,15 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 
 namespace Barotrauma.Extensions
 {
     public static class ColorExtensions
     {
+        /*
         public static Color Multiply(this Color color, float value, bool onlyAlpha = false)
         {
             return onlyAlpha ?
-                new Color(color.R, color.G,  color.B, MultiplyComponent(color.A, value)) :            
+                new Color(color.R, color.G, color.B, MultiplyComponent(color.A, value)) :
                 new Color(MultiplyComponent(color.R, value), MultiplyComponent(color.G, value), MultiplyComponent(color.B, value), MultiplyComponent(color.A, value));
 
             static byte MultiplyComponent(float colorComponent, float multiplier)
@@ -15,7 +17,41 @@ namespace Barotrauma.Extensions
                 return (byte)MathHelper.Clamp(colorComponent * multiplier, 0.0f, 255.0f);
             }
         }
+        */
+        public static Color Multiply(this Color color, float value)
+        {
+            return new Color(
+                MultiplyComponent(color.R, value),
+                MultiplyComponent(color.G, value),
+                MultiplyComponent(color.B, value),
+                MultiplyComponent(color.A, value)
+            );
+        }
 
+        // Use this for alpha-only multiplication
+        public static Color MultiplyAlpha(this Color color, float value)
+        {
+            return new Color(color.R, color.G, color.B, MultiplyComponent(color.A, value));
+        }
+        private static byte MultiplyComponent(float component, float multiplier)
+        {
+            return (byte)MathHelper.Clamp(component * multiplier, 0.0f, 255.0f);
+        }
+        /// <summary>
+        /// Multiplies the color components(RGBA) by the brightness factor, 
+        /// treating the input as a normalized 0-1 scale.
+        /// </summary>
+        public static Color MultiplyNormalized(this Color color, float brightness)
+        {
+            //we can do this because we multiply and devide for naught
+            //*255.f/255.f (redundant so we use byte cast)
+            return new Color(
+                MultiplyComponent(color.R, brightness),
+                MultiplyComponent(color.G, brightness),
+                MultiplyComponent(color.B, brightness),
+                color.A
+            );
+        }
         public static Color Multiply(this Color thisColor, Color color)
         {
             return new Color((byte)(thisColor.R * color.R / 255f), (byte)(thisColor.G * color.G / 255f), (byte)(thisColor.B * color.B / 255f), (byte)(thisColor.A * color.A / 255f));

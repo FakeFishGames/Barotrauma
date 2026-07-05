@@ -12,6 +12,8 @@ namespace Barotrauma
 {
     public class PrefabCollection<T> : IEnumerable<T> where T : notnull, Prefab
     {
+        //this way we can add from multiple threads (allowing us to multi thread the loading)!
+        private readonly object _syncLock = new object();
         /// <summary>
         /// Default constructor.
         /// </summary>
@@ -45,7 +47,7 @@ namespace Barotrauma
         {
             OnSort = onSort;
         }
-        
+
         /// <summary>
         /// For iterating through the Prefabs in a deterministic order (e.g. for map generation). Sorting is not cached, so use sparingly.
         /// </summary>
@@ -56,7 +58,7 @@ namespace Barotrauma
             {
                 return this.OrderBy(p => (p as PrefabWithUintIdentifier)!.UintIdentifier);
             }
-            
+
             return this.OrderBy(p => p.Identifier);
         }
 
@@ -112,7 +114,7 @@ namespace Barotrauma
         private ContentFile? topMostOverrideFile = null;
 
         private readonly bool implementsVariants;
-        
+
         private bool IsPrefabOverriddenByFile(T prefab)
         {
             return topMostOverrideFile != null &&
@@ -124,14 +126,14 @@ namespace Barotrauma
             public class Node
             {
                 public Node(Identifier identifier) { Identifier = identifier; }
-                
+
                 public readonly Identifier Identifier;
                 public Node? Parent = null;
                 public readonly HashSet<Node> Inheritors = new HashSet<Node>();
             }
 
             private readonly PrefabCollection<T> prefabCollection;
-            
+
             public InheritanceTreeCollection(PrefabCollection<T> collection) { prefabCollection = collection; }
 
             public readonly Dictionary<Identifier, Node> IdToNode = new Dictionary<Identifier, Node>();
@@ -140,7 +142,7 @@ namespace Barotrauma
             public Node? AddNodeAndInheritors(Identifier id)
             {
                 if (!prefabCollection.TryGet(id, out T? _, requireInheritanceValid: false)) { return null; }
-                
+
                 if (!IdToNode.TryGetValue(id, out var node))
                 {
                     node = new Node(id);
@@ -183,7 +185,7 @@ namespace Barotrauma
                     {
                         int index = hierarchyPositions.IndexOf(currNode);
                         throw new Exception("Inheritance cycle detected: "
-                            +string.Join(", ", hierarchyPositions.Skip(index).Select(n => n.Identifier)));
+                            + string.Join(", ", hierarchyPositions.Skip(index).Select(n => n.Identifier)));
                     }
                     checkedNodes.Add(currNode);
                     hierarchyPositions.Add(currNode);
@@ -191,7 +193,7 @@ namespace Barotrauma
                 } while (currNode != null);
                 uncheckedNodes.RemoveWhere(i => checkedNodes.Contains(i));
             }
-            
+
             public void AddNodesAndInheritors(IEnumerable<Identifier> ids)
                 => ids.ForEach(id => AddNodeAndInheritors(id));
 
@@ -203,8 +205,8 @@ namespace Barotrauma
                 {
                     if (!prefabCollection.TryGet(node.Identifier, out var p, requireInheritanceValid: false) ||
                         p is not IImplementsVariants<T> prefab) { return; }
-                    if (!prefab.VariantOf.IsEmpty && prefabCollection.TryGet(prefab.VariantOf, out T? parent, requireInheritanceValid: false)) 
-                    { 
+                    if (!prefab.VariantOf.IsEmpty && prefabCollection.TryGet(prefab.VariantOf, out T? parent, requireInheritanceValid: false))
+                    {
                         prefab.InheritFrom(parent);
                         prefab.ParentPrefab = parent;
                     }
@@ -217,7 +219,7 @@ namespace Barotrauma
         private static bool IsInheritanceValid(T? prefab)
         {
             if (prefab == null) { return false; }
-            return 
+            return
                 prefab is not IImplementsVariants<T> implementsVariants ||
                 (implementsVariants.VariantOf.IsEmpty || (implementsVariants.ParentPrefab != null && IsInheritanceValid(implementsVariants.ParentPrefab)));
         }
@@ -351,7 +353,7 @@ namespace Barotrauma
             return TryGet(identifier, out _);
         }
 
-        public bool ContainsKey(string k) =>  prefabs.ContainsKey(k.ToIdentifier());
+        public bool ContainsKey(string k) => prefabs.ContainsKey(k.ToIdentifier());
 
         /// <summary>
         /// Determines whether a prefab is implemented as an override or not.
@@ -380,50 +382,53 @@ namespace Barotrauma
         public void Add(T prefab, bool isOverride)
         {
             Prefab.DisallowCallFromConstructor();
-            if (prefab.Identifier.IsEmpty)
+            lock (_syncLock)
             {
-                throw new ArgumentException($"Prefab has no identifier!");
-            }
-
-            bool selectorExists = prefabs.TryGetValue(prefab.Identifier, out PrefabSelector<T>? selector);
-
-            //Add to list
-            selector ??= new PrefabSelector<T>();
-
-            if (prefab is PrefabWithUintIdentifier prefabWithUintIdentifier)
-            {
-                if (!selector.IsEmpty)
+                if (prefab.Identifier.IsEmpty)
                 {
-                    prefabWithUintIdentifier.UintIdentifier = (selector.ActivePrefab as PrefabWithUintIdentifier)!.UintIdentifier;
+                    throw new ArgumentException($"Prefab has no identifier!");
                 }
-                else
-                {
-                    using (MD5 md5 = MD5.Create())
-                    {
-                        prefabWithUintIdentifier.UintIdentifier = ToolBoxCore.IdentifierToUint32Hash(prefab.Identifier, md5);
 
-                        //it's theoretically possible for two different values to generate the same hash, but the probability is astronomically small
-                        T? findCollision()
-                            => Find(p =>
-                                p.Identifier != prefab.Identifier
-                                && p is PrefabWithUintIdentifier otherPrefab
-                                && otherPrefab.UintIdentifier == prefabWithUintIdentifier.UintIdentifier);
-                        for (T? collision = findCollision(); collision != null; collision = findCollision())
+                bool selectorExists = prefabs.TryGetValue(prefab.Identifier, out PrefabSelector<T>? selector);
+
+                //Add to list
+                selector ??= new PrefabSelector<T>();
+
+                if (prefab is PrefabWithUintIdentifier prefabWithUintIdentifier)
+                {
+                    if (!selector.IsEmpty)
+                    {
+                        prefabWithUintIdentifier.UintIdentifier = (selector.ActivePrefab as PrefabWithUintIdentifier)!.UintIdentifier;
+                    }
+                    else
+                    {
+                        using (MD5 md5 = MD5.Create())
                         {
-                            DebugConsole.AddWarning($"Hashing collision when generating uint identifiers for {typeof(T).Name}: {prefab.Identifier} has the same UintIdentifier as {collision.Identifier} ({prefabWithUintIdentifier.UintIdentifier})");
-                            prefabWithUintIdentifier.UintIdentifier++;
+                            prefabWithUintIdentifier.UintIdentifier = ToolBoxCore.IdentifierToUint32Hash(prefab.Identifier, md5);
+
+                            //it's theoretically possible for two different values to generate the same hash, but the probability is astronomically small
+                            T? findCollision()
+                                => Find(p =>
+                                    p.Identifier != prefab.Identifier
+                                    && p is PrefabWithUintIdentifier otherPrefab
+                                    && otherPrefab.UintIdentifier == prefabWithUintIdentifier.UintIdentifier);
+                            for (T? collision = findCollision(); collision != null; collision = findCollision())
+                            {
+                                DebugConsole.AddWarning($"Hashing collision when generating uint identifiers for {typeof(T).Name}: {prefab.Identifier} has the same UintIdentifier as {collision.Identifier} ({prefabWithUintIdentifier.UintIdentifier})");
+                                prefabWithUintIdentifier.UintIdentifier++;
+                            }
                         }
                     }
                 }
-            }
-            selector.Add(prefab, isOverride);
+                selector.Add(prefab, isOverride);
 
-            if (!selectorExists)
-            {
-                if (!prefabs.TryAdd(prefab.Identifier, selector)) { throw new Exception($"Failed to add selector for \"{prefab.Identifier}\""); }
+                if (!selectorExists)
+                {
+                    if (!prefabs.TryAdd(prefab.Identifier, selector)) { throw new Exception($"Failed to add selector for \"{prefab.Identifier}\""); }
+                }
+                OnAdd?.Invoke(prefab, isOverride);
+                HandleInheritance(prefab.Identifier);
             }
-            OnAdd?.Invoke(prefab, isOverride);
-            HandleInheritance(prefab.Identifier);
         }
 
         /// <summary>
@@ -434,15 +439,18 @@ namespace Barotrauma
         {
             Prefab.DisallowCallFromConstructor();
             OnRemove?.Invoke(prefab);
-            if (!ContainsKey(prefab.Identifier)) { return; }
-            if (!prefabs[prefab.Identifier].Contains(prefab)) { return; }
-            prefabs[prefab.Identifier].Remove(prefab);
-
-            if (prefabs[prefab.Identifier].IsEmpty)
+            lock (_syncLock)
             {
-                prefabs.TryRemove(prefab.Identifier, out _);
+                if (!ContainsKey(prefab.Identifier)) { return; }
+                if (!prefabs[prefab.Identifier].Contains(prefab)) { return; }
+                prefabs[prefab.Identifier].Remove(prefab);
+
+                if (prefabs[prefab.Identifier].IsEmpty)
+                {
+                    prefabs.TryRemove(prefab.Identifier, out _);
+                }
+                HandleInheritance(prefab.Identifier);
             }
-            HandleInheritance(prefab.Identifier);
         }
 
         /// <summary>
@@ -546,7 +554,10 @@ namespace Barotrauma
         /// <returns>IEnumerator</returns>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return GetEnumerator(requireInheritanceValid: true);
+            lock (_syncLock)
+            {
+                return GetEnumerator(requireInheritanceValid: true);
+            }
         }
     }
 }

@@ -562,29 +562,32 @@ namespace Barotrauma
                 return;
             }
 
-            Color? color = null;
-            if (character.ExternalHighlight)
-            {
-                color = Color.Lerp(Color.White, GUIStyle.Orange, (float)Math.Sin(Timing.TotalTime * 3.5f));
-            }
+            Color? color = character.ExternalHighlight
+                ? Color.Lerp(Color.White, GUIStyle.Orange, (float)Math.Sin(Timing.TotalTime * 3.5f))
+                : (Color?)null;
 
             float depthOffset = GetDepthOffset();
+            //added depthOffset parameter
+            /*
             if (!MathUtils.NearlyEqual(depthOffset, 0.0f))
             {
                 foreach (Limb limb in limbs) { limb.ActiveSprite.Depth += depthOffset; }
             }
-            for (int i = 0; i < inversedLimbDrawOrder.Length; i++)
+            */
+            foreach (var limb in inversedLimbDrawOrder)
             {
-                if (onlyDrawSeveredLimbs && !inversedLimbDrawOrder[i].IsSevered) 
+                if (onlyDrawSeveredLimbs && !limb.IsSevered)
                 {
-                    continue; 
+                    continue;
                 }
-                inversedLimbDrawOrder[i].Draw(spriteBatch, cam, color);
+                limb.Draw(spriteBatch, cam, color, depthOffset: GetDepthOffset());
             }
+            /*
             if (!MathUtils.NearlyEqual(depthOffset, 0.0f))
             {
                 foreach (Limb limb in limbs) { limb.ActiveSprite.Depth -= depthOffset; }
             }
+            */
             LimbJoints.ForEach(j => j.Draw(spriteBatch));
         }
 

@@ -726,7 +726,7 @@ namespace Barotrauma
             RefreshDeformations();
         }
 
-        public void Draw(SpriteBatch spriteBatch, Camera cam, Color? overrideColor = null, bool disableDeformations = false)
+        public void Draw(SpriteBatch spriteBatch, Camera cam, Color? overrideColor = null, bool disableDeformations = false, float depthOffset = 0.0f)
         {
             var spriteParams = Params.GetSprite();
             if (spriteParams == null || Alpha <= 0) { return; }
@@ -750,8 +750,8 @@ namespace Barotrauma
                     tintedColor = Color.Lerp(tintedColor, character.CharacterHealth.BodyTint.Opaque(), character.CharacterHealth.BodyTint.A / 255.0f);
                 }
             }
-            Color color = new Color(tintedColor.Multiply(brightness), tintedColor.A);
-            Color colorWithoutTint = new Color(baseColor.Multiply(brightness), baseColor.A);
+            Color color = tintedColor.MultiplyNormalized(brightness);
+            Color colorWithoutTint = baseColor.MultiplyNormalized(brightness);
             Color blankColor = new Color(brightness, brightness, brightness, 1);
             if (deadTimer > 0)
             {
@@ -815,6 +815,7 @@ namespace Barotrauma
             
             body.UpdateDrawPosition();
             float depthStep = 0.000001f;
+            float resultantScale = Scale * TextureScale;
 
             if (!hideLimb)
             {
@@ -837,7 +838,7 @@ namespace Barotrauma
                     {
                         deformSprite.Reset();
                     }
-                    body.Draw(deformSprite, cam, Vector2.One * Scale * TextureScale, color, Params.MirrorHorizontally);
+                    body.Draw(deformSprite, cam, Vector2.One * resultantScale, color, Params.MirrorHorizontally);
                 }
                 else
                 {
@@ -863,12 +864,14 @@ namespace Barotrauma
                         parameters["highlightMultiplier"] = TintHighlightMultiplier;
                         spriteBatch.SwapEffect(tintEffectParams);
                     }
-                    body.Draw(spriteBatch, activeSprite, color, null, Scale * TextureScale, Params.MirrorHorizontally, Params.MirrorVertically);
+                    body.Draw(spriteBatch, activeSprite, color, null, resultantScale, Params.MirrorHorizontally, Params.MirrorVertically);
                     if (useTintMask)
                     {
                         spriteBatch.SwapEffect(null);
                     }
                 }
+
+
                 // Handle non-exlusive, i.e. additional conditional sprites
                 foreach (var conditionalSprite in ConditionalSprites)
                 {
@@ -887,11 +890,11 @@ namespace Barotrauma
                         {
                             defSprite.Reset();
                         }
-                        body.Draw(defSprite, cam, Vector2.One * Scale * TextureScale, color, Params.MirrorHorizontally);
+                        body.Draw(defSprite, cam, Vector2.One * resultantScale, color, Params.MirrorHorizontally);
                     }
                     else
                     {
-                        body.Draw(spriteBatch, conditionalSprite.Sprite, color, depth: activeSprite.Depth - (depthStep * 50), Scale * TextureScale, Params.MirrorHorizontally, Params.MirrorVertically);
+                        body.Draw(spriteBatch, conditionalSprite.Sprite, color, depth: activeSprite.Depth - (depthStep * 50) + depthOffset, resultantScale, Params.MirrorHorizontally, Params.MirrorVertically);
                     }
                 }
             }
@@ -992,23 +995,27 @@ namespace Barotrauma
             }
             if (!Hide && onlyDrawable == null)
             {
+                //move calculations
+                var ca = (float)Math.Cos(-body.Rotation);
+                var sa = (float)Math.Sin(-body.Rotation);
                 foreach (var decorativeSprite in DecorativeSprites)
                 {
                     if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
-                    Color c = new Color(decorativeSprite.Color.R / 255f * brightness, decorativeSprite.Color.G / 255f * brightness, decorativeSprite.Color.B / 255f * brightness, decorativeSprite.Color.A / 255f);
+                    Color spriteColor = decorativeSprite.Color;
+                    spriteColor.MultiplyNormalized(brightness);
+                    //Color c = new Color(decorativeSprite.Color.R / 255f * brightness, decorativeSprite.Color.G / 255f * brightness, decorativeSprite.Color.B / 255f * brightness, decorativeSprite.Color.A / 255f);
                     if (deadTimer > 0)
                     {
-                        c = Color.Lerp(c, spriteParams.DeadColor, MathUtils.InverseLerp(0, Params.GetSprite().DeadColorTime, deadTimer));
+                        spriteColor = Color.Lerp(spriteColor, spriteParams.DeadColor, MathUtils.InverseLerp(0, Params.GetSprite().DeadColorTime, deadTimer));
                     }
-                    c = overrideColor ?? c;
+                    spriteColor = overrideColor ?? spriteColor;
                     float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
                     Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier) * Scale;
-                    var ca = (float)Math.Cos(-body.Rotation);
-                    var sa = (float)Math.Sin(-body.Rotation);
+                   
                     Vector2 transformedOffset = new Vector2(ca * offset.X + sa * offset.Y, -sa * offset.X + ca * offset.Y);
-                    decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X + transformedOffset.X, -(body.DrawPosition.Y + transformedOffset.Y)), c, decorativeSprite.Sprite.Origin,
+                    decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X + transformedOffset.X, -(body.DrawPosition.Y + transformedOffset.Y)), spriteColor, decorativeSprite.Sprite.Origin,
                         -body.Rotation + rotation, decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, spriteEffect,
-                        depth: activeSprite.Depth - depthStep);
+                        depth: activeSprite.Depth - depthStep + depthOffset);
                     depthStep += step;
                 }
                 if (damageOverlayStrength > 0.0f && DamagedSprite != null)
@@ -1017,7 +1024,7 @@ namespace Barotrauma
                         new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
                         colorWithoutTint * damageOverlayStrength, activeSprite.Origin,
                         -body.DrawRotation,
-                        Scale * TextureScale, spriteEffect, activeSprite.Depth - depthStep * Math.Max(1, WearingItems.Count * 2)); // Multiply by 2 to get rid of z-fighting with some clothing combos
+                        resultantScale, spriteEffect, activeSprite.Depth + depthOffset - depthStep * Math.Max(1, WearingItems.Count * 2)); // Multiply by 2 to get rid of z-fighting with some clothing combos
                 }
             }
 

@@ -1781,11 +1781,13 @@ namespace Barotrauma
             if (rect.Contains(PlayerInput.MousePosition))
             {
                 clicked = PlayerInput.PrimaryMouseButtonHeld();
-
+                /*
                 color = clicked ?
                     new Color((int)(color.R * 0.8f), (int)(color.G * 0.8f), (int)(color.B * 0.8f), color.A) :
                     new Color((int)(color.R * 1.2f), (int)(color.G * 1.2f), (int)(color.B * 1.2f), color.A);
+                */
 
+                color = color.MultiplyNormalized(clicked ? 0.8f : 1.2f);
                 if (!isHoldable) clicked = PlayerInput.PrimaryMouseButtonClicked();
             }
 
