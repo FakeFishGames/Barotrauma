@@ -185,16 +185,22 @@ namespace Barotrauma.Media
             if (video.sound != null && dataLen > 0)
             {
                 //TODO: reduce garbage?
-                float[] buffer = FloatArrayPool.Rent(dataLen);
 
                 try
                 {
-                    Marshal.Copy(data, buffer, 0, dataLen);
-                    video.sound.Enqueue(buffer);
+                    //NOTE we take the conversion hit to convert to normalized float here as we have allot less video's to load!
+                    short[] newBuf = new short[dataLen];
+                    Marshal.Copy(data, newBuf, 0, dataLen);
+                    float[] floatBuf = new float[dataLen];
+                    float multiplier = (1.0f / 32768.0f);
+                    for (int i = 0; i < dataLen; i++)
+                    {
+                        floatBuf[i] = newBuf[i] * multiplier;
+                    }
+                    video.sound.Enqueue(floatBuf);
                 }
                 finally
                 {
-                    FloatArrayPool.Return(buffer);
                 }
             }
         }

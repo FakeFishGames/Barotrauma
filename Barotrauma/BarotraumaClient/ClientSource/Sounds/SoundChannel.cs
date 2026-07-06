@@ -785,7 +785,7 @@ namespace Barotrauma.Sounds
                         else if (Sound.StreamsReliably)
                         {
                             streamSeekPos += readSamples;
-                            if (readSamples < STREAM_BUFFER_SIZE)
+                            if (readSamples * 2 < STREAM_BUFFER_SIZE)
                             {
                                 if (looping)
                                 {
