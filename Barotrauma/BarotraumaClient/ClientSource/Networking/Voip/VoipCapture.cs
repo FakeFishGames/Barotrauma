@@ -86,20 +86,20 @@ namespace Barotrauma.Networking
             encoder = VoipConfig.CreateEncoder();
 
             //set up capture device
-            captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, Al.FormatMonoF32, VoipConfig.BUFFER_SIZE * 5);
+            captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, Al.FormatMonoF32, VoipConfig.BUFFER_SIZE * sizeof(float) * 2);
 
             if (captureDevice == IntPtr.Zero)
             {
                 DebugConsole.NewMessage("Alc.CaptureOpenDevice attempt 1 failed: error code " + Alc.GetError(IntPtr.Zero).ToString(), Color.Orange);
                 //attempt using a smaller buffer size
-                captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, Al.FormatMonoF32, VoipConfig.BUFFER_SIZE * 2);
+                captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, Al.FormatMonoF32, VoipConfig.BUFFER_SIZE * sizeof(float));
             }
 
             if (captureDevice == IntPtr.Zero)
             {
                 DebugConsole.NewMessage("Alc.CaptureOpenDevice attempt 2 failed: error code " + Alc.GetError(IntPtr.Zero).ToString(), Color.Orange);
                 //attempt using the default device
-                captureDevice = Alc.CaptureOpenDevice("", VoipConfig.FREQUENCY, Al.FormatMonoF32, VoipConfig.BUFFER_SIZE * 2);
+                captureDevice = Alc.CaptureOpenDevice("", VoipConfig.FREQUENCY, Al.FormatMonoF32, VoipConfig.BUFFER_SIZE * sizeof(float));
             }
 
             if (captureDevice == IntPtr.Zero)
@@ -173,8 +173,8 @@ namespace Barotrauma.Networking
         }
 
         IntPtr nativeBuffer;
-        readonly short[] uncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
-        readonly short[] prevUncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
+        readonly float[] uncompressedBuffer = new float[VoipConfig.BUFFER_SIZE];
+        readonly float[] prevUncompressedBuffer = new float[VoipConfig.BUFFER_SIZE];
         bool prevCaptured = true;
         int captureTimer;
 
@@ -182,7 +182,7 @@ namespace Barotrauma.Networking
         {
             Array.Copy(uncompressedBuffer, 0, prevUncompressedBuffer, 0, VoipConfig.BUFFER_SIZE);
             Array.Clear(uncompressedBuffer, 0, VoipConfig.BUFFER_SIZE);
-            nativeBuffer = Marshal.AllocHGlobal(VoipConfig.BUFFER_SIZE * 2);
+            nativeBuffer = Marshal.AllocHGlobal(VoipConfig.BUFFER_SIZE * sizeof(float));
             try
             {
                 while (capturing)
@@ -218,8 +218,11 @@ namespace Barotrauma.Networking
                     double maxAmplitude = 0.0f;
                     for (int i = 0; i < VoipConfig.BUFFER_SIZE; i++)
                     {
-                        uncompressedBuffer[i] = (short)MathHelper.Clamp((uncompressedBuffer[i] * Gain), -short.MaxValue, short.MaxValue);
-                        double sampleVal = uncompressedBuffer[i] / (double)short.MaxValue;
+                        uncompressedBuffer[i] = MathHelper.Clamp(
+                            uncompressedBuffer[i] * Gain,
+                            -1.0f,
+                            1.0f); double sampleVal = uncompressedBuffer[i];
+
                         maxAmplitude = Math.Max(maxAmplitude, Math.Abs(sampleVal));
                     }
                     double dB = Math.Min(20 * Math.Log10(maxAmplitude), 0.0);

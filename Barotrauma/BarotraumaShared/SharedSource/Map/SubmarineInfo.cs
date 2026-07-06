@@ -182,23 +182,7 @@ namespace Barotrauma
 
         public Md5Hash MD5Hash
         {
-            /*
-                get
-                {
-                    if (hash == null)
-                    {
-                        if (hashTask == null)
-                        {
-                            XDocument doc = OpenFile(FilePath);
-                            StartHashDocTask(doc);
-                        }
-                        hashTask.Wait();
-                        hashTask = null;
-                    }
-
-                    return hash;
-                }
-                */
+  
             get
             {
                 if (hash == null)

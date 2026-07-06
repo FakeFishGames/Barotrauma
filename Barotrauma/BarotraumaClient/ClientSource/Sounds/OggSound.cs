@@ -70,11 +70,10 @@ namespace Barotrauma.Sounds
             reader.DecodedPosition = 0;
 
             int sampleCount = (int)reader.TotalSamples * reader.Channels;
-            int bufferSize = sampleCount * sizeof(float);
             //by using ArrayPool for short lived buffers or larger then 1KB allocations we don't hammer the GC!
-            float[] sampleBuffer = FloatArrayPool.RentZeroed(bufferSize);
-            float[] muffledBuffer = FloatArrayPool.RentZeroed(bufferSize);
-            int readSamples = await Task.Run(() =>  reader.ReadSamples(sampleBuffer, 0, bufferSize));
+            float[] sampleBuffer = FloatArrayPool.RentZeroed(sampleCount);
+            float[] muffledBuffer = FloatArrayPool.RentZeroed(sampleCount);
+            int readSamples = await Task.Run(() =>  reader.ReadSamples(sampleBuffer, 0, sampleCount));
             Array.Copy(sampleBuffer, muffledBuffer, readSamples);
             var playbackAmplitude = new List<float>();
             int amplitudeWindowSize = reader.Channels * AMPLITUDE_SAMPLE_COUNT;
@@ -154,7 +153,7 @@ namespace Barotrauma.Sounds
             if (!buffers.RequestAlBuffers()) { return; }
 
             Al.BufferData(buffers.AlBuffer, ALFormat, sampleBuffer,
-                sampleBuffer.Length * 2, SampleRate);
+                sampleBuffer.Length, SampleRate);
 
             int alError = Al.GetError();
             if (alError != Al.NoError)
@@ -163,7 +162,7 @@ namespace Barotrauma.Sounds
             }
 
             Al.BufferData(buffers.AlMuffledBuffer, ALFormat, muffleBuffer,
-                muffleBuffer.Length * 2, SampleRate);
+                muffleBuffer.Length, SampleRate);
 
             alError = Al.GetError();
             if (alError != Al.NoError)
