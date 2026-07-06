@@ -3,24 +3,24 @@ using OpenAL;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace Barotrauma.Sounds
 {
     sealed class OggSound : Sound
     {
-        private static readonly ArrayPool<float> FloatPool = ArrayPool<float>.Shared;
-        private static readonly ArrayPool<short> ShortPool = ArrayPool<short>.Shared;
+
 
         private readonly VorbisReader streamReader;
 
-        public long MaxStreamSamplePos => streamReader == null ? 0 : streamReader.TotalSamples * streamReader.Channels * 2;
+        public long MaxStreamSamplePos => streamReader == null ? 0 : streamReader.TotalSamples * streamReader.Channels * sizeof(float);
 
         private List<float> playbackAmplitude;
         private const int AMPLITUDE_SAMPLE_COUNT = 4410; //100ms in a 44100hz file
 
-        private short[] sampleBuffer = Array.Empty<short>();
-        private short[] muffleBuffer = Array.Empty<short>();
+        private float[] sampleBuffer = Array.Empty<float>();
+        private float[] muffleBuffer = Array.Empty<float>();
 
         private readonly double durationSeconds;
         public override double? DurationSeconds => durationSeconds;
@@ -30,7 +30,8 @@ namespace Barotrauma.Sounds
         {
             var reader = new VorbisReader(Filename);
             durationSeconds = reader.TotalTime.TotalSeconds;
-            ALFormat = reader.Channels == 1 ? Al.FormatMono16 : Al.FormatStereo16;
+
+            ALFormat = reader.Channels == 1 ? Al.FormatMonoF32 : Al.FormatStereoF32;
             SampleRate = reader.SampleRate;
 
             if (stream)
@@ -60,44 +61,37 @@ namespace Barotrauma.Sounds
         }
 
         private readonly record struct TaskResult(
-            short[] SampleBuffer,
-            short[] MuffleBuffer,
+            float[] SampleBuffer,
+            float[] MuffleBuffer,
             List<float> PlaybackAmplitude);
 
         private static async Task<TaskResult> LoadSamples(VorbisReader reader)
         {
             reader.DecodedPosition = 0;
 
-            int bufferSize = (int)reader.TotalSamples * reader.Channels;
-
-            /*
-            float[] floatBuffer = new float[bufferSize];
-            var sampleBuffer = new short[bufferSize];
-            var muffledBuffer = new short[bufferSize];
-            */
-            //by using ArrayPool for short lived buffers we don't hammer the GC!
-            float[] floatBuffer = FloatPool.Rent(bufferSize);
-            short[] sampleBuffer = ShortPool.Rent(bufferSize);
-            short[] muffledBuffer = ShortPool.Rent(bufferSize);
-            int readSamples = await Task.Run(() =>  reader.ReadSamples(floatBuffer, 0, bufferSize));
-
+            int sampleCount = (int)reader.TotalSamples * reader.Channels;
+            int bufferSize = sampleCount * sizeof(float);
+            //by using ArrayPool for short lived buffers or larger then 1KB allocations we don't hammer the GC!
+            float[] sampleBuffer = FloatArrayPool.RentZeroed(bufferSize);
+            float[] muffledBuffer = FloatArrayPool.RentZeroed(bufferSize);
+            int readSamples = await Task.Run(() =>  reader.ReadSamples(sampleBuffer, 0, bufferSize));
+            Array.Copy(sampleBuffer, muffledBuffer, readSamples);
             var playbackAmplitude = new List<float>();
-            for (int i = 0; i < bufferSize; i += reader.Channels * AMPLITUDE_SAMPLE_COUNT)
+            int amplitudeWindowSize = reader.Channels * AMPLITUDE_SAMPLE_COUNT;
+            for (int i = 0; i < sampleCount; i += amplitudeWindowSize)
             {
                 float maxAmplitude = 0.0f;
-                for (int j = i; j < i + reader.Channels * AMPLITUDE_SAMPLE_COUNT; j++)
+                int end = Math.Min(i + amplitudeWindowSize, sampleCount);
+
+                for (int j = i; j < end; j++)
                 {
-                    if (j >= bufferSize) { break; }
-                    maxAmplitude = Math.Max(maxAmplitude, Math.Abs(floatBuffer[j]));
+                    maxAmplitude = Math.Max(maxAmplitude, Math.Abs(sampleBuffer[j]));
                 }
+
                 playbackAmplitude.Add(maxAmplitude);
             }
 
-            CastBuffer(floatBuffer, sampleBuffer, readSamples);
-
-            MuffleBuffer(floatBuffer, reader.SampleRate);
-
-            CastBuffer(floatBuffer, muffledBuffer, readSamples);
+            MuffleBuffer(muffledBuffer, reader.SampleRate);
 
             return new TaskResult(sampleBuffer, muffledBuffer, playbackAmplitude);
         }
@@ -110,26 +104,31 @@ namespace Barotrauma.Sounds
             if (index >= playbackAmplitude.Count) { index = playbackAmplitude.Count - 1; }
             return playbackAmplitude[index];
         }
-
+        private int streamFloatBufferLength = 0;
         private float[] streamFloatBuffer = null;
-        public override int FillStreamBuffer(int samplePos, short[] buffer)
+        public override int FillStreamBuffer(int samplePos, float[] buffer)
         {
             if (!Stream) { throw new Exception("Called FillStreamBuffer on a non-streamed sound!"); }
             if (streamReader == null) { throw new Exception("Called FillStreamBuffer when the reader is null!"); }
 
             if (samplePos >= MaxStreamSamplePos) { return 0; }
 
-            samplePos /= streamReader.Channels * 2;
-            streamReader.DecodedPosition = samplePos;
+            int framePos = samplePos / streamReader.Channels;
+            streamReader.DecodedPosition = framePos;
 
-            if (streamFloatBuffer is null || streamFloatBuffer.Length < buffer.Length)
+            if (streamFloatBuffer is null || streamFloatBufferLength < buffer.Length)
             {
-                streamFloatBuffer = new float[buffer.Length];
+                if (streamFloatBuffer != null)
+                {
+                    FloatArrayPool.Return(streamFloatBuffer);
+                }
+                streamFloatBuffer = FloatArrayPool.RentZeroed(buffer.Length);
+                streamFloatBufferLength = buffer.Length;
             }
             int readSamples = streamReader.ReadSamples(streamFloatBuffer, 0, buffer.Length);
             //MuffleBuffer(floatBuffer, reader.Channels);
-            CastBuffer(streamFloatBuffer, buffer, readSamples);
-
+            //CastBuffer(streamFloatBuffer, buffer, readSamples);
+            Array.Copy(streamFloatBuffer, buffer, readSamples); 
             return readSamples;
         }
 
@@ -155,7 +154,7 @@ namespace Barotrauma.Sounds
             if (!buffers.RequestAlBuffers()) { return; }
 
             Al.BufferData(buffers.AlBuffer, ALFormat, sampleBuffer,
-                sampleBuffer.Length * sizeof(short), SampleRate);
+                sampleBuffer.Length * 2, SampleRate);
 
             int alError = Al.GetError();
             if (alError != Al.NoError)
@@ -164,7 +163,7 @@ namespace Barotrauma.Sounds
             }
 
             Al.BufferData(buffers.AlMuffledBuffer, ALFormat, muffleBuffer,
-                muffleBuffer.Length * sizeof(short), SampleRate);
+                muffleBuffer.Length * 2, SampleRate);
 
             alError = Al.GetError();
             if (alError != Al.NoError)
@@ -178,6 +177,8 @@ namespace Barotrauma.Sounds
             if (Stream)
             {
                 streamReader?.Dispose();
+                FloatArrayPool.Return(sampleBuffer);
+                FloatArrayPool.Return(muffleBuffer);
             }
 
             base.Dispose();

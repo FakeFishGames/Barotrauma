@@ -103,7 +103,14 @@ namespace Barotrauma.Sounds
             {
                 if (Disabled) { return; }
                 if (Math.Abs(ListenerGain - value) < 0.001f) { return; }
-                listenerGain = value;
+                if (float.IsNaN(value))
+                {
+                    listenerGain = 0.5f;
+                }
+                else
+                {
+                    listenerGain = value;
+                }
                 Al.Listenerf(Al.Gain, listenerGain);
                 int alError = Al.GetError();
                 if (alError != Al.NoError && !GameMain.IsExiting)

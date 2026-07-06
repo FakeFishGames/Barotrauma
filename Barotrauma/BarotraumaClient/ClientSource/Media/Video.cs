@@ -1,13 +1,14 @@
-﻿using System;
-using Barotrauma.IO;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Linq;
-using System.Runtime.InteropServices;
+﻿using Barotrauma.IO;
+using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Barotrauma.Sounds;
+using System;
+using System.Buffers;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
 
 namespace Barotrauma.Media
 {
@@ -184,9 +185,17 @@ namespace Barotrauma.Media
             if (video.sound != null && dataLen > 0)
             {
                 //TODO: reduce garbage?
-                short[] newBuf = new short[dataLen];
-                Marshal.Copy(data, newBuf, 0, dataLen);
-                video.sound.Enqueue(newBuf);
+                float[] buffer = FloatArrayPool.Rent(dataLen);
+
+                try
+                {
+                    Marshal.Copy(data, buffer, 0, dataLen);
+                    video.sound.Enqueue(buffer);
+                }
+                finally
+                {
+                    FloatArrayPool.Return(buffer);
+                }
             }
         }
     }

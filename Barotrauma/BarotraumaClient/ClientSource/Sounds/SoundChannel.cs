@@ -81,7 +81,7 @@ namespace Barotrauma.Sounds
     class SoundChannel : IDisposable
     {
         private const int STREAM_BUFFER_SIZE = 8820;
-        private readonly short[] streamShortBuffer;
+        private readonly float[] streamFloatBuffer;
 
         private string debugName = "SoundChannel";
 
@@ -561,7 +561,7 @@ namespace Barotrauma.Sounds
                             throw new Exception("Failed to set stream looping state: " + debugName + ", " + Al.GetErrorString(alError));
                         }
 
-                        streamShortBuffer = new short[STREAM_BUFFER_SIZE];
+                        streamFloatBuffer = new float[STREAM_BUFFER_SIZE];
 
                         streamBuffers = new uint[4];
                         unqueuedBuffers = new uint[4];
@@ -749,14 +749,16 @@ namespace Barotrauma.Sounds
                     for (int k = 0; k < iterCount; k++)
                     {
                         int index = queueStartIndex;
-                        short[] buffer = streamShortBuffer;
+                        float[] buffer = streamFloatBuffer;
                         int readSamples = Sound.FillStreamBuffer(streamSeekPos, buffer);
                         float readAmplitude = 0.0f;
 
-                        for (int i = 0; i < Math.Min(readSamples, buffer.Length); i++)
+                        float max = 0f;
+
+                        for (int i = 0; i < readSamples; i++)
                         {
-                            float sampleF = ((float)buffer[i]) / ((float)short.MaxValue);
-                            readAmplitude = Math.Max(readAmplitude, Math.Abs(sampleF));
+                            float v = Math.Abs(buffer[i]);
+                            if (v > max) max = v;
                         }
 
                         if (FilledByNetwork)
@@ -782,8 +784,8 @@ namespace Barotrauma.Sounds
                         }
                         else if (Sound.StreamsReliably)
                         {
-                            streamSeekPos += readSamples * 2;
-                            if (readSamples * 2 < STREAM_BUFFER_SIZE)
+                            streamSeekPos += readSamples;
+                            if (readSamples < STREAM_BUFFER_SIZE)
                             {
                                 if (looping)
                                 {
@@ -800,7 +802,7 @@ namespace Barotrauma.Sounds
                         {
                             streamBufferAmplitudes[index] = readAmplitude;
 
-                            Al.BufferData<short>(streamBuffers[index], Sound.ALFormat, buffer, readSamples * 2, Sound.SampleRate);
+                            Al.BufferData(streamBuffers[index], Sound.ALFormat, buffer, readSamples*sizeof(float), Sound.SampleRate);
 
                             alError = Al.GetError();
                             if (alError != Al.NoError)

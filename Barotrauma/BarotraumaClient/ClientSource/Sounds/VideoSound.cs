@@ -9,7 +9,7 @@ namespace Barotrauma.Sounds
     class VideoSound : Sound
     {
         private readonly object mutex;
-        private readonly Queue<short[]> sampleQueue;
+        private readonly Queue<float[]> sampleQueue;
 
         private SoundChannel soundChannel;
         private readonly Video video;
@@ -18,10 +18,10 @@ namespace Barotrauma.Sounds
 
         public VideoSound(SoundManager owner, string filename, int sampleRate, int channelCount, Video vid) : base(owner, filename, true, false)
         {
-            ALFormat = channelCount == 2 ? Al.FormatStereo16 : Al.FormatMono16;
+            ALFormat = channelCount == 2 ? Al.FormatStereoF32 : Al.FormatMonoF32;
             SampleRate = sampleRate;
 
-            sampleQueue = new Queue<short[]>();
+            sampleQueue = new Queue<float[]>();
             mutex = new object();
 
             soundChannel = null;
@@ -44,7 +44,7 @@ namespace Barotrauma.Sounds
             return retVal;
         }
 
-        public void Enqueue(short[] buf)
+        public void Enqueue(float[] buf)
         {
             lock (mutex)
             {
@@ -86,15 +86,15 @@ namespace Barotrauma.Sounds
             return Play(BaseGain);
         }
 
-        public override int FillStreamBuffer(int samplePos, short[] buffer)
+        public override int FillStreamBuffer(int samplePos, float[] buffer)
         {
             if (!video.IsPlaying) return -1;
 
-            short[] buf;
+            float[] buf;
             int readAmount = 0;
             lock (mutex)
             {
-                while (readAmount<buffer.Length)
+                while (readAmount < buffer.Length)
                 {
                     if (sampleQueue.Count == 0) break;
                     buf = sampleQueue.Peek();

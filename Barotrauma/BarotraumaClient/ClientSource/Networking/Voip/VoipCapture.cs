@@ -86,20 +86,20 @@ namespace Barotrauma.Networking
             encoder = VoipConfig.CreateEncoder();
 
             //set up capture device
-            captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, Al.FormatMono16, VoipConfig.BUFFER_SIZE * 5);
+            captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, Al.FormatMonoF32, VoipConfig.BUFFER_SIZE * 5);
 
             if (captureDevice == IntPtr.Zero)
             {
                 DebugConsole.NewMessage("Alc.CaptureOpenDevice attempt 1 failed: error code " + Alc.GetError(IntPtr.Zero).ToString(), Color.Orange);
                 //attempt using a smaller buffer size
-                captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, Al.FormatMono16, VoipConfig.BUFFER_SIZE * 2);
+                captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, Al.FormatMonoF32, VoipConfig.BUFFER_SIZE * 2);
             }
 
             if (captureDevice == IntPtr.Zero)
             {
                 DebugConsole.NewMessage("Alc.CaptureOpenDevice attempt 2 failed: error code " + Alc.GetError(IntPtr.Zero).ToString(), Color.Orange);
                 //attempt using the default device
-                captureDevice = Alc.CaptureOpenDevice("", VoipConfig.FREQUENCY, Al.FormatMono16, VoipConfig.BUFFER_SIZE * 2);
+                captureDevice = Alc.CaptureOpenDevice("", VoipConfig.FREQUENCY, Al.FormatMonoF32, VoipConfig.BUFFER_SIZE * 2);
             }
 
             if (captureDevice == IntPtr.Zero)
@@ -321,7 +321,7 @@ namespace Barotrauma.Networking
 
         private Sound overrideSound;
         private int overridePos;
-        private readonly short[] overrideBuf = new short[VoipConfig.BUFFER_SIZE];
+        private readonly float[] overrideBuf = new float[VoipConfig.BUFFER_SIZE];
 
         private void FillBuffer()
         {

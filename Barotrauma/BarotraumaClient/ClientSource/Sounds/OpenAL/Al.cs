@@ -82,8 +82,10 @@ namespace OpenAL
         public const int Undetermined = 0x1030;
         public const int FormatMono8 = 0x1100;
         public const int FormatMono16 = 0x1101;
+        public const int FormatMonoF32 = 0x10010;
         public const int FormatStereo8 = 0x1102;
         public const int FormatStereo16 = 0x1103;
+        public const int FormatStereoF32 = 0x10011;
         public const int ReferenceDistance = 0x1020;
         public const int RolloffFactor = 0x1021;
         public const int ConeOuterGain = 0x1022;
