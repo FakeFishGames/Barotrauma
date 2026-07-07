@@ -29,7 +29,7 @@ namespace Barotrauma.Networking
 
         int BitPosition { get; set; }
         int BytePosition { get; }
-        byte[] Buffer { get; }
+        PooledBuffer Buffer { get; }
         int LengthBits { get; set; }
         int LengthBytes { get; }
 

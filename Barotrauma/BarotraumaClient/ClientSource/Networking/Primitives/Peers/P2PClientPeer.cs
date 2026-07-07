@@ -166,7 +166,7 @@ namespace Barotrauma.Networking
                 if (!completeMessageOption.TryUnwrap(out var completeMessage)) { return; }
 
                 int completeMessageLengthBits = completeMessage.Length * 8;
-                incomingDataMessages.Add(new ReadWriteMessage(completeMessage.ToArray(), 0, completeMessageLengthBits, copyBuf: false));
+                incomingDataMessages.Add(new ReadWriteMessage(new PooledBuffer(completeMessage), 0, completeMessageLengthBits, copyBuf: false));
             }
             else if (packetHeader.IsHeartbeatMessage() || packetHeader.IsDoSProtectionMessage())
             {
@@ -269,7 +269,7 @@ namespace Barotrauma.Networking
         {
             if (!isActive) { return; }
 
-            byte[] bufAux = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);
+            PooledBuffer bufAux = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);
             if (bufAux.Length > MessageFragment.MaxSize)
             {
                 var fragments = fragmenter.FragmentMessage(msg.Buffer.AsSpan()[..msg.LengthBytes]);

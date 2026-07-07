@@ -73,10 +73,9 @@ sealed class SteamListenSocket : P2PSocket
             if (!identity.IsSteamId || data == IntPtr.Zero) { return; }
             var endpoint = new SteamP2PEndpoint(new SteamId((Steamworks.SteamId)identity));
 
-            var dataArray = new byte[size];
-            Marshal.Copy(source: data, destination: dataArray, startIndex: 0, length: size);
+            
 
-            callbacks.OnData(endpoint, new ReadWriteMessage(dataArray, bitPos: 0, lBits: size * 8, copyBuf: false));
+            callbacks.OnData(endpoint, new ReadWriteMessage(new PooledBuffer(data,size), bitPos: 0, lBits: size * 8, copyBuf: false));
 
             if (socket?.Type is OwnerOrClient.Owner)
             {

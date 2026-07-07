@@ -220,7 +220,7 @@ readonly ref struct SegmentTableReader<T> where T : struct
 
         public int BytePosition => BitPosition / 8;
 
-        public byte[] Buffer => underlyingMsg.Buffer;
+        public PooledBuffer Buffer => underlyingMsg.Buffer;
 
         public int LengthBits
         {

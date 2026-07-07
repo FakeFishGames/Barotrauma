@@ -45,10 +45,10 @@ namespace Barotrauma.Networking
         private static int readIncOffset;
         private static int readIncTotal;
 
-        private static ConcurrentQueue<byte[]> msgsToWrite;
+        private static ConcurrentQueue<PooledBuffer> msgsToWrite;
         private static ConcurrentQueue<string> errorsToWrite;
 
-        private static ConcurrentQueue<byte[]> msgsToRead;
+        private static ConcurrentQueue<PooledBuffer> msgsToRead;
 
         private static Thread readThread;
         private static Thread writeThread;
@@ -64,10 +64,10 @@ namespace Barotrauma.Networking
 
             readTempBytes = new byte[ReadBufferSize];
 
-            msgsToWrite = new ConcurrentQueue<byte[]>();
+            msgsToWrite = new ConcurrentQueue<PooledBuffer>();
             errorsToWrite = new ConcurrentQueue<string>();
             
-            msgsToRead = new ConcurrentQueue<byte[]>();
+            msgsToRead = new ConcurrentQueue<PooledBuffer>();
 
             readCancellationToken = new CancellationTokenSource();
 
@@ -211,7 +211,7 @@ namespace Barotrauma.Networking
                                 | (msgLengthSpan[3] << 24);
                 WriteStatus writeStatus = (WriteStatus)msgLengthSpan[4];
 
-                byte[] msg = msgLength > 0 ? new byte[msgLength] : Array.Empty<byte>();
+                PooledBuffer msg = msgLength > 0 ? new PooledBuffer(msgLength) : new PooledBuffer(0);
                 if (msg.Length > 0 && !readBytes(msg.AsSpan())) { status = StatusEnum.ShutDown; break; }
 
                 switch (writeStatus)
@@ -314,7 +314,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public static void Write(byte[] msg)
+        public static void Write(PooledBuffer msg)
         {
             if (HasShutDown) { return; }
 
@@ -331,7 +331,7 @@ namespace Barotrauma.Networking
         private static readonly Stopwatch stopwatch = new Stopwatch();
         private const int MaxMilliseconds = 8;
 
-        public static IEnumerable<byte[]> Read()
+        public static IEnumerable<PooledBuffer> Read()
         {
             stopwatch.Restart();
 
@@ -357,7 +357,7 @@ namespace Barotrauma.Networking
             stopwatch.Stop();
         }
 
-        private static bool ReadSingleMessage(out byte[] msg)
+        private static bool ReadSingleMessage(out PooledBuffer msg)
         {
             if (HasShutDown) { msg = null; return false; }
 

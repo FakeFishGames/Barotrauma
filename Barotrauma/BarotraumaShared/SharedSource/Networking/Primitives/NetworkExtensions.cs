@@ -42,7 +42,7 @@ namespace Barotrauma.Networking
 
         public static IReadMessage ToReadMessage(this NetIncomingMessage msg)
         {
-            return new ReadWriteMessage(msg.Data, 0, msg.LengthBits, copyBuf: false);
+            return new ReadWriteMessage(new PooledBuffer(msg.Data), 0, msg.LengthBits, copyBuf: false);
         }
     }
 

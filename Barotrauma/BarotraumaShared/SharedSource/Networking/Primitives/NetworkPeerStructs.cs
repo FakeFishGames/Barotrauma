@@ -74,7 +74,7 @@ namespace Barotrauma.Networking
     [NetworkSerialize(ArrayMaxSize = ushort.MaxValue)]
     internal struct PeerPacketMessage : INetSerializableStruct
     {
-        public byte[] Buffer;
+        public PooledBuffer Buffer;
         public readonly int Length => Buffer.Length;
 
         public readonly IReadMessage GetReadMessageUncompressed() => new ReadWriteMessage(Buffer, 0, Length * 8, copyBuf: false);

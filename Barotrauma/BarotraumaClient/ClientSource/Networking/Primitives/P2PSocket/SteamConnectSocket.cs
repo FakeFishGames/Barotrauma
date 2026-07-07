@@ -17,10 +17,7 @@ sealed class SteamConnectSocket : P2PSocket
 
         public override void OnMessage(IntPtr data, int size, long messageNum, long recvTime, int channel)
         {
-            var dataArray = new byte[size];
-            Marshal.Copy(source: data, destination: dataArray, startIndex: 0, length: size);
-
-            callbacks.OnData(endpoint, new ReadWriteMessage(dataArray, bitPos: 0, lBits: size * 8, copyBuf: false));
+            callbacks.OnData(endpoint, new ReadWriteMessage(new PooledBuffer(data,size), bitPos: 0, lBits: size * 8, copyBuf: false));
         }
 
         public override void OnDisconnected(Steamworks.Data.ConnectionInfo info)

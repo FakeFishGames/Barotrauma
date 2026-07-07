@@ -40,7 +40,7 @@ sealed class EosP2PSocket : P2PSocket
         foreach (var msg in eosSocket.GetMessageBatch())
         {
             EosP2PEndpoint endpoint = new EosP2PEndpoint(msg.Sender);
-            callbacks.OnData(endpoint, new ReadWriteMessage(msg.Buffer, 0, msg.ByteLength * 8, false));
+            callbacks.OnData(endpoint, new ReadWriteMessage(new PooledBuffer(msg.Buffer), 0, msg.ByteLength * 8, false));
 
             if (Type is OwnerOrClient.Owner)
             {

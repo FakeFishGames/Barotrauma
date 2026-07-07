@@ -319,9 +319,9 @@ namespace Barotrauma.Networking
             }
         }
 
-        private static byte[] GetRemainingBytes(IReadMessage msg)
+        private static Span<byte> GetRemainingBytes(IReadMessage msg)
         {
-            return msg.Buffer[msg.BytePosition..msg.LengthBytes];
+            return msg.Buffer.AsSpanRange(msg.BytePosition,msg.LengthBytes);
         }
         
         private void HandleMessageForRemotePeer(PeerPacketHeaders peerPacketHeaders, P2PEndpoint recipientEndpoint, IReadMessage inc)
@@ -360,7 +360,7 @@ namespace Barotrauma.Networking
                     LobbyID = 0,
                     Message = new PeerPacketMessage
                     {
-                        Buffer = GetRemainingBytes(inc)
+                        Buffer = new PooledBuffer(GetRemainingBytes(inc))
                     }
                 };
 
@@ -368,7 +368,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                byte[] userMessage = GetRemainingBytes(inc);
+                PooledBuffer userMessage = new PooledBuffer(GetRemainingBytes(inc));
                 outMsg.WriteBytes(userMessage, 0, userMessage.Length);
             }
 
@@ -507,7 +507,7 @@ namespace Barotrauma.Networking
             if (!isActive) { return; }
 
             IWriteMessage msgToSend = new WriteOnlyMessage();
-            byte[] msgData = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);
+            PooledBuffer msgData = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);
             msgToSend.WriteNetSerializableStruct(new P2POwnerToServerHeader
             {
                 EndpointStr = selfPrimaryEndpoint.StringRepresentation,
@@ -533,9 +533,7 @@ namespace Barotrauma.Networking
 
         private static void ForwardToServerProcess(IWriteMessage msg)
         {
-            byte[] bufToSend = new byte[msg.LengthBytes];
-            msg.Buffer[..msg.LengthBytes].CopyTo(bufToSend.AsSpan());
-            ChildServerRelay.Write(bufToSend);
+            ChildServerRelay.Write(msg.Buffer);
         }
 
         private void ForwardToRemotePeer(DeliveryMethod deliveryMethod, P2PEndpoint recipient, IWriteMessage outMsg)

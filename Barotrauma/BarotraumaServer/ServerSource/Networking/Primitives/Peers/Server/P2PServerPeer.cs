@@ -73,7 +73,7 @@ namespace Barotrauma.Networking
 
             try
             {
-                foreach (byte[] incBuf in ChildServerRelay.Read())
+                foreach (PooledBuffer incBuf in ChildServerRelay.Read())
                 {
                     P2PEndpoint? senderEndpoint = null;
                     try
@@ -205,7 +205,7 @@ namespace Barotrauma.Networking
                         var completeMessageOption = connectedClient.Defragmenter.ProcessIncomingFragment(fragment);
                         if (!completeMessageOption.TryUnwrap(out var completeMessage)) { return; }
 
-                        IReadMessage msg = new ReadOnlyMessage(completeMessage.ToArray(), false, 0, completeMessage.Length, connectedClient.Connection);
+                        IReadMessage msg = new ReadOnlyMessage(new PooledBuffer(completeMessage), false, 0, completeMessage.Length, connectedClient.Connection);
                         callbacks.OnMessageReceived.Invoke(connectedClient.Connection, msg);
                     }
                     else
@@ -316,7 +316,7 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError($"Tried to send message to unauthenticated connection: {p2pConn.AccountInfo.AccountId}");
                 return;
             }
-            byte[] bufAux = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);
+            PooledBuffer bufAux = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);
 
             if (bufAux.Length > MessageFragment.MaxSize && conn != OwnerConnection)
             {
@@ -404,9 +404,8 @@ namespace Barotrauma.Networking
 
         private static void ForwardToOwnerProcess(IWriteMessage msg)
         {
-            byte[] bufToSend = (byte[])msg.Buffer.Clone();
-            Array.Resize(ref bufToSend, msg.LengthBytes);
-            ChildServerRelay.Write(bufToSend);
+            msg.Buffer.Resize(msg.LengthBytes);
+            ChildServerRelay.Write(msg.Buffer);
         }
 
         protected override void ProcessAuthTicket(ClientAuthTicketAndVersionPacket packet, PendingClient pendingClient)
