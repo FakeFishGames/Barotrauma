@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Barotrauma
 {
@@ -13,9 +15,29 @@ namespace Barotrauma
     /// </summary>
     public static class ArrayPoolBase<T>
     {
+        
         // Using the shared pool which is thread-safe and optimized for general use.
         private static readonly ArrayPool<T> Pool = ArrayPool<T>.Shared;
 
+        private static readonly BlockingCollection<T[]> BufferClearQueue = new();
+
+        private static readonly Thread BufferClearThread = new Thread(() =>
+        {
+            foreach (T[] buffer in BufferClearQueue.GetConsumingEnumerable())
+            {
+                Array.Clear(buffer, 0, buffer.Length);
+                Pool.Return(buffer);
+            }
+        })
+        {
+            IsBackground = true,
+            Name = $"ArrayPoolClearThread<{typeof(T).Name}>"
+        };
+
+        static ArrayPoolBase()
+        {
+            BufferClearThread.Start();
+        }
         /// <summary>
         /// Rents a buffer of at least the specified size. 
         /// Note: The buffer is not guaranteed to be empty.
@@ -26,24 +48,18 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Rents a buffer and ensures it is cleared before use.
-        /// Useful if the logic depends on default-initialized values.
-        /// </summary>
-        public static T[] RentZeroed(int size)
-        {
-            T[] buffer = Pool.Rent(size);
-            Array.Clear(buffer, 0, size);
-            return buffer;
-        }
-
-        /// <summary>
         /// Returns the buffer to the pool for future reuse.
         /// Clears the array to prevent memory leaks (sensitive data) 
         /// and avoid accidental cross-contamination.
         /// </summary>
         public static void Return(T[] buffer)
         {
-            Pool.Return(buffer, clearArray: true);
+            if (buffer == null)
+            {
+                return;
+            }
+
+            BufferClearQueue.Add(buffer);
         }
 
         /// <summary>
@@ -93,11 +109,7 @@ namespace Barotrauma
         /// Note: The buffer is not guaranteed to be empty.
         /// </summary>
         public static float[] Rent(int size) => ArrayPoolBase<float>.Rent(size);
-        /// <summary>
-        /// Rents a buffer and ensures it is cleared before use.
-        /// Useful if the logic depends on default-initialized values.
-        /// </summary>
-        public static float[] RentZeroed(int size) => ArrayPoolBase<float>.RentZeroed(size);
+       
         /// <summary>
         /// Returns the buffer to the pool for future reuse.
         /// Clears the array to prevent memory leaks (sensitive data) 
@@ -129,11 +141,7 @@ namespace Barotrauma
         /// Note: The buffer is not guaranteed to be empty.
         /// </summary>
         public static byte[] Rent(int size) => ArrayPoolBase<byte>.Rent(size);
-        /// <summary>
-        /// Rents a buffer and ensures it is cleared before use.
-        /// Useful if the logic depends on default-initialized values.
-        /// </summary>
-        public static byte[] RentZeroed(int size) => ArrayPoolBase<byte>.RentZeroed(size);
+
         /// <summary>
         /// Returns the buffer to the pool for future reuse.
         /// Clears the array to prevent memory leaks (sensitive data) 

@@ -526,7 +526,7 @@ namespace Barotrauma.Networking
                     UInt16 characterStateID = msg.ReadUInt16();
 
                     ReadWriteMessage buffer = new ReadWriteMessage();
-                    byte[] temp = msg.ReadBytes(msgLength - 2);
+                    PooledBuffer temp = msg.ReadBytes(msgLength - 2);
                     buffer.WriteBytes(temp, 0, msgLength - 2);
                     buffer.BitPosition = 0;
                     BufferEvent(

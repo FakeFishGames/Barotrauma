@@ -401,8 +401,8 @@ namespace Barotrauma.Networking
                 return retval;
             }
 
-            byte[] bytes = ReadBytes(buf, ref bitPos, byteLen);
-            return Encoding.UTF8.GetString(bytes, 0, bytes.Length);
+            PooledBuffer bytes = ReadBytes(buf, ref bitPos, byteLen);
+            return Encoding.UTF8.GetString(bytes, 0, byteLen);
         }
 
         internal static int ReadRangedInteger(PooledBuffer buf, ref int bitPos, int min, int max)
@@ -424,9 +424,9 @@ namespace Barotrauma.Networking
             return min + range * intVal / maxInt;
         }
 
-        internal static byte[] ReadBytes(PooledBuffer buf, ref int bitPos, int numberOfBytes)
+        internal static PooledBuffer ReadBytes(PooledBuffer buf, ref int bitPos, int numberOfBytes)
         {
-            byte[] retval = new byte[numberOfBytes];
+            PooledBuffer retval = new PooledBuffer(numberOfBytes);
             NetBitWriter.ReadBytes(buf, numberOfBytes, bitPos, retval, 0);
             bitPos += 8 * numberOfBytes;
             return retval;
@@ -556,7 +556,7 @@ namespace Barotrauma.Networking
             MsgWriter.WriteRangedSingle(ref buf, ref seekPos, ref lengthBits, val, min, max, bitCount);
         }
 
-        public void WriteBytes(byte[] val, int startPos, int length)
+        public void WriteBytes(PooledBuffer val, int startPos, int length)
         {
             MsgWriter.WriteBytes(ref buf, ref seekPos, ref lengthBits, val, startPos, length);
         }
@@ -654,17 +654,6 @@ namespace Barotrauma.Networking
                         Buffer = new PooledBuffer(output.ToArray());
                     }
                 }
-                /*
-                try
-                {
-                    Array.Copy(decompressedData, 0, Buffer, 0, decompressedData.Length);
-                }
-                catch (ArgumentException e)
-                {
-                    throw new ArgumentException(
-                        $"Failed to copy the incoming compressed buffer. Source buffer length: {decompressedData.Length}, start position: {0}, length: {decompressedData.Length}, destination buffer length: {Buffer.Length}.", e);
-                }
-                */
                 lengthBits = Buffer.Length * 8;
                 DebugConsole.Log("Decompressing message: " + byteLength + " to " + LengthBytes);
             }
@@ -778,7 +767,7 @@ namespace Barotrauma.Networking
             return MsgReader.ReadRangedSingle(Buffer, ref seekPos, min, max, bitCount);
         }
 
-        public byte[] ReadBytes(int numberOfBytes)
+        public PooledBuffer ReadBytes(int numberOfBytes)
         {
             return MsgReader.ReadBytes(Buffer, ref seekPos, numberOfBytes);
         }
@@ -922,7 +911,7 @@ namespace Barotrauma.Networking
             MsgWriter.WriteRangedSingle(ref buf, ref seekPos, ref lengthBits, val, min, max, bitCount);
         }
 
-        public void WriteBytes(byte[] val, int startPos, int length)
+        public void WriteBytes(PooledBuffer val, int startPos, int length)
         {
             MsgWriter.WriteBytes(ref buf, ref seekPos, ref lengthBits, val, startPos, length);
         }
@@ -1019,7 +1008,7 @@ namespace Barotrauma.Networking
             return MsgReader.ReadRangedSingle(buf, ref seekPos, min, max, bitCount);
         }
 
-        public byte[] ReadBytes(int numberOfBytes)
+        public PooledBuffer ReadBytes(int numberOfBytes)
         {
             return MsgReader.ReadBytes(buf, ref seekPos, numberOfBytes);
         }

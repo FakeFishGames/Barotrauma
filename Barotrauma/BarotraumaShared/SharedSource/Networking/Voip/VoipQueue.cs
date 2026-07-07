@@ -6,7 +6,7 @@ namespace Barotrauma.Networking
     {
         public const int BUFFER_COUNT = 8;
         protected int[] bufferLengths;
-        protected byte[][] buffers;
+        protected PooledBuffer[] buffers;
         protected int newestBufferInd;
         protected bool firstRead;
 
@@ -70,10 +70,10 @@ namespace Barotrauma.Networking
             BufferToQueue = new byte[VoipConfig.MAX_COMPRESSED_SIZE];
             newestBufferInd = BUFFER_COUNT - 1;
             bufferLengths = new int[BUFFER_COUNT];
-            buffers = new byte[BUFFER_COUNT][];
+            buffers = new PooledBuffer[BUFFER_COUNT];
             for (int i = 0; i < BUFFER_COUNT; i++)
             {
-                buffers[i] = new byte[VoipConfig.MAX_COMPRESSED_SIZE];
+                buffers[i] = new PooledBuffer(VoipConfig.MAX_COMPRESSED_SIZE);
             }
             QueueID = id;
             CanSend = canSend;

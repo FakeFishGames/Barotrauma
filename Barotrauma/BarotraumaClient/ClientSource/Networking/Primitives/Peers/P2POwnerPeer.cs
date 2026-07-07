@@ -39,7 +39,7 @@ namespace Barotrauma.Networking
             public Option<DisconnectInfo> PendingDisconnect;
             public AuthenticationStatus AuthStatus;
 
-            public readonly record struct UnauthedMessage(byte[] Bytes, int LengthBytes);
+            public readonly record struct UnauthedMessage(PooledBuffer Bytes, int LengthBytes);
 
             public readonly List<UnauthedMessage> UnauthedMessages;
 

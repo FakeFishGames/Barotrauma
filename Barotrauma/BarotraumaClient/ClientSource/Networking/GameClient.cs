@@ -2185,7 +2185,7 @@ namespace Barotrauma.Networking
                             UInt16 updateID = inc.ReadUInt16();
 
                             UInt16 settingsLen = inc.ReadUInt16();
-                            byte[] settingsData = inc.ReadBytes(settingsLen);
+                            PooledBuffer settingsData = inc.ReadBytes(settingsLen);
 
                             bool isInitialUpdate = inc.ReadBoolean();
                             DebugConsole.Log($"Received {(isInitialUpdate ? "initial" : string.Empty)} lobby update ID: {updateID}, last ID: {GameMain.NetLobbyScreen.LastUpdateID}.");
