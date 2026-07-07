@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
 
@@ -151,7 +153,7 @@ namespace Barotrauma
         /// </summary>
         public static TResult RentImmediate<TResult>(int size, Func<byte[], TResult> func) => ArrayPoolBase<byte>.RentImmediate(size, func);
     }
-    public class PooledBuffer : IDisposable
+    public class PooledBuffer : IDisposable, IEnumerable<byte>
     {
         public byte[] Array { get; private set; }
         public int Length { get; private set; }
@@ -236,8 +238,16 @@ namespace Barotrauma
                 _disposed = true;
             }
         }
+        public IEnumerator<byte> GetEnumerator()
+        {
+            // Use the Span to iterate only over the valid 'Length' of the buffer
+            for (int i = 0; i < Array.Length; i++)
+            {
+                yield return Array[i];
+            }
+        }
 
-        // The Finalizer (Destructor)
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         ~PooledBuffer()
         {
             Dispose(false);

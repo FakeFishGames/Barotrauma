@@ -188,7 +188,11 @@ namespace Barotrauma
             { type => IsOfGenericType(type, typeof(ImmutableArray<>)), CreateImmutableArrayBehavior },
 
             // Option
-            { type => IsOfGenericType(type, typeof(Option<>)), CreateOptionBehavior }
+            { type => IsOfGenericType(type, typeof(Option<>)), CreateOptionBehavior },
+
+            //PooledBuffer
+            { type => type == typeof(PooledBuffer), CreatePooledBufferBehavior }
+
         }.ToImmutableDictionary();
 
         /// <param name="behaviorGenericParam">The type that the behavior handles</param>
@@ -227,6 +231,13 @@ namespace Barotrauma
                 arrayType.GetElementType()!,
                 ReadArray<object>,
                 WriteArray<object>);
+
+        private static IReadWriteBehavior CreatePooledBufferBehavior(Type arrayType) =>
+            CreateBehavior(
+                typeof(PooledBuffer),
+                typeof(PooledBuffer), // funcGenericParam matches
+                ReadPooledBuffer<byte>,     // Matches ReadDelegate<PooledBuffer>
+                WritePooledBuffer<byte>);
 
         private static IReadWriteBehavior CreateINetSerializableStructBehavior(Type structType) =>
             CreateBehavior(
@@ -519,7 +530,36 @@ namespace Barotrauma
             WriteSingle(x, attribute, msg, bitField);
             WriteSingle(y, attribute, msg, bitField);
         }
+        private static PooledBuffer ReadPooledBuffer<T>(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) where T : notnull
+        {
+            int length = bitField.ReadInteger(0, attribute.ArrayMaxSize);
+            PooledBuffer buffer = new PooledBuffer(length);
+            
+            if (!TryFindBehavior(out ReadWriteBehavior<byte> behavior))
+            {
+                throw new InvalidOperationException($"Could not find suitable behavior for type {typeof(byte)} in {nameof(ReadArray)}");
+            }
 
+            for (int i = 0; i < length; i++)
+            {
+                buffer[i] = behavior.ReadActionDirect(inc, attribute, bitField);
+            }
+            return buffer;
+        }
+        private static void WritePooledBuffer<T>(PooledBuffer buffer, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) where T : notnull
+        {
+            bitField.WriteInteger(buffer.Length, 0, attribute.ArrayMaxSize);
+
+            if (!TryFindBehavior(out ReadWriteBehavior<byte> behavior))
+            {
+                throw new InvalidOperationException($"Could not find suitable behavior for type {typeof(byte)} in {nameof(WriteArray)}");
+            }
+
+            foreach (byte o in buffer)
+            {
+                behavior.WriteActionDirect(o, attribute, msg, bitField);
+            }
+        }
         private static readonly Range<Int64> ValidTickRange
             = new Range<Int64>(
                 start: DateTime.MinValue.Ticks,
