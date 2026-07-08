@@ -45,12 +45,22 @@ namespace Barotrauma
         public static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 10000.0f);
         //position of the "actual submarine" which is rendered wherever the SubmarineBody is 
         //should be in an unreachable place
+        private Vector2 _hiddenSubPosition;
         public Vector2 HiddenSubPosition
+        {
+            get => _hiddenSubPosition;
+            private set
+            {
+                _hiddenSubPosition = value;
+                // Update the DrawOffset based on the new HiddenSubPosition and your existing DrawPosition
+                DrawOffset = _hiddenSubPosition + DrawPosition;
+            }
+        }
+        public Vector2 DrawOffset
         {
             get;
             private set;
         }
-
         public ushort IdOffset
         {
             get;
@@ -302,11 +312,15 @@ namespace Barotrauma
             return false;
         }
 
-
+        private Vector2 _drawPosition;
         public new Vector2 DrawPosition
         {
-            get;
-            private set;
+            get => _drawPosition;
+            private set
+            {
+                _drawPosition = value;
+                DrawOffset = HiddenSubPosition + _drawPosition;
+            }
         }
 
         public override Vector2 SimPosition

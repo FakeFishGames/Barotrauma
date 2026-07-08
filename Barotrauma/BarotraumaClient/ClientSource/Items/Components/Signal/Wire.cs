@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Barotrauma.Items.Components
 {
@@ -26,19 +27,27 @@ namespace Barotrauma.Items.Components
 
         public partial class WireSection
         {
-            public VertexPositionColorTexture[] vertices;
-            public VertexPositionColorTexture[] shiftedVertices;
+            public readonly VertexPositionColorTexture[] vertices = new VertexPositionColorTexture[4];
+            public readonly VertexPositionColorTexture[] shiftedVertices = new VertexPositionColorTexture[4];
 
             private float cachedWidth = 0f;
-
-            private void RecalculateVertices(Sprite wireSprite, float width)
+            public WireSection()
+            {
+                // Initialize all vertices with the default White color
+                for (int i = 0; i < 4; i++)
+                {
+                    vertices[i].Color = Color.White;
+                    shiftedVertices[i].Color = Color.White;
+                }
+            }
+            private void RecalculateVertices(Sprite wireSprite, float width, Vector2 offset, Color color)
             {
                 if (MathUtils.NearlyEqual(cachedWidth, width)) { return; }
                 cachedWidth = width;
 
-                vertices = new VertexPositionColorTexture[4];
+                //vertices = new VertexPositionColorTexture[4];
 
-                Vector2 expandDir = start-end;
+                Vector2 expandDir = start - end;
                 expandDir.Normalize();
                 float temp = expandDir.X;
                 expandDir.X = -expandDir.Y;
@@ -58,26 +67,57 @@ namespace Barotrauma.Items.Components
                 Vector2 invStart = new Vector2(start.X, -start.Y);
                 Vector2 invEnd = new Vector2(end.X, -end.Y);
 
+                SetVertex(0, invStart + expandDir, topLeftUv, offset, color);
+                SetVertex(2, invEnd + expandDir, bottomRightUv.X, topLeftUv.Y, offset, color);
+                SetVertex(1, invStart - expandDir, topLeftUv.X, bottomRightUv.Y, offset, color);
+                SetVertex(3, invEnd - expandDir, bottomRightUv, offset, color);
+
+                /*
                 vertices[0] = new VertexPositionColorTexture(new Vector3(invStart + expandDir, 0f), Color.White, topLeftUv);
                 vertices[2] = new VertexPositionColorTexture(new Vector3(invEnd + expandDir, 0f), Color.White, new Vector2(bottomRightUv.X, topLeftUv.Y));
                 vertices[1] = new VertexPositionColorTexture(new Vector3(invStart - expandDir, 0f), Color.White, new Vector2(topLeftUv.X, bottomRightUv.Y));
                 vertices[3] = new VertexPositionColorTexture(new Vector3(invEnd - expandDir, 0f), Color.White, bottomRightUv);
-
-                shiftedVertices = (VertexPositionColorTexture[])vertices.Clone();
+                */
+                //Array.Copy(vertices, shiftedVertices, vertices.Length);
+            }
+            #region SET_VERTEX
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void SetVertex(int index, Vector2 pos, Vector2 uv, Vector2 offset, Color color)
+            {
+                SetVertex(index, pos.X, pos.Y, uv.X, uv.Y, offset, color);
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void SetVertex(int index, float posX, float posY, Vector2 uv, Vector2 offset, Color color)
+            {
+                SetVertex(index, posX, posY, uv.X, uv.Y, offset, color);
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void SetVertex(int index, Vector2 pos, float uvX, float uvY, Vector2 offset, Color color)
+            {
+                SetVertex(index, pos.X, pos.Y, uvX, uvY, offset, color);
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void SetVertex(int index, float posX, float posY, float uvX, float uvY, Vector2 offset, Color color)
+            {
+                vertices[index].Position.X = posX;
+                vertices[index].Position.Y = posY;
+                vertices[index].TextureCoordinate.X = uvX;
+                vertices[index].TextureCoordinate.Y = uvY;
+
+                shiftedVertices[index].Color = color;
+                shiftedVertices[index].Position.X = posX + offset.X;
+                shiftedVertices[index].Position.Y = posY - offset.Y;
+                shiftedVertices[index].TextureCoordinate.X = uvX;
+                shiftedVertices[index].TextureCoordinate.Y = uvY;
+            }
+            #endregion
+            
             public void Draw(ISpriteBatch spriteBatch, Sprite wireSprite, Color color, Vector2 offset, float depth, float width = 0.3f)
             {
                 if (width <= 0f) { return; }
-                RecalculateVertices(wireSprite, width);
+                RecalculateVertices(wireSprite, width, offset, color);
 
-                for (int i = 0; i < vertices.Length; i++)
-                {
-                    shiftedVertices[i].Color = color;
-                    shiftedVertices[i].Position = vertices[i].Position;
-                    shiftedVertices[i].Position.X += offset.X;
-                    shiftedVertices[i].Position.Y -= offset.Y;
-                }
                 spriteBatch.Draw(
                     wireSprite.Texture,
                     shiftedVertices,
@@ -186,9 +226,9 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing, Vector2 offset, float itemDepth = -1, Color? overrideColor = null)
         {
-            if (sections.Count == 0 && !IsActive || Hidden)
+            if (Drawable/*sections.Count == 0 && !IsActive || Hidden*/)
             {
-                Drawable = false;
+                //Drawable = false;
                 return;
             }
 
@@ -198,27 +238,28 @@ namespace Barotrauma.Items.Components
 
             float baseDepth = UseSpriteDepth ? item.SpriteDepth : wireSprite.Depth;
             float depth = item.IsSelected ? 0.0f : SubEditorScreen.IsWiringMode() ? 0.02f : baseDepth + (item.ID % 100) * 0.000001f;// item.GetDrawDepth(wireSprite.Depth, wireSprite);
+            float selectionDepth = depth + 0.00001f;
+
+            // 1. Determine the correct color before entering the loop
+            Color drawColor = overrideColor ?? item.Color;
 
             if (item.IsHighlighted)
             {
-                foreach (WireSection section in sections)
-                {
-                    section.Draw(spriteBatch, wireSprite, 
-                        Screen.Selected == GameMain.GameScreen ? higlightColor : editorHighlightColor, 
-                        drawOffset, depth + 0.00001f, Width * 2.0f);
-                }
+                drawColor = (Screen.Selected == GameMain.GameScreen) ? higlightColor : editorHighlightColor;
             }
             else if (item.IsSelected)
             {
-                foreach (WireSection section in sections)
-                {
-                    section.Draw(spriteBatch, wireSprite, editorSelectedColor, drawOffset, depth + 0.00001f, Width * 2.0f);
-                }
+                drawColor = editorSelectedColor;
             }
 
+            // 2. Determine width and depth based on the state
+            float currentWidth = (item.IsHighlighted || item.IsSelected) ? DoubleWidth : Width;
+            float currentDepth = (item.IsHighlighted || item.IsSelected) ? selectionDepth : depth;
+
+            // 3. Single loop to draw everything
             foreach (WireSection section in sections)
             {
-                section.Draw(spriteBatch, wireSprite, overrideColor ?? item.Color, drawOffset, depth, Width);
+                section.Draw(spriteBatch, wireSprite, drawColor, drawOffset, currentDepth, currentWidth);
             }
 
             if (nodes.Count > 0)
@@ -410,7 +451,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                return sub.DrawPosition + sub.HiddenSubPosition;
+                return sub.DrawOffset;//sub.DrawPosition + sub.HiddenSubPosition;
             }
         }
 
