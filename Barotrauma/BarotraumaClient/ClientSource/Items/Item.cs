@@ -302,7 +302,8 @@ namespace Barotrauma
                 }
                 foreach (DecorativeSprite decorativeSprite in Prefab.DecorativeSprites)
                 {
-                    Vector2 scale = decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale;
+                    DecorativeSprite.State state = spriteAnimState[decorativeSprite];
+                    Vector2 scale = decorativeSprite.GetScale(ref state.ScaleState, state.RandomScaleFactor) * Scale;
                     min.X = Math.Min(-decorativeSprite.Sprite.size.X * decorativeSprite.Sprite.RelativeOrigin.X * scale.X, min.X);
                     min.Y = Math.Min(-decorativeSprite.Sprite.size.Y * (1.0f - decorativeSprite.Sprite.RelativeOrigin.Y) * scale.Y, min.Y);
                     max.X = Math.Max(decorativeSprite.Sprite.size.X * (1.0f - decorativeSprite.Sprite.RelativeOrigin.X) * scale.X, max.X);
@@ -518,13 +519,14 @@ namespace Barotrauma
 
                     foreach (var decorativeSprite in upgradeSprites)
                     {
-                        if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
-                        float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
-                        Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, -RotationRad) * Scale;
+                        DecorativeSprite.State state = spriteAnimState[decorativeSprite];
+                        if (!state.IsActive) { continue; }
+                        float rotation = decorativeSprite.GetRotation(ref state.RotationState, state.RandomRotationFactor);
+                        Vector2 offset = decorativeSprite.GetOffset(ref state.OffsetState, state.RandomOffsetMultiplier, -RotationRad) * Scale;
                         if (FlippedX && Prefab.CanSpriteFlipX) { offset.X = -offset.X; }
                         if (FlippedY && Prefab.CanSpriteFlipY) { offset.Y = -offset.Y; }
                         decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color, decorativeSprite.Sprite.Origin,
-                            rotation, decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, activeSprite.effects,
+                            rotation, decorativeSprite.GetScale(ref state.ScaleState, state.RandomScaleFactor) * Scale, activeSprite.effects,
                             depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth));
                     }
                 }
@@ -538,9 +540,10 @@ namespace Barotrauma
 
             //use a backwards for loop because the drawable components may disable drawing,
             //causing them to be removed from the list
+            bool shouldDraw = editing && !GameMain.SubEditorScreen.TransformWidgetSelected;
             for (int i = drawableComponents.Count - 1; i >= 0; i--)
             {
-                drawableComponents[i].Draw(spriteBatch, editing && !GameMain.SubEditorScreen.TransformWidgetSelected, depth, overrideColor);
+                drawableComponents[i].Draw(spriteBatch,shouldDraw, depth, overrideColor);
             }
 
             if (GameMain.DebugDraw)
@@ -579,7 +582,7 @@ namespace Barotrauma
                     clr: Color.White,
                     depth: 0,
                     thickness: Math.Max(2f / Screen.Selected.Cam.Zoom, 1));
-
+                float triggerThickness = (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f);
                 foreach (Rectangle t in Prefab.Triggers)
                 {
                     Rectangle transformedTrigger = TransformTrigger(t);
@@ -594,23 +597,23 @@ namespace Barotrauma
                         GUIStyle.Green,
                         false,
                         0,
-                        (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
+                        triggerThickness);
                 }
             }
 
             if (!ShowLinks || GUI.DisableHUD) { return; }
-
+            Color lineColor = GUIStyle.Red * 0.5f;
+            Color lineColorSoft = lineColor * 0.25f;
             foreach (MapEntity e in linkedTo)
             {
                 bool isLinkAllowed = Prefab.IsLinkAllowed(e.Prefab);
-                Color lineColor = GUIStyle.Red * 0.5f;
                 if (isLinkAllowed)
                 {
                     lineColor = e is Item i && (DisplaySideBySideWhenLinked || i.DisplaySideBySideWhenLinked) ? Color.Purple * 0.5f : Color.LightGreen * 0.5f;
                 }
                 Vector2 from = new Vector2(WorldPosition.X, -WorldPosition.Y);
                 Vector2 to = new Vector2(e.WorldPosition.X, -e.WorldPosition.Y);
-                GUI.DrawLine(spriteBatch, from, to, lineColor * 0.25f, width: 3);
+                GUI.DrawLine(spriteBatch, from, to, lineColorSoft, width: 3);
                 GUI.DrawLine(spriteBatch, from, to, lineColor, width: 1);
                 //GUI.DrawString(spriteBatch, from, $"Linked to {e.Name}", lineColor, Color.Black * 0.5f);
             }
@@ -639,25 +642,29 @@ namespace Barotrauma
 
         public void DrawDecorativeSprites(SpriteBatch spriteBatch, Vector2 drawPos, bool flipX, bool flipY, float rotation, float depth, Color? overrideColor = null)
         {
+            float effectiveRotation = (flipX ^ flipY) ? -rotation : rotation;
+            float depthOffset = -activeSprite.Depth;
+            Vector2 position = new Vector2(rect.Width, rect.Height);
             foreach (var decorativeSprite in Prefab.DecorativeSprites)
             {
                 Color decorativeSpriteColor = overrideColor ?? GetSpriteColor(decorativeSprite.Color).Multiply(GetSpriteColor(spriteColor));
-                if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
+                DecorativeSprite.State state = spriteAnimState[decorativeSprite];
+                if (!state.IsActive) { continue; }
 
-                Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier,
-                    flipX ^ flipY ? -rotation : rotation) * Scale;
+                Vector2 offset = decorativeSprite.GetOffset(ref state.OffsetState, state.RandomOffsetMultiplier,
+                    effectiveRotation) * Scale;
 
                 if (ResizeHorizontal || ResizeVertical)
                 {
                     decorativeSprite.Sprite.DrawTiled(spriteBatch,
                         new Vector2(DrawPosition.X + offset.X - rect.Width / 2, -(DrawPosition.Y + offset.Y + rect.Height / 2)),
-                        new Vector2(rect.Width, rect.Height), color: decorativeSpriteColor,
+                        position, color: decorativeSpriteColor,
                         textureScale: Vector2.One * Scale,
                         depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth), 0.999f));
                 }
                 else
                 {
-                    float spriteRotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
+                    float spriteRotation = decorativeSprite.GetRotation(ref state.RotationState, state.RandomRotationFactor);
                     
                     Vector2 origin = decorativeSprite.Sprite.Origin;
                     SpriteEffects spriteEffects = SpriteEffects.None;
@@ -674,7 +681,7 @@ namespace Barotrauma
                         spriteEffects |= SpriteEffects.FlipVertically;
                     }
                     decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(drawPos.X + offset.X, -(drawPos.Y + offset.Y)), decorativeSpriteColor, origin,
-                        -rotation + spriteRotation, decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, spriteEffects,
+                        -rotation + spriteRotation, decorativeSprite.GetScale(ref state.ScaleState, state.RandomScaleFactor) * Scale, spriteEffects,
                         depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth));
                 }
             }
@@ -697,19 +704,26 @@ namespace Barotrauma
             if (body == null || CurrentHull == null) { return; }
             //create a splash particle
             float massFactor = MathHelper.Clamp(body.Mass, 0.5f, 20.0f);
+            float velocityRandSync = Math.Abs(body.LinearVelocity.Y * 10);
+            float splashSizeMultiplier = MathHelper.Clamp(Math.Abs(body.LinearVelocity.Y) * 0.1f * massFactor, 1.0f, 4.0f);
+
+            Vector2 particlePosition = new Vector2(WorldPosition.X, CurrentHull.WorldSurface);
+            Vector2 baseParticlePosition = new Vector2(0.0f, Math.Abs(-body.LinearVelocity.Y * massFactor));
+
+
             for (int i = 0; i < MathHelper.Clamp(Math.Abs(body.LinearVelocity.Y), 1.0f, 10.0f); i++)
             {
                 var splash = GameMain.ParticleManager.CreateParticle("watersplash",
-                    new Vector2(WorldPosition.X, CurrentHull.WorldSurface),
-                    new Vector2(0.0f, Math.Abs(-body.LinearVelocity.Y * massFactor)) + Rand.Vector(Math.Abs(body.LinearVelocity.Y * 10)),
+                    particlePosition,
+                    baseParticlePosition + Rand.Vector(velocityRandSync),
                     Rand.Range(0.0f, MathHelper.TwoPi), CurrentHull);
                 if (splash != null)
                 {
-                    splash.Size *= MathHelper.Clamp(Math.Abs(body.LinearVelocity.Y) * 0.1f * massFactor, 1.0f, 4.0f);
+                    splash.Size *= splashSizeMultiplier;
                 }
             }
             GameMain.ParticleManager.CreateParticle("bubbles",
-                new Vector2(WorldPosition.X, CurrentHull.WorldSurface),
+                particlePosition,
                 body.LinearVelocity * massFactor,
                 0.0f, CurrentHull);
 
@@ -717,9 +731,10 @@ namespace Barotrauma
             if (body.LinearVelocity.Y < 0.0f)
             {
                 int n = (int)((Position.X - CurrentHull.Rect.X) / Hull.WaveWidth);
+                float waveVel = MathHelper.Clamp(body.LinearVelocity.Y * massFactor, -5.0f, 5.0f);
                 if (n >= 0 && n < currentHull.WaveVel.Length)
                 {
-                    CurrentHull.WaveVel[n] += MathHelper.Clamp(body.LinearVelocity.Y * massFactor, -5.0f, 5.0f);
+                    CurrentHull.WaveVel[n] += waveVel;
                 }
             }
             SoundPlayer.PlaySplashSound(WorldPosition, Math.Abs(body.LinearVelocity.Y) + Rand.Range(-10.0f, -5.0f));
@@ -745,8 +760,7 @@ namespace Barotrauma
                 {
                     foreach (DecorativeSprite decorativeSprite in Prefab.DecorativeSprites)
                     {
-                        var spriteState = spriteAnimState[decorativeSprite];
-                        spriteState.IsActive = false;
+                        spriteAnimState[decorativeSprite].IsActive = false;
                     }
                     return;
                 }
@@ -759,8 +773,7 @@ namespace Barotrauma
                     {
                         foreach (DecorativeSprite decorativeSprite in Prefab.DecorativeSprites)
                         {
-                            var spriteState = spriteAnimState[decorativeSprite];
-                            spriteState.IsActive = false;
+                            spriteAnimState[decorativeSprite].IsActive = false;
                         }
                         return;
                     }
