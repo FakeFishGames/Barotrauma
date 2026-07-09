@@ -578,7 +578,7 @@ namespace Barotrauma.Particles
                 drawPos += sub.DrawPosition;
             }
 
-            drawPos = new Vector2(drawPos.X, -drawPos.Y);
+            drawPos.Y =  -drawPos.Y;
             if (prefab.Sprites[spriteIndex] is SpriteSheet sheet)
             {
                 sheet.Draw(

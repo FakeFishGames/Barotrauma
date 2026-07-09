@@ -42,77 +42,80 @@ namespace Barotrauma.Items.Components
             }
             private void RecalculateVertices(Sprite wireSprite, float width, Vector2 offset, Color color)
             {
-                if (MathUtils.NearlyEqual(cachedWidth, width)) { return; }
-                cachedWidth = width;
+                if (MathUtils.NearlyEqual(cachedWidth, width))
+                {
+                    //FAST_PATH
+                    SetCachedVertex(0, offset, color);
+                    SetCachedVertex(1, offset, color);
+                    SetCachedVertex(2, offset, color);
+                    SetCachedVertex(3, offset, color);
+                }
+                else
+                {
+                    cachedWidth = width;
 
-                //vertices = new VertexPositionColorTexture[4];
+                    Vector2 expandDir = start - end;
+                    expandDir.Normalize();
+                    float temp = expandDir.X;
+                    expandDir.X = -expandDir.Y;
+                    expandDir.Y = -temp;
 
-                Vector2 expandDir = start - end;
-                expandDir.Normalize();
-                float temp = expandDir.X;
-                expandDir.X = -expandDir.Y;
-                expandDir.Y = -temp;
+                    Rectangle srcRect = wireSprite.SourceRect;
 
-                Rectangle srcRect = wireSprite.SourceRect;
+                    expandDir *= width * srcRect.Height * 0.5f;
 
-                expandDir *= width * srcRect.Height * 0.5f;
+                    Vector2 rectLocation = srcRect.Location.ToVector2();
+                    Vector2 rectSize = srcRect.Size.ToVector2();
+                    Vector2 textureSize = new Vector2(wireSprite.Texture.Width, wireSprite.Texture.Height);
 
-                Vector2 rectLocation = srcRect.Location.ToVector2();
-                Vector2 rectSize = srcRect.Size.ToVector2();
-                Vector2 textureSize = new Vector2(wireSprite.Texture.Width, wireSprite.Texture.Height);
+                    Vector2 topLeftUv = rectLocation / textureSize;
+                    Vector2 bottomRightUv = (rectLocation + rectSize) / textureSize;
 
-                Vector2 topLeftUv = rectLocation / textureSize;
-                Vector2 bottomRightUv = (rectLocation + rectSize) / textureSize;
+                    Vector2 invStart = new Vector2(start.X, -start.Y);
+                    Vector2 invEnd = new Vector2(end.X, -end.Y);
 
-                Vector2 invStart = new Vector2(start.X, -start.Y);
-                Vector2 invEnd = new Vector2(end.X, -end.Y);
-
-                SetVertex(0, invStart + expandDir, topLeftUv, offset, color);
-                SetVertex(2, invEnd + expandDir, bottomRightUv.X, topLeftUv.Y, offset, color);
-                SetVertex(1, invStart - expandDir, topLeftUv.X, bottomRightUv.Y, offset, color);
-                SetVertex(3, invEnd - expandDir, bottomRightUv, offset, color);
-
-                /*
-                vertices[0] = new VertexPositionColorTexture(new Vector3(invStart + expandDir, 0f), Color.White, topLeftUv);
-                vertices[2] = new VertexPositionColorTexture(new Vector3(invEnd + expandDir, 0f), Color.White, new Vector2(bottomRightUv.X, topLeftUv.Y));
-                vertices[1] = new VertexPositionColorTexture(new Vector3(invStart - expandDir, 0f), Color.White, new Vector2(topLeftUv.X, bottomRightUv.Y));
-                vertices[3] = new VertexPositionColorTexture(new Vector3(invEnd - expandDir, 0f), Color.White, bottomRightUv);
-                */
-                //Array.Copy(vertices, shiftedVertices, vertices.Length);
+                    SetVertex(0, invStart + expandDir, topLeftUv);
+                    SetVertex(2, invEnd + expandDir, bottomRightUv.X, topLeftUv.Y);
+                    SetVertex(1, invStart - expandDir, topLeftUv.X, bottomRightUv.Y);
+                    SetVertex(3, invEnd - expandDir, bottomRightUv);
+                    Array.Copy(vertices, shiftedVertices, vertices.Length);
+                }
             }
             #region SET_VERTEX
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private void SetVertex(int index, Vector2 pos, Vector2 uv, Vector2 offset, Color color)
+            private void SetVertex(int index, Vector2 pos, Vector2 uv)
             {
-                SetVertex(index, pos.X, pos.Y, uv.X, uv.Y, offset, color);
+                SetVertex(index, pos.X, pos.Y, uv.X, uv.Y);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private void SetVertex(int index, float posX, float posY, Vector2 uv, Vector2 offset, Color color)
+            private void SetVertex(int index, float posX, float posY, Vector2 uv)
             {
-                SetVertex(index, posX, posY, uv.X, uv.Y, offset, color);
+                SetVertex(index, posX, posY, uv.X, uv.Y);
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private void SetVertex(int index, Vector2 pos, float uvX, float uvY, Vector2 offset, Color color)
+            private void SetVertex(int index, Vector2 pos, float uvX, float uvY)
             {
-                SetVertex(index, pos.X, pos.Y, uvX, uvY, offset, color);
+                SetVertex(index, pos.X, pos.Y, uvX, uvY);
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private void SetVertex(int index, float posX, float posY, float uvX, float uvY, Vector2 offset, Color color)
+            private void SetVertex(int index, float posX, float posY, float uvX, float uvY)
             {
                 vertices[index].Position.X = posX;
                 vertices[index].Position.Y = posY;
                 vertices[index].TextureCoordinate.X = uvX;
                 vertices[index].TextureCoordinate.Y = uvY;
-
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void SetCachedVertex(int index, Vector2 offset, Color color)
+            {
                 shiftedVertices[index].Color = color;
-                shiftedVertices[index].Position.X = posX + offset.X;
-                shiftedVertices[index].Position.Y = posY - offset.Y;
-                shiftedVertices[index].TextureCoordinate.X = uvX;
-                shiftedVertices[index].TextureCoordinate.Y = uvY;
+                shiftedVertices[index].Position = vertices[index].Position;
+                shiftedVertices[index].Position.X += offset.X;
+                shiftedVertices[index].Position.Y -= offset.Y;
             }
             #endregion
-            
+
             public void Draw(ISpriteBatch spriteBatch, Sprite wireSprite, Color color, Vector2 offset, float depth, float width = 0.3f)
             {
                 if (width <= 0f) { return; }
@@ -132,7 +135,7 @@ namespace Barotrauma.Items.Components
                 spriteBatch.Draw(wireSprite.Texture,
                     start, wireSprite.SourceRect, color,
                     MathUtils.VectorToAngle(end - start),
-                    new Vector2(0.0f, wireSprite.size.Y / 2.0f),
+                    wireSprite.Origin/*new Vector2(0.0f, wireSprite.size.Y / 2.0f)*/,
                     new Vector2((Vector2.Distance(start, end)) / wireSprite.size.X, width),
                     SpriteEffects.None,
                     depth);
@@ -226,7 +229,7 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing, Vector2 offset, float itemDepth = -1, Color? overrideColor = null)
         {
-            if (Drawable/*sections.Count == 0 && !IsActive || Hidden*/)
+            if (!Drawable/*sections.Count == 0 && !IsActive || Hidden*/)
             {
                 //Drawable = false;
                 return;
