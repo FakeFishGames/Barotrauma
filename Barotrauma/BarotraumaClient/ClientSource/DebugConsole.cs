@@ -865,7 +865,20 @@ namespace Barotrauma
                         GameSettings.SaveCurrentConfig();
                     });
             }, isCheat: false));
-            
+
+            commands.Add(new Command("togglespoofeventmanagerid", "togglespoofeventmanagerid: Forces the client to report the last received event ID as always being 1, making the server believe the client is always behind.", (string[] args) =>
+            {
+                if (GameMain.Client != null)
+                {
+                    GameMain.Client.SpoofEntityManagerReceivedId = !GameMain.Client.SpoofEntityManagerReceivedId;
+                    DebugConsole.NewMessage(GameMain.Client.SpoofEntityManagerReceivedId ? "Spoofing enabled ": "Spoofing disabled", Color.Green);
+                }
+                else
+                {
+                    DebugConsole.NewMessage("Not connected to server", Color.Red);
+                }
+            }));
+
             commands.Add(new Command("togglegrid", "Toggle visual snap grid in sub editor.", (string[] args) =>
             {
                 SubEditorScreen.ShouldDrawGrid = !SubEditorScreen.ShouldDrawGrid;
@@ -4444,17 +4457,24 @@ namespace Barotrauma
 
         public static void StartLocalMPSession(int numClients = 2)
         {
+            string extraArguments = "-multiclienttestmode";
+            if (NetConfig.UseLenientHandshake)
+            {
+                extraArguments += " -lenienthandshake";
+            }
+
             try
             {
                 if (Process.GetProcessesByName("DedicatedServer").Length == 0)
                 {
 #if WINDOWS
-                    Process.Start("DedicatedServer.exe", arguments: "-multiclienttestmode");
+                    Process.Start("DedicatedServer.exe", arguments: extraArguments);
 #else
-                    Process.Start("./DedicatedServer", arguments: "-multiclienttestmode");
+                    Process.Start("./DedicatedServer", arguments: extraArguments);
 #endif
                     System.Threading.Thread.Sleep(1000);
                 }
+
 #if DEBUG
                 GameClient.MultiClientTestMode = true;
 #endif
@@ -4468,10 +4488,13 @@ namespace Barotrauma
                     for (int i = 2; i <= numClients; i++)
                     {
                         System.Threading.Thread.Sleep(1000);
+
+                        string clientArguments = $"-connect server localhost -username client{i} -skipintro";
+
 #if WINDOWS
-                        Process.Start("Barotrauma.exe", arguments: "-connect server localhost -username client" + i + " -multiclienttestmode");
+                        Process.Start("Barotrauma.exe", arguments: $"{clientArguments} {extraArguments}");
 #else
-                        Process.Start("./Barotrauma", arguments: "-connect server localhost -username client" + i + " -multiclienttestmode");
+                        Process.Start("./Barotrauma", arguments: $"{clientArguments} {extraArguments}");
 #endif
                     }
                 }

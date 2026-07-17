@@ -339,6 +339,19 @@ namespace Barotrauma
                         toolTip += $"‖color:{conditionColorStr}‖ ({(int)item.ConditionPercentage} %)‖color:end‖";
                     }
                     if (!description.IsNullOrEmpty()) { toolTip += '\n' + description; }
+
+                    if (item.Prefab.UnlockedRecipeInToolTip.Length > 0 && GameMain.GameSession is { } GameSession)
+                    {
+                        if (item.Prefab.UnlockedRecipeInToolTip.All(id => GameSession.HasUnlockedRecipe(Character.Controlled, id)))
+                        {
+                            toolTip += $"\n‖color:{XMLExtensions.ToStringHex(GUIStyle.Green)}‖{TextManager.Get("unlockedrecipe.true")}‖color:end‖";
+                        }
+                        else
+                        {
+                            toolTip += $"\n‖color:{XMLExtensions.ToStringHex(GUIStyle.Yellow)}‖{TextManager.Get("unlockedrecipe.false")}‖color:end‖";
+                        }
+                    }
+
                     if (item.Prefab.ContentPackage != GameMain.VanillaContent && item.Prefab.ContentPackage != null)
                     {
                         colorStr = XMLExtensions.ToStringHex(Color.MediumPurple);
@@ -356,19 +369,7 @@ namespace Barotrauma
                 }
 #if DEBUG
                 toolTip += $" ({item.Prefab.Identifier})";
-#endif           
-                if (!item.Prefab.UnlockedRecipeInToolTip.IsEmpty && GameMain.GameSession is { } GameSession)
-                {
-                    if (GameSession.HasUnlockedRecipe(Character.Controlled, item.Prefab.UnlockedRecipeInToolTip))
-                    {
-                        toolTip += TextManager.Get("unlockedrecipe.true");
-                    }
-                    else
-                    {
-                        toolTip += $"\n‖color:{XMLExtensions.ToStringHex(GUIStyle.Yellow)}‖{TextManager.Get("unlockedrecipe.false")}‖color:end‖";
-                    }
-                }
-
+#endif          
                 if (PlayerInput.KeyDown(InputType.ContextualCommand))
                 {
                     toolTip += $"\n‖color:gui.blue‖{TextManager.ParseInputTypes(TextManager.Get("itemmsgcontextualorders"))}‖color:end‖";
@@ -1300,8 +1301,7 @@ namespace Barotrauma
                             SubEditorScreen.StoreCommand(new InventoryPlaceCommand(DraggingItems.First().ParentInventory, new List<Item>(DraggingItems), true));
                         }
                     }
-                        
-                    SoundPlayer.PlayUISound(GUISoundType.DropItem);
+                    
                     bool removed = false;
                     if (Screen.Selected is SubEditorScreen editor)
                     {

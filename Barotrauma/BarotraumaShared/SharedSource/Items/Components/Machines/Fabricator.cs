@@ -732,6 +732,7 @@ namespace Barotrauma.Items.Components
         }
 
         private readonly HashSet<Item> usedIngredients = new HashSet<Item>();
+        private readonly Dictionary<ItemPrefab, int> ingredientFlexibilityCache = new Dictionary<ItemPrefab, int>();
 
         public bool MissingRequiredRecipe(FabricationRecipe fabricableItem, Character character)
         {
@@ -786,10 +787,24 @@ namespace Barotrauma.Items.Components
             //maintain a list of used ingredients so we don't end up considering the same item a suitable for multiple required ingredients
             usedIngredients.Clear();
 
-            return fabricableItem.RequiredItems.All(requiredItem =>
+            // Items are considered more flexible if they can be used in many different requirements
+            ingredientFlexibilityCache.Clear();
+            foreach (var prefab in fabricableItem.RequiredItems.SelectMany(static r => r.ItemPrefabs))
+            {
+                ingredientFlexibilityCache[prefab] = fabricableItem.RequiredItems.Count(r => r.ItemPrefabs.Contains(prefab));
+            }
+
+            return fabricableItem.RequiredItems
+                // Match the most restrictive requirements to least restrictive first, while we still have items that we can use
+                .OrderBy(static r => r.ItemPrefabs.Count())
+                .ThenByDescending(static requiredItem => requiredItem.Amount)
+                .All(requiredItem =>
             {
                 int availableItemsAmount = 0;
-                foreach (ItemPrefab requiredPrefab in requiredItem.ItemPrefabs)
+                foreach (ItemPrefab requiredPrefab in requiredItem.ItemPrefabs
+                    // Fill in the least flexible and more abundant items first, so we don't end up using unique items first
+                    .OrderBy(GetItemFlexibility)
+                    .ThenByDescending(GetAvailableItemsCount))
                 {
                     if (!availableIngredients.TryGetValue(requiredPrefab.Identifier, out var availableItems)) { continue; }            
 
@@ -811,6 +826,16 @@ namespace Barotrauma.Items.Components
 
                 return false;
             });
+
+            int GetAvailableItemsCount(ItemPrefab itemPrefab)
+            {
+                return availableIngredients.TryGetValue(itemPrefab.Identifier, out var list) ? list.Count : 0;
+            }
+
+            int GetItemFlexibility(ItemPrefab itemPrefab)
+            {
+                return ingredientFlexibilityCache[itemPrefab];
+            }
         }
 
         private float GetRequiredTime(FabricationRecipe fabricableItem, Character user)

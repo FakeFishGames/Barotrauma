@@ -758,6 +758,11 @@ namespace Barotrauma
         public float CoolDownTimer { get; set; }
         public float CurrentRandomCoolDown { get; private set; }
         public float SecondaryCoolDownTimer { get; set; }
+
+        /// <summary>
+        /// The attack is considered to be running from the moment it starts until the <see cref="AttackTimer"/> reaches the <see cref="Duration"/> of the attack, or until the attack lands successfully.
+        /// E.g. from the moment the monster decides to lunge itself towards the target until it hits a target or until it completes that lunge.
+        /// </summary>
         public bool IsRunning { get; private set; }
 
         public float AfterAttackTimer { get; set; }

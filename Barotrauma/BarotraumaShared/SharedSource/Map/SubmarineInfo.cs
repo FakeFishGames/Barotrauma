@@ -29,6 +29,31 @@ namespace Barotrauma
 
     partial class SubmarineInfo : IDisposable
     {
+        public static HashSet<string> SubmarinePathsWithRemoteStorage { get; set; } = [];
+
+        public bool SaveToRemoteStorage
+        {
+            get
+            {
+                if (FilePath == null) { return false; }
+
+                return SubmarinePathsWithRemoteStorage.Contains(FilePath.CleanUpPathCrossPlatform(correctFilenameCase: false));
+            }
+            set
+            {
+                if (FilePath == null) { return; }
+
+                if (value)
+                {
+                    SubmarinePathsWithRemoteStorage.Add(FilePath.CleanUpPathCrossPlatform(correctFilenameCase: false));
+                }
+                else
+                {
+                    SubmarinePathsWithRemoteStorage.Remove(FilePath.CleanUpPathCrossPlatform(correctFilenameCase: false));
+                }
+            }
+        }
+
         private static List<SubmarineInfo> savedSubmarines = new List<SubmarineInfo>();
         public static IEnumerable<SubmarineInfo> SavedSubmarines => savedSubmarines;
 
@@ -196,6 +221,8 @@ namespace Barotrauma
             get;
             set;
         }
+
+        public bool IsFromRemoteStorage;
 
         /// <summary>
         /// When enabled, the <see cref="SubmarineElement">XML element is not loaded</see> until it is accessed.

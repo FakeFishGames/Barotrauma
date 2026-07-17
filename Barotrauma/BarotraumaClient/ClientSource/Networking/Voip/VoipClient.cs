@@ -89,6 +89,7 @@ namespace Barotrauma.Networking
         {
             byte queueId = msg.ReadByte();
             float distanceFactor = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+            bool isRadio = msg.ReadBoolean();
             VoipQueue queue = queues.Find(q => q.QueueID == queueId);
 
             if (queue == null)
@@ -117,19 +118,21 @@ namespace Barotrauma.Networking
                     float rangeMultiplier = spectating ? 2.0f : 1.0f;
                     WifiComponent senderRadio = null;
 
-                    var messageType = 
-                        !client.VoipQueue.ForceLocal && 
-                        ChatMessage.CanUseRadio(client.Character, out senderRadio) && 
-                        (spectating || (ChatMessage.CanUseRadio(Character.Controlled, out var recipientRadio) && senderRadio.CanReceive(recipientRadio)))
-                            ? ChatMessageType.Radio : ChatMessageType.Default;
+                    var messageType = isRadio ? ChatMessageType.Radio : ChatMessageType.Default;
+
                     client.Character.ShowTextlessSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
 
                     client.VoipSound.UseRadioFilter = messageType == ChatMessageType.Radio && !GameSettings.CurrentConfig.Audio.DisableVoiceChatFilters;
                     client.RadioNoise = 0.0f;
                     if (messageType == ChatMessageType.Radio)
                     {
+                        //If the client cannot establish a radio, use a headsets default range as a fallback to calculate the radio noise.
+                        //This cannot happen in an un-modded setting as CanUseRadio is part of the server side check for isRadio to be true.
+                        ChatMessage.CanUseRadio(client.Character, out senderRadio);
+                        float senderRadioRange = (senderRadio == null) ? 35000.0f : senderRadio.Range;
+
                         client.VoipSound.UsingRadio = true;
-                        client.VoipSound.SetRange(senderRadio.Range * RangeNear * speechImpedimentMultiplier * rangeMultiplier, senderRadio.Range * speechImpedimentMultiplier * rangeMultiplier);
+                        client.VoipSound.SetRange(senderRadioRange * RangeNear * speechImpedimentMultiplier * rangeMultiplier, senderRadioRange * speechImpedimentMultiplier * rangeMultiplier);
                         if (distanceFactor > RangeNear && !spectating)
                         {
                             //noise starts increasing exponentially after 40% range

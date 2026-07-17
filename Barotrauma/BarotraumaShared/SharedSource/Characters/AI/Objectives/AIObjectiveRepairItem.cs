@@ -173,6 +173,16 @@ namespace Barotrauma
             if (character.CanInteractWith(Item, out _, checkLinked: false))
             {
                 waitTimer += deltaTime;
+
+                //if we're climbing upwards to the item, ensure the character stays within arm's length of it
+                //without this, the character can get stuck in a loop where the GoTo objective takes them close enough to the item,
+                //then the character shifts a bit downwards on the ladder and goes outside interaction range, and the GoTo objective kicks in again
+                if (character.IsClimbing && 
+                    Item.WorldPosition.Y > character.WorldPosition.Y + FarseerPhysics.ConvertUnits.ToDisplayUnits(character.AnimController.ArmLength))
+                {
+                    character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.UnitY);
+                }
+
                 if (waitTimer < WaitTimeBeforeRepair) { return; }
 
                 HumanAIController.FaceTarget(Item);

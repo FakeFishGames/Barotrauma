@@ -275,7 +275,7 @@ namespace Barotrauma
                 {
                     CreateStairBodies();
                 }
-                else if (HasBody)
+                else if (Prefab.Body)
                 {
                     CreateSections();
                     UpdateSections();
@@ -346,7 +346,7 @@ namespace Barotrauma
             {
                 Rectangle oldRect = Rect;
                 base.Rect = value;
-                if (HasBody)
+                if (Prefab.Body)
                 {
                     CreateSections();
                     UpdateSections();
@@ -668,7 +668,7 @@ namespace Barotrauma
             {
                 prevSections = Sections.ToArray();
             }
-            if (!HasBody)
+            if (!Prefab.Body)
             {
                 if (FlippedX && IsHorizontal)
                 {
@@ -685,7 +685,7 @@ namespace Barotrauma
                     xsections = 1;
                     ysections = 1;
                 }
-                Sections = new WallSection[xsections];
+                Sections = new WallSection[Math.Max(xsections, ysections)];
             }
             else
             {
@@ -1635,7 +1635,7 @@ namespace Barotrauma
                 CreateStairBodies();
             }
 
-            if (HasBody)
+            if (Prefab.Body)
             {
                 CreateSections();
                 UpdateSections();
@@ -1663,7 +1663,7 @@ namespace Barotrauma
                 CreateStairBodies();
             }
 
-            if (HasBody)
+            if (Prefab.Body)
             {
                 CreateSections();
                 UpdateSections();

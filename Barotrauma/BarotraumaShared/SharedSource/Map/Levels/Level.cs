@@ -2971,11 +2971,39 @@ namespace Barotrauma
             string percentage = string.Format(CultureInfo.InvariantCulture, "{0:P2}", (float)spawnPointsContainingResources / PathPoints.Count);
             DebugConsole.NewMessage($"Level resources spawned: {itemCount}\n" +
                 $"   Spawn points containing resources: {spawnPointsContainingResources} ({percentage})\n" +
-                $"   Total value: {PathPoints.Sum(p => p.ClusterLocations.Sum(c => c.Resources.Sum(r => r.Prefab.DefaultPrice?.Price ?? 0)))} mk");
+                $"   Total value: {GetTotalLevelResourceValue()} mk");
             if (AbyssResources.Count > 0)
             {
                 DebugConsole.NewMessage($"Abyss resources spawned: {AbyssResources.Sum(a => a.Resources.Count)}\n" +
-                    $"   Total value: {AbyssResources.Sum(c => c.Resources.Sum(r => r.Prefab.DefaultPrice?.Price ?? 0))} mk");
+                    $"   Total value: {GetTotalAbyssResourceValue()} mk");
+            }
+
+            int GetTotalLevelResourceValue()
+            {
+                int value = 0;
+                foreach (var pathPoint in PathPoints)
+                {
+                    foreach (var clusterLocation in pathPoint.ClusterLocations)
+                    {
+                        foreach (var resource in clusterLocation.Resources)
+                        {
+                            value += resource.Prefab.DefaultPrice?.Price ?? 0;
+                        }
+                    }
+                }
+                return value;
+            }
+            int GetTotalAbyssResourceValue()
+            {
+                int value = 0;
+                foreach (var clusterLocation in AbyssResources)
+                {
+                    foreach (var resource in clusterLocation.Resources)
+                    {
+                        value += resource.Prefab.DefaultPrice?.Price ?? 0;
+                    }
+                }
+                return value;
             }
 #endif
 
@@ -3204,7 +3232,6 @@ namespace Barotrauma
             }
         }
 
-        /// <param name="rotation">Used by clients to set the rotation for the resources</param>
         public List<Item> GenerateMissionResources(ItemPrefab prefab, int requiredAmount, PositionType positionType, IEnumerable<Cave> targetCaves = null)
         {
             var allValidLocations = GetAllValidClusterLocations();
@@ -5150,6 +5177,7 @@ namespace Barotrauma
                 renderer.Dispose();
                 renderer = null;
             }
+            backgroundCreatureManager?.Clear();
 #endif
 
             if (LevelObjectManager != null)

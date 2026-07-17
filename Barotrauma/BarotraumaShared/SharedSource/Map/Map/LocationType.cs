@@ -487,7 +487,19 @@ namespace Barotrauma
                         var portrait = new Sprite(subElement, lazyLoad: true);
                         if (portrait != null)
                         {
+#if CLIENT
+                            if (!File.Exists(portrait.FilePath))
+                            {
+                                DebugConsole.ThrowError($"Error in location type \"{Identifier}\": cannot find the location portrait \"{portrait.FilePath}\".");
+                            }
+                            else
+                            {
+                                portraitsList.Add(portrait);
+                            }
+#elif SERVER
+                            // Add without checking the path, since servers don't parse the file path of the sprite
                             portraitsList.Add(portrait);
+#endif
                         }
                         break;
                     case "store":

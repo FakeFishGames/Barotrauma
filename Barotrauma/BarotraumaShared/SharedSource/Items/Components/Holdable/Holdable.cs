@@ -168,6 +168,9 @@ namespace Barotrauma.Items.Components
             set { attachedByDefault = value; }
         }
 
+#if DEBUG
+        [Editable]
+#endif
         [Serialize("0.0,0.0", IsPropertySaveable.No, description: "The position the character holds the item at (in pixels, as an offset from the character's shoulder)."+
             " For example, a value of 10,-100 would make the character hold the item 100 pixels below the shoulder and 10 pixels forwards.")]
         public Vector2 HoldPos
@@ -177,8 +180,10 @@ namespace Barotrauma.Items.Components
         }
         //the distance from the holding characters elbow to center of the physics body of the item
         protected Vector2 holdPos;
-        
 
+#if DEBUG
+        [Editable]
+#endif
         [Serialize("0.0,0.0", IsPropertySaveable.No, description: "The position the character holds the item at when aiming (in pixels, as an offset from the character's shoulder)."+
             " Works similarly as HoldPos, except that the position is rotated according to the direction the player is aiming at. For example, a value of 10,-100 would make the character hold the item 100 pixels below the shoulder and 10 pixels forwards when aiming directly to the right.")]
         public Vector2 AimPos
@@ -279,6 +284,9 @@ namespace Barotrauma.Items.Components
         /// <summary>
         /// For setting the handle positions using status effects
         /// </summary>
+#if DEBUG
+        [Editable]
+#endif
         public Vector2 Handle1
         {
             get { return ConvertUnits.ToDisplayUnits(handlePos[0]); }
@@ -299,6 +307,9 @@ namespace Barotrauma.Items.Components
         /// <summary>
         /// For setting the handle positions using status effects
         /// </summary>
+#if DEBUG
+        [Editable]
+#endif
         public Vector2 Handle2
         {
             get { return ConvertUnits.ToDisplayUnits(handlePos[1]); }

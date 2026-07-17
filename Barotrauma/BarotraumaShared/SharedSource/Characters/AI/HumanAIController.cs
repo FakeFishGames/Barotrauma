@@ -46,7 +46,7 @@ namespace Barotrauma
 
         private float respondToAttackTimer;
         private const float RespondToAttackInterval = 1.0f;
-        private bool wasConscious;
+        private bool wasDead;
 
         private bool freezeAI;
 
@@ -201,7 +201,7 @@ namespace Barotrauma
             }
             if (isIncapacitated) { return; }
 
-            wasConscious = true;
+            wasDead = false;
 
             respondToAttackTimer -= deltaTime;
             if (respondToAttackTimer <= 0.0f)
@@ -1256,14 +1256,15 @@ namespace Barotrauma
 
         public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
-            // The attack incapacitated/killed the character: respond immediately to trigger nearby characters because the update loop no longer runs
-            if (wasConscious && (Character.IsIncapacitated || Character.Stun > 0.0f))
+            // If the character is incapacitated or dead, respond to the attack anyway to let other nearby characters react to it
+            // (But if the character is already dead, and was dead before this attack, don't react)
+            if (Character.IsDead && wasDead) { return; }
+            if (Character.IsIncapacitated || Character.Stun > 0.0f)
             {
                 RespondToAttack(attacker, attackResult);
-                wasConscious = false;
+                wasDead = Character.IsDead;
                 return;
             }
-            if (Character.IsDead) { return; }
             if (attacker == null || Character.IsPlayer)
             {
                 // The player characters need to "respond" to the attack always, because the update loop doesn't run for them.
@@ -1467,10 +1468,10 @@ namespace Barotrauma
                         otherHumanAI.VisibleHulls.Contains(attacker.CurrentHull) ||
                         otherCharacter.CanSeeTarget(attacker, seeThroughWindows: true);
                     if (!isWitnessing) 
-                    { 
-                        if (Character.IsDead || Character.IsUnconscious || otherCharacter.TeamID != Character.TeamID)
+                    {
+                        if (Character.IsKnockedDown || otherCharacter.TeamID != Character.TeamID)
                         {
-                            // Dead or in different team -> cannot report.
+                            // Knocked down or in different team -> cannot report.
                             continue;
                         }
                         if (otherHumanAI.objectiveManager.HasOrders())
@@ -1492,6 +1493,14 @@ namespace Barotrauma
                         {
                             // Ignore defensive and retreating behavior, unless witnessing the attack.
                             continue;
+                        }
+                    }
+                    else if (!otherCharacter.IsSecurity)
+                    {
+                        //witnessed the attack as non-security, trigger security
+                        foreach (Character security in Character.CharacterList.Where(c => c.TeamID == otherCharacter.TeamID))
+                        {
+                            TriggerSecurity(security.AIController as HumanAIController, attacker, DetermineCombatMode(security, cumulativeDamage, isWitnessing));
                         }
                     }
                     float delay = isWitnessing ? GetReactionTime() : Rand.Range(2.0f, 3.0f, Rand.RandSync.Unsynced);
@@ -1926,12 +1935,12 @@ namespace Barotrauma
                         character.IsCriminal = true;
                         character.IsActingOffensively = true;
                     }
-                    if (!TriggerSecurity(otherHumanAI, combatMode))
+                    if (!TriggerSecurity(otherHumanAI, character, combatMode))
                     {
                         // Else call the others
                         foreach (Character security in Character.CharacterList.Where(c => c.TeamID == otherCharacter.TeamID).OrderBy(c => Vector2.DistanceSquared(character.WorldPosition, c.WorldPosition)))
                         {
-                            if (!TriggerSecurity(security.AIController as HumanAIController, combatMode))
+                            if (!TriggerSecurity(security.AIController as HumanAIController, character, combatMode))
                             {
                                 // Only alert one guard at a time
                                 return;
@@ -1941,25 +1950,25 @@ namespace Barotrauma
                 }
             }
 
-            bool TriggerSecurity(HumanAIController humanAI, AIObjectiveCombat.CombatMode combatMode)
-            {
-                if (humanAI == null) { return false; }
-                if (!humanAI.Character.IsSecurity) { return false; }
-                if (humanAI.ObjectiveManager.IsCurrentObjective<AIObjectiveCombat>()) { return false; }
-                humanAI.AddCombatObjective(combatMode, character, delay: GetReactionTime(),
-                    onCompleted: () => 
-                    { 
-                        //if the target is arrested successfully, reset the damage accumulator
-                        foreach (Character anyCharacter in Character.CharacterList)
+        }
+        private static bool TriggerSecurity(HumanAIController humanAI, Character targetCharacter, AIObjectiveCombat.CombatMode combatMode)
+        {
+            if (humanAI == null) { return false; }
+            if (!humanAI.Character.IsSecurity) { return false; }
+            if (humanAI.ObjectiveManager.IsCurrentObjective<AIObjectiveCombat>()) { return false; }
+            humanAI.AddCombatObjective(combatMode, targetCharacter, delay: GetReactionTime(),
+                onCompleted: () => 
+                { 
+                    //if the target is arrested successfully, reset the damage accumulator
+                    foreach (Character anyCharacter in Character.CharacterList)
+                    {
+                        if (anyCharacter.AIController is HumanAIController anyAI)
                         {
-                            if (anyCharacter.AIController is HumanAIController anyAI)
-                            {
-                                anyAI.structureDamageAccumulator?.Remove(character);
-                            }
+                            anyAI.structureDamageAccumulator?.Remove(targetCharacter);
                         }
-                    });
-                return true;
-            }
+                    }
+                });
+            return true;
         }
 
         public static void ItemTaken(Item item, Character thief)

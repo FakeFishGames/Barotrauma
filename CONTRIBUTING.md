@@ -21,7 +21,7 @@ You need a version of Visual Studio that supports C# 10 to compile game. If you 
 When installing on Windows, make sure you select ".NET desktop development" during the install process to make sure you have the required features to work with Barotrauma.
 
 #### Linux
-You will need to install the .NET 6 SDK according to the instructions laid out on Microsoft's docs: https://docs.microsoft.com/en-us/dotnet/core/install/linux
+You will need to install the .NET 8 SDK according to the instructions laid out on Microsoft's docs: https://docs.microsoft.com/en-us/dotnet/core/install/linux
 
 To edit the source code, we recommend using [Visual Studio Code](https://code.visualstudio.com/) with [Microsoft's C# extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.csharp).
 

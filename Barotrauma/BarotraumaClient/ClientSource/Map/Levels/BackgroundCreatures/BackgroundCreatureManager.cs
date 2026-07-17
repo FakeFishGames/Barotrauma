@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -15,52 +14,11 @@ namespace Barotrauma
 
         private float checkVisibleTimer;
 
-        private readonly List<BackgroundCreature> creatures = new List<BackgroundCreature>();
+        private readonly List<BackgroundCreature> creatures = [];
 
-        private readonly List<BackgroundCreature> visibleCreatures = new List<BackgroundCreature>();
+        private readonly List<BackgroundCreature> visibleCreatures = [];
 
-        public BackgroundCreatureManager()
-        {
-            /*foreach(var file in files)
-            {
-                LoadConfig(file.Path);
-            }*/
-        }
-
-        /*public BackgroundCreatureManager(string path)
-        {
-            DebugConsole.AddWarning($"Couldn't find any BackgroundCreaturePrefabs files, falling back to {path}");
-            LoadConfig(ContentPath.FromRaw(null, path));
-        }
-
-        private void LoadConfig(ContentPath configPath)
-        {
-            try
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(configPath);
-                if (doc == null) { return; }
-                var mainElement = doc.Root.FromPackage(configPath.ContentPackage);
-                if (mainElement.IsOverride())
-                {
-                    mainElement = mainElement.FirstElement();
-                    Prefabs.Clear();
-                    DebugConsole.NewMessage($"Overriding all background creatures with '{configPath}'", Color.MediumPurple);
-                }
-                else if (Prefabs.Any())
-                {
-                    DebugConsole.NewMessage($"Loading additional background creatures from file '{configPath}'");
-                }
-
-                foreach (var element in mainElement.Elements())
-                {
-                    Prefabs.Add(new BackgroundCreaturePrefab(element));
-                };
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError(String.Format("Failed to load BackgroundCreatures from {0}", configPath), e);
-            }
-        }*/
+        public IEnumerable<BackgroundCreature> VisibleCreatures => visibleCreatures;
 
         public void SpawnCreatures(Level level, int count, Vector2? position = null)
         {
@@ -158,14 +116,6 @@ namespace Barotrauma
             foreach (BackgroundCreature creature in visibleCreatures)
             {
                 creature.Update(deltaTime);
-            }
-        }
-
-        public void Draw(SpriteBatch spriteBatch, Camera cam)
-        {
-            foreach (BackgroundCreature creature in visibleCreatures)
-            {
-                creature.Draw(spriteBatch, cam);
             }
         }
 

@@ -734,8 +734,8 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.No, description: "Hides the condition displayed in the item's tooltip.")]
         public bool HideConditionInTooltip { get; set; }
 
-        [Serialize("", IsPropertySaveable.No, description: "If set, displays if the given fabrication recipe has been unlocked or not in the tooltip. The actual unlocking of the recipe should be handled in a status effect.")]
-        public Identifier UnlockedRecipeInToolTip { get; set; }
+        [Serialize("", IsPropertySaveable.No, description: "If set, the item's tooltip displays if the given fabrication recipe has been unlocked or not. The actual unlocking of the recipe should be handled in a status effect.")]
+        public Identifier[] UnlockedRecipeInToolTip { get; set; }
 
         //if true and the item has trigger areas defined, characters need to be within the trigger to interact with the item
         //if false, trigger areas define areas that can be used to highlight the item

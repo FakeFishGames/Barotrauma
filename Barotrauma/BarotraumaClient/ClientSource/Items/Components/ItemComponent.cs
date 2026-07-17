@@ -678,7 +678,7 @@ namespace Barotrauma.Items.Components
             {
                 color = GuiFrameSource.GetAttributeColor("color", Color.White);
             }
-            string style = GuiFrameSource.Attribute("style") == null ? null : GuiFrameSource.GetAttributeString("style", "");
+            string style = GuiFrameSource.GetAttribute("style") == null ? null : GuiFrameSource.GetAttributeString("style", "");
             GuiFrame = new GUIFrame(RectTransform.Load(GuiFrameSource, GUI.Canvas, Anchor.Center), style, color);
             GuiFrame.RectTransform.ScreenSpaceOffset = GuiFrameOffset;
 

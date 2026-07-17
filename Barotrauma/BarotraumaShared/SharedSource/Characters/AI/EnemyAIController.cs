@@ -197,6 +197,18 @@ namespace Barotrauma
 
         private readonly List<Body> myBodies;
 
+#if SERVER
+        /// <summary>
+        /// How often the server can send messages about a limb targeting some attack target.
+        /// Mainly relevant for attacks with no cooldown, e.g. fractal guardian's steam cannons which run continuously over time (we can't send events every frame)
+        /// </summary>
+        private const double MinSetAttackTargetEventInterval = 0.5;
+        private IDamageable lastDamageTarget;
+        private Limb lastTargetLimb;
+        private Limb lastAttackLimb;
+        private double lastSetAttackTargetEventTime;
+#endif
+
         public LatchOntoAI LatchOntoAI { get; private set; }
         public SwarmBehavior SwarmBehavior { get; private set; }
         public PetBehavior PetBehavior { get; private set; }
@@ -2679,11 +2691,19 @@ namespace Barotrauma
             if (!ActiveAttack.IsRunning)
             {
 #if SERVER
-                GameMain.NetworkMember.CreateEntityEvent(Character, new Character.SetAttackTargetEventData(
-                    AttackLimb,
-                    damageTarget,
-                    targetLimb,
-                    SimPosition));
+                if (Timing.TotalTime > lastSetAttackTargetEventTime + MinSetAttackTargetEventInterval || 
+                    damageTarget != lastDamageTarget || AttackLimb != lastAttackLimb || targetLimb != lastTargetLimb)
+                {
+                    GameMain.NetworkMember.CreateEntityEvent(Character, new Character.SetAttackTargetEventData(
+                        AttackLimb,
+                        damageTarget,
+                        targetLimb,
+                        SimPosition));
+                    lastSetAttackTargetEventTime = Timing.TotalTime;
+                    lastDamageTarget = damageTarget;
+                    lastAttackLimb = AttackLimb;
+                    lastTargetLimb = targetLimb;
+                }
 #else
                 Character.PlaySound(CharacterSound.SoundType.Attack, maxInterval: 3);
 #endif

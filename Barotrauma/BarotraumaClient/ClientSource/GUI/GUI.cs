@@ -14,6 +14,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Barotrauma
 {
@@ -649,12 +650,12 @@ namespace Barotrauma
                 DrawMessages(spriteBatch, cam);
 
                 if (MouseOn != null)
-                { 
+                {
+                    MouseOn.OnDrawToolTip?.Invoke(MouseOn);
                     if (!MouseOn.ToolTip.IsNullOrWhiteSpace())
                     {
                         MouseOn.DrawToolTip(spriteBatch);
                     }
-                    MouseOn.OnDrawToolTip?.Invoke(MouseOn);
                 }
 
                 if (SubEditorScreen.IsSubEditor())
@@ -2323,10 +2324,10 @@ namespace Barotrauma
         /// <summary>
         /// Creates a 7-segment display.
         /// </summary>
-        /// <param name="leftLabel">Returns <see langword="null"/> if <paramref name="leftLabelText"/> is <see langword="null"/> or empty.</param>
+        /// <param name="leftLabel">Returns <see langword="null"/> if <paramref name="leftLabelText"/> is <see langword="null"/>.</param>
         /// <param name="rightLabelText">Defaults to <c>TextManager.Get("kilowatt")</c>.</param>
         /// <param name="leftLabelFont">Defaults to <see cref="GUIStyle.LargeFont"/>.</param>
-        public static GUITextBlock CreateDigitalDisplay(RectTransform rect, out GUITextBlock? leftLabel, out GUITextBlock rightLabel, LocalizedString? leftLabelText = null, LocalizedString? rightLabelText = null, LocalizedString? tooltip = null, GUIFont? leftLabelFont = null)
+        public static GUITextBlock CreateDigitalDisplay(RectTransform rect, [NotNullIfNotNull(nameof(leftLabelText))] out GUITextBlock? leftLabel, out GUITextBlock rightLabel, LocalizedString? leftLabelText = null, LocalizedString? rightLabelText = null, LocalizedString? tooltip = null, GUIFont? leftLabelFont = null)
         {
             GUILayoutGroup textArea = new(rect, isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
@@ -2337,7 +2338,7 @@ namespace Barotrauma
             };
 
             leftLabel = null;
-            if (!leftLabelText.IsNullOrEmpty())
+            if (leftLabelText != null)
             {
                 leftLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1f), textArea.RectTransform), leftLabelText, textColor: GUIStyle.TextColorBright, font: leftLabelFont ?? GUIStyle.LargeFont, textAlignment: Alignment.CenterRight);
             }

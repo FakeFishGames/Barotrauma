@@ -716,13 +716,19 @@ namespace Barotrauma.Items.Components
 
             GetAvailablePower(out float batteryCharge, out float batteryCapacity);
 
-            List<Item> availableAmmo = new List<Item>();
+            List<Item> availableAmmo = [];
+            AddAmmoFromContainer(item.GetComponent<ItemContainer>());
             foreach (MapEntity e in item.linkedTo)
             {
-                if (!(e is Item linkedItem)) { continue; }
-                var itemContainer = linkedItem.GetComponent<ItemContainer>();
-                if (itemContainer == null) { continue; }
+                if (e is not Item linkedItem) { continue; }
+                AddAmmoFromContainer(linkedItem.GetComponent<ItemContainer>());
+            }
+
+            void AddAmmoFromContainer(ItemContainer itemContainer)
+            {
+                if (itemContainer == null) { return; }
                 availableAmmo.AddRange(itemContainer.Inventory.AllItems);
+                //add empty slots too
                 for (int i = 0; i < itemContainer.Inventory.Capacity - itemContainer.Inventory.AllItems.Count(); i++)
                 {
                     availableAmmo.Add(null);

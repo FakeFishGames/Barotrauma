@@ -193,13 +193,6 @@ namespace Barotrauma
                                                     (item.PreviousParentInventory == null || 
                                                     !sender.Character.CanAccessInventory(item.PreviousParentInventory));
 
-                            // Prevent modified clients from being able to steal items from characters by item swapping with an existing item
-                            // due to drag and drop being enabled
-                            if (!sender.Character.CanAccessInventory(this, CharacterInventory.AccessLevel.AllowBotsAndPets) && GetItemAt(slotIndex) != null)
-                            {
-                                itemAccessDenied = true;
-                            }
-
                             //more restricted "adding" of handcuffs: we can't allow putting handcuffs on a player just because dragging and dropping is allowed
                             if (item.HasTag(Tags.HandLockerItem) && !itemAccessDenied)
                             {
@@ -219,7 +212,7 @@ namespace Barotrauma
                                 continue;
                             }
                         }
-                        TryPutItem(item, slotIndex, true, true, sender.Character, false);
+                        TryPutItem(item, slotIndex, allowSwapping: false, allowCombine: false, user: sender.Character, createNetworkEvent: false);
                         for (int j = 0; j < capacity; j++)
                         {
                             if (slots[j].Contains(item) && !receivedItemIdsFromClient[j].Contains(item.ID))

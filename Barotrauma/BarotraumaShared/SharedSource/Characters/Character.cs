@@ -994,6 +994,9 @@ namespace Barotrauma
         public bool IsForceRagdolled;
         public bool FollowCursor = true;
 
+        /// <summary>
+        /// Is the character currently dead, unconscious or paralyzed?
+        /// </summary>
         public bool IsIncapacitated
         {
             get
@@ -1003,6 +1006,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Is the character dead or below 0 vitality and not able to stay conscious?
+        /// </summary>
         public bool IsUnconscious
         {
             get { return CharacterHealth.IsUnconscious; }
@@ -1669,7 +1675,8 @@ namespace Barotrauma
             AnimController.FindHull(setInWater: true);
             if (AnimController.CurrentHull != null) { Submarine = AnimController.CurrentHull.Submarine; }
 
-            IsContainable = prefab.ConfigElement.GetAttributeBool(nameof(IsContainable), def: Mass <= 30.0f);
+            //mass < 35 = husk chimera is the largest vanilla monster that can be contained by default
+            IsContainable = prefab.ConfigElement.GetAttributeBool(nameof(IsContainable), def: Mass < 35.0f);
 
             CharacterList.Add(this);
 
@@ -2258,7 +2265,10 @@ namespace Barotrauma
             {
                 Vector2 targetMovement = GetTargetMovement();
                 AnimController.TargetMovement = targetMovement;
-                AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < -0.1f;
+                if (SelectedItem?.GetComponent<Controller>() is not { ControlCharacterPose: true })
+                {
+                    AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < -0.1f;
+                }
             }
 
             if (AnimController is HumanoidAnimController humanAnimController)
@@ -3503,9 +3513,11 @@ namespace Barotrauma
 
             UpdateAttackers(deltaTime);
 
-            foreach (var characterTalent in characterTalents)
+            //use a for loop instead of foreach because talents can unlock other talents via StatusEffectAction (see #17328)
+            //this way we'll just add them to the end of the list without causing a collection was modified exception
+            for (int i = 0; i < characterTalents.Count; i++)
             {
-                characterTalent.UpdateTalent(deltaTime);
+                characterTalents[i].UpdateTalent(deltaTime);
             }
 
             if (IsDead) { return; }
@@ -5794,6 +5806,12 @@ namespace Barotrauma
         {
             if (info == null) { return false; }
             return info.UnlockedTalents.Contains(identifier);
+        }
+
+        public bool IsTalentLocked(Identifier talentIdentifier)
+        {
+            if (info == null) { return true; }
+            return Info.GetSavedStatValue(StatTypes.LockedTalents, talentIdentifier) >= 1;
         }
 
         public bool HasUnlockedAllTalents()

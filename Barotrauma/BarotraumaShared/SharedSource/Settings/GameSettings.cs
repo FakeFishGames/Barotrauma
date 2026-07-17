@@ -562,6 +562,19 @@ namespace Barotrauma
                 IgnoredHints.Init(currentConfigDoc.Root.GetChildElement("ignoredhints"));
                 DebugConsoleMapping.Init(currentConfigDoc.Root.GetChildElement("debugconsolemapping"));
                 CompletedTutorials.Init(currentConfigDoc.Root.GetChildElement("tutorials"));
+                var submarineSettings = currentConfigDoc.Root.GetChildElement("submarinesettings");
+                if (submarineSettings != null)
+                {
+                    SubmarineInfo.SubmarinePathsWithRemoteStorage.Clear();
+                    foreach (XElement subElement in submarineSettings.Elements("SubmarineWithRemoteStorage"))
+                    {
+                        string path = subElement.GetAttributeString("path", "");
+                        if (!path.IsNullOrEmpty())
+                        {
+                            SubmarineInfo.SubmarinePathsWithRemoteStorage.Add(path);
+                        }
+                    }
+                }
 #endif
             }
             else
@@ -689,7 +702,14 @@ namespace Barotrauma
             
             XElement tutorialsElement = new XElement("tutorials"); root.Add(tutorialsElement);
             CompletedTutorials.Instance.SaveTo(tutorialsElement);
-            
+
+            XElement submarineSettings = new XElement("submarinesettings"); root.Add(submarineSettings);
+
+            SubmarineInfo.SubmarinePathsWithRemoteStorage.ForEach(path => 
+            {
+                submarineSettings.Add(new XElement("SubmarineWithRemoteStorage", new XAttribute("path", path)));
+            });
+
             XElement keyMappingElement = new XElement("keymapping",
                 currentConfig.KeyMap.Bindings.Select(kvp
                     => new XAttribute(kvp.Key.ToString(), kvp.Value.ToString())));

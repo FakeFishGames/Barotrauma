@@ -26,7 +26,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                DisplayMsg = TextManager.ParseInputTypes(TextManager.Get(Msg));
+                DisplayMsg = TextManager.ParseInputTypes(TextManager.Get(Msg)).Fallback(Msg);
             }
 
             CharacterHUD.RecreateHudTextsIfControlling(Character.Controlled);

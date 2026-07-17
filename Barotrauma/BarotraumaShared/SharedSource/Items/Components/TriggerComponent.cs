@@ -252,7 +252,7 @@ namespace Barotrauma.Items.Components
             {
                 PhysicsBody = new PhysicsBody(currentWidth, currentHeight, radius: 0.0f, density: 1.5f, BodyType.Static, Physics.CollisionWall, LevelTrigger.GetCollisionCategories(triggeredBy))
                 {
-                    UserData = item
+                    UserData = this
                 };
             }
             else
@@ -260,7 +260,7 @@ namespace Barotrauma.Items.Components
                 currentRadius = Math.Max(ConvertUnits.ToSimUnits(Radius * item.Scale), 0.01f);
                 PhysicsBody = new PhysicsBody(width: 0.0f, height: 0.0f, radius: currentRadius, density: 1.5f, BodyType.Static, Physics.CollisionWall, LevelTrigger.GetCollisionCategories(triggeredBy))
                 {
-                    UserData = item
+                    UserData = this
                 };
             }
 

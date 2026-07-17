@@ -258,13 +258,19 @@ namespace Barotrauma
                 //RelativeSpacing = 0.05f
             };
 
-            InventorySlotContainer = new GUICustomComponent(new RectTransform(new Vector2(0.1f, 1.0f), characterIndicatorArea.RectTransform, Anchor.TopLeft, Pivot.TopRight),
+            GUIFrame left = new(new RectTransform(new Vector2(0.25f, 1f), characterIndicatorArea.RectTransform), style: null);
+
+            InventorySlotContainer = new GUICustomComponent(new RectTransform(Vector2.One, left.RectTransform),
                 (spriteBatch, component) =>
                 {
                     for (int i = 0; i < character.Inventory.Capacity; i++)
                     {
                         if (character.Inventory.SlotTypes[i] != InvSlotType.HealthInterface) { continue; }
                         if (character.Inventory.HideSlot(i)) { continue; }
+
+                        int width = Character.Inventory.visualSlots[i].Rect.Width;
+                        left.RectTransform.MinSize = new Point(width, left.RectTransform.MinSize.Y);
+                        if (afflictionIconList != null) { afflictionIconList.RectTransform.MinSize = new Point(width, afflictionIconList.RectTransform.MinSize.Y); }
 
                         //don't draw the item if it's being dragged out of the slot
                         bool drawItem = !Inventory.DraggingItems.Any() || !Character.Inventory.GetItemsAt(i).All(it => Inventory.DraggingItems.Contains(it)) || character.Inventory.visualSlots[i].MouseOn();
@@ -292,8 +298,7 @@ namespace Barotrauma
                     }
                 });
 
-
-            cprButton = new GUIButton(new RectTransform(new Vector2(0.17f, 0.17f), characterIndicatorArea.RectTransform, Anchor.BottomLeft, scaleBasis: ScaleBasis.Smallest), text: "", style: "CPRButton")
+            cprButton = new GUIButton(new RectTransform(new Vector2(0.75f), left.RectTransform, Anchor.BottomLeft, scaleBasis: ScaleBasis.Smallest), text: "", style: "CPRButton")
             {
                 UserData = UIHighlightAction.ElementId.CPRButton,
                 OnClicked = (button, userData) =>
@@ -316,12 +321,11 @@ namespace Barotrauma
 
                     return true;
                 },
-                ToolTip = TextManager.Get("doctor.cprobjective"),
-                IgnoreLayoutGroups = true,
+                ToolTip = TextManager.Get("tutorial.roles.medic.objective.cpr"),
                 Visible = false
             };
 
-            var limbSelection = new GUICustomComponent(new RectTransform(new Vector2(0.4f, 1.0f), characterIndicatorArea.RectTransform),
+            var limbSelection = new GUICustomComponent(new RectTransform(new Vector2(0.5f, 1.0f), characterIndicatorArea.RectTransform),
                 (spriteBatch, component) =>
                 {
                     DrawHealthWindow(spriteBatch, component.RectTransform.Rect, true);
@@ -367,8 +371,6 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
-
-            characterIndicatorArea.Recalculate();
 
             healthBarHolder = new GUIFrame(new RectTransform(Point.Zero, GUI.Canvas), style: null)
             {

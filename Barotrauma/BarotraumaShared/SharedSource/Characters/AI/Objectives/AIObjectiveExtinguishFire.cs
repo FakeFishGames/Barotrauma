@@ -133,7 +133,7 @@ namespace Barotrauma
                     bool operateExtinguisher = !moveCloser || (dist < extinguisher.Range * 1.2f && character.CanSeeTarget(targetHull));
                     if (operateExtinguisher)
                     {
-                        character.CursorPosition = fs.Position;
+                        character.CursorPosition = FarseerPhysics.ConvertUnits.ToDisplayUnits(Submarine.GetRelativeSimPositionFromWorldPosition(fs.WorldPosition, character.Submarine, fs.Submarine));
                         Vector2 fromCharacterToFireSource = fs.WorldPosition - character.WorldPosition;
                         character.CursorPosition += VectorExtensions.Forward(extinguisherItem.body.TransformedRotation + (float)Math.Sin(sinTime) / 2, fromCharacterToFireSource.Length() / 2);
                         if (extinguisherItem.RequireAimToUse)

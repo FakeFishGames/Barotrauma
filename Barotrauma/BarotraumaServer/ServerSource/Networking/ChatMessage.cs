@@ -5,6 +5,17 @@ namespace Barotrauma.Networking
 {
     partial class ChatMessage
     {
+        private static string SanitizeText(Client client, string text)
+        {
+            if (!client.HasPermission(ClientPermissions.SpamImmunity))
+            {
+                // Prevent clients without spam immunity from being able to use RichString features
+                text = text.Replace('‖', ' ');
+            }
+
+            return text;
+        }
+
         public static void ServerRead(IReadMessage msg, Client c)
         {
             c.KickAFKTimer = 0.0f;
@@ -66,8 +77,7 @@ namespace Barotrauma.Networking
                 txt = msg.ReadString() ?? "";
             }
 
-            // Sanitize incoming text message from client so they can't use RichString features
-            txt = txt.Replace('‖', ' ');
+            txt = SanitizeText(c, txt);
 
             if (!NetIdUtils.IdMoreRecent(ID, c.LastSentChatMsgID)) { return; }
 

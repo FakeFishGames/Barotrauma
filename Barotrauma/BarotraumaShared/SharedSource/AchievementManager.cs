@@ -524,8 +524,7 @@ namespace Barotrauma
                     {
                         UnlockAchievement(causeOfDeath.Killer, "killpoison".ToIdentifier());
                     }
-                    else if (item.Prefab.Identifier == "nuclearshell" ||
-                             item.Prefab.Identifier == "nucleardepthcharge")
+                    else if (item.Prefab.Tags.Contains("nuclearexplosive"))
                     {
                             UnlockAchievement(causeOfDeath.Killer, "killnuke".ToIdentifier());
                     }

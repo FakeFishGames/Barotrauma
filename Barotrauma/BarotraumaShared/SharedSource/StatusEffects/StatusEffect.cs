@@ -1779,7 +1779,7 @@ namespace Barotrauma
                     offset *= item.Scale;
                     if (item.FlippedX) { offset.X *= -1; }
                     if (item.FlippedY) { offset.Y *= -1; }
-                    offset = Vector2.Transform(offset, Matrix.CreateRotationZ(-item.RotationRad));
+                    offset = Vector2.Transform(offset, Matrix.CreateRotationZ(item.body?.Rotation ?? -item.RotationRad));
                 }
             }
 
