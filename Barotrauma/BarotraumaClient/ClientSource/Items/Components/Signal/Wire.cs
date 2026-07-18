@@ -42,6 +42,7 @@ namespace Barotrauma.Items.Components
             }
             private void RecalculateVertices(Sprite wireSprite, float width, Vector2 offset, Color color)
             {
+
                 if (MathUtils.NearlyEqual(cachedWidth, width))
                 {
                     //FAST_PATH
@@ -49,9 +50,7 @@ namespace Barotrauma.Items.Components
                     SetCachedVertex(1, offset, color);
                     SetCachedVertex(2, offset, color);
                     SetCachedVertex(3, offset, color);
-                }
-                else
-                {
+                } else { 
                     cachedWidth = width;
 
                     Vector2 expandDir = start - end;
@@ -79,7 +78,7 @@ namespace Barotrauma.Items.Components
                     SetVertex(1, invStart - expandDir, topLeftUv.X, bottomRightUv.Y);
                     SetVertex(3, invEnd - expandDir, bottomRightUv);
                     Array.Copy(vertices, shiftedVertices, vertices.Length);
-                }
+                } 
             }
             #region SET_VERTEX
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -135,7 +134,7 @@ namespace Barotrauma.Items.Components
                 spriteBatch.Draw(wireSprite.Texture,
                     start, wireSprite.SourceRect, color,
                     MathUtils.VectorToAngle(end - start),
-                    wireSprite.Origin/*new Vector2(0.0f, wireSprite.size.Y / 2.0f)*/,
+                    new Vector2(0.0f, wireSprite.size.Y / 2.0f),
                     new Vector2((Vector2.Distance(start, end)) / wireSprite.size.X, width),
                     SpriteEffects.None,
                     depth);
