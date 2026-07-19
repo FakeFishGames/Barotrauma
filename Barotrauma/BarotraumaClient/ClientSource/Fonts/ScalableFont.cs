@@ -73,7 +73,8 @@ namespace Barotrauma
             int TexIndex = default,
             Vector2 DrawOffset = default,
             float Advance = default,
-            Rectangle TexCoords = default);
+            Rectangle TexCoords = default,
+            Vector4 UvCoords = default);
 
         public static TextManager.SpeciallyHandledCharCategory ExtractShccFromXElement(XElement element)
             => TextManager.SpeciallyHandledCharCategories
@@ -189,6 +190,8 @@ namespace Barotrauma
                 {
                     uint start = charRanges[i];
                     uint end = charRanges[i + 1];
+                    float invTexDims = 1.0f / texDims;
+
                     for (uint j = start; j <= end; j++)
                     {
                         uint glyphIndex = face.GetCharIndex(j);
@@ -243,12 +246,18 @@ namespace Barotrauma
                             texIndex++;
                             Array.Clear(pixelBuffer);
                         }
+                        //precalculate the UV coordinates.
+                        float uLeft = currentCoords.X * invTexDims;
+                        float vTop = currentCoords.Y * invTexDims;
+                        float uRight = (currentCoords.X + glyphWidth) * invTexDims;
+                        float vBottom = (currentCoords.Y + glyphHeight) * invTexDims;
 
                         GlyphData newData = new GlyphData(
                             Advance: (float)face.Glyph.Metrics.HorizontalAdvance,
                             TexIndex: texIndex,
                             TexCoords: new Rectangle((int)currentCoords.X, (int)currentCoords.Y, glyphWidth, glyphHeight),
-                            DrawOffset: new Vector2(face.Glyph.BitmapLeft, baseHeight * 14 / 10 - face.Glyph.BitmapTop)
+                            DrawOffset: new Vector2(face.Glyph.BitmapLeft, baseHeight * 14 / 10 - face.Glyph.BitmapTop),
+                            UvCoords: new Vector4(uLeft, vTop, uRight, vBottom)
                         );
                         texCoords.Add(j, newData);
 
@@ -385,13 +394,21 @@ namespace Barotrauma
                         textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
                         currentDynamicPixelBuffer = null;
                     }
+                    //pre calculate the UV coords instead of recalculating them
+                    float invTexDims = 1.0f / texDims;
 
+                    float left = currentDynamicAtlasCoords.X * invTexDims;
+                    float top = currentDynamicAtlasCoords.Y * invTexDims;
+                    float right = (currentDynamicAtlasCoords.X + glyphWidth) * invTexDims;
+                    float bottom = (currentDynamicAtlasCoords.Y + glyphHeight) * invTexDims;
                     GlyphData newData = new GlyphData(
                         Advance: (float)horizontalAdvance,
                         TexIndex: textures.Count - 1,
                         TexCoords: new Rectangle((int)currentDynamicAtlasCoords.X, (int)currentDynamicAtlasCoords.Y, glyphWidth, glyphHeight),
-                        DrawOffset: drawOffset
+                        DrawOffset: drawOffset,
+                        UvCoords: new Vector4(left, top, right, bottom)
                     );
+
                     texCoords.Add(character, newData);
 
                     if (currentDynamicPixelBuffer == null)
@@ -424,6 +441,7 @@ namespace Barotrauma
         private void HandleNewLineAndAlignment(
             string text,
             in Vector2 advanceUnit,
+            in Vector2 scaledAdvanceUnit,
             in Vector2 position,
             in Vector2 scale,
             bool isHorizontallyCentered,
@@ -463,7 +481,7 @@ namespace Barotrauma
             {
                 lineNum++;
                 currentPos = position;
-                currentPos.X -= LineHeight * lineNum * advanceUnit.Y * scale.Y;
+                currentPos.X -= LineHeight * lineNum * scaledAdvanceUnit.Y;
                 currentPos.Y += LineHeight * lineNum * advanceUnit.X * scale.Y;
                 shouldContinue = true; charIndex = 0; return;
             }
@@ -500,11 +518,12 @@ namespace Barotrauma
             int lineNum = 0;
             Vector2 currentPos = position;
             Vector2 advanceUnit = rotation == 0.0f ? Vector2.UnitX : new Vector2(MathF.Cos(rotation), MathF.Sin(rotation));
+            Vector2 scaledAdvanceUnit = advanceUnit * scale;
             bool isHorizontallyCentered = (alignment & Alignment.CenterX) == Alignment.CenterX;
             bool isAlignedToRight = (alignment & Alignment.Right) == Alignment.Right;
             for (int i = 0; i < text.Length; i++)
             {
-                HandleNewLineAndAlignment(text, advanceUnit, position, scale, isHorizontallyCentered, isAlignedToRight, i,
+                HandleNewLineAndAlignment(text, advanceUnit,scaledAdvanceUnit, position, scale, isHorizontallyCentered, isAlignedToRight, i,
                     ref lineWidth, ref currentLineOffset, ref lineNum, ref currentPos,
                     out uint charIndex, out bool shouldContinue);
                 if (shouldContinue) { continue; }
@@ -518,8 +537,8 @@ namespace Barotrauma
                     }
                     Texture2D tex = textures[gd.TexIndex];
                     Vector2 drawOffset;
-                    drawOffset.X = gd.DrawOffset.X * advanceUnit.X * scale.X - gd.DrawOffset.Y * advanceUnit.Y * scale.Y;
-                    drawOffset.Y = gd.DrawOffset.X * advanceUnit.Y * scale.Y + gd.DrawOffset.Y * advanceUnit.X * scale.X;
+                    drawOffset.X = gd.DrawOffset.X * scaledAdvanceUnit.X - gd.DrawOffset.Y * scaledAdvanceUnit.Y;
+                    drawOffset.Y = gd.DrawOffset.X * scaledAdvanceUnit.Y + gd.DrawOffset.Y * scaledAdvanceUnit.X;
 
                     sb.Draw(tex, currentPos + currentLineOffset + drawOffset, gd.TexCoords, color, rotation, origin, scale, se, layerDepth);
                 }
@@ -583,22 +602,24 @@ namespace Barotrauma
 
                     Texture2D tex = textures[gd.TexIndex];
 
-                    float left = (float)gd.TexCoords.Left / tex.Width;
-                    float bottom = (float)gd.TexCoords.Bottom / tex.Height;
-                    float top = (float)gd.TexCoords.Top / tex.Height;
-                    float right = (float)gd.TexCoords.Right / tex.Width;
                     Vector2 currentOffset = currentPos + gd.DrawOffset;
-                    quadVertices[0].Position = new Vector3(currentOffset + (bottomItalicOffset, gd.TexCoords.Height), 0.0f);
-                    quadVertices[0].TextureCoordinate = new Vector2(left, bottom);
+                    Vector2 offset = currentPos + gd.DrawOffset;
 
-                    quadVertices[1].Position = new Vector3(currentOffset + (topItalicOffset, 0.0f), 0.0f);
-                    quadVertices[1].TextureCoordinate = new Vector2(left, top);
+                    // Vertex 0: Bottom-Left
+                    FillVertex(0, new Vector2(offset.X + bottomItalicOffset, offset.Y + gd.TexCoords.Height),
+                               gd.UvCoords.X, gd.UvCoords.W, color);
 
-                    quadVertices[2].Position = new Vector3(currentOffset + (gd.TexCoords.Width + bottomItalicOffset, gd.TexCoords.Height), 0.0f);
-                    quadVertices[2].TextureCoordinate = new Vector2(right, bottom);
+                    // Vertex 1: Top-Left
+                    FillVertex(1, new Vector2(offset.X + topItalicOffset, offset.Y),
+                               gd.UvCoords.X, gd.UvCoords.Y, color);
 
-                    quadVertices[3].Position = new Vector3(currentOffset + (gd.TexCoords.Width + topItalicOffset, 0.0f), 0.0f);
-                    quadVertices[3].TextureCoordinate = new Vector2(right, top);
+                    // Vertex 2: Bottom-Right
+                    FillVertex(2, new Vector2(offset.X + gd.TexCoords.Width + bottomItalicOffset, offset.Y + gd.TexCoords.Height),
+                               gd.UvCoords.Z, gd.UvCoords.W, color);
+
+                    // Vertex 3: Top-Right
+                    FillVertex(3, new Vector2(offset.X + gd.TexCoords.Width + topItalicOffset, offset.Y),
+                               gd.UvCoords.Z, gd.UvCoords.Y, color);
 
                     sb.Draw(tex, quadVertices, 0.0f);
                 }
@@ -628,6 +649,7 @@ namespace Barotrauma
             int lineNum = 0;
             Vector2 currentPos = position;
             Vector2 advanceUnit = Vector2.UnitX;
+            Vector2 scaledAdvanceUnit = advanceUnit * scale;
 
             if (rotation != 0.0f)
             {
@@ -641,12 +663,9 @@ namespace Barotrauma
             bool isHorizontallyCentered = (alignment & Alignment.CenterX) == Alignment.CenterX;
             bool isAlignedToRight = (alignment & Alignment.Right) == Alignment.Right;
 
-            float xMultiplier = advanceUnit.X * scale.X;
-            float yMultiplier = advanceUnit.Y * scale.Y;
-
             for (int i = 0; i < text.Length; i++)
             {
-                HandleNewLineAndAlignment(text, advanceUnit, position, scale,isHorizontallyCentered, isAlignedToRight, i,
+                HandleNewLineAndAlignment(text, advanceUnit,scaledAdvanceUnit, position, scale,isHorizontallyCentered, isAlignedToRight, i,
                     ref lineWidth, ref currentLineOffset, ref lineNum, ref currentPos,
                     out uint charIndex, out bool shouldContinue);
                 if (shouldContinue) { continue; }
@@ -681,8 +700,8 @@ namespace Barotrauma
                     float x = gd.DrawOffset.X;
                     float y = gd.DrawOffset.Y;
 
-                    drawOffset.X = x * xMultiplier - y * yMultiplier;
-                    drawOffset.Y = x * yMultiplier + y * xMultiplier;
+                    drawOffset.X = x * scaledAdvanceUnit.X - y * scaledAdvanceUnit.Y;
+                    drawOffset.Y = x * scaledAdvanceUnit.Y + y * scaledAdvanceUnit.X;
 
                     sb.Draw(tex, currentPos + currentLineOffset + drawOffset, gd.TexCoords, currentTextColor, rotation, origin, scale, se, layerDepth);
                 }
@@ -861,7 +880,16 @@ namespace Barotrauma
             var tex = gd.TexIndex >= 0 ? textures[gd.TexIndex] : null;
             return (gd, tex);
         }
-
+        private void FillVertex(int index, Vector2 pos, float u, float v, Color color, float depth = 0.0f)
+        {
+            ref var vert = ref quadVertices[index];
+            vert.Position.X = pos.X;
+            vert.Position.Y = pos.Y;
+            vert.Position.Z = depth;
+            vert.Color = color;
+            vert.TextureCoordinate.X = u;
+            vert.TextureCoordinate.Y = v;
+        }
         public void Dispose()
         {
             FontList.Remove(this);
