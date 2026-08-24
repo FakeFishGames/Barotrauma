@@ -92,7 +92,7 @@ namespace Barotrauma.Networking
                 }
                 teamSpecificState.CurrentState = newState;
 
-                if (respawnPromptPending && !clientHasChosenNewBotViaShuttle)
+                if (respawnPromptPending && !clientHasChosenNewBotViaShuttle && GameMain.Client?.IsControllingBot != true)
                 {
                     GameMain.Client.HasSpawned = true;
                     DeathPrompt.Create(delay: 1.0f);

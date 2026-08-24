@@ -261,17 +261,43 @@ namespace Barotrauma
                 {
                     c.Character = null;
                 }
-                //use the info of the character the client is currently controlling
-                // or the previously saved info if not (e.g. if the client has been spectating or died)
+
+                // Save the main character separately when the client is controlling a bot
+                var mainCharacter = GameMain.Server.GetMainCharacter(c);
+                Character activeCharacter = c.Character;
+                CharacterInfo activeCharacterInfo = c.CharacterInfo;
+                if (mainCharacter != null)
+                {
+                    c.Character = mainCharacter;
+                    c.CharacterInfo = mainCharacter.Info;
+                }
+
+                // Use the main character's info, or the previously saved info if not (e.g. if the client has been spectating or died)
                 var characterInfo = c.Character?.Info;
                 var matchingCharacterData = characterData.Find(d => d.MatchesClient(c));
                 if (matchingCharacterData != null)
                 {
                     //hasn't spawned this round -> don't touch the data
-                    if (!matchingCharacterData.HasSpawned) { continue; }
+                    if (!matchingCharacterData.HasSpawned)
+                    {
+                        if (mainCharacter != null)
+                        {
+                            c.Character = activeCharacter;
+                            c.CharacterInfo = activeCharacterInfo;
+                        }
+                        continue;
+                    }
                     characterInfo ??= matchingCharacterData.CharacterInfo;
                 }
-                if (characterInfo == null || characterInfo.Discarded) { continue; }
+                if (characterInfo == null || characterInfo.Discarded)
+                {
+                    if (mainCharacter != null)
+                    {
+                        c.Character = activeCharacter;
+                        c.CharacterInfo = activeCharacterInfo;
+                    }
+                    continue;
+                }
                 //reduce skills if the character has died
                 bool diedToDisconnect = characterInfo.CauseOfDeath is { Type: CauseOfDeathType.Disconnected };
                 bool diedForReal = characterInfo.CauseOfDeath != null && !diedToDisconnect;
@@ -296,6 +322,12 @@ namespace Barotrauma
                 if (c.Character != null || diedForReal)
                 {
                     SetClientCharacterData(c);
+                }
+
+                if (mainCharacter != null)
+                {
+                    c.Character = activeCharacter;
+                    c.CharacterInfo = activeCharacterInfo;
                 }
             }
 
@@ -345,7 +377,7 @@ namespace Barotrauma
                     Map.CurrentLocation.RegisterTakenItems(c.Inventory.AllItems.Where(it => it.SpawnedInCurrentOutpost && it.OriginalModuleIndex > 0));
                 }
 
-                if (c.Info != null && c.IsBot)
+                if (c.Info != null && (c.IsBot || c.AIController is HumanAIController))
                 {
                     if (c.IsDead && c.CauseOfDeath?.Type != CauseOfDeathType.Disconnected) { CrewManager.RemoveCharacterInfo(c.Info); }
                     c.Info.HealthData = new XElement("health");

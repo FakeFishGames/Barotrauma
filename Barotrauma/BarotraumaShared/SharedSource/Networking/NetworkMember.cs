@@ -45,7 +45,8 @@ namespace Barotrauma.Networking
         TAKEOVERBOT,
         TOGGLE_RESERVE_BENCH,
 
-        REQUEST_BACKUP_INDICES // client wants a list of available backups for a save file
+        REQUEST_BACKUP_INDICES, // client wants a list of available backups for a save file
+        REQUEST_CHARACTER_CONTROL // client wants to take control of a character
     }
 
     enum ClientNetSegment

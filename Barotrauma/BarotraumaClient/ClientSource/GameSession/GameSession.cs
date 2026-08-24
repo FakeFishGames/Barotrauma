@@ -287,6 +287,14 @@ namespace Barotrauma
         {
             if (topLeftButtonGroup == null) { return; }
 
+            // If the player is controlling a bot, hide the death choice elements.
+            if (GameMain.Client?.IsControllingBot == true && Character.Controlled != null)
+            {
+                deathChoiceInfoFrame.Visible = false;
+                deathChoiceButtonContainer.Visible = false;
+                return;
+            }
+
             bool permadeathMode = GameMain.NetworkMember?.ServerSettings is { RespawnMode: RespawnMode.Permadeath };
             bool ironmanMode = GameMain.NetworkMember?.ServerSettings is { IronmanModeActive: true };
 
