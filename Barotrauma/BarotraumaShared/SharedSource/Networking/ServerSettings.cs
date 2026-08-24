@@ -516,6 +516,21 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
+
+        private bool allowControllingBots;
+
+        [Serialize(false, IsPropertySaveable.Yes)]
+        public bool AllowControllingBots
+        {
+            get { return allowControllingBots; }
+            private set
+            {
+                if (GameMain.NetworkMember is { GameStarted: true, IsServer: true }) { return; }
+                if (value && (respawnMode == RespawnMode.Permadeath || IronmanMode)) { return; }
+                allowControllingBots = value;
+                ServerDetailsChanged = true;
+            }
+        }
         
         [Serialize(false, IsPropertySaveable.Yes)]
         /// <summary>
@@ -756,6 +771,7 @@ namespace Barotrauma.Networking
                 if (respawnMode == value) { return; }
                 //can't change this when a round is running (but clients can, if the server says so, e.g. when a client joins and needs to know what it's set to despite a round being running)
                 if (GameMain.NetworkMember is { GameStarted: true, IsServer: true }) { return; }
+                if (value == RespawnMode.Permadeath && AllowControllingBots) { return; }
                 respawnMode = value;
                 ServerDetailsChanged = true;
             }

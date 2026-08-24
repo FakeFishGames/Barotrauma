@@ -49,6 +49,21 @@ namespace Barotrauma
                 }
             }
 
+            // Ensure the owner client is correctly associated with this character in the multiplayer campaign.
+            if (GameMain.Server is { } server &&
+                GameMain.GameSession?.Campaign is MultiPlayerCampaign)
+            {
+                var ownerClient = server.ConnectedClients.FirstOrDefault(c => c.Character == this);
+                if (ownerClient == null)
+                {
+                    ownerClient = server.ConnectedClients.FirstOrDefault(c => c.Character != this && server.GetMainCharacter(c) == this);
+                    if (ownerClient != null)
+                    {
+                        server.SetClientCharacter(ownerClient, this);
+                    }
+                }
+            }
+
             if (HasAbilityFlag(AbilityFlags.RetainExperienceForNewCharacter))
             {
                 var ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);

@@ -547,7 +547,12 @@ namespace Barotrauma.Networking
 
             if (GameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                EndVoteTickBox.Visible = ServerSettings.AllowEndVoting && HasSpawned;
+                // Update the visibility of the end vote tick box based on server settings and player state.
+                EndVoteTickBox.Visible = ServerSettings.AllowEndVoting && HasSpawned && !IsControllingBot;
+                if (!EndVoteTickBox.Visible)
+                {
+                    EndVoteTickBox.Selected = false;
+                }
 
                 RespawnManager?.Update(deltaTime);
 
@@ -2633,6 +2638,16 @@ namespace Barotrauma.Networking
             msg.WriteUInt16(bot.ID);
             ClientPeer?.Send(msg, DeliveryMethod.Reliable);
         }
+
+        public void SendCharacterControlRequest(Character character)
+        {
+            if (character == null) { return; }
+
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ClientPacketHeader.REQUEST_CHARACTER_CONTROL);
+            msg.WriteUInt16(character.ID);
+            ClientPeer?.Send(msg, DeliveryMethod.Reliable);
+        }
         
         public void ToggleReserveBench(CharacterInfo bot, bool pendingHire = false)
         {
@@ -3323,6 +3338,8 @@ namespace Barotrauma.Networking
             set { myCharacter = value; }
         }
 
+        public bool IsControllingBot { get; set; }
+
         protected GUIFrame inGameHUD;
         protected ChatBox chatBox;
 
@@ -3346,7 +3363,7 @@ namespace Barotrauma.Networking
                 else
                 {
                     var campaign = GameMain.GameSession?.Campaign;
-                    ShowLogButton.Visible = hasPermissionToUseLogButton && (campaign == null || !campaign.ShowCampaignUI);
+                    ShowLogButton.Visible = hasPermissionToUseLogButton && !IsControllingBot && (campaign == null || !campaign.ShowCampaignUI);
                 }
             }
         }

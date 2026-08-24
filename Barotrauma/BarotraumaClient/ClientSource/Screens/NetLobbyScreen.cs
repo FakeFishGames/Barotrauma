@@ -101,6 +101,7 @@ namespace Barotrauma
         private GUISelectionCarousel<RespawnMode> respawnModeSelection;
         private GUITextBlock respawnModeLabel;
         private GUIComponent respawnIntervalElement;
+        private GUITickBox allowControllingBotsTickbox;
         
         private readonly List<GUIComponent> midRoundRespawnSettings = new List<GUIComponent>();
         private readonly List<GUIComponent> permadeathEnabledRespawnSettings = new List<GUIComponent>();
@@ -1060,6 +1061,21 @@ namespace Barotrauma
             clientDisabledElements.AddRange(botSpawnModeSettingHolder.GetAllChildren());
             botSettingsElements.Add(botSpawnModeSelection);
 
+            allowControllingBotsTickbox = new GUITickBox(new RectTransform(Vector2.One, gameModeSettingsContent.RectTransform), TextManager.Get("AllowControllingBots").Fallback("Allow controlling bots"))
+            {
+                ToolTip = TextManager.Get("AllowControllingBots.Tooltip").Fallback("Allow players to switch control to available bot crew members during a multiplayer campaign."),
+                Selected = GameMain.Client != null && GameMain.Client.ServerSettings.AllowControllingBots,
+                OnSelected = (GUITickBox box) =>
+                {
+                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Properties);
+                    return true;
+                }
+            };
+            AssignComponentToServerSetting(allowControllingBotsTickbox, nameof(ServerSettings.AllowControllingBots));
+            permadeathDisabledRespawnSettings.Add(allowControllingBotsTickbox);
+            clientDisabledElements.Add(allowControllingBotsTickbox);
+            botSettingsElements.Add(allowControllingBotsTickbox);
+
             botCountSelection.OnValueChanged += (_) =>
             {
                 botSpawnModeSelection.Enabled = GameMain.Client.ServerSettings.BotCount > 0;
@@ -1254,7 +1270,7 @@ namespace Barotrauma
                 respawnModeSelection.AddElement(respawnMode, TextManager.Get($"respawnmode.{respawnMode}"), TextManager.Get($"respawnmode.{respawnMode}.tooltip"));
             }
             
-            respawnModeSelection.ElementSelectionCondition += (value) => value != RespawnMode.Permadeath || SelectedMode == GameModePreset.MultiPlayerCampaign;
+            respawnModeSelection.ElementSelectionCondition += (value) => value != RespawnMode.Permadeath || (SelectedMode == GameModePreset.MultiPlayerCampaign && GameMain.Client?.ServerSettings.AllowControllingBots != true);
             respawnModeSelection.OnValueChanged += (_) => GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Properties);
             AssignComponentToServerSetting(respawnModeSelection, nameof(ServerSettings.RespawnMode));
 
@@ -2424,6 +2440,8 @@ namespace Barotrauma
             }
 
             RefreshStartButtonVisibility();
+
+            allowControllingBotsTickbox.Visible = SelectedMode == GameModePreset.MultiPlayerCampaign;
 
             botSettingsElements.ForEach(b => b.Enabled = !campaignStarted && manageSettings);
 
