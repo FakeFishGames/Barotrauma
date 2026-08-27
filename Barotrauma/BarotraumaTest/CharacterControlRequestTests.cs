@@ -19,7 +19,7 @@ public class CharacterControlRequestTests
     public void InvalidCharacterControlRequestsAreRejected(
         bool featureEnabled,
         bool gameStarted,
-        bool isMultiplayerCampaign,
+        bool isGameModeAllowed,
         bool senderInGame,
         bool senderIsSpectating,
         bool targetIsValid,
@@ -29,7 +29,7 @@ public class CharacterControlRequestTests
         GameServer.ValidateCharacterControlRequest(
                 featureEnabled,
                 gameStarted,
-                isMultiplayerCampaign,
+                isGameModeAllowed,
                 senderInGame,
                 senderIsSpectating,
                 targetIsValid,
@@ -43,7 +43,7 @@ public class CharacterControlRequestTests
         GameServer.ValidateCharacterControlRequest(
                 featureEnabled: true,
                 gameStarted: true,
-                isMultiplayerCampaign: true,
+                isGameModeAllowed: true,
                 senderInGame: true,
                 senderIsSpectating: false,
                 targetIsValid: true,

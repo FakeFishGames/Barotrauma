@@ -1063,7 +1063,7 @@ namespace Barotrauma
 
             allowControllingBotsTickbox = new GUITickBox(new RectTransform(Vector2.One, gameModeSettingsContent.RectTransform), TextManager.Get("AllowControllingBots").Fallback("Allow controlling bots"))
             {
-                ToolTip = TextManager.Get("AllowControllingBots.Tooltip").Fallback("Allow players to switch control to available bot crew members during a multiplayer campaign."),
+                ToolTip = TextManager.Get("AllowControllingBots.Tooltip").Fallback("Allow players to switch control to available bot crew members."),
                 Selected = GameMain.Client != null && GameMain.Client.ServerSettings.AllowControllingBots,
                 OnSelected = (GUITickBox box) =>
                 {
@@ -2441,7 +2441,7 @@ namespace Barotrauma
 
             RefreshStartButtonVisibility();
 
-            allowControllingBotsTickbox.Visible = SelectedMode == GameModePreset.MultiPlayerCampaign;
+            allowControllingBotsTickbox.Visible = SelectedMode != GameModePreset.PvP;
 
             botSettingsElements.ForEach(b => b.Enabled = !campaignStarted && manageSettings);
 

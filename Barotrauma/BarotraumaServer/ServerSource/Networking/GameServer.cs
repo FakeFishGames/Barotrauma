@@ -1665,7 +1665,7 @@ namespace Barotrauma.Networking
             var validationResult = ValidateCharacterControlRequest(
                 ServerSettings.AllowControllingBots,
                 GameStarted,
-                GameMain.GameSession?.GameMode is MultiPlayerCampaign,
+                GameMain.GameSession?.GameMode is not PvPMode,
                 sender.InGame,
                 sender.SpectateOnly,
                     target is { Removed: false, IsDead: false, IsOnPlayerTeam: true, Info: not null } &&
@@ -1731,7 +1731,7 @@ namespace Barotrauma.Networking
         internal static CharacterControlRequestResult ValidateCharacterControlRequest(
             bool featureEnabled,
             bool gameStarted,
-            bool isMultiplayerCampaign,
+            bool isGameModeAllowed,
             bool senderInGame,
             bool senderIsSpectating,
             bool targetIsValid,
@@ -1739,7 +1739,7 @@ namespace Barotrauma.Networking
         {
             if (!featureEnabled) { return CharacterControlRequestResult.FeatureDisabled; }
             if (!gameStarted) { return CharacterControlRequestResult.RoundNotRunning; }
-            if (!isMultiplayerCampaign) { return CharacterControlRequestResult.InvalidGameMode; }
+            if (!isGameModeAllowed) { return CharacterControlRequestResult.InvalidGameMode; }
             if (!senderInGame) { return CharacterControlRequestResult.SenderNotInGame; }
             if (senderIsSpectating) { return CharacterControlRequestResult.SenderIsSpectating; }
             if (!targetIsValid) { return CharacterControlRequestResult.InvalidTarget; }
