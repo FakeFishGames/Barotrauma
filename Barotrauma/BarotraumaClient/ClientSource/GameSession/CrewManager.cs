@@ -1872,14 +1872,16 @@ namespace Barotrauma
         {
             if (crewList == null) { return; }
 
+            bool allowOwnerIcons = GameMain.Client?.ServerSettings.AllowControllingBots == true;
+
             foreach (GUIComponent characterComponent in crewList.Content.Children)
             {
                 if (characterComponent.UserData is not Character character) { continue; }
                 GUIImage ownerIcon = characterComponent.FindChild(c => Equals(c.UserData, "ownericon"), recursive: true) as GUIImage;
                 if (ownerIcon == null) { continue; }
 
-                string ownerName = GameMain.Client?.Character == character ||
-                    GameMain.Client?.Character?.Info == character.Info
+                string ownerName = !allowOwnerIcons ? null :
+                    GameMain.Client?.Character == character || GameMain.Client?.Character?.Info == character.Info
                     ? GameMain.Client.Name
                     : GameMain.NetworkMember?.ConnectedClients?.FirstOrDefault(c => c.Character == character || c.Character?.Info == character.Info)?.Name;
                 ownerIcon.Visible = ownerName != null;
