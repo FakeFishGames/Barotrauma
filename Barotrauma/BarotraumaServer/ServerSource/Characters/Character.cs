@@ -32,7 +32,8 @@ namespace Barotrauma
                 GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign &&
                 causeOfDeath != CauseOfDeathType.Disconnected)
             {
-                Client ownerClient = GameMain.Server.ConnectedClients.FirstOrDefault(c => c.Character == this);
+                //the dying character may be the client's real/main character even if they're currently controlling a borrowed bot
+                Client ownerClient = GameMain.Server.ConnectedClients.FirstOrDefault(c => c.Character == this || GameMain.Server.GetMainCharacter(c) == this);
                 if (ownerClient != null)
                 {
                     ownerClient.SpectateOnly = true;

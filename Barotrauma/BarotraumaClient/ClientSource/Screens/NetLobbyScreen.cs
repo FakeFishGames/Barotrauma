@@ -1072,7 +1072,6 @@ namespace Barotrauma
                 }
             };
             AssignComponentToServerSetting(allowControllingBotsTickbox, nameof(ServerSettings.AllowControllingBots));
-            permadeathDisabledRespawnSettings.Add(allowControllingBotsTickbox);
             clientDisabledElements.Add(allowControllingBotsTickbox);
             botSettingsElements.Add(allowControllingBotsTickbox);
 
@@ -1270,7 +1269,7 @@ namespace Barotrauma
                 respawnModeSelection.AddElement(respawnMode, TextManager.Get($"respawnmode.{respawnMode}"), TextManager.Get($"respawnmode.{respawnMode}.tooltip"));
             }
             
-            respawnModeSelection.ElementSelectionCondition += (value) => value != RespawnMode.Permadeath || (SelectedMode == GameModePreset.MultiPlayerCampaign && GameMain.Client?.ServerSettings.AllowControllingBots != true);
+            respawnModeSelection.ElementSelectionCondition += (value) => value != RespawnMode.Permadeath || SelectedMode == GameModePreset.MultiPlayerCampaign;
             respawnModeSelection.OnValueChanged += (_) => GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Properties);
             AssignComponentToServerSetting(respawnModeSelection, nameof(ServerSettings.RespawnMode));
 
