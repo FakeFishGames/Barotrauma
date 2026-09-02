@@ -74,6 +74,7 @@ body:
       description: Which version of the game did the bug happen in? You can see the current version number in the bottom left corner of your screen in the main menu.
       options:
         - v1.13.4.0 (Summer Update 2026 Hotfix 1)
+        - v1.15.17.0 (Unstable, DLC Companion Update test build)
         - Other
     validations:
       required: true
