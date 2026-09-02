@@ -516,6 +516,20 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
+
+        private bool allowControllingBots;
+
+        [Serialize(false, IsPropertySaveable.Yes)]
+        public bool AllowControllingBots
+        {
+            get { return allowControllingBots; }
+            private set
+            {
+                if (GameMain.NetworkMember is { GameStarted: true, IsServer: true }) { return; }
+                allowControllingBots = value;
+                ServerDetailsChanged = true;
+            }
+        }
         
         [Serialize(false, IsPropertySaveable.Yes)]
         /// <summary>

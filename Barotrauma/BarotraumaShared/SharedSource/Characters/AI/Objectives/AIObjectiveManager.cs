@@ -255,12 +255,23 @@ namespace Barotrauma
                 CurrentObjective.OnSelected();
                 GetObjective<AIObjectiveIdle>().CalculatePriority(Math.Max(CurrentObjective.Priority - 10, 0));   
             }
+            SendCurrentObjectiveState();
+            return CurrentObjective;
+        }
+
+        /// <summary>
+        /// Lets the clients know what the character's current order/objective is, so they can display the correct icon in the crew UI.
+        /// Normally only sent when the current objective changes, but this can be used to force clients to re-sync
+        /// (e.g. when a bot stops being controlled by a player and resumes its previous, unchanged objective).
+        /// </summary>
+        public void SendCurrentObjectiveState()
+        {
             if (GameMain.NetworkMember is { IsServer: true })
             {
+                bool currentObjectiveIsOrder = CurrentObjective != null && CurrentObjective == CurrentOrder;
                 GameMain.NetworkMember.CreateEntityEvent(character,
                     new Character.ObjectiveManagerStateEventData(currentObjectiveIsOrder ? ObjectiveType.Order : ObjectiveType.Objective));
             }
-            return CurrentObjective;
         }
 
         /// <summary>

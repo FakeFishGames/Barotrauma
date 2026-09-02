@@ -20,7 +20,7 @@ namespace Barotrauma.Networking
             {
                 if (!c.InGame) { continue; }
                 if (c.SpectateOnly && (GameMain.Server.ServerSettings.AllowSpectating || GameMain.Server.OwnerConnection == c.Connection)) { continue; }
-                if (c.Character != null && !c.Character.IsDead) { continue; }
+                if (c.Character != null && (!c.Character.IsDead || GameMain.Server.IsControllingBot(c))) { continue; }
                 if (c.TeamID != CharacterTeamType.None && c.TeamID != teamId)
                 {
                     continue;
@@ -62,7 +62,7 @@ namespace Barotrauma.Networking
 
             if (!c.InGame) { return false; }
             if (c.SpectateOnly && (GameMain.Server.ServerSettings.AllowSpectating || GameMain.Server.OwnerConnection == c.Connection)) { return false; }
-            if (c.Character != null && !c.Character.IsDead) { return false; }
+            if (c.Character != null && (!c.Character.IsDead || GameMain.Server.IsControllingBot(c))) { return false; }
 
             CharacterCampaignData matchingData = campaign.GetClientCharacterData(c);
             if (matchingData != null && matchingData.HasSpawned)
@@ -478,7 +478,9 @@ namespace Barotrauma.Networking
                     anyCharacterSpawnedInShuttle = true;                        
                 }
 
-                var character = Character.Create(characterInfo, (forceSpawnInMainSub ? mainSubSpawnPoints[i] : selectedSpawnPoints[i]).WorldPosition, characterInfo.Name, isRemotePlayer: !bot, hasAi: bot);
+                // When bot control is allowed, player characters need an AIController too so they behave like bots whenever no client is controlling them
+                bool needsAi = bot || GameMain.Server.ServerSettings.AllowControllingBots;
+                var character = Character.Create(characterInfo, (forceSpawnInMainSub ? mainSubSpawnPoints[i] : selectedSpawnPoints[i]).WorldPosition, characterInfo.Name, isRemotePlayer: !bot, hasAi: needsAi);
                 characterCampaignData?.ApplyWalletData(character);
                 character.LoadTalents();
                 if (characterInfo.LastRewardDistribution.TryUnwrap(out int salary))

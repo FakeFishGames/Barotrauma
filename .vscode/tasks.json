@@ -1,0 +1,159 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Windows Debug",
+            "dependsOn": [
+                "Build Windows Server Debug",
+                "Build Windows Client Debug"
+            ],
+            "dependsOrder": "sequence",
+            "group": {
+                "kind": "build"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build Windows Release",
+            "dependsOn": [
+                "Build Windows Server Release",
+                "Build Windows Client Release"
+            ],
+            "dependsOrder": "sequence",
+            "group": {
+                "kind": "build"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Rebuild Windows Debug",
+            "dependsOn": [
+                "Clean Windows Server Debug",
+                "Clean Windows Client Debug",
+                "Build Windows Debug"
+            ],
+            "dependsOrder": "sequence",
+            "group": {
+                "kind": "build"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Rebuild Windows Release",
+            "dependsOn": [
+                "Clean Windows Server Release",
+                "Clean Windows Client Release",
+                "Build Windows Release"
+            ],
+            "dependsOrder": "sequence",
+            "group": {
+                "kind": "build"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Clean Windows Server Debug",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "clean",
+                "${workspaceFolder}/Barotrauma/BarotraumaServer/WindowsServer.csproj",
+                "--configuration",
+                "Debug",
+                "--property:Platform=x64"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Clean Windows Client Debug",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "clean",
+                "${workspaceFolder}/Barotrauma/BarotraumaClient/WindowsClient.csproj",
+                "--configuration",
+                "Debug",
+                "--property:Platform=x64"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Clean Windows Server Release",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "clean",
+                "${workspaceFolder}/Barotrauma/BarotraumaServer/WindowsServer.csproj",
+                "--configuration",
+                "Release",
+                "--property:Platform=x64"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Clean Windows Client Release",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "clean",
+                "${workspaceFolder}/Barotrauma/BarotraumaClient/WindowsClient.csproj",
+                "--configuration",
+                "Release",
+                "--property:Platform=x64"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Build Windows Server Debug",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/Barotrauma/BarotraumaServer/WindowsServer.csproj",
+                "--configuration",
+                "Debug",
+                "--property:Platform=x64"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Build Windows Client Debug",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/Barotrauma/BarotraumaClient/WindowsClient.csproj",
+                "--configuration",
+                "Debug",
+                "--property:Platform=x64"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Build Windows Server Release",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/Barotrauma/BarotraumaServer/WindowsServer.csproj",
+                "--configuration",
+                "Release",
+                "--property:Platform=x64"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Build Windows Client Release",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/Barotrauma/BarotraumaClient/WindowsClient.csproj",
+                "--configuration",
+                "Release",
+                "--property:Platform=x64"
+            ],
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}

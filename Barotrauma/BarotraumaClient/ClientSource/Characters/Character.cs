@@ -584,19 +584,26 @@ namespace Barotrauma
         {
             HintManager.OnCharacterKilled(this);
 
-            if (GameMain.NetworkMember != null && controlled == this)
+            if (GameMain.NetworkMember != null && (controlled == this || GameMain.Client?.Character == this))
             {
-                LocalizedString chatMessage = CauseOfDeath.Type == CauseOfDeathType.Affliction ?
-                    CauseOfDeath.Affliction.SelfCauseOfDeathDescription :
-                    TextManager.Get("Self_CauseOfDeathDescription." + CauseOfDeath.Type.ToString(), "Self_CauseOfDeathDescription.Damage");
+                bool showDeathPrompt = !GameMain.IsMultiplayer || GameMain.Client?.IsControllingBot != true;
+                if (showDeathPrompt)
+                {
+                    LocalizedString chatMessage = CauseOfDeath.Type == CauseOfDeathType.Affliction ?
+                        CauseOfDeath.Affliction.SelfCauseOfDeathDescription :
+                        TextManager.Get("Self_CauseOfDeathDescription." + CauseOfDeath.Type.ToString(), "Self_CauseOfDeathDescription.Damage");
 
-                if (GameMain.Client != null) { chatMessage += " " + TextManager.Get("DeathChatNotification"); }
+                    if (GameMain.Client != null) { chatMessage += " " + TextManager.Get("DeathChatNotification"); }
 
-                RespawnManager.ShowDeathPromptIfNeeded();
+                    RespawnManager.ShowDeathPromptIfNeeded();
 
-                GameMain.NetworkMember.AddChatMessage(chatMessage.Value, ChatMessageType.Dead);
+                    GameMain.NetworkMember.AddChatMessage(chatMessage.Value, ChatMessageType.Dead);
+                }
                 GameMain.LightManager.LosEnabled = false;
-                controlled = null;
+                if (!GameMain.IsMultiplayer || GameMain.Client?.IsControllingBot != true)
+                {
+                    controlled = null;
+                }
                 if (Screen.Selected?.Cam is Camera cam)
                 {
                     cam.TargetPos = Vector2.Zero;
