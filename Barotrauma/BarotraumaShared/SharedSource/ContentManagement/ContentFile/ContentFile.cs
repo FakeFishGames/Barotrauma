@@ -144,7 +144,7 @@ namespace Barotrauma
 
         public virtual Md5Hash CalculateHash()
         {
-            return Md5Hash.CalculateForFile(Path.Value, Md5Hash.StringHashOptions.IgnoreWhitespace);
+            return Md5Hash.CalculateForFile(Path.Value);
         }
 
         public bool NotSyncedInMultiplayer => Types.Any(t => t.Type == GetType() && t.NotSyncedInMultiplayer);

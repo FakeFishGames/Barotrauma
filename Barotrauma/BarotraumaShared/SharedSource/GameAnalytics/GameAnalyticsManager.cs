@@ -541,7 +541,7 @@ namespace Barotrauma
             Md5Hash? exeHash = null;
             try
             {
-                exeHash = Md5Hash.CalculateForFile(exePath, Md5Hash.StringHashOptions.BytePerfect);
+                exeHash = Md5Hash.CalculateForFile(exePath);
             }
             catch (Exception e)
             {
