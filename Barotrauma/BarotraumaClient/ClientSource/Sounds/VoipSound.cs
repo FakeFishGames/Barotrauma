@@ -75,7 +75,7 @@ namespace Barotrauma.Sounds
             client = targetClient;
             decoder = VoipConfig.CreateDecoder();
 
-            ALFormat = Al.FormatMono16;
+            ALFormat = Al.FormatMonoF32;
             SampleRate = VoipConfig.FREQUENCY;
 
             queue = q;
@@ -104,12 +104,12 @@ namespace Barotrauma.Sounds
             soundChannel.Far = Far = far;
         }
 
-        public void ApplyFilters(short[] buffer, int readSamples)
+        public void ApplyFilters(float[] buffer, int readSamples)
         {
             float finalGain = gain * GameSettings.CurrentConfig.Audio.VoiceChatVolume * client.VoiceVolume;
             for (int i = 0; i < readSamples; i++)
             {
-                float fVal = ToolBox.ShortAudioSampleToFloat(buffer[i]);
+                float fVal = buffer[i];
 
                 if (finalGain > 1.0f) //TODO: take distance into account?
                 {
@@ -130,7 +130,7 @@ namespace Barotrauma.Sounds
                         fVal = Math.Clamp(filter.Process(fVal) * PostRadioFilterBoost, -1f, 1f);
                     }
                 }
-                buffer[i] = ToolBox.FloatToShortAudioSample(fVal);
+                buffer[i] = fVal;
             }
         }
 
@@ -154,7 +154,7 @@ namespace Barotrauma.Sounds
             throw new InvalidOperationException();
         }
 
-        public override int FillStreamBuffer(int samplePos, short[] buffer)
+        public override int FillStreamBuffer(int samplePos, float[] buffer)
         {
             queue.RetrieveBuffer(bufferID, out int compressedSize, out byte[] compressedBuffer);
             try

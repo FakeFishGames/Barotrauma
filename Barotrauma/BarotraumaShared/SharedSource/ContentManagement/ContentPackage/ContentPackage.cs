@@ -70,7 +70,7 @@ namespace Barotrauma
         public readonly Option<SerializableDateTime> InstallTime;
 
         public ImmutableArray<ContentFile> Files { get; private set; }
-        
+        public ImmutableDictionary<Type,ImmutableList<ContentFile>> TypeFiles { get; private set; }
         /// <summary>
         /// Errors that occurred when loading this content package.
         /// Currently, all errors are considered fatal and the game
@@ -149,6 +149,10 @@ namespace Barotrauma
                 .Successes()
                 .ToImmutableArray();
 
+            //we use a dictionary to increase search performance!
+            var typeBuilder = ImmutableDictionary.CreateBuilder<Type, ImmutableList<ContentFile>>();
+            TypeFiles = typeBuilder.ToImmutable();
+
             FatalLoadErrors = fileResults
                 .Failures()
                 .ToImmutableArray();
@@ -178,7 +182,11 @@ namespace Barotrauma
                !expectedHash.IsNullOrWhiteSpace() &&
                !expectedHash.Equals(Hash.StringRepresentation, StringComparison.OrdinalIgnoreCase);
 
-        public IEnumerable<T> GetFiles<T>() where T : ContentFile => Files.OfType<T>();
+        public IEnumerable<T> GetFiles<T>() where T : ContentFile
+        {
+            var files = TypeFiles.GetValueOrDefault(typeof(T), ImmutableList<ContentFile>.Empty);
+            return files.OfType<T>();
+        }
 
         public IEnumerable<ContentFile> GetFiles(Type type)
             => !type.IsSubclassOf(typeof(ContentFile))
@@ -277,15 +285,56 @@ namespace Barotrauma
         {
             missingDependencies.Clear();
         }
+        #region GET_FILES_BY_TYPE
+        public IEnumerable<ContentFile> GetFilesByType<T>() where T : ContentFile
+        {
+            return TypeFiles.GetValueOrDefault(typeof(T), ImmutableList<ContentFile>.Empty);
+        }
 
+        public IEnumerable<ContentFile> GetFilesByType(params Type[] types)
+        {
+            IEnumerable<ContentFile> result = Enumerable.Empty<ContentFile>();
+            foreach (var type in types)
+            {
+                result = result.Concat(TypeFiles.GetValueOrDefault(type, ImmutableList<ContentFile>.Empty));
+            }
+            return result;
+        }
+        #endregion
+
+        #region HAS_FILE_TYPE
+        public bool HasFileType<T>() where T : ContentFile
+        {
+            return TypeFiles.ContainsKey(typeof(T));
+        }
+
+        public bool HasFileType(params Type[] types)
+        {
+            foreach (var type in types)
+            {
+                if (TypeFiles.ContainsKey(type)) return true;
+            }
+            return false;
+        }
+        #endregion
+        public IEnumerable<ContentFile> GetFilesNotOfType(params Type[] excludedTypes)
+        {
+            // Create a set of the types to exclude for O(1) lookup
+            var excludedTypeSet = new HashSet<Type>(excludedTypes);
+
+            // Flatten all lists in TypeFiles that ARE NOT in our excluded set
+            return TypeFiles
+                .Where(kvp => !excludedTypeSet.Contains(kvp.Key))
+                .SelectMany(kvp => kvp.Value);
+        }
         public void LoadFilesOfType<T>() where T : ContentFile
         {
-            Files.Where(f => f is T).ForEach(f => f.LoadFile());
+            GetFilesByType<T>().ForEach(f => f.LoadFile());
         }
 
         public void UnloadFilesOfType<T>() where T : ContentFile
         {
-            Files.Where(f => f is T).ForEach(f => f.UnloadFile());
+            GetFilesByType<T>().ForEach(f => f.UnloadFile());
         }
 
         public enum LoadResult

@@ -149,7 +149,7 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public abstract int FillStreamBuffer(int samplePos, short[] buffer);
+        public abstract int FillStreamBuffer(int samplePos, float[] buffer);
 
         public abstract float GetAmplitudeAtPlaybackPos(int playbackPos);
 

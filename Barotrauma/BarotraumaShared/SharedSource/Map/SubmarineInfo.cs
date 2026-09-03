@@ -182,19 +182,15 @@ namespace Barotrauma
 
         public Md5Hash MD5Hash
         {
+  
             get
             {
                 if (hash == null)
                 {
-                    if (hashTask == null)
-                    {
-                        XDocument doc = OpenFile(FilePath);
-                        StartHashDocTask(doc);
-                    }
-                    hashTask.Wait();
-                    hashTask = null;
+                    // Include file modification time to ensure uniqueness if the file is edited
+                    string identity = FilePath + File.GetLastWriteTimeUtc(FilePath).Ticks;
+                    hash = Md5Hash.CalculateForString(identity, Md5Hash.StringHashOptions.IgnoreWhitespace);
                 }
-
                 return hash;
             }
         }
@@ -438,7 +434,9 @@ namespace Barotrauma
             }
             if (hash == null)
             {
-                StartHashDocTask(doc);
+                // Include file modification time to ensure uniqueness if the file is edited
+                string identity = FilePath + File.GetLastWriteTimeUtc(FilePath).Ticks;
+                hash = Md5Hash.CalculateForString(identity, Md5Hash.StringHashOptions.IgnoreWhitespace);
             }
             SubmarineElement = doc.Root;
         }

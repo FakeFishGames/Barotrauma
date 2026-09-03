@@ -247,6 +247,7 @@ namespace Barotrauma
                 }
             }
         }
+        public static readonly Color HealthBarBackground = new Color(0.5f, 0.57f, 0.6f, 1.0f);
 
         private readonly List<ObjectiveEntity> activeObjectiveEntities = new List<ObjectiveEntity>();
         public IEnumerable<ObjectiveEntity> ActiveObjectiveEntities
@@ -1152,7 +1153,7 @@ namespace Barotrauma
                     GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f),
                         CharacterHealth.DisplayedVitality / MaxVitality,
                         Color.Lerp(GUIStyle.Red, GUIStyle.Green, CharacterHealth.DisplayedVitality / MaxVitality) * 0.8f * hudInfoAlpha,
-                        new Color(0.5f, 0.57f, 0.6f, 1.0f) * hudInfoAlpha);
+                        HealthBarBackground * hudInfoAlpha);
                 }
             }
 

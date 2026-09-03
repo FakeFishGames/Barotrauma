@@ -676,6 +676,11 @@ namespace Barotrauma.IO
             }
             return sanitized;
         }
+
+        internal static DateTime GetLastWriteTimeUtc(string filePath)
+        {
+            return System.IO.File.GetLastWriteTimeUtc(filePath);
+        }
     }
 
     public class FileStream : System.IO.Stream

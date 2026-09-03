@@ -1,7 +1,8 @@
 using Barotrauma.Extensions;
-using Microsoft.Xna.Framework;
-using System.Collections.Generic;
 using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
+using Steamworks.Ugc;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -40,15 +41,18 @@ namespace Barotrauma
                     if (item.Color.A == 0) { continue; }
                     if (item.Prefab.BrokenSprites.None())
                     {
-                        Color c = originalColors[item];
-                        item.SpriteColor = new Color(c.R / 255f * m, c.G / 255f * m, c.B / 255f * m, c.A / 255f);
+                        //Color c = originalColors[item];
+                        //item.SpriteColor = new Color(c.R / 255f * m, c.G / 255f * m, c.B / 255f * m, c.A / 255f);
+                        item.SpriteColor = originalColors[item].MultiplyNormalized(m);
                     }
                 }
                 foreach (var structure in thalamusStructures)
                 {
-                    Color c = originalColors[structure];
-                    structure.SpriteColor = new Color(c.R / 255f * m, c.G / 255f * m, c.B / 255f * m, c.A / 255f);
+                    //Color c = originalColors[structure];
+                    //structure.SpriteColor = new Color(c.R / 255f * m, c.G / 255f * m, c.B / 255f * m, c.A / 255f);
+                    structure.SpriteColor = originalColors[structure].MultiplyNormalized(m);
                 }
+
                 yield return CoroutineStatus.Running;
             }
             yield return CoroutineStatus.Success;
