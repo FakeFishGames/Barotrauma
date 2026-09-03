@@ -134,7 +134,7 @@ namespace Barotrauma
                 foreach (Submarine sub in Loaded)
                 {
                     Rectangle worldBorders = sub.Borders;
-                    worldBorders.Location += (sub.DrawPosition + sub.HiddenSubPosition).ToPoint();
+                    worldBorders.Location += (sub.DrawOffset).ToPoint();
                     worldBorders.Y = -worldBorders.Y;
 
                     GUI.DrawRectangle(spriteBatch, worldBorders, Color.White, false, 0, 5);

@@ -83,9 +83,20 @@ namespace Barotrauma.Items.Components
         }
 
         public float Length { get; private set; }
-
+        
+        private float _width;
         [Serialize(0.3f, IsPropertySaveable.No), Editable(MinValueFloat = 0.01f, MaxValueFloat = 10.0f, DecimalCount = 2)]
         public float Width
+        {
+            get => _width;
+            set
+            {
+                _width = value;
+                // Update the dependent variable immediately
+                DoubleWidth = _width * 2.0f;
+            }
+        }
+        private float DoubleWidth
         {
             get;
             set;
@@ -583,7 +594,7 @@ namespace Barotrauma.Items.Components
             {
                 sections.Add(new WireSection(nodes[i], nodes[i + 1]));
             }
-            Drawable = IsActive || sections.Count > 0;
+            Drawable = IsActive || sections.Count > 0 || Hidden;
             Length = sections.Count > 0 ? sections.Sum(s => s.Length) : 0;
             CalculateExtents();
         }

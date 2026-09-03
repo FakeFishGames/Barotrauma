@@ -341,14 +341,22 @@ namespace Barotrauma
 
             Rectangle drawRect =
                 Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
+            
+            Vector2 invertedStart = new Vector2(drawRect.X, -drawRect.Y);
+            Vector2 hullEnd = new Vector2(rect.Width, rect.Height);
+
+            float zoom = Screen.Selected.Cam.Zoom;
+
+            int normalThickness = (int)Math.Max(MathF.Ceiling(1.5f / zoom), 1.0f);
+            int selectedThickness = (int)Math.Max(5.0f / zoom, 1.0f);
 
             if (editing)
             {
                 if (IsSelected || IsHighlighted)
                 {
                     GUI.DrawRectangle(spriteBatch,
-                        new Vector2(drawRect.X, -drawRect.Y),
-                        new Vector2(rect.Width, rect.Height),
+                        invertedStart,
+                        hullEnd,
                         (IsHighlighted ? Color.LightBlue * 0.8f : GUIStyle.Red * 0.5f) * alpha, false, 0, (int)Math.Max(5.0f / Screen.Selected.Cam.Zoom, 1.0f));
                 }
 
@@ -360,8 +368,8 @@ namespace Barotrauma
             }
 
             GUI.DrawRectangle(spriteBatch,
-                new Vector2(drawRect.X, -drawRect.Y),
-                new Vector2(rect.Width, rect.Height),
+                invertedStart,
+                hullEnd,
                 Color.Blue * alpha, false, (ID % 255) * 0.000001f, (int)Math.Max(MathF.Ceiling(1.5f / Screen.Selected.Cam.Zoom), 1.0f));
 
             GUI.DrawRectangle(spriteBatch,
@@ -424,7 +432,16 @@ namespace Barotrauma
                         new Vector2(drawRect.X + WaveWidth * (i + 1), -WorldSurface - waveY[i + 1] - 10), Color.Blue * 0.5f);
                 }
             }
-
+            
+            
+            //center of the hull
+            Rectangle currentHullRect = Submarine == null ?
+                WorldRect :
+                new Rectangle(
+                    (int)(Submarine.DrawPosition.X + WorldPosition.X),
+                    (int)(Submarine.DrawPosition.Y + WorldPosition.Y),
+                    WorldRect.Width, WorldRect.Height);
+            Vector2 currentHullOffset = new Vector2(currentHullRect.X, -currentHullRect.Y);
             foreach (MapEntity e in linkedTo)
             {
                 if (e is Hull linkedHull)
@@ -436,16 +453,10 @@ namespace Barotrauma
                             (int)(Submarine.DrawPosition.Y + linkedHull.WorldPosition.Y),
                             linkedHull.WorldRect.Width, linkedHull.WorldRect.Height);
 
-                    //center of the hull
-                    Rectangle currentHullRect = Submarine == null ?
-                        WorldRect :
-                        new Rectangle(
-                            (int)(Submarine.DrawPosition.X + WorldPosition.X),
-                            (int)(Submarine.DrawPosition.Y + WorldPosition.Y),
-                            WorldRect.Width, WorldRect.Height);
+
 
                     GUI.DrawLine(spriteBatch,
-                        new Vector2(currentHullRect.X, -currentHullRect.Y),
+                        currentHullOffset,
                         new Vector2(connectedHullRect.X, -connectedHullRect.Y),
                         GUIStyle.Green, width: 2);
                 }

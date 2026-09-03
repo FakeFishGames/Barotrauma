@@ -15,7 +15,6 @@ namespace Barotrauma.Lights
 
         public bool Persistent;
 
-
         public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; private set; } = new Dictionary<Identifier, SerializableProperty>();
 
         [Serialize("1.0,1.0,1.0,1.0", IsPropertySaveable.Yes, alwaysUseInstanceValues: true), Editable]
@@ -204,6 +203,7 @@ namespace Barotrauma.Lights
 
     class LightSource
     {
+        const float blurDistance = 25.0f;
         //how many pixels the position of the light needs to change for the light volume to be recalculated
         const float MovementRecalculationThreshold = 10.0f;
         //how many radians the light needs to rotate for the light volume to be recalculated
@@ -982,8 +982,8 @@ namespace Barotrauma.Lights
                     Segment seg1 = visibleSegments[intersection1.index];
                     Segment seg2 = visibleSegments[intersection2.index];
 
-                    bool isPoint1 = MathUtils.LineToPointDistanceSquared(seg1.Start.WorldPos, seg1.End.WorldPos, p.WorldPos) < 25.0f;
-                    bool isPoint2 = MathUtils.LineToPointDistanceSquared(seg2.Start.WorldPos, seg2.End.WorldPos, p.WorldPos) < 25.0f;
+                    bool isPoint1 = MathUtils.LineToPointDistanceSquared(seg1.Start.WorldPos, seg1.End.WorldPos, p.WorldPos) < blurDistance;
+                    bool isPoint2 = MathUtils.LineToPointDistanceSquared(seg2.Start.WorldPos, seg2.End.WorldPos, p.WorldPos) < blurDistance;
 
                     bool markAsVisible = false;
                     if (isPoint1 && isPoint2)
@@ -1134,7 +1134,6 @@ namespace Barotrauma.Lights
             return (segment, closestIntersection == null ? rayEnd : (Vector2)closestIntersection);
         }
 
-
         private void CalculateLightVertices(List<Vector2> rayCastHits)
         {
             vertexCount = rayCastHits.Count * 2 + 1;
@@ -1184,6 +1183,8 @@ namespace Barotrauma.Lights
 
             // Add all the other encounter points as vertices
             // storing their world position as UV coordinates
+            float invRange = 1.0f / (Range * 2.0f);
+            const float maxBlurSq = 100.0f * 100.0f;
             for (int i = 0; i < rayCastHits.Count; i++)
             {
                 Vector2 vertex = rayCastHits[i];
@@ -1202,24 +1203,23 @@ namespace Barotrauma.Lights
                 nDiff1 /= Math.Max(Math.Abs(nDiff1.X), Math.Abs(nDiff1.Y));
                 //if the normal is pointing towards the light origin
                 //rather than away from it, invert it
-                if (Vector2.DistanceSquared(nDiff1, rawDiff) > Vector2.DistanceSquared(-nDiff1, rawDiff)) nDiff1 = -nDiff1;
-
+                if (Vector2.Dot(nDiff1, rawDiff) > 0) nDiff1 = -nDiff1;
                 //calculate normal of second segment
                 Vector2 nDiff2 = prevVertex - vertex;
                 nDiff2 = new Vector2(-nDiff2.Y, nDiff2.X);
                 nDiff2 /= Math.Max(Math.Abs(nDiff2.X), Math.Abs(nDiff2.Y));
                 //if the normal is pointing towards the light origin
                 //rather than away from it, invert it
-                if (Vector2.DistanceSquared(nDiff2, rawDiff) > Vector2.DistanceSquared(-nDiff2, rawDiff)) nDiff2 = -nDiff2;
+                // use Dot product  
+                if (Vector2.Dot(nDiff2, rawDiff) > 0) nDiff2 = -nDiff2;
 
                 //add the normals together and use some magic numbers to create
                 //a somewhat useful/good-looking blur
-                float blurDistance = 25.0f;
                 Vector2 nDiff = nDiff1 * blurDistance;
                 if (MathUtils.GetLineIntersection(vertex + (nDiff1 * blurDistance), nextVertex + (nDiff1 * blurDistance), vertex + (nDiff2 * blurDistance), prevVertex + (nDiff2 * blurDistance), true, out Vector2 intersection))
                 {
                     nDiff = intersection - vertex;
-                    if (nDiff.LengthSquared() > 100.0f * 100.0f)
+                    if (nDiff.LengthSquared() > maxBlurSq)
                     {
                         nDiff /= Math.Max(Math.Abs(nDiff.X), Math.Abs(nDiff.Y)); 
                         nDiff *= 100.0f;
@@ -1227,7 +1227,7 @@ namespace Barotrauma.Lights
                 }
 
                 Vector2 diff = rawDiff;
-                diff /= Range * 2.0f;
+                diff *= invRange;
                 if (OverrideLightTexture != null)
                 {
                     //calculate texture coordinates based on the light's rotation
@@ -1238,12 +1238,12 @@ namespace Barotrauma.Lights
                     diff *= (overrideTextureDims / OverrideLightTexture.size);// / (1.0f - Math.Max(Math.Abs(uvOffset.X), Math.Abs(uvOffset.Y)));
                     diff += uvOffset;
                 }
-
+                Vector2 vertUv = GetUV(new Vector2(0.5f, 0.5f) + diff, LightSpriteEffect);
                 //finally, create the vertices
                 VertexPositionColorTexture fullVert = new VertexPositionColorTexture(new Vector3(position.X + rawDiff.X, position.Y + rawDiff.Y, 0),
-                   Color.White, GetUV(new Vector2(0.5f, 0.5f) + diff, LightSpriteEffect));
+                   Color.White, vertUv);
                 VertexPositionColorTexture fadeVert = new VertexPositionColorTexture(new Vector3(position.X + rawDiff.X + nDiff.X, position.Y + rawDiff.Y + nDiff.Y, 0),
-                   Color.White * 0.0f, GetUV(new Vector2(0.5f, 0.5f) + diff, LightSpriteEffect));
+                   Color.White * 0.0f, vertUv);
 
                 vertices[1 + i * 2] = fullVert;
                 vertices[1 + i * 2 + 1] = fadeVert;
@@ -1252,34 +1252,40 @@ namespace Barotrauma.Lights
             // Compute the indices to form triangles
             for (int i = 0; i < rayCastHits.Count - 1; i++)
             {
+                int raycastIndex = i * 9;
+                int vertexIndex = i * 2;
                 //main light body
-                indices[i * 9] = 0;
-                indices[i * 9 + 1] = (short)((i * 2 + 3) % vertexCount);
-                indices[i * 9 + 2] = (short)((i * 2 + 1) % vertexCount);
+                indices[raycastIndex] = 0;
+                indices[raycastIndex + 1] = (short)((vertexIndex + 3) % vertexCount);
+                indices[raycastIndex + 2] = (short)((vertexIndex + 1) % vertexCount);
 
                 //faded light
-                indices[i * 9 + 3] = (short)((i * 2 + 1) % vertexCount);
-                indices[i * 9 + 4] = (short)((i * 2 + 3) % vertexCount);
-                indices[i * 9 + 5] = (short)((i * 2 + 4) % vertexCount);
+                indices[raycastIndex + 3] = (short)((vertexIndex + 1) % vertexCount);
+                indices[raycastIndex + 4] = (short)((vertexIndex + 3) % vertexCount);
+                indices[raycastIndex + 5] = (short)((vertexIndex + 4) % vertexCount);
 
-                indices[i * 9 + 6] = (short)((i * 2 + 2) % vertexCount);
-                indices[i * 9 + 7] = (short)((i * 2 + 1) % vertexCount);
-                indices[i * 9 + 8] = (short)((i * 2 + 4) % vertexCount);
+                indices[raycastIndex + 6] = (short)((vertexIndex + 2) % vertexCount);
+                indices[raycastIndex + 7] = (short)((vertexIndex + 1) % vertexCount);
+                indices[raycastIndex + 8] = (short)((vertexIndex + 4) % vertexCount);
             }
 
-            //main light body
-            indices[(rayCastHits.Count - 1) * 9] = 0;
-            indices[(rayCastHits.Count - 1) * 9 + 1] = (short)(1);
-            indices[(rayCastHits.Count - 1) * 9 + 2] = (short)(vertexCount - 2);
+            int index = (rayCastHits.Count - 1) * 9;
+            short lastVertex = (short)(vertexCount - 1);
+            short secondLastVertex = (short)(vertexCount - 2);
 
-            //faded light
-            indices[(rayCastHits.Count - 1) * 9 + 3] = (short)(1);
-            indices[(rayCastHits.Count - 1) * 9 + 4] = (short)(vertexCount - 1);
-            indices[(rayCastHits.Count - 1) * 9 + 5] = (short)(vertexCount - 2);
+            // main light body
+            indices[index] = 0;
+            indices[index + 1] = 1;
+            indices[index + 2] = secondLastVertex;
 
-            indices[(rayCastHits.Count - 1) * 9 + 6] = (short)(1);
-            indices[(rayCastHits.Count - 1) * 9 + 7] = (short)(2);
-            indices[(rayCastHits.Count - 1) * 9 + 8] = (short)(vertexCount - 1);
+            // faded light
+            indices[index + 3] = 1;
+            indices[index + 4] = lastVertex;
+            indices[index + 5] = secondLastVertex;
+
+            indices[index + 6] = 1;
+            indices[index + 7] = 2;
+            indices[index + 8] = lastVertex;
 
             //TODO: a better way to determine the size of the vertex buffer and handle changes in size?
             //now we just create a buffer for 64 verts and make it larger if needed
@@ -1302,23 +1308,18 @@ namespace Barotrauma.Lights
 
             static Vector2 GetUV(Vector2 vert, SpriteEffects effects)
             {
-                if (effects == SpriteEffects.FlipHorizontally)
+                if ((effects & SpriteEffects.FlipHorizontally) != 0)
                 {
                     vert.X = 1.0f - vert.X;
                 }
-                else if (effects == SpriteEffects.FlipVertically)
+
+                if ((effects & SpriteEffects.FlipVertically) != 0)
                 {
                     vert.Y = 1.0f - vert.Y;
                 }
-                else if (effects == (SpriteEffects.FlipHorizontally | SpriteEffects.FlipVertically))
-                {
-                    vert.X = 1.0f - vert.X;
-                    vert.Y = 1.0f - vert.Y;
-                }
-                vert.Y = 1.0f - vert.Y;
+
                 return vert;
             }
-
             translateVertices = Vector2.Zero;
             prevCalculatedPosition = position;
             prevCalculatedRotation = rotation;
