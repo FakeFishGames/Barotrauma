@@ -408,7 +408,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            byte[] bufAux = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);
+            PooledBuffer bufAux = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);
 
 #if DEBUG
             ToolBox.ThrowIfNull(netPeerConfiguration);

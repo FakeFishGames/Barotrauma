@@ -25,11 +25,11 @@ namespace Barotrauma.Networking
         Microsoft.Xna.Framework.Color ReadColorR8G8B8A8();
         int ReadRangedInteger(int min, int max);
         Single ReadRangedSingle(Single min, Single max, int bitCount);
-        byte[] ReadBytes(int numberOfBytes);
+        PooledBuffer ReadBytes(int numberOfBytes);
 
         int BitPosition { get; set; }
         int BytePosition { get; }
-        byte[] Buffer { get; }
+        PooledBuffer Buffer { get; }
         int LengthBits { get; set; }
         int LengthBytes { get; }
 

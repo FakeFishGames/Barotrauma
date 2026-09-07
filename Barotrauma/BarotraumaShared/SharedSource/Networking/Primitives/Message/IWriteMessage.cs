@@ -22,13 +22,13 @@ namespace Barotrauma.Networking
         void WriteIdentifier(Identifier val);
         void WriteRangedInteger(int val, int min, int max);
         void WriteRangedSingle(Single val, Single min, Single max, int bitCount);
-        void WriteBytes(byte[] val, int startIndex, int length);
+        void WriteBytes(PooledBuffer val, int startIndex, int length);
 
-        byte[] PrepareForSending(bool compressPastThreshold, out bool isCompressed, out int outLength);
+        PooledBuffer PrepareForSending(bool compressPastThreshold, out bool isCompressed, out int outLength);
 
         int BitPosition { get; set; }
         int BytePosition { get; }
-        byte[] Buffer { get; }
+        PooledBuffer Buffer { get; }
         int LengthBits { get; set; }
         int LengthBytes { get; }
     }

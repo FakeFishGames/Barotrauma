@@ -210,7 +210,7 @@ readonly ref struct SegmentTableReader<T> where T : struct
 
         public float ReadRangedSingle(float min, float max, int bitCount) => Check(underlyingMsg.ReadRangedSingle(min, max, bitCount));
 
-        public byte[] ReadBytes(int numberOfBytes) => Check(underlyingMsg.ReadBytes(numberOfBytes));
+        public PooledBuffer ReadBytes(int numberOfBytes) => Check(underlyingMsg.ReadBytes(numberOfBytes));
 
         public int BitPosition
         {
@@ -220,7 +220,7 @@ readonly ref struct SegmentTableReader<T> where T : struct
 
         public int BytePosition => BitPosition / 8;
 
-        public byte[] Buffer => underlyingMsg.Buffer;
+        public PooledBuffer Buffer => underlyingMsg.Buffer;
 
         public int LengthBits
         {

@@ -786,12 +786,12 @@ namespace Barotrauma.Networking
 
 
         private double lastPingTime;
-        private byte[] lastPingData;
+        private PooledBuffer lastPingData;
         private void UpdatePing()
         {
             if (Timing.TotalTime > lastPingTime + 1.0)
             {
-                lastPingData ??= new byte[64];
+                lastPingData ??= new PooledBuffer(64);
                 for (int i = 0; i < lastPingData.Length; i++)
                 {
                     lastPingData[i] = (byte)Rand.Range(33, 126);

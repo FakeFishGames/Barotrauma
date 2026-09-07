@@ -240,7 +240,7 @@ namespace Barotrauma.Networking
             }
 #endif
 
-            byte[] bufAux = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);
+            PooledBuffer bufAux = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);
 
             var headers = new PeerPacketHeaders
             {

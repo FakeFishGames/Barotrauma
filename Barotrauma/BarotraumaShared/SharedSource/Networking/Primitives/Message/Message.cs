@@ -46,7 +46,7 @@ namespace Barotrauma.Networking
             bitLength = Math.Max(bitLength, bitPos);
         }
         
-        internal static void WriteBoolean(ref byte[] buf, ref int bitPos, ref int bitLength, bool val)
+        internal static void WriteBoolean(ref PooledBuffer buf, ref int bitPos, ref int bitLength, bool val)
         {
 #if DEBUG
             int resetPos = bitPos;
@@ -71,7 +71,7 @@ namespace Barotrauma.Networking
 #endif
         }
 
-        internal static void WritePadBits(ref byte[] buf, ref int bitPos, ref int bitLength)
+        internal static void WritePadBits(ref PooledBuffer buf, ref int bitPos, ref int bitLength)
         {
             int bitOffset = bitPos % 8;
             bitPos += ((8 - bitOffset) % 8);
@@ -79,7 +79,7 @@ namespace Barotrauma.Networking
             EnsureBufferSize(ref buf, bitPos);
         }
 
-        internal static void WriteByte(ref byte[] buf, ref int bitPos, ref int bitLength, byte val)
+        internal static void WriteByte(ref PooledBuffer buf, ref int bitPos, ref int bitLength, byte val)
         {
             EnsureBufferSize(ref buf, bitPos + 8);
             NetBitWriter.WriteByte(val, 8, buf, bitPos);
@@ -87,7 +87,7 @@ namespace Barotrauma.Networking
             UpdateBitLength(ref bitLength, bitPos);
         }
 
-        internal static void WriteUInt16(ref byte[] buf, ref int bitPos, ref int bitLength, UInt16 val)
+        internal static void WriteUInt16(ref PooledBuffer buf, ref int bitPos, ref int bitLength, UInt16 val)
         {
             EnsureBufferSize(ref buf, bitPos + 16);
             NetBitWriter.WriteUInt16(val, 16, buf, bitPos);
@@ -95,7 +95,7 @@ namespace Barotrauma.Networking
             UpdateBitLength(ref bitLength, bitPos);
         }
 
-        internal static void WriteInt16(ref byte[] buf, ref int bitPos, ref int bitLength, Int16 val)
+        internal static void WriteInt16(ref PooledBuffer buf, ref int bitPos, ref int bitLength, Int16 val)
         {
             EnsureBufferSize(ref buf, bitPos + 16);
             NetBitWriter.WriteUInt16((UInt16)val, 16, buf, bitPos);
@@ -103,7 +103,7 @@ namespace Barotrauma.Networking
             UpdateBitLength(ref bitLength, bitPos);
         }
 
-        internal static void WriteUInt32(ref byte[] buf, ref int bitPos, ref int bitLength, UInt32 val)
+        internal static void WriteUInt32(ref PooledBuffer buf, ref int bitPos, ref int bitLength, UInt32 val)
         {
             EnsureBufferSize(ref buf, bitPos + 32);
             NetBitWriter.WriteUInt32(val, 32, buf, bitPos);
@@ -111,7 +111,7 @@ namespace Barotrauma.Networking
             UpdateBitLength(ref bitLength, bitPos);
         }
 
-        internal static void WriteInt32(ref byte[] buf, ref int bitPos, ref int bitLength, Int32 val)
+        internal static void WriteInt32(ref PooledBuffer buf, ref int bitPos, ref int bitLength, Int32 val)
         {
             EnsureBufferSize(ref buf, bitPos + 32);
             NetBitWriter.WriteUInt32((UInt32)val, 32, buf, bitPos);
@@ -119,7 +119,7 @@ namespace Barotrauma.Networking
             UpdateBitLength(ref bitLength, bitPos);
         }
 
-        internal static void WriteUInt64(ref byte[] buf, ref int bitPos, ref int bitLength, UInt64 val)
+        internal static void WriteUInt64(ref PooledBuffer buf, ref int bitPos, ref int bitLength, UInt64 val)
         {
             EnsureBufferSize(ref buf, bitPos + 64);
             NetBitWriter.WriteUInt64(val, 64, buf, bitPos);
@@ -127,7 +127,7 @@ namespace Barotrauma.Networking
             UpdateBitLength(ref bitLength, bitPos);
         }
 
-        internal static void WriteInt64(ref byte[] buf, ref int bitPos, ref int bitLength, Int64 val)
+        internal static void WriteInt64(ref PooledBuffer buf, ref int bitPos, ref int bitLength, Int64 val)
         {
             EnsureBufferSize(ref buf, bitPos + 64);
             NetBitWriter.WriteUInt64((UInt64)val, 64, buf, bitPos);
@@ -135,7 +135,7 @@ namespace Barotrauma.Networking
             UpdateBitLength(ref bitLength, bitPos);
         }
 
-        internal static void WriteSingle(ref byte[] buf, ref int bitPos, ref int bitLength, Single val)
+        internal static void WriteSingle(ref PooledBuffer buf, ref int bitPos, ref int bitLength, Single val)
         {
             // Use union to avoid BitConverter.GetBytes() which allocates memory on the heap
             SingleUIntUnion su;
@@ -149,7 +149,7 @@ namespace Barotrauma.Networking
             UpdateBitLength(ref bitLength, bitPos);
         }
 
-        internal static void WriteDouble(ref byte[] buf, ref int bitPos, ref int bitLength, Double val)
+        internal static void WriteDouble(ref PooledBuffer buf, ref int bitPos, ref int bitLength, Double val)
         {
             EnsureBufferSize(ref buf, bitPos + 64);
 
@@ -157,7 +157,7 @@ namespace Barotrauma.Networking
             WriteBytes(ref buf, ref bitPos, ref bitLength, bytes, 0, 8);
         }
 
-        internal static void WriteColorR8G8B8(ref byte[] buf, ref int bitPos, ref int bitLength, Color val)
+        internal static void WriteColorR8G8B8(ref PooledBuffer buf, ref int bitPos, ref int bitLength, Color val)
         {
             EnsureBufferSize(ref buf, bitPos + 24);
 
@@ -166,7 +166,7 @@ namespace Barotrauma.Networking
             WriteByte(ref buf, ref bitPos, ref bitLength, val.B);
         }
 
-        internal static void WriteColorR8G8B8A8(ref byte[] buf, ref int bitPos, ref int bitLength, Color val)
+        internal static void WriteColorR8G8B8A8(ref PooledBuffer buf, ref int bitPos, ref int bitLength, Color val)
         {
             EnsureBufferSize(ref buf, bitPos + 32);
 
@@ -176,7 +176,7 @@ namespace Barotrauma.Networking
             WriteByte(ref buf, ref bitPos, ref bitLength, val.A);
         }
 
-        internal static void WriteString(ref byte[] buf, ref int bitPos, ref int bitLength, string val)
+        internal static void WriteString(ref PooledBuffer buf, ref int bitPos, ref int bitLength, string val)
         {
             if (string.IsNullOrEmpty(val))
             {
@@ -189,7 +189,7 @@ namespace Barotrauma.Networking
             WriteBytes(ref buf, ref bitPos, ref bitLength, bytes, 0, bytes.Length);
         }
 
-        internal static void WriteVariableUInt32(ref byte[] buf, ref int bitPos, ref int bitLength, uint value)
+        internal static void WriteVariableUInt32(ref PooledBuffer buf, ref int bitPos, ref int bitLength, uint value)
         {
             uint remainingValue = value;
             while (remainingValue >= 0x80)
@@ -201,7 +201,7 @@ namespace Barotrauma.Networking
             WriteByte(ref buf, ref bitPos, ref bitLength, (byte)remainingValue);
         }
 
-        internal static void WriteRangedInteger(ref byte[] buf, ref int bitPos, ref int bitLength, int val, int min, int max)
+        internal static void WriteRangedInteger(ref PooledBuffer buf, ref int bitPos, ref int bitLength, int val, int min, int max)
         {
             uint range = (uint)(max - min);
             int numberOfBits = NetUtility.BitsToHoldUInt(range);
@@ -214,7 +214,7 @@ namespace Barotrauma.Networking
             UpdateBitLength(ref bitLength, bitPos);
         }
 
-        internal static void WriteRangedSingle(ref byte[] buf, ref int bitPos, ref int bitLength, Single val, Single min, Single max, int numberOfBits)
+        internal static void WriteRangedSingle(ref PooledBuffer buf, ref int bitPos, ref int bitLength, Single val, Single min, Single max, int numberOfBits)
         {
             float range = max - min;
             float unit = ((val - min) / range);
@@ -227,7 +227,7 @@ namespace Barotrauma.Networking
             UpdateBitLength(ref bitLength, bitPos);
         }
 
-        internal static void WriteBytes(ref byte[] buf, ref int bitPos, ref int bitLength, byte[] val, int pos, int length)
+        internal static void WriteBytes(ref PooledBuffer buf, ref int bitPos, ref int bitLength, byte[] val, int pos, int length)
         {
             EnsureBufferSize(ref buf, bitPos + length * 8);
             NetBitWriter.WriteBytes(val, pos, length, buf, bitPos);
@@ -235,25 +235,25 @@ namespace Barotrauma.Networking
             UpdateBitLength(ref bitLength, bitPos);
         }
 
-        internal static void EnsureBufferSize(ref byte[] buf, int numberOfBits)
+        internal static void EnsureBufferSize(ref PooledBuffer buf, int numberOfBits)
         {
             int byteLen = (numberOfBits + 7) / 8;
             if (buf == null)
             {
-                buf = new byte[byteLen + MsgConstants.BufferOverAllocateAmount];
+                buf = new PooledBuffer(byteLen + MsgConstants.BufferOverAllocateAmount);
                 return;
             }
 
             if (buf.Length < byteLen)
             {
-                Array.Resize(ref buf, byteLen + MsgConstants.BufferOverAllocateAmount);
+               buf.Resize(byteLen + MsgConstants.BufferOverAllocateAmount);
             }
         }
     }
 
     internal static class MsgReader
     {
-        internal static bool ReadBoolean(byte[] buf, ref int bitPos)
+        internal static bool ReadBoolean(PooledBuffer buf, ref int bitPos)
         {
             byte retval = NetBitWriter.ReadByte(buf, 1, bitPos);
             bitPos++;
@@ -266,44 +266,44 @@ namespace Barotrauma.Networking
             bitPos += (8 - bitOffset) % 8;
         }
 
-        internal static byte ReadByte(byte[] buf, ref int bitPos)
+        internal static byte ReadByte(PooledBuffer buf, ref int bitPos)
         {
             byte retval = NetBitWriter.ReadByte(buf, 8, bitPos);
             bitPos += 8;
             return retval;
         }
 
-        internal static byte PeekByte(byte[] buf, ref int bitPos)
+        internal static byte PeekByte(PooledBuffer buf, ref int bitPos)
         {
             byte retval = NetBitWriter.ReadByte(buf, 8, bitPos);
             return retval;
         }
 
-        internal static UInt16 ReadUInt16(byte[] buf, ref int bitPos)
+        internal static UInt16 ReadUInt16(PooledBuffer buf, ref int bitPos)
         {
             uint retval = NetBitWriter.ReadUInt16(buf, 16, bitPos);
             bitPos += 16;
             return (ushort)retval;
         }
 
-        internal static Int16 ReadInt16(byte[] buf, ref int bitPos)
+        internal static Int16 ReadInt16(PooledBuffer buf, ref int bitPos)
         {
             return (Int16)ReadUInt16(buf, ref bitPos);
         }
 
-        internal static UInt32 ReadUInt32(byte[] buf, ref int bitPos)
+        internal static UInt32 ReadUInt32(PooledBuffer buf, ref int bitPos)
         {
             uint retval = NetBitWriter.ReadUInt32(buf, 32, bitPos);
             bitPos += 32;
             return retval;
         }
 
-        internal static Int32 ReadInt32(byte[] buf, ref int bitPos)
+        internal static Int32 ReadInt32(PooledBuffer buf, ref int bitPos)
         {
             return (Int32)ReadUInt32(buf, ref bitPos);
         }
 
-        internal static UInt64 ReadUInt64(byte[] buf, ref int bitPos)
+        internal static UInt64 ReadUInt64(PooledBuffer buf, ref int bitPos)
         {
             ulong low = NetBitWriter.ReadUInt32(buf, 32, bitPos);
             bitPos += 32;
@@ -313,12 +313,12 @@ namespace Barotrauma.Networking
             return retval;
         }
 
-        internal static Int64 ReadInt64(byte[] buf, ref int bitPos)
+        internal static Int64 ReadInt64(PooledBuffer buf, ref int bitPos)
         {
             return (Int64)ReadUInt64(buf, ref bitPos);
         }
 
-        internal static Single ReadSingle(byte[] buf, ref int bitPos)
+        internal static Single ReadSingle(PooledBuffer buf, ref int bitPos)
         {
             if ((bitPos & 7) == 0) // read directly
             {
@@ -331,7 +331,7 @@ namespace Barotrauma.Networking
             return BitConverter.ToSingle(bytes, 0);
         }
 
-        internal static Double ReadDouble(byte[] buf, ref int bitPos)
+        internal static Double ReadDouble(PooledBuffer buf, ref int bitPos)
         {
             if ((bitPos & 7) == 0) // read directly
             {
@@ -345,7 +345,7 @@ namespace Barotrauma.Networking
             return BitConverter.ToDouble(bytes, 0);
         }
 
-        internal static Color ReadColorR8G8B8(byte[] buf, ref int bitPos)
+        internal static Color ReadColorR8G8B8(PooledBuffer buf, ref int bitPos)
         {
             byte r = ReadByte(buf, ref bitPos);
             byte g = ReadByte(buf, ref bitPos);
@@ -353,7 +353,7 @@ namespace Barotrauma.Networking
             return new Color(r, g, b, (byte)255);
         }
 
-        internal static Color ReadColorR8G8B8A8(byte[] buf, ref int bitPos)
+        internal static Color ReadColorR8G8B8A8(PooledBuffer buf, ref int bitPos)
         {
             byte r = ReadByte(buf, ref bitPos);
             byte g = ReadByte(buf, ref bitPos);
@@ -362,7 +362,7 @@ namespace Barotrauma.Networking
             return new Color(r, g, b, a);
         }
 
-        internal static UInt32 ReadVariableUInt32(byte[] buf, ref int bitPos)
+        internal static UInt32 ReadVariableUInt32(PooledBuffer buf, ref int bitPos)
         {
             int bitLength = buf.Length * 8;
 
@@ -380,7 +380,7 @@ namespace Barotrauma.Networking
             return (uint)result;
         }
 
-        internal static String ReadString(byte[] buf, ref int bitPos)
+        internal static String ReadString(PooledBuffer buf, ref int bitPos)
         {
             int bitLength = buf.Length * 8;
             int byteLen = (int)ReadVariableUInt32(buf, ref bitPos);
@@ -401,11 +401,11 @@ namespace Barotrauma.Networking
                 return retval;
             }
 
-            byte[] bytes = ReadBytes(buf, ref bitPos, byteLen);
-            return Encoding.UTF8.GetString(bytes, 0, bytes.Length);
+            PooledBuffer bytes = ReadBytes(buf, ref bitPos, byteLen);
+            return Encoding.UTF8.GetString(bytes, 0, byteLen);
         }
 
-        internal static int ReadRangedInteger(byte[] buf, ref int bitPos, int min, int max)
+        internal static int ReadRangedInteger(PooledBuffer buf, ref int bitPos, int min, int max)
         {
             uint range = (uint)(max - min);
             int numBits = NetUtility.BitsToHoldUInt(range);
@@ -416,7 +416,7 @@ namespace Barotrauma.Networking
             return (int)(min + rvalue);
         }
 
-        internal static Single ReadRangedSingle(byte[] buf, ref int bitPos, Single min, Single max, int bitCount)
+        internal static Single ReadRangedSingle(PooledBuffer buf, ref int bitPos, Single min, Single max, int bitCount)
         {
             int maxInt = (1 << bitCount) - 1;
             int intVal = ReadRangedInteger(buf, ref bitPos, 0, maxInt);
@@ -424,9 +424,9 @@ namespace Barotrauma.Networking
             return min + range * intVal / maxInt;
         }
 
-        internal static byte[] ReadBytes(byte[] buf, ref int bitPos, int numberOfBytes)
+        internal static PooledBuffer ReadBytes(PooledBuffer buf, ref int bitPos, int numberOfBytes)
         {
-            byte[] retval = new byte[numberOfBytes];
+            PooledBuffer retval = new PooledBuffer(numberOfBytes);
             NetBitWriter.ReadBytes(buf, numberOfBytes, bitPos, retval, 0);
             bitPos += 8 * numberOfBytes;
             return retval;
@@ -435,7 +435,7 @@ namespace Barotrauma.Networking
 
     internal sealed class WriteOnlyMessage : IWriteMessage
     {
-        private byte[] buf = new byte[MsgConstants.InitialBufferSize];
+        private PooledBuffer buf = new PooledBuffer(MsgConstants.InitialBufferSize);
         private int seekPos;
         private int lengthBits;
 
@@ -447,7 +447,7 @@ namespace Barotrauma.Networking
 
         public int BytePosition => seekPos / 8;
 
-        public byte[] Buffer => buf;
+        public PooledBuffer Buffer => buf;
 
         public int LengthBits
         {
@@ -556,18 +556,18 @@ namespace Barotrauma.Networking
             MsgWriter.WriteRangedSingle(ref buf, ref seekPos, ref lengthBits, val, min, max, bitCount);
         }
 
-        public void WriteBytes(byte[] val, int startPos, int length)
+        public void WriteBytes(PooledBuffer val, int startPos, int length)
         {
             MsgWriter.WriteBytes(ref buf, ref seekPos, ref lengthBits, val, startPos, length);
         }
 
-        public byte[] PrepareForSending(bool compressPastThreshold, out bool isCompressed, out int length)
+        public PooledBuffer PrepareForSending(bool compressPastThreshold, out bool isCompressed, out int length)
         {
-            byte[] outBuf;
+            PooledBuffer outBuf;
             if (LengthBytes <= MsgConstants.CompressionThreshold || !compressPastThreshold)
             {
                 isCompressed = false;
-                outBuf = new byte[LengthBytes];
+                outBuf = new PooledBuffer(LengthBytes);
                 Array.Copy(buf, outBuf, LengthBytes);
                 length = LengthBytes;
             }
@@ -586,14 +586,14 @@ namespace Barotrauma.Networking
                 if (compressedBuf.Length >= LengthBytes)
                 {
                     isCompressed = false;
-                    outBuf = new byte[LengthBytes];
+                    outBuf = new PooledBuffer(LengthBytes);
                     Array.Copy(buf, outBuf, LengthBytes);
                     length = LengthBytes;
                 }
                 else
                 {
                     isCompressed = true;
-                    outBuf = compressedBuf;
+                    outBuf = new PooledBuffer(compressedBuf);
                     length = outBuf.Length;
                     DebugConsole.Log($"Compressed message: {LengthBytes} to {length}");
                 }
@@ -616,7 +616,7 @@ namespace Barotrauma.Networking
 
         public int BytePosition => seekPos / 8;
 
-        public byte[] Buffer { get; }
+        public PooledBuffer Buffer { get; }
 
         public int LengthBits
         {
@@ -636,12 +636,12 @@ namespace Barotrauma.Networking
 
         public NetworkConnection Sender { get; }
 
-        public ReadOnlyMessage(byte[] inBuf, bool isCompressed, int startPos, int byteLength, NetworkConnection sender)
+        public ReadOnlyMessage(PooledBuffer inBuf, bool isCompressed, int startPos, int byteLength, NetworkConnection sender)
         {
             Sender = sender;
             if (isCompressed)
             {
-                byte[] decompressedData;
+                PooledBuffer decompressedData;
                 using (MemoryStream input = new MemoryStream(inBuf, startPos, byteLength))
                 {
                     using (MemoryStream output = new MemoryStream())
@@ -651,27 +651,15 @@ namespace Barotrauma.Networking
                             dstream.CopyTo(output);
                         }
 
-                        decompressedData = output.ToArray();
+                        Buffer = new PooledBuffer(output.ToArray());
                     }
                 }
-
-                Buffer = new byte[decompressedData.Length];
-                try
-                {
-                    Array.Copy(decompressedData, 0, Buffer, 0, decompressedData.Length);
-                }
-                catch (ArgumentException e)
-                {
-                    throw new ArgumentException(
-                        $"Failed to copy the incoming compressed buffer. Source buffer length: {decompressedData.Length}, start position: {0}, length: {decompressedData.Length}, destination buffer length: {Buffer.Length}.", e);
-                }
-
-                lengthBits = decompressedData.Length * 8;
+                lengthBits = Buffer.Length * 8;
                 DebugConsole.Log("Decompressing message: " + byteLength + " to " + LengthBytes);
             }
             else
             {
-                Buffer = new byte[inBuf.Length];
+                Buffer = new PooledBuffer(inBuf.Length);
                 try
                 {
                     Array.Copy(inBuf, startPos, Buffer, 0, byteLength);
@@ -779,7 +767,7 @@ namespace Barotrauma.Networking
             return MsgReader.ReadRangedSingle(Buffer, ref seekPos, min, max, bitCount);
         }
 
-        public byte[] ReadBytes(int numberOfBytes)
+        public PooledBuffer ReadBytes(int numberOfBytes)
         {
             return MsgReader.ReadBytes(Buffer, ref seekPos, numberOfBytes);
         }
@@ -787,20 +775,20 @@ namespace Barotrauma.Networking
 
     internal sealed class ReadWriteMessage : IWriteMessage, IReadMessage
     {
-        private byte[] buf;
+        private PooledBuffer buf;
         private int seekPos;
         private int lengthBits;
 
         public ReadWriteMessage()
         {
-            buf = new byte[MsgConstants.InitialBufferSize];
+            buf = new PooledBuffer(MsgConstants.InitialBufferSize);
             seekPos = 0;
             lengthBits = 0;
         }
 
-        public ReadWriteMessage(byte[] b, int bitPos, int lBits, bool copyBuf)
+        public ReadWriteMessage(PooledBuffer b, int bitPos, int lBits, bool copyBuf)
         {
-            buf = copyBuf ? (byte[])b.Clone() : b;
+            buf = copyBuf ? b.Clone() : b;
             seekPos = bitPos;
             lengthBits = lBits;
         }
@@ -813,7 +801,7 @@ namespace Barotrauma.Networking
 
         public int BytePosition => seekPos / 8;
 
-        public byte[] Buffer => buf;
+        public PooledBuffer Buffer => buf;
 
         public int LengthBits
         {
@@ -923,7 +911,7 @@ namespace Barotrauma.Networking
             MsgWriter.WriteRangedSingle(ref buf, ref seekPos, ref lengthBits, val, min, max, bitCount);
         }
 
-        public void WriteBytes(byte[] val, int startPos, int length)
+        public void WriteBytes(PooledBuffer val, int startPos, int length)
         {
             MsgWriter.WriteBytes(ref buf, ref seekPos, ref lengthBits, val, startPos, length);
         }
@@ -1020,12 +1008,12 @@ namespace Barotrauma.Networking
             return MsgReader.ReadRangedSingle(buf, ref seekPos, min, max, bitCount);
         }
 
-        public byte[] ReadBytes(int numberOfBytes)
+        public PooledBuffer ReadBytes(int numberOfBytes)
         {
             return MsgReader.ReadBytes(buf, ref seekPos, numberOfBytes);
         }
 
-        public byte[] PrepareForSending(bool compressPastThreshold, out bool isCompressed, out int outLength)
+        public PooledBuffer PrepareForSending(bool compressPastThreshold, out bool isCompressed, out int outLength)
         {
             throw new InvalidOperationException("ReadWriteMessages are not to be sent");
         }
