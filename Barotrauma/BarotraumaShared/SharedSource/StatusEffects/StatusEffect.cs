@@ -648,7 +648,7 @@ namespace Barotrauma
 
         private readonly int useItemCount;
 
-        private readonly bool removeItem, dropContainedItems, dropItem, removeCharacter, breakLimb, hideLimb;
+        private readonly bool removeItem, dropContainedItems, dropItem, removeCharacter, breakLimb, hideLimb, flipCharacter;
         private readonly float hideLimbTimer;
 
         /// <summary>
@@ -1100,6 +1100,9 @@ namespace Barotrauma
                     case "removecharacter":
                         removeCharacter = true;
                         containerForItemsOnCharacterRemoval = subElement.GetAttributeIdentifier("moveitemstocontainer", Identifier.Empty);
+                        break;
+                    case "flipcharacter":
+                        flipCharacter = true;
                         break;
                     case "breaklimb":
                         breakLimb = true;
@@ -1802,6 +1805,9 @@ namespace Barotrauma
             PhysicsBody parentItemBody = parentItem?.body;
             Hull hull = GetHull(entity);
             Vector2 position = GetPosition(entity, targets, worldPosition);
+
+            bool isNotClient = GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient;
+
             if (useItemCount > 0)
             {
                 Character useTargetCharacter = null;
@@ -1879,6 +1885,17 @@ namespace Barotrauma
                     if (targetCharacter != null) { RemoveCharacter(targetCharacter); }
                 }
             }
+            if (flipCharacter && isNotClient)
+            {
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    var target = GetCharacterFromTarget(targets[i]);
+                    if (target != null)
+                    {
+                        target.TryFlipCharacter();
+                    }
+                }
+            }
             if (breakLimb || hideLimb)
             {
                 for (int i = 0; i < targets.Count; i++)
@@ -1949,8 +1966,6 @@ namespace Barotrauma
                     explosion.Explode(position, damageSource: entity, attacker: user);
                 }
             }
-
-            bool isNotClient = GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient;
 
             for (int i = 0; i < targets.Count; i++)
             {
@@ -2298,6 +2313,10 @@ namespace Barotrauma
                                     foreach (var target in targets)
                                     {
                                         if (target is not Character character) { continue; }
+                                        if (character.IsFlipped)
+                                        {
+                                            newCharacter.TryFlipCharacter();
+                                        }
                                         if (characterSpawnInfo.TransferInventory && character.Inventory != null && newCharacter.Inventory != null)
                                         {
                                             if (character.Inventory.Capacity != newCharacter.Inventory.Capacity) { return; }
