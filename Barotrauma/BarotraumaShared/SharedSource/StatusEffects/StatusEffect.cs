@@ -2350,7 +2350,7 @@ namespace Barotrauma
                                                 }
 #endif
                                             }
-                                            if (characterSpawnInfo.RemovePreviousCharacter) { Entity.Spawner?.AddEntityToRemoveQueue(character); }
+                                            if (characterSpawnInfo.RemovePreviousCharacter) { character.TriggerDeathEffects = false; character.Kill(CauseOfDeathType.Unknown, null); Entity.Spawner?.AddEntityToRemoveQueue(character); }
                                         }
                                     }
                                     if (characterSpawnInfo.InheritEventTags)
@@ -2490,6 +2490,8 @@ namespace Barotrauma
                     }
                 }
             }
+            character.TriggerDeathEffects = false;
+            character.Kill(CauseOfDeathType.Unknown, null);
             Entity.Spawner?.AddEntityToRemoveQueue(character);
         }
 
