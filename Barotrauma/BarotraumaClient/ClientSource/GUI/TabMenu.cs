@@ -1057,8 +1057,14 @@ namespace Barotrauma
             Point iconSize = new Point((int)(paddedFrame.Rect.Height * 0.8f));
             float characterNameWidthAdjustment = (iconSize.X + paddedFrame.AbsoluteSpacing) / characterColumnWidth;
 
+            //a client's own character is named after the client, so a different name means they're controlling a bot
+            string displayName = GameMain.Client?.ServerSettings.AllowControllingBots == true &&
+                client.Character is { IsDead: false } controlledCharacter &&
+                !string.Equals(controlledCharacter.Name, client.Name, StringComparison.OrdinalIgnoreCase) ?
+                $"{controlledCharacter.Name} ({client.Name})" : client.Name;
+
             characterNameBlock = new GUITextBlock(new RectTransform(new Point(characterColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
-                ToolBox.LimitString(client.Name, GUIStyle.Font, (int)(characterColumnWidth - paddedFrame.Rect.Width * characterNameWidthAdjustment)), textAlignment: Alignment.Center, textColor: nameColor);
+                ToolBox.LimitString(displayName, GUIStyle.Font, (int)(characterColumnWidth - paddedFrame.Rect.Width * characterNameWidthAdjustment)), textAlignment: Alignment.Center, textColor: nameColor);
 
             float iconWidth = iconSize.X / (float)characterColumnWidth;
             int xOffset = (int)(jobColumnWidth + characterNameBlock.TextPos.X - GUIStyle.Font.MeasureString(characterNameBlock.Text).X / 2f - paddedFrame.AbsoluteSpacing - iconWidth * paddedFrame.Rect.Width);
