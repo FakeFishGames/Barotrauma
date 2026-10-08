@@ -1680,6 +1680,11 @@ namespace Barotrauma.Networking
             ushort characterId = inc.ReadUInt16();
             var target = Character.CharacterList.FirstOrDefault(c => c.ID == characterId);
             var isReservedForSender = target != null && crewControlStates.TryGetValue(sender, out CrewControlState controlState) && target.Info == controlState.MainCharacterInfo;
+            //the main character of a client that is currently controlling a bot is reserved for that client
+            bool isReservedForOtherClient = target != null && crewControlStates.Any(kvp =>
+                kvp.Key != sender &&
+                IsCrewControlStateActive(kvp.Value.MainCharacterInfo, kvp.Value.ControlledCharacterInfo) &&
+                kvp.Value.MainCharacterInfo == target.Info);
             var validationResult = ValidateCharacterControlRequest(
                 ServerSettings.AllowControllingBots,
                 GameStarted,
@@ -1688,6 +1693,7 @@ namespace Barotrauma.Networking
                 sender.SpectateOnly,
                     target is { Removed: false, IsDead: false, IsOnPlayerTeam: true, Info: not null } &&
                     (sender.Character is { IsDead: false } || IsControllingBot(sender)) &&
+                    !isReservedForOtherClient &&
                     IsCharacterControlTargetValid(target.IsBot, isReservedForSender),
                 ConnectedClients.Any(c => c != sender && c.Character == target));
 
