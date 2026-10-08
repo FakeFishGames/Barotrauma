@@ -338,6 +338,9 @@ namespace Barotrauma
         {
             characterInfos.Clear();
             reserveBench.Clear();
+#if CLIENT
+            serverCrewCharacterInfoIds.Clear();
+#endif
         }
 
         public void InitRound()

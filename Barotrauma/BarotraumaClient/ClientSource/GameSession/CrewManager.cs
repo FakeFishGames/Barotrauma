@@ -33,6 +33,7 @@ namespace Barotrauma
         private float crewListOpenState;
         private bool _isCrewMenuOpen = true;
         private Point crewListEntrySize;
+        private readonly HashSet<ushort> serverCrewCharacterInfoIds = new HashSet<ushort>();
 
         private readonly List<GUITickBox> traitorButtons = new List<GUITickBox>();
 
@@ -324,6 +325,9 @@ namespace Barotrauma
         {
             return crewArea.Rect;
         }
+
+        public bool IsInCrewList(Character character) =>
+            crewList.Content.Children.Any(c => c.UserData as Character == character);
 
         /// <summary>
         /// Add character to the list without actually adding it to the crew
@@ -3832,6 +3836,7 @@ namespace Barotrauma
         {
             characters.Clear();
             characterInfos.Clear();
+            serverCrewCharacterInfoIds.Clear();
             crewList.ClearChildren();
         }
 
@@ -3959,10 +3964,13 @@ namespace Barotrauma
         /// </summary>
         public bool UpdateCrewManagerIfNecessary(List<CharacterInfo> updatedCrewManager)
         {
+            var updatedIds = updatedCrewManager.Select(updated => updated.ID).ToHashSet();
             // CharacterInfos no longer in the server's CrewManager
-            var toRemove = characterInfos.Where(original => updatedCrewManager.None(updated => updated.ID == original.ID)).ToList();
+            var toRemove = characterInfos.Where(original => serverCrewCharacterInfoIds.Contains(original.ID) && !updatedIds.Contains(original.ID)).ToList();
             // CharacterInfos that are in the server's CrewManager but not on the client yet
-            var toAdd = updatedCrewManager.Where(updated => characterInfos.None(original => original.ID == updated.ID)).ToList();
+            var toAdd = updatedCrewManager.Where(updated => !characterInfos.Any(original => original.ID == updated.ID)).ToList();
+
+            serverCrewCharacterInfoIds.UnionWith(updatedIds);
             
             foreach (CharacterInfo characterInfo in toRemove)
             {
