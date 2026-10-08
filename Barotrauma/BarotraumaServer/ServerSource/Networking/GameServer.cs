@@ -4507,10 +4507,13 @@ namespace Barotrauma.Networking
             {
                 Character previousCharacter = client.Character;
                 previousCharacter.SetOwnerClient(null);
-                CreateEntityEvent(previousCharacter, new Character.ControlEventData(null));
+                if (newCharacter == null || ServerSettings.AllowControllingBots)
+                {
+                    CreateEntityEvent(previousCharacter, new Character.ControlEventData(null));
+                }
 
                 // The objective may be unchanged (e.g. already idle), so force a resync to update the order/objective icon
-                if (previousCharacter.AIController is HumanAIController previousController)
+                if (ServerSettings.AllowControllingBots && previousCharacter.AIController is HumanAIController previousController)
                 {
                     previousController.ObjectiveManager.SendCurrentObjectiveState();
                 }

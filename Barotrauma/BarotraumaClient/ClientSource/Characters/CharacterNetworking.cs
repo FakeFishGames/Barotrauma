@@ -383,7 +383,7 @@ namespace Barotrauma
                         IsRemotePlayer = false;
                         GameMain.Client.HasSpawned = true;
                         GameMain.Client.Character = this;
-                        if (IsDead)
+                        if (IsDead && GameMain.Client.ServerSettings.AllowControllingBots)
                         {
                             // If the player was controlling a bot, stop controlling it upon death.
                             GameMain.Client.IsControllingBot = false;

@@ -377,7 +377,7 @@ namespace Barotrauma
                     Map.CurrentLocation.RegisterTakenItems(c.Inventory.AllItems.Where(it => it.SpawnedInCurrentOutpost && it.OriginalModuleIndex > 0));
                 }
 
-                if (c.Info != null && (c.IsBot || c.AIController is HumanAIController))
+                if (c.Info != null && (c.IsBot || (GameMain.Server.ServerSettings.AllowControllingBots && c.AIController is HumanAIController)))
                 {
                     if (c.IsDead && c.CauseOfDeath?.Type != CauseOfDeathType.Disconnected) { CrewManager.RemoveCharacterInfo(c.Info); }
                     c.Info.HealthData = new XElement("health");
