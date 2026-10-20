@@ -41,7 +41,7 @@ namespace Barotrauma
         BossHealthBarsOnly,
         HideAll
     }
-    
+
     public enum InteractionLabelDisplayMode
     {
         Everything,
@@ -115,7 +115,7 @@ namespace Barotrauma
             public static Config FromElement(XElement element, in Config? fallback = null)
             {
                 Config retVal = fallback ?? GetDefault();
-                
+
                 retVal.DeserializeElement(element);
 #if SERVER
                 //server defaults to English, clients get a prompt to select a language
@@ -195,7 +195,7 @@ namespace Barotrauma
             public struct GraphicsSettings
             {
                 public static readonly Point MinSupportedResolution = new Point(1024, 540);
-                
+
                 public static GraphicsSettings GetDefault()
                 {
                     GraphicsSettings gfxSettings = new GraphicsSettings
@@ -263,7 +263,7 @@ namespace Barotrauma
                     public static string Write(string s)
                         => System.Xml.XmlConvert.EncodeName(s)!;
                 }
-                
+
                 public static AudioSettings GetDefault()
                 {
                     AudioSettings audioSettings = new AudioSettings
@@ -302,12 +302,12 @@ namespace Barotrauma
                 public bool UseDirectionalVoiceChat;
                 public bool VoipAttenuationEnabled;
                 public VoiceMode VoiceSetting;
-                
+
                 [StructSerialization.Handler(typeof(DeviceNameHandler))]
                 public string AudioOutputDevice;
                 [StructSerialization.Handler(typeof(DeviceNameHandler))]
                 public string VoiceCaptureDevice;
-                
+
                 public float NoiseGateThreshold;
                 public bool DisableVoiceChatFilters;
             }
@@ -336,7 +336,7 @@ namespace Barotrauma
                         { InputType.RadioChat, Keys.None },
                         { InputType.ActiveChat, Keys.T },
                         { InputType.CrewOrders, Keys.C },
-                        { InputType.ChatBox, Keys.B }, 
+                        { InputType.ChatBox, Keys.B },
 
                         { InputType.Voice, Keys.V },
                         { InputType.RadioVoice, Keys.None },
@@ -363,7 +363,8 @@ namespace Barotrauma
                         { InputType.Select, MouseButton.PrimaryMouse },
                         { InputType.Deselect, MouseButton.SecondaryMouse },
                         { InputType.Shoot, MouseButton.PrimaryMouse },
-                        { InputType.ShowInteractionLabels, Keys.LeftAlt }
+                        { InputType.ShowInteractionLabels, Keys.LeftAlt },
+                        { InputType.QuickItemTransfer, Keys.None }
                 }.ToImmutableDictionary();
 
                 public static KeyMapping GetDefault() => new KeyMapping
@@ -468,7 +469,7 @@ namespace Barotrauma
                         .ToImmutableDictionary();
                     return newMapping;
                 }
-                
+
                 public ImmutableDictionary<InputType, KeyOrMouse> Bindings;
 
                 public LocalizedString KeyBindText(InputType inputType) => Bindings[inputType].Name;
@@ -542,7 +543,7 @@ namespace Barotrauma
             // Ensure the save folder exists early. Otherwise the game will crash on macOS,
             // attempting to read the non-existent folder in SafeIO.CanWrite() when saving initial user config.
             SaveUtil.EnsureSaveFolderExists();
-            
+
             XDocument? currentConfigDoc = null;
 
             if (File.Exists(PlayerConfigPath))
@@ -586,8 +587,8 @@ namespace Barotrauma
 
         public static void SetCurrentConfig(in Config newConfig)
         {
-            bool resolutionChanged = 
-                currentConfig.Graphics.Width != newConfig.Graphics.Width || 
+            bool resolutionChanged =
+                currentConfig.Graphics.Width != newConfig.Graphics.Width ||
                 currentConfig.Graphics.Height != newConfig.Graphics.Height;
             bool languageChanged = currentConfig.Language != newConfig.Language;
             bool audioOutputChanged = currentConfig.Audio.AudioOutputDevice != newConfig.Audio.AudioOutputDevice;
@@ -699,13 +700,13 @@ namespace Barotrauma
 
             XElement debugConsoleMappingElement = new XElement("debugconsolemapping"); root.Add(debugConsoleMappingElement);
             DebugConsoleMapping.Instance.SaveTo(debugConsoleMappingElement);
-            
+
             XElement tutorialsElement = new XElement("tutorials"); root.Add(tutorialsElement);
             CompletedTutorials.Instance.SaveTo(tutorialsElement);
 
             XElement submarineSettings = new XElement("submarinesettings"); root.Add(submarineSettings);
 
-            SubmarineInfo.SubmarinePathsWithRemoteStorage.ForEach(path => 
+            SubmarineInfo.SubmarinePathsWithRemoteStorage.ForEach(path =>
             {
                 submarineSettings.Add(new XElement("SubmarineWithRemoteStorage", new XAttribute("path", path)));
             });
@@ -730,7 +731,7 @@ namespace Barotrauma
 
             //allow retrying a few times because the file may be in use if the player is running multiple instances of the game on the same machine
             configDoc.SaveSafe(PlayerConfigPath, maxRetries: 4);
-            
+
             System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
             {
                 Indent = true,

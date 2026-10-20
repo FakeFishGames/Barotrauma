@@ -584,11 +584,12 @@ namespace Barotrauma
 
             if (doubleClickedItems.Any())
             {
-                var quickUseAction = GetQuickUseAction(doubleClickedItems.First(), true, true, true);
+                var notQuickTransfer = !PlayerInput.KeyDown(InputType.QuickItemTransfer); // disallow to use/equip items with quick items transfer keybind so you won't accidently handcuff or poison yourself
+                var quickUseAction = GetQuickUseAction(doubleClickedItems.First(), notQuickTransfer, true, notQuickTransfer);
                 int itemCount = 0;
                 foreach (Item doubleClickedItem in doubleClickedItems)
                 {
-                    QuickUseItem(doubleClickedItem, true, true, true, quickUseAction, playSound: doubleClickedItem == doubleClickedItems.First());
+                    QuickUseItem(doubleClickedItem, true, true, true, quickUseAction, playSound: notQuickTransfer && doubleClickedItem == doubleClickedItems.First());
                     itemCount++;
                     //only use one item if we're equipping or using it as a treatment
                     if (quickUseAction == QuickUseAction.Equip || quickUseAction == QuickUseAction.UseTreatment)

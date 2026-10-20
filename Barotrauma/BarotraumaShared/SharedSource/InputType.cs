@@ -26,6 +26,7 @@
         ActiveChat,
         ToggleChatMode,
         ChatBox,
-        ShowInteractionLabels
+        ShowInteractionLabels,
+        QuickItemTransfer
     }
 }

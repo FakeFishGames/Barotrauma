@@ -410,7 +410,7 @@ namespace Barotrauma
 
         protected static HashSet<SlotReference> highlightedSubInventorySlots = new HashSet<SlotReference>();
         private static readonly List<SlotReference> subInventorySlotsToDraw = new List<SlotReference>();
-
+        public static bool OnFreshSlot;
         protected static SlotReference selectedSlot;
 
         public VisualSlot[] visualSlots;
@@ -653,16 +653,40 @@ namespace Barotrauma
                     if (Screen.Selected is SubEditorScreen editor && !editor.WiringMode && slotRef.ParentInventory is CharacterInventory) { return; }
                     if (CanSelectSlot(slotRef))
                     {
+                        OnFreshSlot = OnFreshSlot || selectedSlot != slotRef;
                         selectedSlot = slotRef;
                     }
                 }
 
                 if (!DraggingItems.Any())
                 {
-                    var interactableItems = Screen.Selected == GameMain.GameScreen ? slots[slotIndex].Items.Where(it => it.IsInteractable(Character.Controlled)) : slots[slotIndex].Items;
+                    var interactableItems = Screen.Selected == GameMain.GameScreen ?
+                        slots[slotIndex].Items.Where(it => it.IsInteractable(Character.Controlled)) :
+                        slots[slotIndex].Items;
                     if (interactableItems.Any())
-                    {                        
-                        if (availableContextualOrder.target != null)
+                    {
+                        if (PlayerInput.KeyUp(InputType.QuickItemTransfer) && !OnFreshSlot)
+                        {
+                            OnFreshSlot = true;
+                        }
+                        else if (PlayerInput.KeyDown(InputType.QuickItemTransfer) && OnFreshSlot)
+                        {
+                            OnFreshSlot = false;
+                            doubleClickedItems.Clear();
+                            if (PlayerInput.KeyDown(InputType.TakeHalfFromInventorySlot))
+                            {
+                                doubleClickedItems.AddRange(interactableItems.SkipLast(interactableItems.Count() / 2));
+                            }
+                            else if (PlayerInput.KeyDown(InputType.TakeOneFromInventorySlot))
+                            {
+                                doubleClickedItems.Add(interactableItems.First());
+                            }
+                            else
+                            {
+                                doubleClickedItems.AddRange(interactableItems);
+                            }
+                        }
+                        else if (availableContextualOrder.target != null)
                         {
                             if (PlayerInput.PrimaryMouseButtonClicked())
                             {
