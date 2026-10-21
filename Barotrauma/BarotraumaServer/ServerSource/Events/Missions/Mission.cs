@@ -84,10 +84,20 @@ namespace Barotrauma
             }
 
             int nonTraitorCount = GameSession.GetSessionCrewCharacters(CharacterType.Both).Count(c => !traitorExpSteal.ContainsKey(c));
+            HashSet<CharacterInfo> rewardedInfos = new HashSet<CharacterInfo>();
             foreach (Networking.Client c in GameMain.Server.ConnectedClients)
             {
                 //give the experience to the stored characterinfo if the client isn't currently controlling a character
                 GiveMissionExperience(c.Character?.Info ?? c.CharacterInfo);
+                if (GameMain.Server.ServerSettings.AllowControllingBots)
+                {
+                    //the main character of a client controlling a bot also gets experience
+                    var mainCharacterInfo = GameMain.Server.GetMainCharacter(c)?.Info;
+                    if (mainCharacterInfo != null && mainCharacterInfo != c.Character?.Info)
+                    {
+                        GiveMissionExperience(mainCharacterInfo);
+                    }
+                }
             }
             foreach (Character bot in GameSession.GetSessionCrewCharacters(CharacterType.Bot))
             {
@@ -96,7 +106,7 @@ namespace Barotrauma
 
             void GiveMissionExperience(CharacterInfo info)
             {
-                if (info == null) { return; }
+                if (info == null || !rewardedInfos.Add(info)) { return; }
                 var experienceGainMultiplierIndividual = new AbilityMissionExperienceGainMultiplier(this, 1f, info.Character);
                 //check if anyone else in the crew has talents that could give a bonus to this one
                 foreach (var c in crew)
