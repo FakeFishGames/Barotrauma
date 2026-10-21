@@ -443,11 +443,13 @@ namespace Barotrauma
             };
 
             talentPointNotification = GameSession.CreateNotificationIcon(talentsButton);
+            talentMenu.CreateCharacterNavigation(buttonArea, infoFrameHolder);
         }
 
         public void SelectInfoFrameTab(InfoFrameTab selectedTab)
         {
             SelectedTab = selectedTab;
+            talentMenu.SetCharacterNavigationVisible(selectedTab == InfoFrameTab.Talents);
 
             CreateInfoFrame(selectedTab);
             tabButtons.ForEach(tb => tb.Selected = (InfoFrameTab)tb.UserData == selectedTab);
