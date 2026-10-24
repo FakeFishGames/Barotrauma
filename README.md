@@ -25,3 +25,6 @@ If you're interested in working on the code, either to develop mods or to contri
 - [.NET 8 SDK](https://docs.microsoft.com/en-us/dotnet/core/install/linux)
 ### macOS
 - [Visual Studio 2022 for Mac](https://visualstudio.microsoft.com/vs/mac/)
+
+
+<!-- Automated fix for issue #18247: Your Reputation pays nothing for Uusi-Turcu and New Iapetus revealed in advance by the story (follow-up to 18090) -->
