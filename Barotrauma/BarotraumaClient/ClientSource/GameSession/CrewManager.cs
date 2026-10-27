@@ -617,12 +617,17 @@ namespace Barotrauma
             {
                 // Allow controlling bots if permitted by the server settings
                 if (character == Character.Controlled) { return true; }
-                if (GameMain.Client?.ServerSettings.AllowControllingBots == true &&
+                if (GameMain.Client is { ServerSettings.AllowControllingBots: true } client &&
                     GameMain.GameSession?.DeathPrompt == null &&
                     !character.IsDead)
                 {
-                    GameMain.Client.IsControllingBot = character.IsBot;
-                    GameMain.Client.SendCharacterControlRequest(character);
+                    if (!client.HasPermission(ClientPermissions.ControlBots) &&
+                        client.MyClient?.MainCharacterID != character.ID)
+                    {
+                        return true;
+                    }
+                    client.IsControllingBot = character.IsBot;
+                    client.SendCharacterControlRequest(character);
                     return true;
                 }
                 if (Character.Controlled == null)

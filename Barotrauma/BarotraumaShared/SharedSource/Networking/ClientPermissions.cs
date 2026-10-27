@@ -29,7 +29,8 @@ namespace Barotrauma.Networking
         ManageHires = 0x10000,
         ManageBotTalents = 0x20000,
         SpamImmunity = 0x40000,
-        All = 0x7FFFF
+        ControlBots = 0x80000,
+        All = 0xFFFFF
     }
 
     class PermissionPreset

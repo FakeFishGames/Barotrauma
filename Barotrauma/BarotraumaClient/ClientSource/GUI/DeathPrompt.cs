@@ -183,7 +183,7 @@ internal class DeathPrompt
                         Enabled = false,
                         OnAddedToGUIUpdateList = (component) =>
                         {
-                            component.Enabled = GetAvailableBots().Any();
+                            component.Enabled = GetAvailableBots().Any() && CanControlBots();
                         },
                         OnClicked = (btn, userdata) =>
                         {
@@ -459,12 +459,13 @@ internal class DeathPrompt
             Enabled = false,
             OnAddedToGUIUpdateList = (component) =>
             {
-                component.Enabled = botList.SelectedData is CharacterInfo;
+                component.Enabled = botList.SelectedData is CharacterInfo && CanControlBots();
             },
             OnClicked = (btn, userdata) =>
             {
                 if (botList.SelectedData is CharacterInfo selectedCharacter && GameMain.Client is GameClient client)
                 {
+                    if (!CanControlBots()) { return false; }
                     if (!GetAvailableBots().Contains(selectedCharacter)) // Someone may have taken over the bot while the list was open, etc
                     {
                         CreateTakeOverBotPanel(frame, deathPrompt); // Update
@@ -510,11 +511,16 @@ internal class DeathPrompt
                 // a newly hired bot that hasn't spawned yet
                 (c.Character == null && c.IsNewHire));
         }
+
         else
         {
             return Enumerable.Empty<CharacterInfo>();
         }
     }
+
+    private static bool CanControlBots()
+        => GameMain.Client?.ServerSettings.AllowControllingBots != true ||
+           GameMain.Client.HasPermission(ClientPermissions.ControlBots);
 
     private void DrawBackground(SpriteBatch spriteBatch, GUICustomComponent guiCustomComponent)
     {

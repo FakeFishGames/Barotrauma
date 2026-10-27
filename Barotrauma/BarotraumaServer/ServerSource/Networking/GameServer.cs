@@ -1612,6 +1612,12 @@ namespace Barotrauma.Networking
         {
             UInt16 botId = inc.ReadUInt16();
             if (GameMain.GameSession?.GameMode is not MultiPlayerCampaign campaign) { return; }
+
+            if (ServerSettings.AllowControllingBots && !sender.HasPermission(ClientPermissions.ControlBots))
+            {
+                SendConsoleMessage("You do not have permission to control bots.", sender, Color.Red);
+                return;
+            }
             
             if (ServerSettings.IronmanModeActive)
             {
@@ -1694,7 +1700,7 @@ namespace Barotrauma.Networking
                     target is { Removed: false, IsDead: false, IsOnPlayerTeam: true, Info: not null } &&
                     (sender.Character is { IsDead: false } || IsControllingBot(sender)) &&
                     !isReservedForOtherClient &&
-                    IsCharacterControlTargetValid(target.IsBot, isReservedForSender),
+                    IsCharacterControlTargetValid(target.IsBot, isReservedForSender, sender.HasPermission(ClientPermissions.ControlBots)),
                 ConnectedClients.Any(c => c != sender && c.Character == target));
 
             if (validationResult != CharacterControlRequestResult.Accepted)
@@ -1723,8 +1729,8 @@ namespace Barotrauma.Networking
             SetClientCharacter(sender, target);
         }
 
-        internal static bool IsCharacterControlTargetValid(bool targetIsBot, bool targetIsReservedForSender)
-            => targetIsBot || targetIsReservedForSender;
+        internal static bool IsCharacterControlTargetValid(bool targetIsBot, bool targetIsReservedForSender, bool hasControlBotsPermission)
+            => targetIsReservedForSender || (targetIsBot && hasControlBotsPermission);
 
         internal static bool IsControlledCharacterMatch(bool sameCharacterInfo, int? characterIdentifier, int controlledCharacterIdentifier)
             => sameCharacterInfo || characterIdentifier == controlledCharacterIdentifier;
@@ -1744,6 +1750,7 @@ namespace Barotrauma.Networking
             if (!IsCrewControlStateActive(controlState.MainCharacterInfo, controlState.ControlledCharacterInfo)) { return null; }
             return Character.CharacterList.FirstOrDefault(c => c.Info == controlState.MainCharacterInfo);
         }
+
         internal CharacterInfo GetMainCharacterInfo(Client client)
         {
             if (crewControlStates.TryGetValue(client, out CrewControlState controlState) &&
@@ -1756,7 +1763,6 @@ namespace Barotrauma.Networking
 
         internal Client GetMainCharacterOwner(CharacterInfo characterInfo)
             => characterInfo == null ? null : connectedClients.FirstOrDefault(client => GetMainCharacterInfo(client) == characterInfo);
-
 
         internal bool IsControllingBot(Client client)
         {
@@ -2464,10 +2470,10 @@ namespace Barotrauma.Networking
                         : client.PreferredJob,
                     PreferredTeam = client.PreferredTeam,
                     TeamID = client.TeamID,
+                    CharacterId = client.Character == null || !GameStarted ? (ushort)0 : client.Character.ID,
                     MainCharacterId = !GameStarted || !ServerSettings.AllowControllingBots
                         ? (ushort)0
                         : GetMainCharacterInfo(client)?.Character?.ID ?? 0,
-                    CharacterId = client.Character == null || !GameStarted ? (ushort)0 : client.Character.ID,
                     Karma = c.HasPermission(ClientPermissions.ServerLog) ? client.Karma : 100.0f,
                     Muted = client.Muted,
                     InGame = client.InGame,
@@ -4373,6 +4379,17 @@ namespace Barotrauma.Networking
 
         public void UpdateClientPermissions(Client client)
         {
+            if (ServerSettings.AllowControllingBots &&
+                !client.HasPermission(ClientPermissions.ControlBots) &&
+                IsControllingBot(client) &&
+                GetMainCharacter(client) is Character mainCharacter &&
+                crewControlStates.TryGetValue(client, out CrewControlState controlState))
+            {
+                controlState.ControlledCharacterInfo = controlState.MainCharacterInfo;
+                controlState.ControlledCharacterIdentifier = controlState.MainCharacterInfo.GetIdentifier();
+                SetClientCharacter(client, mainCharacter);
+            }
+
             if (client.AccountId.TryUnwrap(out var accountId))
             {
                 ServerSettings.ClientPermissions.RemoveAll(scp => scp.AddressOrAccountId == accountId);

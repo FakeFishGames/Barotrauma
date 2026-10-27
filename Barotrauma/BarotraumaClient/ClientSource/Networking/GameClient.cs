@@ -1408,8 +1408,18 @@ namespace Barotrauma.Networking
                     LocalizedString permissionList = "";
                     foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                     {
-                        if (!newPermissions.HasFlag(permission) || permission == ClientPermissions.None) { continue; }
-                        permissionList += "   - " + TextManager.Get("ClientPermission." + permission) + "\n";
+                        if (!newPermissions.HasFlag(permission) ||
+                            permission is ClientPermissions.None or ClientPermissions.All)
+                        {
+                            continue;
+                        }
+
+                        LocalizedString permissionName = TextManager.Get("ClientPermission." + permission);
+                        if (permission == ClientPermissions.ControlBots)
+                        {
+                            permissionName = permissionName.Fallback("Control bots");
+                        }
+                        permissionList += "   - " + permissionName + "\n";
                     }
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), leftColumn.RectTransform),
                         permissionList);
@@ -2082,8 +2092,8 @@ namespace Barotrauma.Networking
                     existingClient.Muted = tc.Muted;
                     existingClient.InGame = tc.InGame;
                     existingClient.IsOwner = tc.IsOwner;
-                    existingClient.MainCharacterID = tc.MainCharacterId;
                     existingClient.IsDownloading = tc.IsDownloading;
+                    existingClient.MainCharacterID = tc.MainCharacterId;
                     GameMain.NetLobbyScreen.SetPlayerNameAndJobPreference(existingClient); // refresh lobby player list in the local UI
                     if (Screen.Selected != GameMain.NetLobbyScreen && tc.CharacterId > 0)
                     {
@@ -3656,8 +3666,8 @@ namespace Barotrauma.Networking
                     ? previouslyConnectedClients.Find(c => c.MainCharacterID == character.ID)
                     : previouslyConnectedClients.Find(c => c.Character == character);
                 if (client == null) { return false; }
-                if (client.SessionId == SessionId) { return true; }
 
+                if (client.SessionId == SessionId) { return true; }
 
                 CreateSelectionRelatedButtons(client, frame);
             }

@@ -773,8 +773,13 @@ namespace Barotrauma
                 NewMessage(client.Name + " has the following permissions:", Color.White);
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                 {
-                    if (permission == ClientPermissions.None || !client.HasPermission(permission)) { continue; }
-                    NewMessage("   - " + TextManager.Get("ClientPermission." + permission), Color.White);
+                    if (permission is ClientPermissions.None or ClientPermissions.All || !client.HasPermission(permission)) { continue; }
+                    LocalizedString permissionName = TextManager.Get("ClientPermission." + permission);
+                    if (permission == ClientPermissions.ControlBots)
+                    {
+                        permissionName = permissionName.Fallback("Control bots");
+                    }
+                    NewMessage("   - " + permissionName, Color.White);
                 }
                 if (client.HasPermission(ClientPermissions.ConsoleCommands))
                 {
@@ -2418,8 +2423,13 @@ namespace Barotrauma
                     GameMain.Server.SendConsoleMessage(client.Name + " has the following permissions:", senderClient);
                     foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                     {
-                        if (permission == ClientPermissions.None || !client.HasPermission(permission)) { continue; }
-                        GameMain.Server.SendConsoleMessage($"   - {TextManager.Get("ClientPermission." + permission)}", senderClient);
+                        if (permission is ClientPermissions.None or ClientPermissions.All || !client.HasPermission(permission)) { continue; }
+                        LocalizedString permissionName = TextManager.Get("ClientPermission." + permission);
+                        if (permission == ClientPermissions.ControlBots)
+                        {
+                            permissionName = permissionName.Fallback("Control bots");
+                        }
+                        GameMain.Server.SendConsoleMessage($"   - {permissionName}", senderClient);
                     }
                     if (client.HasPermission(ClientPermissions.ConsoleCommands))
                     {

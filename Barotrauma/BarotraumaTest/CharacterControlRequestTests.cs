@@ -52,17 +52,18 @@ public class CharacterControlRequestTests
     }
 
     [Theory]
-    [InlineData(true, false)]
-    [InlineData(false, true)]
-    public void CharacterControlTargetMustBeBotOrReservedForSender(bool targetIsBot, bool targetIsReservedForSender)
+    [InlineData(true, false, true, true)]
+    [InlineData(true, false, false, false)]
+    [InlineData(false, true, false, true)]
+    [InlineData(false, false, true, false)]
+    public void CharacterControlTargetRequiresPermissionForBots(
+        bool targetIsBot,
+        bool targetIsReservedForSender,
+        bool hasControlBotsPermission,
+        bool expectedValid)
     {
-        GameServer.IsCharacterControlTargetValid(targetIsBot, targetIsReservedForSender).Should().BeTrue();
-    }
-
-    [Fact]
-    public void CharacterControlTargetCannotBeAnotherPlayersFormerCharacter()
-    {
-        GameServer.IsCharacterControlTargetValid(targetIsBot: false, targetIsReservedForSender: false).Should().BeFalse();
+        GameServer.IsCharacterControlTargetValid(targetIsBot, targetIsReservedForSender, hasControlBotsPermission)
+            .Should().Be(expectedValid);
     }
 
     [Theory]

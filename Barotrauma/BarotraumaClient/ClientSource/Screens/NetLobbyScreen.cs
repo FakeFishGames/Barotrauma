@@ -3880,8 +3880,16 @@ namespace Barotrauma
                 {
                     if (permission == ClientPermissions.None || permission == ClientPermissions.All) { continue; }
 
+                    LocalizedString permissionName = TextManager.Get("ClientPermission." + permission);
+                    LocalizedString permissionDescription = TextManager.Get("ClientPermission." + permission + ".description");
+                    if (permission == ClientPermissions.ControlBots)
+                    {
+                        permissionName = permissionName.Fallback("Control bots");
+                        permissionDescription = permissionDescription.Fallback("Allows the client to control bots when the server allows bot control.");
+                    }
+
                     var permissionTick = new GUITickBox(new RectTransform(new Vector2(0.15f, 0.15f), permissionsBox.Content.RectTransform),
-                        TextManager.Get("ClientPermission." + permission), font: GUIStyle.SmallFont)
+                        permissionName, font: GUIStyle.SmallFont)
                     {
                         UserData = permission,
                         Selected = selectedClient.HasPermission(permission),
@@ -3909,7 +3917,7 @@ namespace Barotrauma
                             return true;
                         }
                     };
-                    permissionTick.ToolTip = permissionTick.TextBlock.ToolTip = TextManager.Get("ClientPermission." + permission + ".description");
+                    permissionTick.ToolTip = permissionTick.TextBlock.ToolTip = permissionDescription;
                 }
 
                 var listBoxContainerRight = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), permissionContainer.RectTransform))
