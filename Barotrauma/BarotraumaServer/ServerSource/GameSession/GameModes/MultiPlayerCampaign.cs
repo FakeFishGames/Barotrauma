@@ -1226,7 +1226,10 @@ namespace Barotrauma
             {
                 if (!AllowedToManageWallets(sender))
                 {
-                    if (transfer.Receiver.TryUnwrap(out var receiverId) && receiverId == sender.CharacterID)
+                    if (sender.Character is { } senderCharacter &&
+                        CanHaveWallet(senderCharacter) &&
+                        transfer.Receiver.TryUnwrap(out var receiverId) &&
+                        receiverId == sender.CharacterID)
                     {
                         if (transfer.Amount > GameMain.Server.ServerSettings.MaximumMoneyTransferRequest) { return; }
                         GameMain.Server.Voting.StartTransferVote(sender, null, transfer.Amount, sender);
@@ -1240,27 +1243,25 @@ namespace Barotrauma
 
             void TransferMoney(Wallet from)
             {
-                if (!from.TryDeduct(transfer.Amount)) { return; }
-
+                Wallet to;
                 if (transfer.Receiver.TryUnwrap(out var id))
                 {
-                    Wallet wallet = GetWalletByID(id);
-                    if (wallet is InvalidWallet) { return; }
-
-                    wallet.Give(transfer.Amount);
-                    GameServer.Log($"{sender.Name} transferred {transfer.Amount} mk to {wallet.GetOwnerLogName()} from {from.GetOwnerLogName()}.", ServerLog.MessageType.Money);
+                    to = GetWalletByID(id);
                 }
                 else
                 {
-                    Bank.Give(transfer.Amount);
-                    GameServer.Log($"{sender.Name} transferred {transfer.Amount} mk to {Bank.GetOwnerLogName()} from {from.GetOwnerLogName()}.", ServerLog.MessageType.Money);
+                    to = Bank;
                 }
+                if (to is InvalidWallet || !from.TryDeduct(transfer.Amount)) { return; }
+
+                to.Give(transfer.Amount);
+                GameServer.Log($"{sender.Name} transferred {transfer.Amount} mk to {to.GetOwnerLogName()} from {from.GetOwnerLogName()}.", ServerLog.MessageType.Money);
             }
 
             Wallet GetWalletByID(ushort id)
             {
                 Character targetCharacter = Character.CharacterList.FirstOrDefault(c => c.ID == id);
-                return targetCharacter is null ? Wallet.Invalid : targetCharacter.Wallet;
+                return targetCharacter is null || !CanHaveWallet(targetCharacter) ? Wallet.Invalid : targetCharacter.Wallet;
             }
         }
 
@@ -1273,7 +1274,8 @@ namespace Barotrauma
             if (update.Target.TryUnwrap(out ushort id))
             {
                 Character targetCharacter = Character.CharacterList.FirstOrDefault(c => c.ID == id);
-                targetCharacter?.Wallet.SetRewardDistribution(update.NewRewardDistribution);
+                if (targetCharacter == null || !CanHaveWallet(targetCharacter)) { return; }
+                targetCharacter.Wallet.SetRewardDistribution(update.NewRewardDistribution);
                 GameServer.Log($"{sender.Name} changed the salary of {targetCharacter?.Name} to {update.NewRewardDistribution}%.", ServerLog.MessageType.Money);
                 return;
             }
@@ -1288,8 +1290,19 @@ namespace Barotrauma
 
             foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Player))
             {
-                character.Wallet.SetRewardDistribution(Bank.RewardDistribution);
+                if (CanHaveWallet(character))
+                {
+                    character.Wallet.SetRewardDistribution(Bank.RewardDistribution);
+                }
             }
+        }
+
+        private static bool CanHaveWallet(Character character)
+        {
+            if (character == null) { return false; }
+            return GameMain.Server.ServerSettings.AllowControllingBots
+                ? GameMain.Server.GetMainCharacterOwner(character.Info) != null
+                : !character.IsBot;
         }
 
         public void ServerReadCrew(IReadMessage msg, Client sender)

@@ -986,7 +986,7 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("walletdescription")
             };
 
-            if (character == null || character.IsBot) { return; }
+            if (!IsWalletCharacter(character)) { return; }
 
             Sprite walletSprite = GUIStyle.CrewWalletIconSmall.Value.Sprite;
 
@@ -1004,15 +1004,6 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 Visible = false
             };
-
-            if (character.IsBot)
-            {
-                largeIcon.Visible = true;
-                icon.Visible = false;
-                walletBlock.Visible = false;
-                largeIcon.Enabled = false;
-                return;
-            }
 
             walletLayout.Recalculate();
             paddedLayoutGroup.Recalculate();
@@ -1057,7 +1048,17 @@ namespace Barotrauma
             }
         }
 
-        private void CreateNameWithPermissionIcon(Client client, GUILayoutGroup paddedFrame, out GUIImage permissionIcon)
+        private static bool IsWalletCharacter(Character character)
+        {
+            if (character == null) { return false; }
+            if (GameMain.Client?.ServerSettings.AllowControllingBots == true)
+            {
+                return GameMain.Client.ConnectedClients.Any(client => client.MainCharacterID == character.ID);
+            }
+            return !character.IsBot;
+        }
+
+        private void CreateNameWithPermissionIcon(Client client, GUILayoutGroup paddedFrame, out GUIImage permissionIcon, bool showPermissionIcon = true)
         {
             GUITextBlock characterNameBlock;
             Sprite permissionIconSprite = GetPermissionIcon(client);
@@ -1155,7 +1156,7 @@ namespace Barotrauma
                     GUIComponent preview = character.Info.CreateInfoFrame(background, false, GetPermissionIcon(GameMain.Client.ConnectedClients.Find(c => c.Character == character)));
 
                     GameMain.Client.SelectCrewCharacter(character, preview);
-                    if (!character.IsBot && GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign) { CreateWalletFrame(background, character, mpCampaign); }
+                    if (IsWalletCharacter(character) && GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign) { CreateWalletFrame(background, character, mpCampaign); }
                 }
 
                 if (background.FindChild(TalentMenu.ManageBotTalentsButtonUserData, recursive: true) is GUIButton { Enabled: true } talentButton)
@@ -1171,7 +1172,7 @@ namespace Barotrauma
             {
                 GUIComponent preview = CreateClientInfoFrame(background, client, GetPermissionIcon(client));
                 GameMain.Client?.SelectCrewClient(client, preview);
-                if (client.Character != null && GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign)
+                if (client.Character != null && IsWalletCharacter(client.Character) && GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign)
                 {
                     CreateWalletFrame(background, client.Character, mpCampaign);
                 }
@@ -1186,7 +1187,7 @@ namespace Barotrauma
             if (character is null) { throw new ArgumentNullException(nameof(character), "Tried to create a wallet frame for a null character");}
             isTransferMenuOpen = false;
             transferMenuOpenState = 1f;
-            ImmutableHashSet<Character> salaryCrew = GameSession.GetSessionCrewCharacters(CharacterType.Player).Where(c => c != character).ToImmutableHashSet();
+            ImmutableHashSet<Character> salaryCrew = GameSession.GetSessionCrewCharacters(CharacterType.Player).Where(c => c != character && IsWalletCharacter(c)).ToImmutableHashSet();
 
             Wallet targetWallet = character.Wallet;
 
