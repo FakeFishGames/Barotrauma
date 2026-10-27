@@ -33,6 +33,7 @@ namespace Barotrauma
         private float crewListOpenState;
         private bool _isCrewMenuOpen = true;
         private Point crewListEntrySize;
+        private readonly HashSet<ushort> serverCrewCharacterInfoIds = new HashSet<ushort>();
 
         private readonly List<GUITickBox> traitorButtons = new List<GUITickBox>();
 
@@ -325,6 +326,9 @@ namespace Barotrauma
             return crewArea.Rect;
         }
 
+        public bool IsInCrewList(Character character) =>
+            crewList.Content.Children.Any(c => c.UserData as Character == character);
+
         /// <summary>
         /// Add character to the list without actually adding it to the crew
         /// </summary>
@@ -478,6 +482,21 @@ namespace Barotrauma
                 UserData = "extraicons"
             };
 
+            // Extra icons (owner, sound)
+            new GUIImage(
+                new RectTransform(new Vector2(0.5f), extraIconFrame.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.Smallest),
+                style: "OwnerIcon")
+            {
+                CanBeFocused = true,
+                UserData = "ownericon",
+                Visible = false,
+                Color = Color.White * 0.6f,
+                HoverColor = Color.White,
+                SelectedColor = Color.White,
+                PressedColor = Color.White,
+                DisabledColor = Color.White
+            };
+
             var soundIconParent = new GUIFrame(new RectTransform(new Vector2(0.8f), extraIconFrame.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.Smallest), style: null)
             {
                 CanBeFocused = false,
@@ -596,6 +615,21 @@ namespace Barotrauma
 
             if (GameMain.IsMultiplayer)
             {
+                // Allow controlling bots if permitted by the server settings
+                if (character == Character.Controlled) { return true; }
+                if (GameMain.Client is { ServerSettings.AllowControllingBots: true } client &&
+                    GameMain.GameSession?.DeathPrompt == null &&
+                    !character.IsDead)
+                {
+                    if (!client.HasPermission(ClientPermissions.ControlBots) &&
+                        client.MyClient?.MainCharacterID != character.ID)
+                    {
+                        return true;
+                    }
+                    client.IsControllingBot = character.IsBot;
+                    client.SendCharacterControlRequest(character);
+                    return true;
+                }
                 if (Character.Controlled == null)
                 {
                     Camera cam = Screen.Selected.Cam;
@@ -1486,6 +1520,15 @@ namespace Barotrauma
 
         partial void UpdateProjectSpecific(float deltaTime)
         {
+            // If controlling a bot is allowed by the server settings, update the control icons accordingly.
+            UpdateCharacterControlIcons();
+
+            // Deselect the crew list if the death prompt is active.
+            if (GameMain.GameSession?.DeathPrompt != null)
+            {
+                crewList.Deselect();
+            }
+
             // Quick selection
             if (GameMain.IsSingleplayer && GUI.KeyboardDispatcher.Subscriber == null)
             {
@@ -1831,6 +1874,29 @@ namespace Barotrauma
                     foundMatch = orderInfo.MatchesOrder(orderIdentifier, orderOption);
                     glowComponent.Visible = foundMatch;
                 }
+            }
+        }
+
+        private void UpdateCharacterControlIcons()
+        {
+            if (crewList == null) { return; }
+
+            bool allowOwnerIcons = GameMain.Client?.ServerSettings.AllowControllingBots == true;
+
+            foreach (GUIComponent characterComponent in crewList.Content.Children)
+            {
+                if (characterComponent.UserData is not Character character) { continue; }
+                GUIImage ownerIcon = characterComponent.FindChild(c => Equals(c.UserData, "ownericon"), recursive: true) as GUIImage;
+                if (ownerIcon == null) { continue; }
+
+                string ownerName = !allowOwnerIcons ? null :
+                    GameMain.Client?.Character == character || GameMain.Client?.Character?.Info == character.Info
+                    ? GameMain.Client.Name
+                    : GameMain.NetworkMember?.ConnectedClients?.FirstOrDefault(c => c.Character == character || c.Character?.Info == character.Info)?.Name;
+                ownerIcon.Visible = ownerName != null;
+                ownerIcon.ToolTip = ownerName != null
+                    ? TextManager.GetWithVariable("CrewCharacterControlledBy", "[name]", ownerName).Fallback($"Controlled by {ownerName}")
+                    : string.Empty;
             }
         }
 
@@ -3775,6 +3841,7 @@ namespace Barotrauma
         {
             characters.Clear();
             characterInfos.Clear();
+            serverCrewCharacterInfoIds.Clear();
             crewList.ClearChildren();
         }
 
@@ -3902,10 +3969,13 @@ namespace Barotrauma
         /// </summary>
         public bool UpdateCrewManagerIfNecessary(List<CharacterInfo> updatedCrewManager)
         {
+            var updatedIds = updatedCrewManager.Select(updated => updated.ID).ToHashSet();
             // CharacterInfos no longer in the server's CrewManager
-            var toRemove = characterInfos.Where(original => updatedCrewManager.None(updated => updated.ID == original.ID)).ToList();
+            var toRemove = characterInfos.Where(original => serverCrewCharacterInfoIds.Contains(original.ID) && !updatedIds.Contains(original.ID)).ToList();
             // CharacterInfos that are in the server's CrewManager but not on the client yet
-            var toAdd = updatedCrewManager.Where(updated => characterInfos.None(original => original.ID == updated.ID)).ToList();
+            var toAdd = updatedCrewManager.Where(updated => !characterInfos.Any(original => original.ID == updated.ID)).ToList();
+
+            serverCrewCharacterInfoIds.UnionWith(updatedIds);
             
             foreach (CharacterInfo characterInfo in toRemove)
             {

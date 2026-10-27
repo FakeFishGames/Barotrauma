@@ -34,6 +34,10 @@ namespace Barotrauma
         private bool newEntitySpawned;
         private int prevPlayerCount, prevBotCount;
         private Character prevControlled;
+        private readonly HashSet<Character> previousPlayers = new();
+        private readonly HashSet<Character> previousBots = new();
+        private readonly HashSet<Character> currentPlayers = new();
+        private readonly HashSet<Character> currentBots = new();
 
         public readonly OnRoundEndAction OnRoundEndAction;
 
@@ -388,26 +392,43 @@ namespace Barotrauma
         {
             int botCount = 0;
             int playerCount = 0;
+            currentPlayers.Clear();
+            currentBots.Clear();
             foreach (Character c in Character.CharacterList)
             {
                 if (c.IsPlayer)
                 {
                     playerCount++;
+                    currentPlayers.Add(c);
                 }
                 else if (c.IsBot)
                 {
                     botCount++;
+                    currentBots.Add(c);
                 }
             }
 
-            if (botCount != prevBotCount || playerCount != prevPlayerCount || prevControlled != Character.Controlled || NeedsToRefreshCachedTargets())
+            bool characterTargetsChanged =
+                !previousPlayers.SetEquals(currentPlayers) ||
+                !previousBots.SetEquals(currentBots);
+            if (botCount != prevBotCount ||
+                playerCount != prevPlayerCount ||
+                prevControlled != Character.Controlled ||
+                characterTargetsChanged ||
+                NeedsToRefreshCachedTargets())
             {
                 cachedTargets.Clear();
                 newEntitySpawned = false;
                 prevBotCount = botCount;
                 prevPlayerCount = playerCount;
                 prevControlled = Character.Controlled;
+                previousPlayers.Clear();
+                previousPlayers.UnionWith(currentPlayers);
+                previousBots.Clear();
+                previousBots.UnionWith(currentBots);
             }
+            currentPlayers.Clear();
+            currentBots.Clear();
             
             if (!Actions.Any())
             {

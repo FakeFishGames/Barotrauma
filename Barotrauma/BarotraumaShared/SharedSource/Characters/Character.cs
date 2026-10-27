@@ -5191,9 +5191,10 @@ namespace Barotrauma
 #if CLIENT
             // Keep permadeath status in sync (to show it correctly in the UI, the server takes care of the actual logic)
             // NOTE: The opposite is done in Revive
+            // Check against the info rather than the currently controlled Character, since the player may be controlling a borrowed bot
             if (GameMain.NetworkMember is { ServerSettings.RespawnMode: RespawnMode.Permadeath } &&
-                GameMain.Client.Character == this &&
-                GameMain.Client.CharacterInfo is CharacterInfo characterInfo)
+                GameMain.Client.CharacterInfo is CharacterInfo characterInfo &&
+                characterInfo == info)
             {
                 characterInfo.PermanentlyDead = true;
             }

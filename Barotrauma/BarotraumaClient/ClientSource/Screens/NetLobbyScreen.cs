@@ -101,6 +101,7 @@ namespace Barotrauma
         private GUISelectionCarousel<RespawnMode> respawnModeSelection;
         private GUITextBlock respawnModeLabel;
         private GUIComponent respawnIntervalElement;
+        private GUITickBox allowControllingBotsTickbox;
         
         private readonly List<GUIComponent> midRoundRespawnSettings = new List<GUIComponent>();
         private readonly List<GUIComponent> permadeathEnabledRespawnSettings = new List<GUIComponent>();
@@ -1059,6 +1060,20 @@ namespace Barotrauma
             AssignComponentToServerSetting(botSpawnModeSelection, nameof(ServerSettings.BotSpawnMode));
             clientDisabledElements.AddRange(botSpawnModeSettingHolder.GetAllChildren());
             botSettingsElements.Add(botSpawnModeSelection);
+
+            allowControllingBotsTickbox = new GUITickBox(new RectTransform(Vector2.One, gameModeSettingsContent.RectTransform), TextManager.Get("AllowControllingBots").Fallback("Allow controlling bots"))
+            {
+                ToolTip = TextManager.Get("AllowControllingBots.Tooltip").Fallback("Allow players to switch control to available bot crew members."),
+                Selected = GameMain.Client != null && GameMain.Client.ServerSettings.AllowControllingBots,
+                OnSelected = (GUITickBox box) =>
+                {
+                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Properties);
+                    return true;
+                }
+            };
+            AssignComponentToServerSetting(allowControllingBotsTickbox, nameof(ServerSettings.AllowControllingBots));
+            clientDisabledElements.Add(allowControllingBotsTickbox);
+            botSettingsElements.Add(allowControllingBotsTickbox);
 
             botCountSelection.OnValueChanged += (_) =>
             {
@@ -2424,6 +2439,8 @@ namespace Barotrauma
             }
 
             RefreshStartButtonVisibility();
+
+            allowControllingBotsTickbox.Visible = SelectedMode != GameModePreset.PvP;
 
             botSettingsElements.ForEach(b => b.Enabled = !campaignStarted && manageSettings);
 
@@ -3863,8 +3880,16 @@ namespace Barotrauma
                 {
                     if (permission == ClientPermissions.None || permission == ClientPermissions.All) { continue; }
 
+                    LocalizedString permissionName = TextManager.Get("ClientPermission." + permission);
+                    LocalizedString permissionDescription = TextManager.Get("ClientPermission." + permission + ".description");
+                    if (permission == ClientPermissions.ControlBots)
+                    {
+                        permissionName = permissionName.Fallback("Control bots");
+                        permissionDescription = permissionDescription.Fallback("Allows the client to control bots when the server allows bot control.");
+                    }
+
                     var permissionTick = new GUITickBox(new RectTransform(new Vector2(0.15f, 0.15f), permissionsBox.Content.RectTransform),
-                        TextManager.Get("ClientPermission." + permission), font: GUIStyle.SmallFont)
+                        permissionName, font: GUIStyle.SmallFont)
                     {
                         UserData = permission,
                         Selected = selectedClient.HasPermission(permission),
@@ -3892,7 +3917,7 @@ namespace Barotrauma
                             return true;
                         }
                     };
-                    permissionTick.ToolTip = permissionTick.TextBlock.ToolTip = TextManager.Get("ClientPermission." + permission + ".description");
+                    permissionTick.ToolTip = permissionTick.TextBlock.ToolTip = permissionDescription;
                 }
 
                 var listBoxContainerRight = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), permissionContainer.RectTransform))

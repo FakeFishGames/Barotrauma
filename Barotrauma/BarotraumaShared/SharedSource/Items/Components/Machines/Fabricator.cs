@@ -720,9 +720,12 @@ namespace Barotrauma.Items.Components
 
         private static bool AnyOneHasRecipeForItem(Character user, ItemPrefab item)
         {
-            CharacterType mustHaveRecipe = GameMain.GameSession?.GameMode is { IsSinglePlayer: true } ?
+            CharacterType mustHaveRecipe = 
+                GameMain.GameSession?.GameMode is { IsSinglePlayer: true } ||
+                GameMain.NetworkMember?.ServerSettings is { AllowControllingBots: true } ?
                 //in single player it doesn't matter if it's a bot or a player who has the recipe 
-                //(the bots can turn into a "player" when switching characters, and that could interrupt the fabrication)
+                //(the bots can turn into a "player" when switching characters, and that could interrupt the fabrication).
+                //The same applies in MP when players are allowed to control bots: a controlled bot is still a bot as far as the crew's recipes are concerned.
                 CharacterType.Both : 
                 //in MP the recipes other players have don't cound
                 CharacterType.Bot;

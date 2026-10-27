@@ -83,6 +83,9 @@ namespace Barotrauma
 
         private GUIButton? talentApplyButton,
                            talentResetButton;
+        private GUIButton? previousCharacterButton,
+                           nextCharacterButton;
+        private GUILayoutGroup? characterNavigationLayout;
 
         private delegate void StartAnimation(RectangleF start, RectangleF end, float duration);
         private StartAnimation? startAnimation;
@@ -92,6 +95,8 @@ namespace Barotrauma
         {
             this.characterInfo = characterInfo;
             character = characterInfo?.Character;
+            SetCharacterNavigationVisible(true);
+            UpdateCharacterNavigation();
 
             parent.ClearChildren();
             talentButtons.Clear();
@@ -128,6 +133,103 @@ namespace Barotrauma
             if (GameMain.NetworkMember != null && IsOwnCharacter(characterInfo))
             {
                 CreateMultiplayerCharacterSettings(frame, content);
+            }
+            UpdateCharacterNavigation();
+        }
+
+        public void CreateCharacterNavigation(GUIComponent parent, GUIFrame menuParent)
+        {
+            new GUIFrame(new RectTransform(new Vector2(1f, 0.15f), parent.RectTransform, scaleBasis: ScaleBasis.BothWidth), style: null);
+            characterNavigationLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.3f), parent.RectTransform, scaleBasis: ScaleBasis.BothWidth), isHorizontal: true)
+            {
+                RelativeSpacing = 0.02f
+            };
+
+            previousCharacterButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), characterNavigationLayout.RectTransform), style: "GUIButtonSmall")
+            {
+                ToolTip = TextManager.Get("Previous"),
+                OnClicked = (_, _) =>
+                {
+                    return NavigateCharacter(menuParent, -1);
+                }
+            };
+            new GUIImage(new RectTransform(new Vector2(0.6f), previousCharacterButton.RectTransform, Anchor.Center), style: "GUIButtonHorizontalArrow", scaleToFit: true)
+            {
+                SpriteEffects = SpriteEffects.FlipHorizontally,
+                CanBeFocused = false
+            };
+
+            nextCharacterButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), characterNavigationLayout.RectTransform), style: "GUIButtonSmall")
+            {
+                ToolTip = TextManager.Get("Next"),
+                OnClicked = (_, _) =>
+                {
+                    return NavigateCharacter(menuParent, 1);
+                }
+            };
+            new GUIImage(new RectTransform(new Vector2(0.6f), nextCharacterButton.RectTransform, Anchor.Center), style: "GUIButtonHorizontalArrow", scaleToFit: true)
+            {
+                CanBeFocused = false
+            };
+            SetCharacterNavigationVisible(false);
+            UpdateCharacterNavigation();
+        }
+
+        public void SetCharacterNavigationVisible(bool visible)
+        {
+            if (characterNavigationLayout is not null)
+            {
+                characterNavigationLayout.Visible = visible;
+                if (characterNavigationLayout.Parent is GUILayoutGroup parentLayout)
+                {
+                    parentLayout.NeedsToRecalculate = true;
+                }
+            }
+        }
+
+        private bool NavigateCharacter(GUIFrame menuParent, int direction)
+        {
+            if (characterInfo is null) { return false; }
+            List<CharacterInfo> manageableCharacters = GetManageableCharacters();
+            int currentIndex = manageableCharacters.IndexOf(characterInfo);
+            if (currentIndex < 0 || manageableCharacters.Count < 2) { return false; }
+            int targetIndex = (currentIndex + direction + manageableCharacters.Count) % manageableCharacters.Count;
+            CreateGUI(menuParent, manageableCharacters[targetIndex]);
+            return true;
+        }
+
+        private void UpdateCharacterNavigation()
+        {
+            if (previousCharacterButton is null || nextCharacterButton is null) { return; }
+            if (characterInfo is null)
+            {
+                previousCharacterButton.Enabled = false;
+                nextCharacterButton.Enabled = false;
+                return;
+            }
+            List<CharacterInfo> manageableCharacters = GetManageableCharacters();
+            bool canNavigate = manageableCharacters.Count > 1 && manageableCharacters.Contains(characterInfo);
+            previousCharacterButton.Enabled = canNavigate;
+            nextCharacterButton.Enabled = canNavigate;
+        }
+
+        private List<CharacterInfo> GetManageableCharacters()
+        {
+            List<CharacterInfo> manageableCharacters = new List<CharacterInfo>();
+            HashSet<CharacterInfo> seenCharacters = new HashSet<CharacterInfo>();
+            foreach (Character character in GameMain.GameSession?.CrewManager?.GetCharacters() ?? Enumerable.Empty<Character>())
+            {
+                AddIfManageable(character.Info);
+            }
+            AddIfManageable(characterInfo);
+            return manageableCharacters;
+
+            void AddIfManageable(CharacterInfo? info)
+            {
+                if (info != null && seenCharacters.Add(info) && CanManageTalents(info))
+                {
+                    manageableCharacters.Add(info);
+                }
             }
         }
 
@@ -282,7 +384,7 @@ namespace Barotrauma
                 CanBeFocused = true
             };
 
-            nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), nameLayout.RectTransform), info.Name, font: GUIStyle.SubHeadingFont);
+            nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), nameLayout.RectTransform), info.Character?.Name ?? info.Name, font: GUIStyle.SubHeadingFont);
 
             if (!info.OmitJobInMenus)
             {
@@ -1055,26 +1157,17 @@ namespace Barotrauma
         {
             if (info is null) { return false; }
 
+            if (GameMain.Client is { } gameClient &&
+                gameClient.ServerSettings.AllowControllingBots &&
+                gameClient.MyClient is { MainCharacterID: > 0 } myClient)
+            {
+                return info.Character?.ID == myClient.MainCharacterID;
+            }
+
             CharacterInfo? ownCharacterInfo = Character.Controlled?.Info ?? GameMain.Client?.CharacterInfo;
             if (ownCharacterInfo is null) { return false; }
 
             return info.GetIdentifierUsingOriginalName() == ownCharacterInfo.GetIdentifierUsingOriginalName();
-        }
-
-        private static bool IsOnSameTeam(CharacterInfo? info)
-        {
-            if (info is null) { return false; }
-
-            CharacterTeamType? ownCharacterTeam = Character.Controlled?.TeamID ?? GameMain.Client?.MyClient?.TeamID;
-            if (ownCharacterTeam is null) { return false; }
-
-            return info.TeamID == ownCharacterTeam;
-        }
-
-        private static bool IsSpectatingInMultiplayer()
-        {
-            if (GameMain.Client?.MyClient is not { } myClient) { return false; }
-            return myClient.Spectating;
         }
 
         public static bool CanManageTalents(CharacterInfo targetInfo)
@@ -1082,20 +1175,38 @@ namespace Barotrauma
             // in singleplayer we can do whatever we want
             if (GameMain.IsSingleplayer) { return true; }
 
+            if (GameMain.Client is { } gameClient && gameClient.ServerSettings.AllowControllingBots)
+            {
+                Client? mainCharacterOwner = targetInfo.Character is { } character
+                    ? gameClient.ConnectedClients.FirstOrDefault(client => client.MainCharacterID == character.ID)
+                    : null;
+                if (mainCharacterOwner != null) { return mainCharacterOwner == gameClient.MyClient; }
+            }
+
             // always allow managing talents for own character
             if (IsOwnCharacter(targetInfo)) { return true; }
 
-            // disallow managing talents while spectating
-            if (IsSpectatingInMultiplayer()) { return false; }
+            if (GameMain.Client?.ServerSettings.AllowControllingBots == true)
+            {
+                if (targetInfo.Character is not { AIController: HumanAIController }) { return false; }
+            }
+            else
+            {
+                if (IsSpectatingInMultiplayer()) { return false; }
+                if (targetInfo.Character is not { IsBot: true } || !IsOnSameTeam(targetInfo)) { return false; }
+            }
 
-            // don't allow controlling non-bot characters
-            if (targetInfo.Character is not { IsBot: true }) { return false; }
-
-            // only allow managing talents for bots on the same team
-            if (!IsOnSameTeam(targetInfo)) { return false; }
-
-            // lastly, check if we have the permission to do this
             return GameMain.Client is { } client && client.HasPermission(ClientPermissions.ManageBotTalents);
         }
+
+        private static bool IsOnSameTeam(CharacterInfo? info)
+        {
+            if (info is null) { return false; }
+            CharacterTeamType? ownCharacterTeam = Character.Controlled?.TeamID ?? GameMain.Client?.MyClient?.TeamID;
+            return ownCharacterTeam != null && info.TeamID == ownCharacterTeam;
+        }
+
+        private static bool IsSpectatingInMultiplayer()
+            => GameMain.Client?.MyClient?.Spectating == true;
     }
 }

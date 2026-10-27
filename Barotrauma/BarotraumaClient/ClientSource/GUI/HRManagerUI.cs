@@ -563,7 +563,9 @@ namespace Barotrauma
 
                 if (ReplacingPermanentlyDeadCharacter)
                 {
-                    bool canHire = CanHire(characterInfo) && campaign.CanAffordNewCharacter(characterInfo);
+                    bool canControlBots = GameMain.Client?.ServerSettings.AllowControllingBots != true ||
+                                          GameMain.Client.HasPermission(ClientPermissions.ControlBots);
+                    bool canHire = canControlBots && CanHire(characterInfo) && campaign.CanAffordNewCharacter(characterInfo);
                     var takeoverButton = new GUIButton(new RectTransform(new Vector2(buttonWidth, 0.9f), mainGroup.RectTransform), style: "CrewManagementTakeControlButton")
                     {
                         ToolTip = canHire ? TextManager.Get("hireandtakecontrol") : TextManager.Get("hireandtakecontroldisabled"),
@@ -589,7 +591,9 @@ namespace Barotrauma
                     };
                     takeoverButton.OnAddedToGUIUpdateList += (GUIComponent btn) =>
                     {
-                        bool canHireCurrently = ReplacingPermanentlyDeadCharacter && CanHire(characterInfo) && campaign.CanAffordNewCharacter(characterInfo);
+                        bool canControlBots = GameMain.Client?.ServerSettings.AllowControllingBots != true ||
+                                              GameMain.Client.HasPermission(ClientPermissions.ControlBots);
+                        bool canHireCurrently = canControlBots && ReplacingPermanentlyDeadCharacter && CanHire(characterInfo) && campaign.CanAffordNewCharacter(characterInfo);
                         btn.ToolTip = TextManager.Get(canHireCurrently ? "hireandtakecontrol" : "hireandtakecontroldisabled");
                         btn.Visible = GameMain.GameSession is { AllowHrManagerBotTakeover: true };
                         btn.Enabled = canHireCurrently;

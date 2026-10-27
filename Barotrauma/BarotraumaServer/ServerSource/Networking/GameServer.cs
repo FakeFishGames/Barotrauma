@@ -17,6 +17,25 @@ namespace Barotrauma.Networking
 {
     sealed class GameServer : NetworkMember
     {
+        internal enum CharacterControlRequestResult
+        {
+            Accepted,
+            FeatureDisabled,
+            RoundNotRunning,
+            InvalidGameMode,
+            SenderNotInGame,
+            SenderIsSpectating,
+            InvalidTarget,
+            TargetAlreadyControlled
+        }
+
+        private sealed class CrewControlState
+        {
+            public CharacterInfo MainCharacterInfo;
+            public CharacterInfo ControlledCharacterInfo;
+            public int ControlledCharacterIdentifier;
+        }
+
         public override bool IsServer => true;
         public override bool IsClient => false;
 
@@ -35,6 +54,8 @@ namespace Barotrauma.Networking
         public bool SubmarineSwitchLoad = false;
 
         private readonly List<Client> connectedClients = new List<Client>();
+        private readonly Dictionary<Client, CrewControlState> crewControlStates = new Dictionary<Client, CrewControlState>();
+        private MultiPlayerCampaign crewControlCampaign;
 
         /// <summary>
         /// For keeping track of disconnected clients in case they reconnect shortly after.
@@ -1017,6 +1038,9 @@ namespace Barotrauma.Networking
                 case ClientPacketHeader.READY_TO_SPAWN:
                     ReadReadyToSpawnMessage(inc, connectedClient);
                     break;
+                case ClientPacketHeader.REQUEST_CHARACTER_CONTROL:
+                    ReadCharacterControlRequest(inc, connectedClient);
+                    break;
                 case ClientPacketHeader.TAKEOVERBOT:
                     ReadTakeOverBotMessage(inc, connectedClient);
                     break;
@@ -1588,6 +1612,12 @@ namespace Barotrauma.Networking
         {
             UInt16 botId = inc.ReadUInt16();
             if (GameMain.GameSession?.GameMode is not MultiPlayerCampaign campaign) { return; }
+
+            if (ServerSettings.AllowControllingBots && !sender.HasPermission(ClientPermissions.ControlBots))
+            {
+                SendConsoleMessage("You do not have permission to control bots.", sender, Color.Red);
+                return;
+            }
             
             if (ServerSettings.IronmanModeActive)
             {
@@ -1649,6 +1679,115 @@ namespace Barotrauma.Networking
                     DebugConsole.ThrowError($"Client {sender.Name} failed to take over a bot (taking control of bots is disallowed).");
                 }
             }
+        }
+
+        private void ReadCharacterControlRequest(IReadMessage inc, Client sender)
+        {
+            ushort characterId = inc.ReadUInt16();
+            var target = Character.CharacterList.FirstOrDefault(c => c.ID == characterId);
+            var isReservedForSender = target != null && crewControlStates.TryGetValue(sender, out CrewControlState controlState) && target.Info == controlState.MainCharacterInfo;
+            //the main character of a client that is currently controlling a bot is reserved for that client
+            bool isReservedForOtherClient = target != null && crewControlStates.Any(kvp =>
+                kvp.Key != sender &&
+                IsCrewControlStateActive(kvp.Value.MainCharacterInfo, kvp.Value.ControlledCharacterInfo) &&
+                kvp.Value.MainCharacterInfo == target.Info);
+            var validationResult = ValidateCharacterControlRequest(
+                ServerSettings.AllowControllingBots,
+                GameStarted,
+                GameMain.GameSession?.GameMode is not PvPMode,
+                sender.InGame,
+                sender.SpectateOnly,
+                    target is { Removed: false, IsDead: false, IsOnPlayerTeam: true, Info: not null } &&
+                    (sender.Character is { IsDead: false } || IsControllingBot(sender)) &&
+                    !isReservedForOtherClient &&
+                    IsCharacterControlTargetValid(target.IsBot, isReservedForSender, sender.HasPermission(ClientPermissions.ControlBots)),
+                ConnectedClients.Any(c => c != sender && c.Character == target));
+
+            if (validationResult != CharacterControlRequestResult.Accepted)
+            {
+                if (validationResult == CharacterControlRequestResult.TargetAlreadyControlled)
+                {
+                    SendConsoleMessage("That character is already controlled by another player.", sender, Color.Red);
+                }
+                else if (validationResult == CharacterControlRequestResult.InvalidTarget)
+                {
+                    SendConsoleMessage("Could not take control of that character.", sender, Color.Red);
+                }
+                return;
+            }
+
+            if (sender.Character != null && sender.Character != target)
+            {
+                if (!crewControlStates.TryGetValue(sender, out controlState))
+                {
+                    controlState = new CrewControlState { MainCharacterInfo = sender.Character.Info };
+                    crewControlStates.Add(sender, controlState);
+                }
+                controlState.ControlledCharacterInfo = target.Info;
+                controlState.ControlledCharacterIdentifier = target.Info.GetIdentifier();
+            }
+            SetClientCharacter(sender, target);
+        }
+
+        internal static bool IsCharacterControlTargetValid(bool targetIsBot, bool targetIsReservedForSender, bool hasControlBotsPermission)
+            => targetIsReservedForSender || (targetIsBot && hasControlBotsPermission);
+
+        internal static bool IsControlledCharacterMatch(bool sameCharacterInfo, int? characterIdentifier, int controlledCharacterIdentifier)
+            => sameCharacterInfo || characterIdentifier == controlledCharacterIdentifier;
+
+        internal static bool IsCrewControlStateActive(CharacterInfo mainCharacterInfo, CharacterInfo controlledCharacterInfo)
+            => mainCharacterInfo != null &&
+               !mainCharacterInfo.Discarded &&
+               !mainCharacterInfo.PermanentlyDead &&
+               controlledCharacterInfo != null &&
+               controlledCharacterInfo != mainCharacterInfo &&
+               !controlledCharacterInfo.Discarded &&
+               !controlledCharacterInfo.PermanentlyDead;
+
+        internal Character GetMainCharacter(Client client)
+        {
+            if (!crewControlStates.TryGetValue(client, out CrewControlState controlState)) { return null; }
+            if (!IsCrewControlStateActive(controlState.MainCharacterInfo, controlState.ControlledCharacterInfo)) { return null; }
+            return Character.CharacterList.FirstOrDefault(c => c.Info == controlState.MainCharacterInfo);
+        }
+
+        internal CharacterInfo GetMainCharacterInfo(Client client)
+        {
+            if (crewControlStates.TryGetValue(client, out CrewControlState controlState) &&
+                controlState.MainCharacterInfo != null)
+            {
+                return controlState.MainCharacterInfo;
+            }
+            return client.CharacterInfo;
+        }
+
+        internal Client GetMainCharacterOwner(CharacterInfo characterInfo)
+            => characterInfo == null ? null : connectedClients.FirstOrDefault(client => GetMainCharacterInfo(client) == characterInfo);
+
+        internal bool IsControllingBot(Client client)
+        {
+            if (!crewControlStates.TryGetValue(client, out CrewControlState controlState)) { return false; }
+            return IsCrewControlStateActive(controlState.MainCharacterInfo, controlState.ControlledCharacterInfo) &&
+                   client.Character?.Info == controlState.ControlledCharacterInfo;
+        }
+
+        internal static CharacterControlRequestResult ValidateCharacterControlRequest(
+            bool featureEnabled,
+            bool gameStarted,
+            bool isGameModeAllowed,
+            bool senderInGame,
+            bool senderIsSpectating,
+            bool targetIsValid,
+            bool targetIsControlled)
+        {
+            if (!featureEnabled) { return CharacterControlRequestResult.FeatureDisabled; }
+            if (!gameStarted) { return CharacterControlRequestResult.RoundNotRunning; }
+            if (!isGameModeAllowed) { return CharacterControlRequestResult.InvalidGameMode; }
+            if (!senderInGame) { return CharacterControlRequestResult.SenderNotInGame; }
+            if (senderIsSpectating) { return CharacterControlRequestResult.SenderIsSpectating; }
+            if (!targetIsValid) { return CharacterControlRequestResult.InvalidTarget; }
+            if (targetIsControlled) { return CharacterControlRequestResult.TargetAlreadyControlled; }
+            return CharacterControlRequestResult.Accepted;
         }
 
         private static void SpawnAndTakeOverBot(CampaignMode campaign, CharacterInfo botInfo, Client client)
@@ -2332,6 +2471,9 @@ namespace Barotrauma.Networking
                     PreferredTeam = client.PreferredTeam,
                     TeamID = client.TeamID,
                     CharacterId = client.Character == null || !GameStarted ? (ushort)0 : client.Character.ID,
+                    MainCharacterId = !GameStarted || !ServerSettings.AllowControllingBots
+                        ? (ushort)0
+                        : GetMainCharacterInfo(client)?.Character?.ID ?? 0,
                     Karma = c.HasPermission(ClientPermissions.ServerLog) ? client.Karma : 100.0f,
                     Muted = client.Muted,
                     InGame = client.InGame,
@@ -2848,6 +2990,12 @@ namespace Barotrauma.Networking
             MultiPlayerCampaign campaign = selectedMode == GameMain.GameSession?.GameMode.Preset ?
                 GameMain.GameSession?.GameMode as MultiPlayerCampaign : null;
 
+            if (campaign != crewControlCampaign)
+            {
+                crewControlStates.Clear();
+                crewControlCampaign = campaign;
+            }
+
             if (campaign != null && campaign.Map == null)
             {
                 initiatedStartGame = false;
@@ -2921,6 +3069,18 @@ namespace Barotrauma.Networking
                 GameMain.GameSession.StartRound(campaign.NextLevel, startOutpost: campaign.GetPredefinedStartOutpost(), mirrorLevel: campaign.MirrorLevel);
                 SubmarineSwitchLoad = false;
                 campaign.AssignClientCharacterInfos(connectedClients);
+                foreach (var (client, controlState) in crewControlStates.ToList())
+                {
+                    if (!IsCrewControlStateActive(controlState.MainCharacterInfo, controlState.ControlledCharacterInfo))
+                    {
+                        crewControlStates.Remove(client);
+                        continue;
+                    }
+                    if (!client.SpectateOnly)
+                    {
+                        client.CharacterInfo = controlState.MainCharacterInfo;
+                    }
+                }
                 Log("Game mode: " + selectedMode.Name.Value, ServerLog.MessageType.ServerMessage);
                 Log("Submarine: " + GameMain.GameSession.SubmarineInfo.Name, ServerLog.MessageType.ServerMessage);
                 Log("Level seed: " + campaign.NextLevel.Seed, ServerLog.MessageType.ServerMessage);
@@ -2969,6 +3129,20 @@ namespace Barotrauma.Networking
             AutoItemPlacer.SpawnItems(campaign?.Settings.StartItemSet);
 
             CrewManager crewManager = GameMain.GameSession.CrewManager;
+
+            foreach (var controlState in crewControlStates.Values.ToList())
+            {
+                CharacterInfo controlledCharacterInfo = controlState.ControlledCharacterInfo;
+                if (!IsCrewControlStateActive(controlState.MainCharacterInfo, controlledCharacterInfo))
+                {
+                    continue;
+                }
+                if (!crewManager.GetCharacterInfos(includeReserveBench: true).Contains(controlledCharacterInfo))
+                {
+                    controlledCharacterInfo.TeamID = CharacterTeamType.Team1;
+                    crewManager.AddCharacterInfo(controlledCharacterInfo);
+                }
+            }
 
             bool hadBots = true;
 
@@ -3081,7 +3255,9 @@ namespace Barotrauma.Networking
                     //give the job items based on that spawnpoint
                     WayPoint jobItemSpawnPoint = mainSubWaypoints != null ? mainSubWaypoints[i] : spawnWaypoints[i];
 
-                    Character spawnedCharacter = Character.Create(teamClients[i].CharacterInfo, spawnWaypoints[i].WorldPosition, teamClients[i].CharacterInfo.Name, isRemotePlayer: true, hasAi: false);
+                    // When bot control is allowed, player characters need an AIController too so they behave like bots whenever no client is controlling them
+                    Character spawnedCharacter = Character.Create(teamClients[i].CharacterInfo, spawnWaypoints[i].WorldPosition, teamClients[i].CharacterInfo.Name, isRemotePlayer: true, hasAi: ServerSettings.AllowControllingBots);
+
                     //spawnedCharacter.AnimController.Frozen = true;
                     spawnedCharacter.TeamID = teamID;
                     teamClients[i].Character = spawnedCharacter;
@@ -3169,6 +3345,23 @@ namespace Barotrauma.Networking
                     //created new bots -> save them
                     SaveUtil.SaveGame(GameMain.GameSession.DataPath);
                 }
+            }
+
+            foreach (var (client, controlState) in crewControlStates.ToList())
+            {
+                if (!IsCrewControlStateActive(controlState.MainCharacterInfo, controlState.ControlledCharacterInfo))
+                {
+                    crewControlStates.Remove(client);
+                    continue;
+                }
+                if (client.SpectateOnly) { continue; }
+                Character character = Character.CharacterList.FirstOrDefault(c =>
+                    !c.IsDead &&
+                    IsControlledCharacterMatch(
+                        c.Info == controlState.ControlledCharacterInfo,
+                        c.Info?.GetIdentifier(),
+                        controlState.ControlledCharacterIdentifier));
+                if (character != null) { SetClientCharacter(client, character); }
             }
 
             campaign?.LoadPets();
@@ -3713,6 +3906,8 @@ namespace Barotrauma.Networking
         {
             if (client == null) return;
 
+            crewControlStates.Remove(client);
+
             if (client.Character != null)
             {
                 client.Character.ClientDisconnected = true;
@@ -4184,6 +4379,17 @@ namespace Barotrauma.Networking
 
         public void UpdateClientPermissions(Client client)
         {
+            if (ServerSettings.AllowControllingBots &&
+                !client.HasPermission(ClientPermissions.ControlBots) &&
+                IsControllingBot(client) &&
+                GetMainCharacter(client) is Character mainCharacter &&
+                crewControlStates.TryGetValue(client, out CrewControlState controlState))
+            {
+                controlState.ControlledCharacterInfo = controlState.MainCharacterInfo;
+                controlState.ControlledCharacterIdentifier = controlState.MainCharacterInfo.GetIdentifier();
+                SetClientCharacter(client, mainCharacter);
+            }
+
             if (client.AccountId.TryUnwrap(out var accountId))
             {
                 ServerSettings.ClientPermissions.RemoveAll(scp => scp.AddressOrAccountId == accountId);
@@ -4332,14 +4538,24 @@ namespace Barotrauma.Networking
             //the client's previous character is no longer a remote player
             if (client.Character != null)
             {
-                client.Character.SetOwnerClient(null);
+                Character previousCharacter = client.Character;
+                previousCharacter.SetOwnerClient(null);
+                if (newCharacter == null || ServerSettings.AllowControllingBots)
+                {
+                    CreateEntityEvent(previousCharacter, new Character.ControlEventData(null));
+                }
+
+                // The objective may be unchanged (e.g. already idle), so force a resync to update the order/objective icon
+                if (ServerSettings.AllowControllingBots && previousCharacter.AIController is HumanAIController previousController)
+                {
+                    previousController.ObjectiveManager.SendCurrentObjectiveState();
+                }
             }
 
             if (newCharacter == null)
             {
                 if (client.Character != null) //removing control of the current character
                 {
-                    CreateEntityEvent(client.Character, new Character.ControlEventData(null));
                     client.Character = null;
                 }
             }

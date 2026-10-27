@@ -15,6 +15,7 @@ namespace Barotrauma.Networking
         public AccountInfo AccountInfo;
         public byte SessionId;
         public UInt16 CharacterId;
+        public UInt16 MainCharacterId;
         public float Karma;
         public bool Muted;
         public bool InGame;
@@ -110,6 +111,7 @@ namespace Barotrauma.Networking
         public bool UsingFreeCam;
 
         public UInt16 CharacterID;
+        public UInt16 MainCharacterID;
 
         private Vector2 spectatePos;
         public Vector2? SpectatePos

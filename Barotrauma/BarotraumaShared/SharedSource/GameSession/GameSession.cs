@@ -1055,7 +1055,12 @@ namespace Barotrauma
             HashSet<Character> characters = new HashSet<Character>();
 
 #if SERVER
-            players = GameMain.Server.ConnectedClients.Select(c => c.Character).Where(c => c?.Info != null && !c.IsDead);
+            //include the main characters of clients who are currently controlling a bot
+            players = GameMain.Server.ConnectedClients
+                .SelectMany(c => GameMain.Server.ServerSettings.AllowControllingBots ?
+                    new[] { c.Character, GameMain.Server.GetMainCharacter(c) } :
+                    new[] { c.Character })
+                .Where(c => c?.Info != null && !c.IsDead);
             bots = crewManager.GetCharacterInfos()
                 //filter out players in case a player has been given control of a bot using console commands
                 .Where(characterInfo => GameMain.Server.ConnectedClients.None(c => c.CharacterInfo == characterInfo))

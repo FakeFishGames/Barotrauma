@@ -58,17 +58,21 @@ namespace Barotrauma
             private readonly bool wasCharacterAlive;
             private readonly GUITextBlock textBlock;
             private readonly GUIFrame frame;
+            private readonly bool showPing;
+            private readonly bool trackControlledCharacter;
 
             private readonly GUIImage permissionIcon;
 
-            public LinkedGUI(Client client, GUIFrame frame, GUITextBlock textBlock, GUIImage permissionIcon)
+            public LinkedGUI(Client client, GUIFrame frame, GUITextBlock textBlock, GUIImage permissionIcon, bool showPing = true, bool trackControlledCharacter = true, Character character = null)
             {
                 this.Client = client;
                 this.textBlock = textBlock;
                 this.frame = frame;
                 this.permissionIcon = permissionIcon;
-                character = client?.Character;
-                wasCharacterAlive = client?.Character != null && !client.Character.IsDead;
+                this.showPing = showPing;
+                this.trackControlledCharacter = trackControlledCharacter;
+                this.character = character ?? client?.Character;
+                wasCharacterAlive = this.character != null && !this.character.IsDead;
             }
 
             public LinkedGUI(Character character, GUIFrame frame, GUITextBlock textBlock)
@@ -81,7 +85,7 @@ namespace Barotrauma
 
             public bool HasMultiplayerCharacterChanged()
             {
-                if (Client == null) { return false; }
+                if (Client == null || !trackControlledCharacter) { return false; }
 
                 if (GameSettings.CurrentConfig.VerboseLogging)
                 {
@@ -118,7 +122,7 @@ namespace Barotrauma
 
             public void TryPingRefresh()
             {
-                if (Client == null) { return; }
+                if (Client == null || !showPing || textBlock == null) { return; }
                 if (currentPing == Client.Ping) { return; }
                 if (GameMain.NetworkMember != null && GameMain.NetworkMember.ConnectedClients.Contains(Client))
                 {
@@ -443,11 +447,13 @@ namespace Barotrauma
             };
 
             talentPointNotification = GameSession.CreateNotificationIcon(talentsButton);
+            talentMenu.CreateCharacterNavigation(buttonArea, infoFrameHolder);
         }
 
         public void SelectInfoFrameTab(InfoFrameTab selectedTab)
         {
             SelectedTab = selectedTab;
+            talentMenu.SetCharacterNavigationVisible(selectedTab == InfoFrameTab.Talents);
 
             CreateInfoFrame(selectedTab);
             tabButtons.ForEach(tb => tb.Selected = (InfoFrameTab)tb.UserData == selectedTab);
@@ -472,7 +478,15 @@ namespace Barotrauma
                     CreateSubmarineInfo(infoFrameHolder, Submarine.MainSub);
                     break;
                 case InfoFrameTab.Talents:
-                    talentMenu.CreateGUI(infoFrameHolder, Character.Controlled?.Info ?? GameMain.Client?.CharacterInfo);
+                    CharacterInfo characterInfo = Character.Controlled?.Info ?? GameMain.Client?.CharacterInfo;
+                    if (GameMain.Client is { IsControllingBot: true } client &&
+                        client.ServerSettings.AllowControllingBots &&
+                        !client.HasPermission(ClientPermissions.ManageBotTalents) &&
+                        client.MyClient is { MainCharacterID: > 0 } myClient)
+                    {
+                        characterInfo = Character.CharacterList.FirstOrDefault(c => c.ID == myClient.MainCharacterID)?.Info ?? characterInfo;
+                    }
+                    talentMenu.CreateGUI(infoFrameHolder, characterInfo);
                     break;
             }
         }
@@ -790,7 +804,9 @@ namespace Barotrauma
 
             if (client != null)
             {
-                CreateNameWithPermissionIcon(client, paddedFrame, out GUIImage permissionIcon);
+                bool showPermissionIcon = GameMain.Client?.ServerSettings.AllowControllingBots != true ||
+                                          client.MainCharacterID == character.ID;
+                CreateNameWithPermissionIcon(client, paddedFrame, out GUIImage permissionIcon, showPermissionIcon);
 
                 if (GameMain.GameSession?.GameMode is PvPMode)
                 {
@@ -804,14 +820,27 @@ namespace Barotrauma
                     };
                 }
 
-                linkedGUIList.Add(new LinkedGUI(client, frame, 
-                    new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), client.Ping.ToString(), textAlignment: Alignment.Center),
-                    permissionIcon));
+                bool isBot = GameMain.Client?.ServerSettings.AllowControllingBots == true && client.MainCharacterID != character.ID;
+                GUITextBlock pingBlock = new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
+                    isBot ? TextManager.Get("tabmenu.bot") : client.Ping.ToString(), textAlignment: Alignment.Center)
+                {
+                    ForceUpperCase = isBot ? ForceUpperCase.Yes : ForceUpperCase.No
+                };
+                linkedGUIList.Add(new LinkedGUI(client, frame, pingBlock,
+                    showPermissionIcon ? permissionIcon : null,
+                    showPing: !isBot));
             }
             else
             {
                 GUITextBlock characterNameBlock = new GUITextBlock(new RectTransform(new Point(characterColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
                     ToolBox.LimitString(characterInfo.Name, GUIStyle.Font, characterColumnWidth), textAlignment: Alignment.Center, textColor: characterInfo.Job.Prefab.UIColor);
+
+                Client mainCharacterClient = GameMain.Client?.ServerSettings.AllowControllingBots == true
+                    ? GameMain.Client.ConnectedClients.FirstOrDefault(c => c.MainCharacterID == character?.ID)
+                    : null;
+                GUIImage permissionIcon = mainCharacterClient != null
+                    ? CreatePermissionIcon(mainCharacterClient, paddedFrame, characterNameBlock)
+                    : null;
 
                 if (GameMain.GameSession?.GameMode is PvPMode)
                 {
@@ -825,7 +854,12 @@ namespace Barotrauma
                     };
                 }
 
-                if (character is AICharacter)
+                if (mainCharacterClient != null)
+                {
+                    GUITextBlock pingBlock = new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), mainCharacterClient.Ping.ToString(), textAlignment: Alignment.Center);
+                    linkedGUIList.Add(new LinkedGUI(mainCharacterClient, frame, pingBlock, permissionIcon, trackControlledCharacter: false, character: character));
+                }
+                else if (character is AICharacter)
                 {
                     // "BOT" instead of ping (which isn't relevant for bots)
                     linkedGUIList.Add(new LinkedGUI(character, frame,
@@ -976,7 +1010,7 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("walletdescription")
             };
 
-            if (character == null || character.IsBot) { return; }
+            if (!IsWalletCharacter(character)) { return; }
 
             Sprite walletSprite = GUIStyle.CrewWalletIconSmall.Value.Sprite;
 
@@ -994,15 +1028,6 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 Visible = false
             };
-
-            if (character.IsBot)
-            {
-                largeIcon.Visible = true;
-                icon.Visible = false;
-                walletBlock.Visible = false;
-                largeIcon.Enabled = false;
-                return;
-            }
 
             walletLayout.Recalculate();
             paddedLayoutGroup.Recalculate();
@@ -1047,27 +1072,50 @@ namespace Barotrauma
             }
         }
 
-        private void CreateNameWithPermissionIcon(Client client, GUILayoutGroup paddedFrame, out GUIImage permissionIcon)
+        private static bool IsWalletCharacter(Character character)
+        {
+            if (character == null) { return false; }
+            if (GameMain.Client?.ServerSettings.AllowControllingBots == true)
+            {
+                return GameMain.Client.ConnectedClients.Any(client => client.MainCharacterID == character.ID);
+            }
+            return !character.IsBot;
+        }
+
+        private void CreateNameWithPermissionIcon(Client client, GUILayoutGroup paddedFrame, out GUIImage permissionIcon, bool showPermissionIcon = true)
         {
             GUITextBlock characterNameBlock;
-            Sprite permissionIconSprite = GetPermissionIcon(client);
+            Sprite permissionIconSprite = showPermissionIcon ? GetPermissionIcon(client) : null;
             JobPrefab prefab = client.Character?.Info?.Job?.Prefab;
             Color nameColor = prefab != null ? prefab.UIColor : Color.White;
 
             Point iconSize = new Point((int)(paddedFrame.Rect.Height * 0.8f));
             float characterNameWidthAdjustment = (iconSize.X + paddedFrame.AbsoluteSpacing) / characterColumnWidth;
 
-            characterNameBlock = new GUITextBlock(new RectTransform(new Point(characterColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
-                ToolBox.LimitString(client.Name, GUIStyle.Font, (int)(characterColumnWidth - paddedFrame.Rect.Width * characterNameWidthAdjustment)), textAlignment: Alignment.Center, textColor: nameColor);
+            // A character ID different from the client's main character ID means they're controlling a bot.
+            string displayName = GameMain.Client?.ServerSettings.AllowControllingBots == true &&
+                client.Character is { IsDead: false } controlledCharacter &&
+                client.MainCharacterID != 0 && controlledCharacter.ID != client.MainCharacterID ?
+                $"{controlledCharacter.Name} ({client.Name})" : client.Name;
 
-            float iconWidth = iconSize.X / (float)characterColumnWidth;
-            int xOffset = (int)(jobColumnWidth + characterNameBlock.TextPos.X - GUIStyle.Font.MeasureString(characterNameBlock.Text).X / 2f - paddedFrame.AbsoluteSpacing - iconWidth * paddedFrame.Rect.Width);
-            permissionIcon = new GUIImage(new RectTransform(new Vector2(iconWidth, 1f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(xOffset + 2, 0) }, permissionIconSprite) { IgnoreLayoutGroups = true };
+            characterNameBlock = new GUITextBlock(new RectTransform(new Point(characterColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
+                ToolBox.LimitString(displayName, GUIStyle.Font, (int)(characterColumnWidth - paddedFrame.Rect.Width * characterNameWidthAdjustment)), textAlignment: Alignment.Center, textColor: nameColor);
+
+            permissionIcon = CreatePermissionIcon(showPermissionIcon ? client : null, paddedFrame, characterNameBlock);
 
             if (client.Character != null && client.Character.IsDead)
             {
                 characterNameBlock.Strikethrough = new GUITextBlock.StrikethroughSettings(null, GUI.IntScale(1f), GUI.IntScale(5f));
             }
+        }
+
+        private GUIImage CreatePermissionIcon(Client client, GUILayoutGroup paddedFrame, GUITextBlock characterNameBlock)
+        {
+            Sprite permissionIconSprite = GetPermissionIcon(client);
+            Point iconSize = new Point((int)(paddedFrame.Rect.Height * 0.8f));
+            float iconWidth = iconSize.X / (float)characterColumnWidth;
+            int xOffset = (int)(jobColumnWidth + characterNameBlock.TextPos.X - GUIStyle.Font.MeasureString(characterNameBlock.Text).X / 2f - paddedFrame.AbsoluteSpacing - iconWidth * paddedFrame.Rect.Width);
+            return new GUIImage(new RectTransform(new Vector2(iconWidth, 1f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(xOffset + 2, 0) }, permissionIconSprite) { IgnoreLayoutGroups = true };
         }
 
         private Sprite GetPermissionIcon(Client client)
@@ -1082,6 +1130,15 @@ namespace Barotrauma
             {
                 return moderatorIcon;
             }
+        }
+
+        private Client GetCharacterOwnerClient(Character character)
+        {
+            if (character == null) { return null; }
+
+            return GameMain.Client?.ServerSettings.AllowControllingBots == true
+                ? GameMain.Client.ConnectedClients.Find(c => c.MainCharacterID == character.ID)
+                : GameMain.Client?.ConnectedClients.Find(c => c.Character == character);
         }
 
         private void DrawClientJobIcon(SpriteBatch spriteBatch, Rectangle area, Client client)
@@ -1136,10 +1193,10 @@ namespace Barotrauma
                 }
                 else
                 {
-                    GUIComponent preview = character.Info.CreateInfoFrame(background, false, GetPermissionIcon(GameMain.Client.ConnectedClients.Find(c => c.Character == character)));
+                    GUIComponent preview = character.Info.CreateInfoFrame(background, false, GetPermissionIcon(GetCharacterOwnerClient(character)));
 
                     GameMain.Client.SelectCrewCharacter(character, preview);
-                    if (!character.IsBot && GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign) { CreateWalletFrame(background, character, mpCampaign); }
+                    if (IsWalletCharacter(character) && GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign) { CreateWalletFrame(background, character, mpCampaign); }
                 }
 
                 if (background.FindChild(TalentMenu.ManageBotTalentsButtonUserData, recursive: true) is GUIButton { Enabled: true } talentButton)
@@ -1155,7 +1212,7 @@ namespace Barotrauma
             {
                 GUIComponent preview = CreateClientInfoFrame(background, client, GetPermissionIcon(client));
                 GameMain.Client?.SelectCrewClient(client, preview);
-                if (client.Character != null && GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign)
+                if (client.Character != null && IsWalletCharacter(client.Character) && GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign)
                 {
                     CreateWalletFrame(background, client.Character, mpCampaign);
                 }
@@ -1170,7 +1227,7 @@ namespace Barotrauma
             if (character is null) { throw new ArgumentNullException(nameof(character), "Tried to create a wallet frame for a null character");}
             isTransferMenuOpen = false;
             transferMenuOpenState = 1f;
-            ImmutableHashSet<Character> salaryCrew = GameSession.GetSessionCrewCharacters(CharacterType.Player).Where(c => c != character).ToImmutableHashSet();
+            ImmutableHashSet<Character> salaryCrew = GameSession.GetSessionCrewCharacters(CharacterType.Player).Where(c => c != character && IsWalletCharacter(c)).ToImmutableHashSet();
 
             Wallet targetWallet = character.Wallet;
 

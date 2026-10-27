@@ -547,7 +547,12 @@ namespace Barotrauma.Networking
 
             if (GameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                EndVoteTickBox.Visible = ServerSettings.AllowEndVoting && HasSpawned;
+                // Update the visibility of the end vote tick box based on server settings and player state.
+                EndVoteTickBox.Visible = ServerSettings.AllowEndVoting && HasSpawned && !IsControllingBot;
+                if (!EndVoteTickBox.Visible)
+                {
+                    EndVoteTickBox.Selected = false;
+                }
 
                 RespawnManager?.Update(deltaTime);
 
@@ -1403,8 +1408,18 @@ namespace Barotrauma.Networking
                     LocalizedString permissionList = "";
                     foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                     {
-                        if (!newPermissions.HasFlag(permission) || permission == ClientPermissions.None) { continue; }
-                        permissionList += "   - " + TextManager.Get("ClientPermission." + permission) + "\n";
+                        if (!newPermissions.HasFlag(permission) ||
+                            permission is ClientPermissions.None or ClientPermissions.All)
+                        {
+                            continue;
+                        }
+
+                        LocalizedString permissionName = TextManager.Get("ClientPermission." + permission);
+                        if (permission == ClientPermissions.ControlBots)
+                        {
+                            permissionName = permissionName.Fallback("Control bots");
+                        }
+                        permissionList += "   - " + permissionName + "\n";
                     }
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), leftColumn.RectTransform),
                         permissionList);
@@ -2078,6 +2093,7 @@ namespace Barotrauma.Networking
                     existingClient.InGame = tc.InGame;
                     existingClient.IsOwner = tc.IsOwner;
                     existingClient.IsDownloading = tc.IsDownloading;
+                    existingClient.MainCharacterID = tc.MainCharacterId;
                     GameMain.NetLobbyScreen.SetPlayerNameAndJobPreference(existingClient); // refresh lobby player list in the local UI
                     if (Screen.Selected != GameMain.NetLobbyScreen && tc.CharacterId > 0)
                     {
@@ -2631,6 +2647,16 @@ namespace Barotrauma.Networking
             IWriteMessage msg = new WriteOnlyMessage();
             msg.WriteByte((byte)ClientPacketHeader.TAKEOVERBOT);
             msg.WriteUInt16(bot.ID);
+            ClientPeer?.Send(msg, DeliveryMethod.Reliable);
+        }
+
+        public void SendCharacterControlRequest(Character character)
+        {
+            if (character == null) { return; }
+
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ClientPacketHeader.REQUEST_CHARACTER_CONTROL);
+            msg.WriteUInt16(character.ID);
             ClientPeer?.Send(msg, DeliveryMethod.Reliable);
         }
         
@@ -3323,6 +3349,8 @@ namespace Barotrauma.Networking
             set { myCharacter = value; }
         }
 
+        public bool IsControllingBot { get; set; }
+
         protected GUIFrame inGameHUD;
         protected ChatBox chatBox;
 
@@ -3346,7 +3374,7 @@ namespace Barotrauma.Networking
                 else
                 {
                     var campaign = GameMain.GameSession?.Campaign;
-                    ShowLogButton.Visible = hasPermissionToUseLogButton && (campaign == null || !campaign.ShowCampaignUI);
+                    ShowLogButton.Visible = hasPermissionToUseLogButton && !IsControllingBot && (campaign == null || !campaign.ShowCampaignUI);
                 }
             }
         }
@@ -3634,8 +3662,12 @@ namespace Barotrauma.Networking
 
             if (character != myCharacter)
             {
-                var client = previouslyConnectedClients.Find(c => c.Character == character);
+                var client = ServerSettings.AllowControllingBots
+                    ? previouslyConnectedClients.Find(c => c.MainCharacterID == character.ID)
+                    : previouslyConnectedClients.Find(c => c.Character == character);
                 if (client == null) { return false; }
+
+                if (client.SessionId == SessionId) { return true; }
 
                 CreateSelectionRelatedButtons(client, frame);
             }

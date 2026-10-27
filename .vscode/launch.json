@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Barotrauma",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/Barotrauma/bin/DebugWindows/net8.0/Barotrauma.exe",
+            "cwd": "${workspaceFolder}/Barotrauma/bin/DebugWindows/net8.0",
+            "preLaunchTask": "Build Windows Debug",
+            "console": "integratedTerminal",
+            "stopAtEntry": false
+        }
+    ]
+}

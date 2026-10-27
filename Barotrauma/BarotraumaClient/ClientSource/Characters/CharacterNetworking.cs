@@ -371,18 +371,26 @@ namespace Barotrauma
                     bool myCharacter = msg.ReadBoolean();
                     byte ownerID = msg.ReadByte();
                     bool renamingEnabled = msg.ReadBoolean();
+                    ushort networkUpdateID = myCharacter ? msg.ReadUInt16() : (ushort)0;
                     ResetNetState();
                     if (myCharacter)
                     {
-                        if (controlled != null)
-                        {
-                            LastNetworkUpdateID = controlled.LastNetworkUpdateID;
-                        }
-
+                        LastNetworkUpdateID = networkUpdateID;
                         if (!IsDead) { Controlled = this; }
                         IsRemotePlayer = false;
                         GameMain.Client.HasSpawned = true;
                         GameMain.Client.Character = this;
+                        if (IsDead && GameMain.Client.ServerSettings.AllowControllingBots)
+                        {
+                            // If the player was controlling a bot, stop controlling it upon death.
+                            GameMain.Client.IsControllingBot = false;
+                            RespawnManager.ShowDeathPromptIfNeeded();
+                            if (Screen.Selected?.Cam is Camera camera)
+                            {
+                                camera.Position = DrawPosition;
+                                camera.TargetPos = DrawPosition;
+                            }
+                        }
                         GameMain.LightManager.LosEnabled = true;
 #if DEBUG
                         GameMain.LightManager.LosEnabled = !GameMain.DevMode;

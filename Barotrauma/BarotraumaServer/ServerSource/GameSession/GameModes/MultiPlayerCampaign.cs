@@ -261,17 +261,43 @@ namespace Barotrauma
                 {
                     c.Character = null;
                 }
-                //use the info of the character the client is currently controlling
-                // or the previously saved info if not (e.g. if the client has been spectating or died)
+
+                // Save the main character separately when the client is controlling a bot
+                var mainCharacter = GameMain.Server.GetMainCharacter(c);
+                Character activeCharacter = c.Character;
+                CharacterInfo activeCharacterInfo = c.CharacterInfo;
+                if (mainCharacter != null)
+                {
+                    c.Character = mainCharacter;
+                    c.CharacterInfo = mainCharacter.Info;
+                }
+
+                // Use the main character's info, or the previously saved info if not (e.g. if the client has been spectating or died)
                 var characterInfo = c.Character?.Info;
                 var matchingCharacterData = characterData.Find(d => d.MatchesClient(c));
                 if (matchingCharacterData != null)
                 {
                     //hasn't spawned this round -> don't touch the data
-                    if (!matchingCharacterData.HasSpawned) { continue; }
+                    if (!matchingCharacterData.HasSpawned)
+                    {
+                        if (mainCharacter != null)
+                        {
+                            c.Character = activeCharacter;
+                            c.CharacterInfo = activeCharacterInfo;
+                        }
+                        continue;
+                    }
                     characterInfo ??= matchingCharacterData.CharacterInfo;
                 }
-                if (characterInfo == null || characterInfo.Discarded) { continue; }
+                if (characterInfo == null || characterInfo.Discarded)
+                {
+                    if (mainCharacter != null)
+                    {
+                        c.Character = activeCharacter;
+                        c.CharacterInfo = activeCharacterInfo;
+                    }
+                    continue;
+                }
                 //reduce skills if the character has died
                 bool diedToDisconnect = characterInfo.CauseOfDeath is { Type: CauseOfDeathType.Disconnected };
                 bool diedForReal = characterInfo.CauseOfDeath != null && !diedToDisconnect;
@@ -296,6 +322,12 @@ namespace Barotrauma
                 if (c.Character != null || diedForReal)
                 {
                     SetClientCharacterData(c);
+                }
+
+                if (mainCharacter != null)
+                {
+                    c.Character = activeCharacter;
+                    c.CharacterInfo = activeCharacterInfo;
                 }
             }
 
@@ -345,7 +377,7 @@ namespace Barotrauma
                     Map.CurrentLocation.RegisterTakenItems(c.Inventory.AllItems.Where(it => it.SpawnedInCurrentOutpost && it.OriginalModuleIndex > 0));
                 }
 
-                if (c.Info != null && c.IsBot)
+                if (c.Info != null && (c.IsBot || (GameMain.Server.ServerSettings.AllowControllingBots && c.AIController is HumanAIController)))
                 {
                     if (c.IsDead && c.CauseOfDeath?.Type != CauseOfDeathType.Disconnected) { CrewManager.RemoveCharacterInfo(c.Info); }
                     c.Info.HealthData = new XElement("health");
@@ -1194,7 +1226,10 @@ namespace Barotrauma
             {
                 if (!AllowedToManageWallets(sender))
                 {
-                    if (transfer.Receiver.TryUnwrap(out var receiverId) && receiverId == sender.CharacterID)
+                    if (sender.Character is { } senderCharacter &&
+                        CanHaveWallet(senderCharacter) &&
+                        transfer.Receiver.TryUnwrap(out var receiverId) &&
+                        receiverId == sender.CharacterID)
                     {
                         if (transfer.Amount > GameMain.Server.ServerSettings.MaximumMoneyTransferRequest) { return; }
                         GameMain.Server.Voting.StartTransferVote(sender, null, transfer.Amount, sender);
@@ -1208,27 +1243,25 @@ namespace Barotrauma
 
             void TransferMoney(Wallet from)
             {
-                if (!from.TryDeduct(transfer.Amount)) { return; }
-
+                Wallet to;
                 if (transfer.Receiver.TryUnwrap(out var id))
                 {
-                    Wallet wallet = GetWalletByID(id);
-                    if (wallet is InvalidWallet) { return; }
-
-                    wallet.Give(transfer.Amount);
-                    GameServer.Log($"{sender.Name} transferred {transfer.Amount} mk to {wallet.GetOwnerLogName()} from {from.GetOwnerLogName()}.", ServerLog.MessageType.Money);
+                    to = GetWalletByID(id);
                 }
                 else
                 {
-                    Bank.Give(transfer.Amount);
-                    GameServer.Log($"{sender.Name} transferred {transfer.Amount} mk to {Bank.GetOwnerLogName()} from {from.GetOwnerLogName()}.", ServerLog.MessageType.Money);
+                    to = Bank;
                 }
+                if (to is InvalidWallet || !from.TryDeduct(transfer.Amount)) { return; }
+
+                to.Give(transfer.Amount);
+                GameServer.Log($"{sender.Name} transferred {transfer.Amount} mk to {to.GetOwnerLogName()} from {from.GetOwnerLogName()}.", ServerLog.MessageType.Money);
             }
 
             Wallet GetWalletByID(ushort id)
             {
                 Character targetCharacter = Character.CharacterList.FirstOrDefault(c => c.ID == id);
-                return targetCharacter is null ? Wallet.Invalid : targetCharacter.Wallet;
+                return targetCharacter is null || !CanHaveWallet(targetCharacter) ? Wallet.Invalid : targetCharacter.Wallet;
             }
         }
 
@@ -1241,7 +1274,8 @@ namespace Barotrauma
             if (update.Target.TryUnwrap(out ushort id))
             {
                 Character targetCharacter = Character.CharacterList.FirstOrDefault(c => c.ID == id);
-                targetCharacter?.Wallet.SetRewardDistribution(update.NewRewardDistribution);
+                if (targetCharacter == null || !CanHaveWallet(targetCharacter)) { return; }
+                targetCharacter.Wallet.SetRewardDistribution(update.NewRewardDistribution);
                 GameServer.Log($"{sender.Name} changed the salary of {targetCharacter?.Name} to {update.NewRewardDistribution}%.", ServerLog.MessageType.Money);
                 return;
             }
@@ -1256,8 +1290,19 @@ namespace Barotrauma
 
             foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Player))
             {
-                character.Wallet.SetRewardDistribution(Bank.RewardDistribution);
+                if (CanHaveWallet(character))
+                {
+                    character.Wallet.SetRewardDistribution(Bank.RewardDistribution);
+                }
             }
+        }
+
+        private static bool CanHaveWallet(Character character)
+        {
+            if (character == null) { return false; }
+            return GameMain.Server.ServerSettings.AllowControllingBots
+                ? GameMain.Server.GetMainCharacterOwner(character.Info) != null
+                : !character.IsBot;
         }
 
         public void ServerReadCrew(IReadMessage msg, Client sender)
