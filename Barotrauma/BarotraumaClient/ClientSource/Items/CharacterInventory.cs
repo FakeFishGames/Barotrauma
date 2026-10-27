@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -584,11 +585,12 @@ namespace Barotrauma
 
             if (doubleClickedItems.Any())
             {
-                var quickUseAction = GetQuickUseAction(doubleClickedItems.First(), true, true, true);
+                var notQuickTransfer = !PlayerInput.KeyDown(InputType.QuickItemTransfer); // disallow to use/equip items with quick items transfer keybind so you won't accidently handcuff or poison yourself
+                var quickUseAction = GetQuickUseAction(doubleClickedItems.First(), notQuickTransfer, true, notQuickTransfer);
                 int itemCount = 0;
                 foreach (Item doubleClickedItem in doubleClickedItems)
                 {
-                    QuickUseItem(doubleClickedItem, true, true, true, quickUseAction, playSound: doubleClickedItem == doubleClickedItems.First());
+                    QuickUseItem(doubleClickedItem, true, true, true, quickUseAction, playSound: notQuickTransfer && doubleClickedItem == doubleClickedItems.First());
                     itemCount++;
                     //only use one item if we're equipping or using it as a treatment
                     if (quickUseAction == QuickUseAction.Equip || quickUseAction == QuickUseAction.UseTreatment)
@@ -661,22 +663,45 @@ namespace Barotrauma
         {
             for (int i = 0; i < capacity; i++)
             {
-                var firstItem = slots[i].FirstOrDefault();
-                if (firstItem != null && !DraggingItems.Contains(firstItem) && Character.Controlled?.Inventory == this &&
-                    GUI.KeyboardDispatcher.Subscriber == null && !CrewManager.IsCommandInterfaceOpen && PlayerInput.InventoryKeyHit(visualSlots[i].InventoryKeyIndex))
+                if (PlayerInput.InventoryKeyHit(visualSlots[i].InventoryKeyIndex))
                 {
-                    if (SubEditorScreen.IsSubEditor() && SubEditorScreen.SkipInventorySlotUpdate) { continue; }
-#if LINUX
-                    // some window managers on Linux use windows key + number to change workspaces or perform other actions
-                    if (PlayerInput.KeyDown(Keys.RightWindows) || PlayerInput.KeyDown(Keys.LeftWindows)) { continue; }
-#endif
-                    var quickUseAction = GetQuickUseAction(firstItem, true, false, true);
-                    foreach (Item itemToUse in slots[i].Items.ToList())
+                    var firstItem = slots[i].FirstOrDefault();
+                    // swap inventory and selected slot items
+                    if (SelectedSlot != null)
                     {
-                        QuickUseItem(itemToUse, true, true, true, quickUseAction, playSound: itemToUse == firstItem);
-                        if (quickUseAction == QuickUseAction.Equip || quickUseAction == QuickUseAction.UseTreatment)
+                        if (firstItem != null)
                         {
-                            break;
+                            foreach (Item item in slots[i].Items.ToArray())
+                            {
+                                SelectedSlot.ParentInventory.TryPutItem(item, Inventory.SelectedSlot.SlotIndex, true, true, Character.Controlled);
+                            }
+                            selectedSlot = null;
+                        }
+                        else if (SelectedSlot.Item != null)
+                        {
+                            foreach (Item item in Inventory.SelectedSlot.ParentInventory.GetItemsAt(Inventory.SelectedSlot.SlotIndex).ToArray())
+                            {
+                                TryPutItem(item, i, true, true, Character.Controlled);
+                            }
+                            selectedSlot = null;
+                        }
+                    }
+                    else if (firstItem != null && !DraggingItems.Contains(firstItem) && Character.Controlled?.Inventory == this &&
+                        GUI.KeyboardDispatcher.Subscriber == null && !CrewManager.IsCommandInterfaceOpen)
+                    {
+                        if (SubEditorScreen.IsSubEditor() && SubEditorScreen.SkipInventorySlotUpdate) { continue; }
+#if LINUX
+                        // some window managers on Linux use windows key + number to change workspaces or perform other actions
+                        if (PlayerInput.KeyDown(Keys.RightWindows) || PlayerInput.KeyDown(Keys.LeftWindows)) { continue; }
+#endif
+                        var quickUseAction = GetQuickUseAction(firstItem, true, false, true);
+                        foreach (Item itemToUse in slots[i].Items.ToList())
+                        {
+                            QuickUseItem(itemToUse, true, true, true, quickUseAction, playSound: itemToUse == firstItem);
+                            if (quickUseAction == QuickUseAction.Equip || quickUseAction == QuickUseAction.UseTreatment)
+                            {
+                                break;
+                            }
                         }
                     }
                 }
