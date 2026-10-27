@@ -3652,8 +3652,12 @@ namespace Barotrauma.Networking
 
             if (character != myCharacter)
             {
-                var client = previouslyConnectedClients.Find(c => c.Character == character);
+                var client = ServerSettings.AllowControllingBots
+                    ? previouslyConnectedClients.Find(c => c.MainCharacterID == character.ID)
+                    : previouslyConnectedClients.Find(c => c.Character == character);
                 if (client == null) { return false; }
+                if (client.SessionId == SessionId) { return true; }
+
 
                 CreateSelectionRelatedButtons(client, frame);
             }
