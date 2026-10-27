@@ -940,6 +940,50 @@ namespace Barotrauma
             }
         }
 
+        private static List<string> GetSaveFolders(SaveType saveType)
+        {
+            var folders = new List<string>()
+            {
+                saveType == SaveType.Singleplayer ? DefaultSaveFolder : DefaultMultiplayerSaveFolder,
+                GetSaveFolder(saveType),
+                saveType == SaveType.Singleplayer ? LegacySaveFolder : LegacyMultiplayerSaveFolder
+            };
+#if OSX
+            folders.Add(saveType == SaveType.Singleplayer ? LegacyMacSaveFolder : LegacyMacMultiplayerSaveFolder);
+#endif
+            return folders;
+        }
+
+        /// <summary>
+        /// Checks if a save file path has the correct extension and is located in save folder.
+        /// </summary>
+        public static bool IsValidSavePath(string filePath, SaveType saveType)
+        {
+            if (string.IsNullOrWhiteSpace(filePath)) 
+            { 
+                return false; 
+            }
+
+            try
+            {
+                string fullPath = Path.GetFullPath(filePath);
+                if (Path.GetExtension(fullPath) != ".save")
+                {
+                    return false;
+                }
+
+                return GetSaveFolders(saveType).Any(folder =>
+                {
+                    string relative = Path.GetRelativePath(Path.GetFullPath(folder), fullPath);
+                    return relative == Path.GetFileName(relative);
+                });
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         public static ImmutableArray<BackupIndexData> GetIndexData(string fullPath)
         {
             string path = Path.GetDirectoryName(fullPath) ?? "";

@@ -726,6 +726,8 @@ namespace Barotrauma
                 doc.Root.Add(new XAttribute("previewimage", Convert.ToBase64String(previewImage.ToArray())));
             }
 
+            doc.StripInvalidCharacters();
+
             SaveUtil.CompressStringToFile(filePath, doc.ToString());
         }
 

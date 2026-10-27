@@ -118,6 +118,8 @@ namespace Barotrauma.IO
                 return;
             }
 
+            doc.StripInvalidCharacters();
+
             for (int i = 0; i <= maxRetries; i++)
             {
                 try
@@ -149,6 +151,9 @@ namespace Barotrauma.IO
                 }
                 return;
             }
+
+            element.StripInvalidCharacters();
+
             element.Save(path);
         }
 
@@ -159,6 +164,8 @@ namespace Barotrauma.IO
 
         public static void WriteTo(this System.Xml.Linq.XDocument doc, XmlWriter writer)
         {
+            doc.StripInvalidCharacters();
+
             writer.Write(doc);
         }
     }

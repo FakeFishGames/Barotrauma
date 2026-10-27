@@ -560,27 +560,6 @@ sealed class SocialOverlay : IDisposable
             };
         friendPlayerListBox.ScrollBar.OnMoved += (_, _) => { friendPlayerListBox.Deselect(); return true; };
 
-        if (SteamManager.IsInitialized)
-        {
-            var eosConfigRowLayout = CreateRowLayout(contentLayout, heightScale: 1.5f);
-            eosConfigRowLayout.ChildAnchor = Anchor.CenterLeft;
-
-            eosConfigButton = new GUIButton(
-                new RectTransform(Vector2.One * 0.8f, eosConfigRowLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight),
-                style: null)
-            {
-                Enabled = GameMain.NetworkMember == null,
-                OnClicked = (_, _) => { ShowEosSettingsMenu(); return true; }
-            };
-            new GUIFrame(new RectTransform(Vector2.One * 0.5f, eosConfigButton.RectTransform, Anchor.Center), style: "GUIButtonSettings")
-            {
-                CanBeFocused = false
-            };
-
-            eosStatusTextContainer = new GUILayoutGroup(new RectTransform(Vector2.One, eosConfigRowLayout.RectTransform));
-            RefreshEosStatusText();
-        }
-
         RefreshFriendList();
     }
 

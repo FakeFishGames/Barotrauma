@@ -48,6 +48,19 @@ namespace Barotrauma.Networking
                 orderTargetType = orderMessageInfo.TargetType;
                 wallSectionIndex = orderMessageInfo.WallSectionIndex;
                 var orderPrefab = orderMessageInfo.OrderPrefab ?? OrderPrefab.Prefabs[orderMessageInfo.OrderIdentifier];
+
+                // Don't allow clients to issue hidden orders, otherwise a modified client could abuse a hidden order, such as the
+                // escapehandcuffs order that makes bots hostile
+                if (orderPrefab.Hidden)
+                {
+                    GameServer.Log($"Client \"{GameServer.ClientLogName(c)}\" attempted to issue a hidden order \"{orderPrefab.Identifier}\".", ServerLog.MessageType.Error);
+                    if (NetIdUtils.IdMoreRecent(ID, c.LastSentChatMsgID)) 
+                    { 
+                        c.LastSentChatMsgID = ID; 
+                    }
+                    return;
+                }
+
                 Identifier orderOption = orderMessageInfo.OrderOption;
                 if (orderOption.IsEmpty)
                 {

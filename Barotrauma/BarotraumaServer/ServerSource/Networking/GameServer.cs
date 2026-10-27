@@ -941,6 +941,12 @@ namespace Barotrauma.Networking
                         }
                         if (CampaignMode.AllowedToManageCampaign(connectedClient, ClientPermissions.ManageRound)) 
                         {
+                            if (!SaveUtil.IsValidSavePath(savePath, SaveUtil.SaveType.Multiplayer))
+                            {
+                                Log($"{ClientLogName(connectedClient)} tried to load a save from an invalid path (\"{savePath}\"), ignoring.", ServerLog.MessageType.Error);
+                                break;
+                            }
+
                             using (dosProtection.Pause(connectedClient))
                             {
                                 CampaignDataPath dataPath;
@@ -1041,6 +1047,18 @@ namespace Barotrauma.Networking
         private void SendBackupIndices(IReadMessage inc, Client connectedClient)
         {
             string savePath = inc.ReadString();
+
+            // A client without permissions shouldn't be able to request backup indices
+            if (!CampaignMode.AllowedToManageCampaign(connectedClient, ClientPermissions.ManageRound)) 
+            { 
+                return; 
+            }
+            
+            if (!SaveUtil.IsValidSavePath(savePath, SaveUtil.SaveType.Multiplayer))
+            {
+                Log($"{ClientLogName(connectedClient)} requested backups of a save outside the save folder (\"{savePath}\"), ignoring.", ServerLog.MessageType.Error);
+                return;
+            }
 
             var indexData = SaveUtil.GetIndexData(savePath);
 

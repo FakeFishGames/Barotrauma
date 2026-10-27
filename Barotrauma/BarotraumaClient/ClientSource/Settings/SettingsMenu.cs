@@ -927,18 +927,14 @@ namespace Barotrauma
             //Steam version supports hosting/joining servers using EOS networking
             if (SteamManager.IsInitialized)
             {
-                bool shouldCrossplayBeEnabled = unsavedConfig.CrossplayChoice is Eos.EosSteamPrimaryLogin.CrossplayChoice.Enabled;
+                bool shouldCrossplayBeEnabled = false;
                 var crossplayTickBox = Tickbox(rightColumn, TextManager.Get("EosAllowCrossplay"), TextManager.Get("EosAllowCrossplayTooltip"), shouldCrossplayBeEnabled, v =>
                 {
                     unsavedConfig.CrossplayChoice = v
                         ? Eos.EosSteamPrimaryLogin.CrossplayChoice.Enabled
                         : Eos.EosSteamPrimaryLogin.CrossplayChoice.Disabled;
                 });
-                if (GameMain.NetworkMember != null)
-                {
-                    crossplayTickBox.Enabled = false;
-                    crossplayTickBox.ToolTip = TextManager.Get("CantAccessEOSSettingsInMP");
-                }
+                crossplayTickBox.Enabled = false;
             }
         }
 

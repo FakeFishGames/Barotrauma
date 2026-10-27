@@ -28,6 +28,10 @@ namespace Barotrauma.Items.Components
         }
 
         private const float MaxAttachDistance = ItemPrefab.DefaultInteractDistance * 0.95f;
+        /// <summary>
+        /// How far down from the aimed position floor-attached items look for a floor
+        /// </summary>
+        private const float FloorAttachRaycastLength = MaxAttachDistance * 2;
 
         //the position(s) in the item that the Character grabs
         protected Vector2[] handlePos;
@@ -939,10 +943,12 @@ namespace Barotrauma.Items.Components
                 if (GameMain.NetworkMember != null)
                 {
 #if CLIENT
-                    if (character == Character.Controlled)
+                    // Only send one request per Use press
+                    if (character == Character.Controlled && !attachRequestSent)
                     {
                         Vector2 attachPos = ConvertUnits.ToSimUnits(GetAttachPosition(character));
                         item.CreateClientEvent(this, new AttachEventData(attachPos, character));
+                        attachRequestSent = true;
                     }
 #endif
                     //don't attach at this point in MP: instead rely on the network events created above
@@ -1034,7 +1040,7 @@ namespace Barotrauma.Items.Components
                     //if attaching to floor, do a raycast down and move the attach pos where it hits
                     float size = item.Rect.Height / 2.0f;
                     Vector2 rayStart = attachPos - submarinePos;
-                    Vector2 rayEnd = rayStart - Vector2.UnitY * MaxAttachDistance * 2;
+                    Vector2 rayEnd = rayStart - Vector2.UnitY * FloorAttachRaycastLength;
                     if (Submarine.PickBody(
                         ConvertUnits.ToSimUnits(rayStart),
                         ConvertUnits.ToSimUnits(rayEnd), collisionCategory: Physics.CollisionWall | Physics.CollisionPlatform) != null)
@@ -1093,6 +1099,22 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        /// <summary>
+        /// Could <see cref="GetAttachPosition"/> have produced an attach position this far from the user?
+        /// </summary>
+        /// <param name="offset">Attach position relative to the character, in display units</param>
+        private bool IsWithinAttachReach(Vector2 offset)
+        {
+            // Leave a harmless margin, the point is just to block placement obviously too far
+            const float maxDistance = MaxAttachDistance * 1.5f;
+            if (AttachesToFloor && offset.Y < 0)
+            {
+                // Floor items can additionally drop straight down from the aimed position by up to the raycast length
+                offset.Y = Math.Min(offset.Y + FloorAttachRaycastLength, 0);
+            }
+            return offset.LengthSquared() <= maxDistance * maxDistance;
+        }
+
         private Voronoi2.VoronoiCell GetAttachTargetCell(float maxDist)
         {
             if (Level.Loaded == null) { return null; }
@@ -1130,6 +1152,13 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+#if CLIENT
+            // Allow a new attach request once the Use key is released (or Shoot for Shootables)
+            if (attachRequestSent && (picker == null || (!picker.IsKeyDown(InputType.Use) && !picker.IsKeyDown(InputType.Shoot))))
+            {
+                attachRequestSent = false;
+            }
+#endif
             if (item.body == null || !item.body.Enabled) { return; }
 
             Character owner = picker ?? item.GetRootInventoryOwner() as Character;

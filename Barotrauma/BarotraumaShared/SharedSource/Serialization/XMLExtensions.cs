@@ -35,7 +35,102 @@ namespace Barotrauma
                 { typeof(Vector4), (str, defVal) => ParseVector4(str) },
                 { typeof(Rectangle), (str, defVal) => ParseRect(str, true) }
             }.ToImmutableDictionary();
-        
+
+        /// <summary>
+        /// Strips characters that are illegal in XML 1.0 from a string so it can be safely written to an
+        /// XML attribute or element. Without this, an out-of-range control character (e.g. a client-supplied
+        /// value containing 0x00–0x08/0x0B/0x0C/0x0E–0x1F, or a lone/broken surrogate) makes the XML writer
+        /// throw <see cref="ArgumentException"/> when the document is saved, which aborts (and can crash) the
+        /// save. Only characters XML forbids are removed; every XML-permitted Unicode character is preserved,
+        /// including CJK, Cyrillic and emoji / other supplementary-plane characters (valid surrogate pairs are
+        /// kept intact).
+        /// </summary>
+        /// <remarks>
+        /// This validates characters only, it does not XML-escape (&amp;, &lt;, etc).
+        /// </remarks>
+        public static string StripInvalidCharacters(string str)
+        {
+            if (string.IsNullOrEmpty(str)) 
+            { 
+                return str; 
+            }
+
+            // Check first without allocating a new string
+            int firstInvalid = -1;
+            for (int i = 0; i < str.Length; i++)
+            {
+                char c = str[i];
+                if (i + 1 < str.Length && XmlConvert.IsXmlSurrogatePair(str[i + 1], c)) 
+                { 
+                    i++; 
+                    continue; 
+                }
+                if (!XmlConvert.IsXmlChar(c)) 
+                { 
+                    firstInvalid = i;
+                    break; 
+                }
+            }
+
+            if (firstInvalid < 0) 
+            { 
+                return str; 
+            }
+
+            // If it's invalid, build a new string without the invalid characters
+            var sb = new StringBuilder(str.Length);
+            for (int i = 0; i < str.Length; i++)
+            {
+                char c = str[i];
+                if (i + 1 < str.Length && XmlConvert.IsXmlSurrogatePair(str[i + 1], c))
+                {
+                    sb.Append(c).Append(str[i + 1]); // valid pair, keep both halves
+                    i++; // skip the extra character
+                }
+                else if (XmlConvert.IsXmlChar(c))
+                {
+                    sb.Append(c);
+                }
+            }
+
+            return sb.ToString();
+        }
+
+
+        /// <summary>
+        /// Cleans up the document of any attributes that contain invalid characters that could throw an exception when serializing.
+        /// </summary>
+        public static void StripInvalidCharacters(this XDocument document)
+        {
+            foreach (var attribute in document.Descendants().Attributes())
+            {
+                string value = attribute.Value;
+                string stripped = StripInvalidCharacters(value);
+                if (!ReferenceEquals(stripped, value))
+                {
+                    attribute.Value = stripped;
+                    DebugConsole.ThrowError($"Invalid characters found in XML attribute '{attribute.Name}': '{value}' -> '{stripped}'. The invalid characters have been removed.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Cleans up the element of any attributes that contain invalid characters that could throw an exception when serializing.
+        /// </summary>
+        public static void StripInvalidCharacters(this XElement element)
+        {
+            foreach (var attribute in element.DescendantsAndSelf().Attributes())
+            {
+                string value = attribute.Value;
+                string stripped = StripInvalidCharacters(value);
+                if (!ReferenceEquals(stripped, value))
+                {
+                    attribute.Value = stripped;
+                    DebugConsole.ThrowError($"Invalid characters found in XML attribute '{attribute.Name}': '{value}' -> '{stripped}'. The invalid characters have been removed.");
+                }
+            }
+        }
+
         /// <summary>
         /// Check if the given value equals to the default value of the property. 
         /// Takes into account that certain default values (e.g. Vectors and other values that aren't compile-time constants) are defined as strings.

@@ -1,4 +1,15 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.13.5.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Disabled crossplay support with Epic Online Services due to the game being removed from the Epic Games Store.
+- Fixed an exploit that allowed modified clients to freeze the server by sending malicious data.
+- Fixed an exploit that allowed modified clients to issue hidden orders to NPCs.
+- Fixed an exploit that allowed modified clients to remotely placely detonators and other attachable items to trigger "remote explosions".
+- Fixed an exploit that allowed modified clients to bypass the server's DoS filter and to cause other clients to get kicked/banned instead of them.
+- Fixed an exploit that allowed modified clients to send the server data that would corrupt the campaign save the next time the game is saved.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.13.4.0 (Summer Update 2026 Hotfix 1)
 -------------------------------------------------------------------------------------------------------------------------------------------------
 

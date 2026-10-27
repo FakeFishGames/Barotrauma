@@ -18,6 +18,14 @@ namespace Barotrauma.Networking
         public const int CompressionThreshold = 1000;
         public const int InitialBufferSize = 256;
         public const int BufferOverAllocateAmount = 4;
+
+        // How large an incoming compressed message is allowed to expand to when decompressed.
+        // Legit messages are orders of magnitude smaller than 10 MB (files/subs are transferred through
+        // the separate file transfer system, not compressed net messages).
+        // The cap exists to guard against "decompression bombs": tiny compressed payloads that expand
+        // to a size that would hang the server/host.
+        public const int MaxDecompressedSize = 10 * 1024 * 1024;
+        public const int DecompressionChunkSize = 8192;
     }
 
     /// <summary>
@@ -648,24 +656,30 @@ namespace Barotrauma.Networking
                     {
                         using (DeflateStream dstream = new DeflateStream(input, CompressionMode.Decompress))
                         {
-                            dstream.CopyTo(output);
-                        }
+                            //decompress in bounded chunks instead of DeflateStream.CopyTo, which would
+                            //decompress the whole stream no matter how large it expands to.
+                            //Bail out if the output exceeds the maximum allowed size so a malicious client
+                            //can't send "decompression bombs" and hang the server/host.
+                            byte[] chunk = new byte[MsgConstants.DecompressionChunkSize];
+                            int bytesRead;
+                            while ((bytesRead = dstream.Read(chunk, 0, chunk.Length)) > 0)
+                            {
+                                if (output.Length + bytesRead > MsgConstants.MaxDecompressedSize)
+                                {
+                                    //this exception should be caught higher up and the sender kicked (see P2PServerPeer and P2POwnerPeer)
+                                    throw new NetStructReadException(
+                                        $"Failed to decompress the incoming message: the decompressed size exceeds the maximum allowed ({MsgConstants.MaxDecompressedSize} bytes). " +
+                                        "The message is malformed or a malicious \"decompression bomb\".");
+                                }
+                                output.Write(chunk, 0, bytesRead);
+                            }
 
-                        decompressedData = output.ToArray();
+                            decompressedData = output.ToArray();
+                        }
                     }
                 }
 
-                Buffer = new byte[decompressedData.Length];
-                try
-                {
-                    Array.Copy(decompressedData, 0, Buffer, 0, decompressedData.Length);
-                }
-                catch (ArgumentException e)
-                {
-                    throw new ArgumentException(
-                        $"Failed to copy the incoming compressed buffer. Source buffer length: {decompressedData.Length}, start position: {0}, length: {decompressedData.Length}, destination buffer length: {Buffer.Length}.", e);
-                }
-
+                Buffer = decompressedData;
                 lengthBits = decompressedData.Length * 8;
                 DebugConsole.Log("Decompressing message: " + byteLength + " to " + LengthBytes);
             }

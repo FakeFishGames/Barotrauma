@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 
@@ -34,9 +35,12 @@ namespace Barotrauma.Items.Components
 
             if (!item.CanClientAccess(c) || !Attachable || attached || !MathUtils.IsValid(simPosition)) { return; }
 
-            Vector2 offset = simPosition - c.Character.SimPosition;
-            offset = offset.ClampLength(MaxAttachDistance * 1.5f);
-            simPosition = c.Character.SimPosition + offset;
+            Vector2 offset = ConvertUnits.ToDisplayUnits(simPosition - c.Character.SimPosition);
+            if (!IsWithinAttachReach(offset))
+            {
+                DebugConsole.AddWarning($"Client {c.Name} attempted to attach {item.Name} too far away from its character ({(int)offset.Length()} units). Ignoring the request.");
+                return;
+            }
 
             Drop(false, null);
             item.SetTransform(simPosition, 0.0f, findNewHull: false);

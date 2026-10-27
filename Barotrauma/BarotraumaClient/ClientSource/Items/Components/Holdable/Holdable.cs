@@ -9,6 +9,11 @@ namespace Barotrauma.Items.Components
 {
     partial class Holdable : IDrawableComponent
     {
+        /// <summary>
+        /// Has an attach request been sent to the server during the current press of the Use key? Used for preventing repeated attach requests when holding down the key.
+        /// </summary>
+        private bool attachRequestSent;
+
         public Vector2 DrawSize
         {
             get { return item.Rect.Size.ToVector2(); }

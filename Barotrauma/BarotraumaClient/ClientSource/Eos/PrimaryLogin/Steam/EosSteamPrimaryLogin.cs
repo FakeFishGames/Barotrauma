@@ -24,12 +24,10 @@ public static class EosSteamPrimaryLogin
 
     public static CrossplayChoice EnableCrossplay
     {
-        get => GameSettings.CurrentConfig.CrossplayChoice;
+        get => CrossplayChoice.Disabled;
         set
         {
-            GameSettings.SetCurrentConfig(GameSettings.CurrentConfig with { CrossplayChoice = value });
-            GameAnalyticsManager.AddDesignEvent("Crossplay:" + value);
-            GameSettings.SaveCurrentConfig();
+            // Disabled temporarily
         }
     }
 

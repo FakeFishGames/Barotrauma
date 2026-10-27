@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Barotrauma.Networking;
 
 namespace Barotrauma
@@ -58,24 +57,32 @@ namespace Barotrauma
             return false;
         }
 
-        public void OnPacket(P2PEndpoint endpoint)
+        public void OnPacket(P2PEndpoint senderEndpoint)
         {
             if (!ShouldCheck()) { return; }
 
             // count = default(int), if the endpoint is not in the dictionary
-            packetCounts.TryGetValue(endpoint, out int count);
-            packetCounts[endpoint] = ++count;
+            packetCounts.TryGetValue(senderEndpoint, out int count);
+            packetCounts[senderEndpoint] = ++count;
 
+            //periodically check all endpoints for excessive packet counts
             if (Timing.TotalTime > nextCheckTime)
             {
-                foreach (P2PEndpoint e in packetCounts.Keys.ToArray())
-                {
-                    CheckForExcessivePackets(e, count);
-                }
+                CheckAllEndPointsForExcessivePackets();
                 packetCounts.Clear();
                 nextCheckTime = Timing.TotalTime + PacketCheckTimer;
             }
         }
+
+        private void CheckAllEndPointsForExcessivePackets()
+        {
+            //check each endpoint against ITS OWN packet count.
+            foreach (var (endpoint, packetCount) in packetCounts)
+            {
+                CheckForExcessivePackets(endpoint, packetCount);
+            }
+        }
+
 
         private void CheckForExcessivePackets(P2PEndpoint endpoint, int count)
         {
@@ -86,7 +93,8 @@ namespace Barotrauma
 
                 onExcessivePackets(endpoint, kickCount > 3);
 
-                packetCounts.Remove(endpoint);
+                //no need to remove from packetCounts here: the whole dictionary is cleared
+                //right after this loop, and removing mid-iteration would break the foreach above
             }
         }
     }
