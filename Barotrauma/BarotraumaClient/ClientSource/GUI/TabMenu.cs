@@ -474,7 +474,15 @@ namespace Barotrauma
                     CreateSubmarineInfo(infoFrameHolder, Submarine.MainSub);
                     break;
                 case InfoFrameTab.Talents:
-                    talentMenu.CreateGUI(infoFrameHolder, Character.Controlled?.Info ?? GameMain.Client?.CharacterInfo);
+                    CharacterInfo characterInfo = Character.Controlled?.Info ?? GameMain.Client?.CharacterInfo;
+                    if (GameMain.Client is { IsControllingBot: true } client &&
+                        client.ServerSettings.AllowControllingBots &&
+                        !client.HasPermission(ClientPermissions.ManageBotTalents) &&
+                        client.MyClient is { MainCharacterID: > 0 } myClient)
+                    {
+                        characterInfo = Character.CharacterList.FirstOrDefault(c => c.ID == myClient.MainCharacterID)?.Info ?? characterInfo;
+                    }
+                    talentMenu.CreateGUI(infoFrameHolder, characterInfo);
                     break;
             }
         }

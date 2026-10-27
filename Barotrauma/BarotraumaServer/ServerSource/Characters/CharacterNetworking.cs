@@ -333,15 +333,31 @@ namespace Barotrauma
 
             bool CanManageTalents(Client client)
             {
-                if (client.Character != this)
+                if (GameMain.Server.ServerSettings.AllowControllingBots)
                 {
-                    if (client.TeamID != TeamID || !IsBot || !client.HasPermission(ClientPermissions.ManageBotTalents) || client.Spectating)
+                    Client mainCharacterOwner = GameMain.Server.GetMainCharacterOwner(Info);
+                    bool canManageTalents = mainCharacterOwner == client ||
+                        (mainCharacterOwner == null &&
+                         AIController is HumanAIController &&
+                         client.HasPermission(ClientPermissions.ManageBotTalents));
+                    if (!canManageTalents)
                     {
 #if DEBUG
                         DebugConsole.Log("A client tried to manage talents of a character they don't control or have permission to manage");
 #endif
                         return false;
                     }
+                }
+                else if (client.Character != this &&
+                         (client.TeamID != TeamID ||
+                          !IsBot ||
+                          !client.HasPermission(ClientPermissions.ManageBotTalents) ||
+                          client.Spectating))
+                {
+#if DEBUG
+                    DebugConsole.Log("A client tried to manage talents of a character they don't control or have permission to manage");
+#endif
+                    return false;
                 }
 
                 return true;

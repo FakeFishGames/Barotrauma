@@ -384,7 +384,7 @@ namespace Barotrauma
                 CanBeFocused = true
             };
 
-            nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), nameLayout.RectTransform), info.Name, font: GUIStyle.SubHeadingFont);
+            nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), nameLayout.RectTransform), info.Character?.Name ?? info.Name, font: GUIStyle.SubHeadingFont);
 
             if (!info.OmitJobInMenus)
             {
@@ -1157,26 +1157,17 @@ namespace Barotrauma
         {
             if (info is null) { return false; }
 
+            if (GameMain.Client is { } gameClient &&
+                gameClient.ServerSettings.AllowControllingBots &&
+                gameClient.MyClient is { MainCharacterID: > 0 } myClient)
+            {
+                return info.Character?.ID == myClient.MainCharacterID;
+            }
+
             CharacterInfo? ownCharacterInfo = Character.Controlled?.Info ?? GameMain.Client?.CharacterInfo;
             if (ownCharacterInfo is null) { return false; }
 
             return info.GetIdentifierUsingOriginalName() == ownCharacterInfo.GetIdentifierUsingOriginalName();
-        }
-
-        private static bool IsOnSameTeam(CharacterInfo? info)
-        {
-            if (info is null) { return false; }
-
-            CharacterTeamType? ownCharacterTeam = Character.Controlled?.TeamID ?? GameMain.Client?.MyClient?.TeamID;
-            if (ownCharacterTeam is null) { return false; }
-
-            return info.TeamID == ownCharacterTeam;
-        }
-
-        private static bool IsSpectatingInMultiplayer()
-        {
-            if (GameMain.Client?.MyClient is not { } myClient) { return false; }
-            return myClient.Spectating;
         }
 
         public static bool CanManageTalents(CharacterInfo targetInfo)
@@ -1184,20 +1175,38 @@ namespace Barotrauma
             // in singleplayer we can do whatever we want
             if (GameMain.IsSingleplayer) { return true; }
 
+            if (GameMain.Client is { } gameClient && gameClient.ServerSettings.AllowControllingBots)
+            {
+                Client? mainCharacterOwner = targetInfo.Character is { } character
+                    ? gameClient.ConnectedClients.FirstOrDefault(client => client.MainCharacterID == character.ID)
+                    : null;
+                if (mainCharacterOwner != null) { return mainCharacterOwner == gameClient.MyClient; }
+            }
+
             // always allow managing talents for own character
             if (IsOwnCharacter(targetInfo)) { return true; }
 
-            // disallow managing talents while spectating
-            if (IsSpectatingInMultiplayer()) { return false; }
+            if (GameMain.Client?.ServerSettings.AllowControllingBots == true)
+            {
+                if (targetInfo.Character is not { AIController: HumanAIController }) { return false; }
+            }
+            else
+            {
+                if (IsSpectatingInMultiplayer()) { return false; }
+                if (targetInfo.Character is not { IsBot: true } || !IsOnSameTeam(targetInfo)) { return false; }
+            }
 
-            // don't allow controlling non-bot characters
-            if (targetInfo.Character is not { IsBot: true }) { return false; }
-
-            // only allow managing talents for bots on the same team
-            if (!IsOnSameTeam(targetInfo)) { return false; }
-
-            // lastly, check if we have the permission to do this
             return GameMain.Client is { } client && client.HasPermission(ClientPermissions.ManageBotTalents);
         }
+
+        private static bool IsOnSameTeam(CharacterInfo? info)
+        {
+            if (info is null) { return false; }
+            CharacterTeamType? ownCharacterTeam = Character.Controlled?.TeamID ?? GameMain.Client?.MyClient?.TeamID;
+            return ownCharacterTeam != null && info.TeamID == ownCharacterTeam;
+        }
+
+        private static bool IsSpectatingInMultiplayer()
+            => GameMain.Client?.MyClient?.Spectating == true;
     }
 }
