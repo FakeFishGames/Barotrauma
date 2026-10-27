@@ -2082,6 +2082,7 @@ namespace Barotrauma.Networking
                     existingClient.Muted = tc.Muted;
                     existingClient.InGame = tc.InGame;
                     existingClient.IsOwner = tc.IsOwner;
+                    existingClient.MainCharacterID = tc.MainCharacterId;
                     existingClient.IsDownloading = tc.IsDownloading;
                     GameMain.NetLobbyScreen.SetPlayerNameAndJobPreference(existingClient); // refresh lobby player list in the local UI
                     if (Screen.Selected != GameMain.NetLobbyScreen && tc.CharacterId > 0)

@@ -1744,6 +1744,19 @@ namespace Barotrauma.Networking
             if (!IsCrewControlStateActive(controlState.MainCharacterInfo, controlState.ControlledCharacterInfo)) { return null; }
             return Character.CharacterList.FirstOrDefault(c => c.Info == controlState.MainCharacterInfo);
         }
+        internal CharacterInfo GetMainCharacterInfo(Client client)
+        {
+            if (crewControlStates.TryGetValue(client, out CrewControlState controlState) &&
+                controlState.MainCharacterInfo != null)
+            {
+                return controlState.MainCharacterInfo;
+            }
+            return client.CharacterInfo;
+        }
+
+        internal Client GetMainCharacterOwner(CharacterInfo characterInfo)
+            => characterInfo == null ? null : connectedClients.FirstOrDefault(client => GetMainCharacterInfo(client) == characterInfo);
+
 
         internal bool IsControllingBot(Client client)
         {
@@ -2451,6 +2464,9 @@ namespace Barotrauma.Networking
                         : client.PreferredJob,
                     PreferredTeam = client.PreferredTeam,
                     TeamID = client.TeamID,
+                    MainCharacterId = !GameStarted || !ServerSettings.AllowControllingBots
+                        ? (ushort)0
+                        : GetMainCharacterInfo(client)?.Character?.ID ?? 0,
                     CharacterId = client.Character == null || !GameStarted ? (ushort)0 : client.Character.ID,
                     Karma = c.HasPermission(ClientPermissions.ServerLog) ? client.Karma : 100.0f,
                     Muted = client.Muted,
