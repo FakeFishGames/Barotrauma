@@ -485,9 +485,11 @@ namespace Barotrauma
                     break;
                 case ControlEventData controlEventData:
                     Client owner = controlEventData.Owner;
-                    msg.WriteBoolean(owner == c && owner.Character == this);
+                    bool myCharacter = owner == c && owner.Character == this;
+                    msg.WriteBoolean(myCharacter);
                     msg.WriteByte(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.SessionId : (byte)0);
                     msg.WriteBoolean(info is { RenamingEnabled: true });
+                    if (myCharacter) { msg.WriteUInt16(LastNetworkUpdateID); }
                     break;
                 case CharacterStatusEventData statusEventData:
                     WriteStatus(msg, statusEventData.ForceAfflictionData);

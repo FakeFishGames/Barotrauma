@@ -371,14 +371,11 @@ namespace Barotrauma
                     bool myCharacter = msg.ReadBoolean();
                     byte ownerID = msg.ReadByte();
                     bool renamingEnabled = msg.ReadBoolean();
+                    ushort networkUpdateID = myCharacter ? msg.ReadUInt16() : (ushort)0;
                     ResetNetState();
                     if (myCharacter)
                     {
-                        if (controlled != null)
-                        {
-                            LastNetworkUpdateID = controlled.LastNetworkUpdateID;
-                        }
-
+                        LastNetworkUpdateID = networkUpdateID;
                         if (!IsDead) { Controlled = this; }
                         IsRemotePlayer = false;
                         GameMain.Client.HasSpawned = true;
