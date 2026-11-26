@@ -391,6 +391,12 @@ namespace Barotrauma
                     }
                 }
 #endif
+#if CLIENT
+                if (GameMain.IsSingleplayer && character != null && Character.Controlled == character && character.IsOnPlayerTeam)
+                {
+                    GameMain.GameSession.CrewManager.SelectNextCharacter();
+                }
+#endif
             }
 
             spawnOrRemoveQueue.Enqueue(new EntityRemoveInfo(entity, onRemoved));
