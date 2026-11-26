@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    partial class Voting
+    public partial class Voting
     {
         public enum VoteState { None = 0, Started = 1, Running = 2, Passed = 3, Failed = 4 };
 

@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class HumanAIController : AIController
+    public partial class HumanAIController : AIController
     {
         public static bool DebugAI;
         public static bool DisableCrewAI;
@@ -25,10 +25,15 @@ namespace Barotrauma
         /// </summary>
         public bool AutoFaceMovement = true;
 
-        const float reactionTime = 0.3f;
-        const float crouchRaycastInterval = 1;
-        const float sortObjectiveInterval = 1;
-        const float clearUnreachableInterval = 30;
+        private const float reactionTime = 0.3f;
+        private const float crouchRaycastInterval = 1;
+        private const float sortObjectiveInterval = 1;
+        private const float clearUnreachableInterval = 30;
+
+        /// <summary>
+        /// Maximum distance between two enemies for them to be considered similar combat targets, used to prevent unnecessary target switching
+        /// </summary>
+        private const float SimilarCombatTargetDistance = 300;
 
         private float flipTimer;
         private const float FlipInterval = 0.5f;
@@ -63,6 +68,18 @@ namespace Barotrauma
         private readonly float enemySpotDistanceOutside = 800;
         private readonly float enemySpotDistanceInside = 1000;
         private float enemyCheckTimer;
+
+        private double? initiateCombatOutsideUntilTime;
+        private bool IsPastInitiateCombatOutsideTime => initiateCombatOutsideUntilTime is double untilTime && Timing.TotalTimeUnpaused > untilTime;
+
+        /// <summary>
+        /// Stop starting fights (and drop started ones) while outside from the given time on. Cleared when the bot gets back inside. If several sources set a time, the earliest one wins.
+        /// The point is that dives are by nature time-limited, so it makes sense their duration can affect task prioritization.
+        /// </summary>
+        public void StopInitiatingCombatOutsideAt(double time)
+        {
+            initiateCombatOutsideUntilTime = Math.Min(initiateCombatOutsideUntilTime ?? time, time);
+        }
 
         private readonly float reportProblemsInterval = 1.0f;
         private float reportProblemsTimer;
@@ -102,24 +119,49 @@ namespace Barotrauma
         /// List of previous attacks done to this character
         /// </summary>
         private readonly Dictionary<Character, AttackResult> previousAttackResults = new Dictionary<Character, AttackResult>();
+        /// <summary>
+        /// Accumulating list of attacks done to this character while the character is incapacitated or stunned
+        /// </summary>
+        private readonly Dictionary<Character, AttackResult> incapacitatedAttackResults = new Dictionary<Character, AttackResult>();
         private readonly Dictionary<Character, float> previousHealAmounts = new Dictionary<Character, float>();
 
         private readonly SteeringManager outsideSteering, insideSteering;
 
         /// <summary>
         /// Waypoints that are not linked to a sub (e.g. main path).
+        /// NOTE: submarines can include waypoints that are outside hulls! When the AI is set to use level waypoints, it will ignore these,
+        /// and only use waypoints that are part of the level.
         /// </summary>
-        public bool UseOutsideWaypoints { get; private set; }
+        public bool UseLevelWaypoints { get; private set; }
 
         public IndoorsSteeringManager PathSteering => insideSteering as IndoorsSteeringManager;
-        public HumanoidAnimController AnimController => Character.AnimController as HumanoidAnimController;
 
         public AIObjectiveManager ObjectiveManager => objectiveManager;
 
         public float CurrentHullSafety { get; private set; } = 100;
 
         private readonly Dictionary<Character, float> structureDamageAccumulator = new Dictionary<Character, float>();
+        private readonly Dictionary<Character, float> structureDamageAccumulatedPerSecond = new Dictionary<Character, float>();
+
+        private double lastStructureDamageAccumulatorReset;
+
+        private const float MaxAccumulatedStructureDamagePerSecond = 20.0f;
+        private const double StructureDamageAccumulatorResetInterval = 1.0;
+
         private readonly Dictionary<Hull, HullSafety> knownHulls = new Dictionary<Hull, HullSafety>();
+
+        /// <summary>
+        /// Team(s) that should be considered hostile by the NPC.
+        /// </summary>
+        private readonly HashSet<CharacterTeamType> hostileTeams = new HashSet<CharacterTeamType>();
+
+        /// <summary>
+        /// While enabled, the NPC doesn't consider anyone hostile based on their team or faction (e.g. the NPCs of an outpost that has surrendered).
+        /// The underlying hostile teams and faction reputation are left as they are, so hostilities resume when this is disabled.
+        /// The NPC doesn't fight back against the player team either, but it can still flee from them. Other targets (e.g. monsters) are unaffected.
+        /// </summary>
+        public bool Ceasefire { get; set; }
+
         private class HullSafety
         {
             public float safety;
@@ -171,13 +213,25 @@ namespace Barotrauma
 
         public ShipCommandManager ShipCommandManager { get; private set; }
 
-        public void InitShipCommandManager()
+        /// <summary>
+        /// </summary>
+        /// <param name="potentialEnemySubmarine">Leave unassigned if you don't want the sub to trigger hostile when shot at.</param>
+        /// <returns></returns>
+        public ShipCommandManager InitShipCommandManager(IEnumerable<Submarine> potentialEnemySubmarines, IEnumerable<Character> crew)
         {
             if (ShipCommandManager == null)
             {
-                ShipCommandManager = new ShipCommandManager(Character);
+                ShipCommandManager = new ShipCommandManager(Character as AICharacter);
+                ShipCommandManager.InitializeShipCommandManager(potentialEnemySubmarines.Distinct(), crew);
+                foreach (var character in crew)
+                {
+                    if (character.AIController is HumanAIController humanAi)
+                    {
+                        humanAi.ShipCommandManager = ShipCommandManager;
+                    }
+                }
             }
-            ShipCommandManager.Active = true;
+            return ShipCommandManager;
         }
 
         public HumanAIController(Character c) : base(c)
@@ -188,6 +242,7 @@ namespace Barotrauma
             reactTimer = GetReactionTime();
             SortTimer = Rand.Range(0f, sortObjectiveInterval);
             reportProblemsTimer = Rand.Range(0f, reportProblemsInterval);
+            c.OnDeath += OnCharacterDeath;
         }
 
         public override void Update(float deltaTime)
@@ -199,7 +254,16 @@ namespace Barotrauma
             {
                 freezeAI = false;
             }
-            if (isIncapacitated) { return; }
+
+            if (isIncapacitated)
+            {
+                return;
+            }
+            else if (incapacitatedAttackResults.Count > 0)
+            {
+                // Attacks accumulated while incapacitated have already been reacted to, clear them here to prevent double-reaction
+                incapacitatedAttackResults.Clear();
+            }
 
             wasDead = false;
 
@@ -266,6 +330,10 @@ namespace Barotrauma
             }
 
             bool isOutside = Character.Submarine == null;
+            if (!isOutside)
+            {
+                initiateCombatOutsideUntilTime = null;
+            }
             if (isOutside)
             {
                 obstacleRaycastTimer -= deltaTime;
@@ -273,7 +341,7 @@ namespace Barotrauma
                 {
                     bool hasValidPath = HasValidPath();
                     isBlocked = false;
-                    UseOutsideWaypoints = false;
+                    UseLevelWaypoints = false;
                     obstacleRaycastTimer = obstacleRaycastIntervalLong;
                     ISpatialEntity spatialTarget = SelectedAiTarget?.Entity ?? ObjectiveManager.GetLastActiveObjective<AIObjectiveGoTo>()?.Target;
                     if (spatialTarget != null && (spatialTarget.Submarine == null || !IsCloseEnoughToTarget(2000, targetSub: false)))
@@ -290,9 +358,9 @@ namespace Barotrauma
                         var obstacle = Submarine.PickBody(SimPosition, rayEnd, ignoredBodies, collisionCategory: Physics.CollisionLevel | Physics.CollisionWall);
                         isBlocked = obstacle != null;
                         // Don't use outside waypoints when blocked by a sub, because we should use the waypoints linked to the sub instead.
-                        UseOutsideWaypoints = isBlocked && (obstacle.UserData is not Submarine sub || sub.Info.IsRuin);
+                        UseLevelWaypoints = isBlocked && (obstacle.UserData is not Submarine sub || sub.Info.IsRuin);
                         bool resetPath = false;
-                        if (UseOutsideWaypoints)
+                        if (UseLevelWaypoints)
                         {
                             bool isUsingInsideWaypoints = hasValidPath && HasValidPath(nodePredicate: n => n.Submarine != null || n.Ruin != null);
                             if (isUsingInsideWaypoints)
@@ -323,8 +391,9 @@ namespace Barotrauma
                             {
                                 if (connectedSub == Submarine.MainSub) { continue; }
                                 Vector2 rayStart = SimPosition - connectedSub.SimPosition;
-                                Vector2 dir = PathSteering.CurrentPath.CurrentNode.WorldPosition - WorldPosition;
-                                Vector2 rayEnd = rayStart + dir.ClampLength(Character.AnimController.Collider.GetLocalFront().Length() * 5);
+                                // Sim units, so the ray ends at the node when it's closer than the max length instead of overshooting into whatever is behind it
+                                Vector2 toCurrentNode = FarseerPhysics.ConvertUnits.ToSimUnits(PathSteering.CurrentPath.CurrentNode.WorldPosition - WorldPosition);
+                                Vector2 rayEnd = rayStart + toCurrentNode.ClampLength(Character.AnimController.Collider.GetLocalFront().Length() * 5);
                                 if (Submarine.CheckVisibility(rayStart, rayEnd, ignoreSubs: true) != null)
                                 {
                                     PathSteering.CurrentPath.Unreachable = true;
@@ -337,7 +406,7 @@ namespace Barotrauma
             }
             else
             {
-                UseOutsideWaypoints = false;
+                UseLevelWaypoints = false;
                 isBlocked = false;
             }
             
@@ -381,7 +450,7 @@ namespace Barotrauma
             }
             steeringBuffer = Math.Clamp(steeringBuffer, minSteeringBuffer, maxSteeringBuffer);
 
-            AnimController.Crouching = shouldCrouch;
+            if (Character.AnimController is HumanoidAnimController humanoidAnimController) { humanoidAnimController.Crouching = shouldCrouch; }
             CheckCrouching(deltaTime);
             Character.ClearInputs();
             
@@ -440,7 +509,12 @@ namespace Barotrauma
                 dirtyHullSafetyCalculations.Clear();
                 if (reportProblemsTimer <= 0.0f)
                 {
-                    if (Character.Submarine != null && (Character.Submarine.TeamID == Character.TeamID || Character.Submarine.TeamID == Character.OriginalTeamID || Character.IsEscorted) && !Character.Submarine.Info.IsWreck)
+                    if (Character.Submarine != null &&
+                        (Character.Submarine.TeamID == Character.TeamID ||
+                         Character.Submarine.TeamID == Character.OriginalTeamID ||
+                         Character.IsOnFriendlyTeam(Character.Submarine.TeamID) ||
+                         Character.IsEscorted) &&
+                        !Character.Submarine.Info.IsWreck)
                     {
                         ReportProblems();
                     }
@@ -496,12 +570,12 @@ namespace Barotrauma
             }
             Character.AnimController.IgnorePlatforms = ignorePlatforms;
 
-            Vector2 targetMovement = AnimController.TargetMovement;
+            Vector2 targetMovement = Character.AnimController.TargetMovement;
             if (!Character.AnimController.InWater)
             {
                 targetMovement = new Vector2(Character.AnimController.TargetMovement.X, MathHelper.Clamp(Character.AnimController.TargetMovement.Y, -1.0f, 1.0f));
             }
-            Character.AnimController.TargetMovement = Character.ApplyMovementLimits(targetMovement, AnimController.GetCurrentSpeed(run));
+            Character.AnimController.TargetMovement = Character.ApplyMovementLimits(targetMovement, Character.AnimController.GetCurrentSpeed(run));
 
             flipTimer -= deltaTime;
             if (flipTimer <= 0.0f)
@@ -536,7 +610,7 @@ namespace Barotrauma
             AutoFaceMovement = true;
 
             MentalStateManager?.Update(deltaTime);
-            ShipCommandManager?.Update(deltaTime);
+            ShipCommandManager?.Update(Character, deltaTime);
         }
 
         private void SpotEnemies()
@@ -544,10 +618,10 @@ namespace Barotrauma
             //already in combat, no need to check
             if (objectiveManager.IsCurrentObjective<AIObjectiveCombat>()) { return; }
             if (objectiveManager.HasActiveObjective<AIObjectiveCombat>()) { return; }
-            
+            if (IsPastInitiateCombatOutsideTime) { return; }
+
             float closestDistance = 0;
             Character closestEnemy = null;
-            bool shouldActOffensively = ObjectiveManager.HasObjectiveOrOrder<AIObjectiveFightIntruders>();
             foreach (Character c in Character.CharacterList)
             {
                 if (c.Submarine != Character.Submarine) { continue; }
@@ -573,13 +647,29 @@ namespace Barotrauma
             }
             if (closestEnemy != null)
             {
-                AddCombatObjective(shouldActOffensively ? AIObjectiveCombat.CombatMode.Offensive : AIObjectiveCombat.CombatMode.Defensive, closestEnemy);
+                AddCombatObjective(ShouldActOffensivelyAgainstTarget(closestEnemy) ? AIObjectiveCombat.CombatMode.Offensive : AIObjectiveCombat.CombatMode.Defensive, closestEnemy,
+                    abortCondition: _ => IsPastInitiateCombatOutsideTime);
             }
+        }
+
+        private bool ShouldActOffensivelyAgainstTarget(Character target)
+        {
+            if (target.IsWeak && Character.Vitality > Character.MaxVitality / 2f)
+            {
+                return true;
+            }
+
+            if (ObjectiveManager.HasObjectiveOrOrder<AIObjectiveFightIntruders>() || Character.ForceOffensiveCombatBehavior)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private void UnequipUnnecessaryItems()
         {
-            if (Character.LockHands) { return; }
+            if (Character.BothHandsDisabled) { return; }
             if (ObjectiveManager.CurrentObjective == null) { return; }
             if (Character.CurrentHull == null) { return; }
             bool shouldActOnSuffocation = Character.IsLowInOxygen && !Character.AnimController.HeadInWater && HasDivingSuit(Character, requireOxygenTank: false) && !HasItem(Character, Tags.OxygenSource, out _, conditionPercentage: 1);
@@ -690,10 +780,10 @@ namespace Barotrauma
                         var divingSuit = Character.Inventory.FindEquippedItemByTag(Tags.HeavyDivingGear);
                         if (divingSuit != null && !divingSuit.HasTag(Tags.DivingGearWearableIndoors) && divingSuit.IsInteractable(Character))
                         {
-                            if (shouldActOnSuffocation || Character.Submarine?.TeamID != Character.TeamID || ObjectiveManager.GetCurrentPriority() >= AIObjectiveManager.RunPriority)
+                            if (shouldActOnSuffocation || Character.Submarine == null || !Character.IsAllowedToInteractWithItemsOnSub(Character.Submarine) || ObjectiveManager.GetCurrentPriority() >= AIObjectiveManager.RunPriority)
                             {
                                 divingSuit.Drop(Character);
-                                HandleRelocation(divingSuit);
+                                HandleRelocation(divingSuit, includeOwnOutpost: true);
                                 ReequipUnequipped();
                             }
                             else if (findItemState == FindItemState.None || findItemState == FindItemState.DivingSuit)
@@ -716,12 +806,14 @@ namespace Barotrauma
                                         };
                                         moveItemObjective.Completed += () => ReequipUnequipped();
                                         ObjectiveManager.CurrentObjective.AddSubObjective(moveItemObjective, addFirst: true);
+                                        // Stowing in our own outpost doesn't return the gear to the main sub, so let's mark it for relocation as well
+                                        HandleRelocation(divingSuit, includeOwnOutpost: true);
                                         return;
                                     }
                                     else
                                     {
                                         divingSuit.Drop(Character);
-                                        HandleRelocation(divingSuit);
+                                        HandleRelocation(divingSuit, includeOwnOutpost: true);
                                         ReequipUnequipped();
                                     }
                                 }
@@ -735,10 +827,10 @@ namespace Barotrauma
                         {
                             if (!mask.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(mask, Character, new List<InvSlotType>() { InvSlotType.Any }))
                             {
-                                if (Character.Submarine?.TeamID != Character.TeamID || ObjectiveManager.GetCurrentPriority() >= AIObjectiveManager.RunPriority)
+                                if (Character.Submarine == null || !Character.IsAllowedToInteractWithItemsOnSub(Character.Submarine) || ObjectiveManager.GetCurrentPriority() >= AIObjectiveManager.RunPriority)
                                 {
                                     mask.Drop(Character);
-                                    HandleRelocation(mask);
+                                    HandleRelocation(mask, includeOwnOutpost: true);
                                     ReequipUnequipped();
                                 }
                                 else if (findItemState is FindItemState.None or FindItemState.DivingMask)
@@ -758,12 +850,13 @@ namespace Barotrauma
                                             };
                                             moveItemObjective.Completed += ReequipUnequipped;
                                             ObjectiveManager.CurrentObjective.AddSubObjective(moveItemObjective, addFirst: true);
+                                            HandleRelocation(mask, includeOwnOutpost: true);
                                             return;
                                         }
                                         else
                                         {
                                             mask.Drop(Character);
-                                            HandleRelocation(mask);
+                                            HandleRelocation(mask, includeOwnOutpost: true);
                                             ReequipUnequipped();
                                         }
                                     }
@@ -781,12 +874,12 @@ namespace Barotrauma
             if (isCarrying) { return; }
             if (!ObjectiveManager.CurrentObjective.AllowAutomaticItemUnequipping || !ObjectiveManager.GetActiveObjective().AllowAutomaticItemUnequipping) { return; }
 
-            if (Character.Submarine?.TeamID == Character.TeamID && findItemState is FindItemState.None or FindItemState.OtherItem)
+            if (Character.Submarine != null && Character.IsAllowedToInteractWithItemsOnSub(Character.Submarine) && findItemState is FindItemState.None or FindItemState.OtherItem)
             {
                 // Only unequip other items inside a friendly sub.
                 foreach (Item item in Character.HeldItems)
                 {
-                    if (item == null || !item.IsInteractable(Character)) { continue; }
+                    if (item == null || !item.IsInteractable(Character) || !item.CanBeUnheld) { continue; }
                     if (!item.UnequipAutomatically) { continue; }
                     //NPC set to operate the item they're holding, don't put it away
                     if (ObjectiveManager.CurrentObjective is AIObjectiveOperateItem operateItem && 
@@ -829,16 +922,30 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Makes the bot put the item in a suitable container (e.g. after taking an empty fuel rod out of a reactor).
+        /// If no suitable container is found, the item is left where it is.
+        /// </summary>
+        public void StoreItem(Item item)
+        {
+            if (Character.Submarine == null || !Character.IsAllowedToInteractWithItemsOnSub(Character.Submarine)) { return; }
+            ObjectiveManager.AddObjective(new AIObjectiveCleanupItem(item, Character, ObjectiveManager)
+            {
+                IsPriority = true
+            });
+        }
+
         private readonly HashSet<Item> itemsToRelocate = new HashSet<Item>();
 
-        public void HandleRelocation(Item item)
+        /// <param name="includeOwnOutpost">Opt-in to also relocate items left in a player-owned outpost.</param>
+        public void HandleRelocation(Item item, bool includeOwnOutpost = false)
         {
-            if (item.SpawnedInCurrentOutpost) { return; }
+            if (item.SpawnedInNonPlayerOutpostOrSubmarine) { return; }
             if (item.Submarine == null || Submarine.MainSub == null) { return; }
             // Only affects bots in the player team
             if (!Character.IsOnPlayerTeam) { return; }
             // Don't relocate if the item is on a sub of the same team
-            if (item.Submarine.TeamID == Character.TeamID) { return; }
+            if (item.Submarine.TeamID == Character.TeamID && !(includeOwnOutpost && item.Submarine.Info.IsOutpost)) { return; }
             if (itemsToRelocate.Contains(item)) { return; }
             itemsToRelocate.Add(item);
             if (item.Submarine.ConnectedDockingPorts.TryGetValue(Submarine.MainSub, out DockingPort myPort))
@@ -918,11 +1025,20 @@ namespace Barotrauma
         private int itemIndex;
 
         public bool FindSuitableContainer(Item containableItem, out Item suitableContainer) => FindSuitableContainer(Character, containableItem, IgnoredItems, ref itemIndex, out suitableContainer);
-
+        
+        /// <summary>
+        /// Returns false while running and true when done.
+        /// </summary>
         public static bool FindSuitableContainer(Character character, Item containableItem, List<Item> ignoredItems, ref int itemIndex, out Item suitableContainer)
         {
             suitableContainer = null;
-            if (character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: ignoredItems, positionalReference: containableItem, customPriorityFunction: i =>
+            if (character.FindItem(ref itemIndex, out Item targetContainer,
+                    ignoredItems: ignoredItems,
+                    positionalReference: containableItem,
+                    itemsToSearch: Item.ContainerItems,
+                    // Keep the item on its own sub
+                    searchSubmarine: containableItem.Submarine,
+                    customPriorityFunction: i =>
             {
                 if (!i.HasAccess(character)) { return 0; }
                 var container = i.GetComponent<ItemContainer>();
@@ -961,7 +1077,10 @@ namespace Barotrauma
             {
                 if (targetContainer != null &&
                     character.AIController is HumanAIController humanAI && 
-                    humanAI.PathSteering.PathFinder.FindPath(character.SimPosition, targetContainer.SimPosition, character.Submarine, errorMsgStr: $"FindSuitableContainer ({character.DisplayName})", nodeFilter: node => node.Waypoint.CurrentHull != null).Unreachable)
+                    humanAI.PathSteering.PathFinder.FindPath(character.SimPosition, Submarine.GetRelativeSimPosition(character, targetContainer), character.Submarine,
+                        errorMsgStr: $"FindSuitableContainer ({character.DisplayName})",
+                        nodeFilter: node => node.Waypoint.CurrentHull != null,
+                        startHull: character.CurrentHull).Unreachable)
                 {
                     ignoredItems.Add(targetContainer);
                     itemIndex = 0;
@@ -994,10 +1113,11 @@ namespace Barotrauma
             if (Character.IsEscorted) { return; }
             if (Character.LockHands) { return; }
 
-            //don't allow player characters who aren't in the same team to drag us for more than x seconds
-            if (Character.SelectedBy == null || 
-                !Character.SelectedBy.IsPlayer || 
-                Character.SelectedBy.TeamID == Character.TeamID) 
+            //don't allow player characters who aren't in the same team to drag us for more than x seconds, unless we've opted in to being handled by them
+            if (Character.SelectedBy == null ||
+                !Character.SelectedBy.IsPlayer ||
+                Character.SelectedBy.TeamID == Character.TeamID ||
+                Character.IsOptedInForFriendlyAccess(Character.SelectedBy))
             {
                 refuseDraggingTimer -= deltaTime;
                 return; 
@@ -1057,7 +1177,10 @@ namespace Barotrauma
                             {
                                 // Immediately react to enemies when they are spotted. AIObjectiveFightIntruders and AIObjectiveFindSafety would make the bot react to the threats,
                                 // but the reaction is delayed (and doesn't necessarily target this enemy), and in many cases the reaction would come only when the enemy attacks and triggers AIObjectiveCombat.
-                                AddCombatObjective(ObjectiveManager.HasObjectiveOrOrder<AIObjectiveFightIntruders>() ? AIObjectiveCombat.CombatMode.Offensive : AIObjectiveCombat.CombatMode.Defensive, target); 
+                                AddCombatObjective(
+                                    ShouldActOffensivelyAgainstTarget(target) ? 
+                                    AIObjectiveCombat.CombatMode.Offensive : 
+                                    AIObjectiveCombat.CombatMode.Defensive, target); 
                             }
                         }
                     }
@@ -1080,7 +1203,7 @@ namespace Barotrauma
                     {
                         foreach (var gap in hull.ConnectedGaps)
                         {
-                            if (AIObjectiveFixLeaks.IsValidTarget(gap, Character))
+                            if (AIObjectiveFixLeaks.IsValidTarget(gap, Character, allowInAnySub: false, allowInFriendlySubs: true))
                             {
                                 if (AddTargets<AIObjectiveFixLeaks, Gap>(Character, gap) && newOrder == null && !gap.IsRoomToRoom)
                                 {
@@ -1110,7 +1233,7 @@ namespace Barotrauma
                             foreach (Item item in Item.RepairableItems)
                             {
                                 if (item.CurrentHull != hull) { continue; }
-                                if (AIObjectiveRepairItems.IsValidTarget(item, Character))
+                                if (AIObjectiveRepairItems.IsValidTarget(item, Character, allowInAnySub: false, allowInFriendlySubs: true))
                                 {
                                     if (!item.Repairables.Any(r => r.IsBelowRepairIconThreshold)) { continue; }
                                     if (AddTargets<AIObjectiveRepairItems, Item>(Character, item) && newOrder == null && !ObjectiveManager.HasActiveObjective<AIObjectiveRepairItem>())
@@ -1220,11 +1343,23 @@ namespace Barotrauma
             //find corpses in the same team
             foreach (Character otherCharacter in Character.CharacterList)
             {
-                if (otherCharacter.SelectedCharacter == null || 
-                    !otherCharacter.SelectedCharacter.IsDead ||
-                    otherCharacter.SelectedCharacter.TeamID != Character.TeamID ||
+                var draggedCharacter = otherCharacter.SelectedCharacter;
+
+                if (draggedCharacter == null || 
+                    !draggedCharacter.IsDead ||
+                    draggedCharacter.TeamID != Character.TeamID ||
+                    // The dead character was the instigator (e.g. hostile NPC spawned by an event). Killing them was justified, no need to react
+                    draggedCharacter.IsInstigator ||
                     otherCharacter.IsPet ||
                     otherCharacter.IsInstigator)
+                {
+                    continue;
+                }
+
+                //only react if the character was killed by someone from the team of whoever is dragging the corpse
+                //may be a bit odd that they magically know who killed the character, but it'd be more odd if they go hostile on you if you lets say grab someone who drowned or overdosed
+                if (draggedCharacter.CauseOfDeath?.Killer == null ||
+                    draggedCharacter.CauseOfDeath.Killer.TeamID != otherCharacter.TeamID)
                 {
                     continue;
                 }
@@ -1261,7 +1396,19 @@ namespace Barotrauma
             if (Character.IsDead && wasDead) { return; }
             if (Character.IsIncapacitated || Character.Stun > 0.0f)
             {
-                RespondToAttack(attacker, attackResult);
+                // Respond to attacks while incapacitated based on an accumulated history of attacks rather than evaluating
+                // each potentially small hit at a time, same way as when not incapacitated
+                AttackResult resultToRespondTo = attackResult;
+                if (!Character.IsPlayer && attacker != null)
+                {
+                    resultToRespondTo = AccumulateAttackResult(incapacitatedAttackResults, attacker, attackResult);
+                }
+                // Lingering afflictions (e.g. the wear-off effect of electric shock) can apply harmless afflictions every frame,
+                // don't respond to the whole accumulated history again because of those
+                if (attackResult.TotalDamageWithKarmaPenalty > 0.01f)
+                {
+                    RespondToAttack(attacker, resultToRespondTo, latestAttackResult: attackResult);
+                }
                 wasDead = Character.IsDead;
                 return;
             }
@@ -1272,16 +1419,28 @@ namespace Barotrauma
                 RespondToAttack(attacker, attackResult);
                 return;
             }
-            if (previousAttackResults.ContainsKey(attacker))
+            AccumulateAttackResult(previousAttackResults, attacker, attackResult);
+        }
+
+        /// <summary>
+        /// Accumulate a list of attacks, so that slow but sustained attacks build up rather than being evaluated one hit at a time.
+        /// Returns the running total for the given accumulation pool.
+        /// </summary>
+        private static AttackResult AccumulateAttackResult(Dictionary<Character, AttackResult> accumulator, Character attacker, AttackResult attackResult)
+        {
+            AttackResult totalResult = attackResult;
+            if (accumulator.TryGetValue(attacker, out AttackResult previousResult))
             {
+                // Afflictions can be null for damage-only attack results
+                List<Affliction> accumulatedAfflictions = previousResult.Afflictions ?? new List<Affliction>();
                 if (attackResult.Afflictions != null)
                 {
                     foreach (Affliction newAffliction in attackResult.Afflictions)
                     {
-                        var matchingAffliction = previousAttackResults[attacker].Afflictions.Find(a => a.Prefab == newAffliction.Prefab && a.Source == newAffliction.Source);
+                        Affliction matchingAffliction = accumulatedAfflictions.Find(a => a.Prefab == newAffliction.Prefab && a.Source == newAffliction.Source);
                         if (matchingAffliction == null)
                         {
-                            previousAttackResults[attacker].Afflictions.Add(newAffliction);
+                            accumulatedAfflictions.Add(newAffliction);
                         }
                         else
                         {
@@ -1289,15 +1448,16 @@ namespace Barotrauma
                         }
                     }
                 }
-                previousAttackResults[attacker] = new AttackResult(previousAttackResults[attacker].Afflictions, previousAttackResults[attacker].HitLimb);
+                totalResult = new AttackResult(accumulatedAfflictions, previousResult.HitLimb,
+                    flatKarmaPenalty: previousResult.FlatKarmaPenalty + attackResult.FlatKarmaPenalty);
             }
-            else
-            {
-                previousAttackResults.Add(attacker, attackResult);
-            }
+            accumulator[attacker] = totalResult;
+            return totalResult;
         }
 
-        private void RespondToAttack(Character attacker, AttackResult attackResult)
+        /// <param name="attackResult">The attack to react to, can be an accumulated total of multiple attacks</param>
+        /// <param name="latestAttackResult">The latest individual attack included in attackResult, if it's an accumulated total. Used for things that shouldn't count the same damage multiple times, like reputation loss.</param>
+        private void RespondToAttack(Character attacker, AttackResult attackResult, AttackResult? latestAttackResult = null)
         {
             float healAmount = 0.0f;
             if (attacker != null)
@@ -1307,14 +1467,7 @@ namespace Barotrauma
             // excluding poisons etc
             float realDamage = attackResult.Damage - healAmount;
             // including poisons etc
-            float totalDamage = realDamage;
-            if (attackResult.Afflictions != null)
-            {
-                foreach (Affliction affliction in attackResult.Afflictions)
-                {
-                    totalDamage -= affliction.Prefab.KarmaChangeOnApplied * affliction.Strength;
-                }
-            }
+            float totalDamage = attackResult.TotalDamageWithKarmaPenalty - healAmount;
             if (totalDamage <= 0.01f) { return; }
             if (Character.IsBot)
             {
@@ -1370,29 +1523,45 @@ namespace Barotrauma
                     // Should not cancel any existing ai objectives (so that if the character attacked you and then helped, we still would want to retaliate).
                     return;
                 }
+
+                // cumulativeDamage counts direct vitality damage (current + historical)
                 float cumulativeDamage = realDamage + Character.GetDamageDoneByAttacker(attacker);
+
+                float damageToReactTo = cumulativeDamage;
+                if (!sameTeam)
+                {
+                    float afflictionVirtualDamage = totalDamage - realDamage;
+                    // Cap the affliction's "virtual" contribution halfway the "just arrest" range, leaving some space to operate before the response turns lethal
+                    float cappedVirtualDamage = Math.Min(afflictionVirtualDamage, majorDamageThreshold / 2);
+                    // Real (current) damage and the virtual damage are summed, so a poison doing actual damage is always worse than ones that don't
+                    damageToReactTo = Math.Max(cumulativeDamage, realDamage + cappedVirtualDamage);
+                }
+
                 bool isAccidental = attacker.IsBot && !eitherIsMentallyUnstable && attacker.CombatAction == null;
                 if (isAccidental)
                 {
-                    if (attacker.TeamID != Character.TeamID || (!Character.IsSecurity && cumulativeDamage > minorDamageThreshold))
+                    if (!Character.ForceOffensiveCombatBehavior)
                     {
-                        AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, attacker);
+                        if (attacker.TeamID != Character.TeamID || (!Character.IsSecurity && damageToReactTo > minorDamageThreshold))
+                        {
+                            AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, attacker);
+                        }
                     }
                 }
                 else
                 {
                     isAttackerInfected = attacker.CharacterHealth.GetAfflictionStrengthByType(AfflictionPrefab.AlienInfectionType) > 0;
                     // Inform other NPCs
-                    if (isAttackerInfected || cumulativeDamage > minorDamageThreshold || totalDamage > minorDamageThreshold)
+                    if (isAttackerInfected || damageToReactTo > minorDamageThreshold)
                     {
                         if (!attacker.IsPlayer || Character.TeamID != attacker.TeamID)
                         {
-                            InformOtherNPCs(cumulativeDamage);
+                            InformOtherNPCs(damageToReactTo);
                         }
                     }
                     if (Character.IsBot)
                     {
-                        var combatMode = DetermineCombatMode(Character, cumulativeDamage);
+                        var combatMode = DetermineCombatMode(Character, damageToReactTo);
                         if (attacker.IsPlayer && !Character.IsInstigator && !ObjectiveManager.IsCurrentObjective<AIObjectiveCombat>())
                         {
                             switch (combatMode)
@@ -1425,7 +1594,8 @@ namespace Barotrauma
                     }
                     if (!isAttackerFightingEnemy)
                     {
-                        (GameMain.GameSession?.GameMode as CampaignMode)?.OutpostNPCAttacked(Character, attacker, attackResult);
+                        // Only apply the reputation loss for the latest attack, otherwise accumulated damage would be counted again on every hit
+                        (GameMain.GameSession?.GameMode as CampaignMode)?.OutpostNPCAttacked(Character, attacker, latestAttackResult ?? attackResult);
                     }
                 }
             }
@@ -1442,10 +1612,11 @@ namespace Barotrauma
                 }
             }
 
-            void InformOtherNPCs(float cumulativeDamage = 0)
+            void InformOtherNPCs(float damageToReactTo = 0)
             {
                 foreach (Character otherCharacter in Character.CharacterList)
                 {
+                    if (otherCharacter == attacker) { continue; }
                     if (otherCharacter == Character || otherCharacter.IsUnconscious || otherCharacter.Removed) { continue; }
                     if (otherCharacter.Submarine != Character.Submarine) { continue; }
                     if (otherCharacter.Submarine != attacker.Submarine) { continue; }
@@ -1486,7 +1657,7 @@ namespace Barotrauma
                             continue;
                         }
                     }
-                    var combatMode = DetermineCombatMode(otherCharacter, cumulativeDamage, isWitnessing);
+                    var combatMode = DetermineCombatMode(otherCharacter, damageToReactTo, isWitnessing);
                     if (!isWitnessing)
                     {
                         if (combatMode is AIObjectiveCombat.CombatMode.Defensive or AIObjectiveCombat.CombatMode.Retreat)
@@ -1500,7 +1671,7 @@ namespace Barotrauma
                         //witnessed the attack as non-security, trigger security
                         foreach (Character security in Character.CharacterList.Where(c => c.TeamID == otherCharacter.TeamID))
                         {
-                            TriggerSecurity(security.AIController as HumanAIController, attacker, DetermineCombatMode(security, cumulativeDamage, isWitnessing));
+                            TriggerSecurity(security.AIController as HumanAIController, attacker, DetermineCombatMode(security, damageToReactTo, isWitnessing));
                         }
                     }
                     float delay = isWitnessing ? GetReactionTime() : Rand.Range(2.0f, 3.0f, Rand.RandSync.Unsynced);
@@ -1508,7 +1679,7 @@ namespace Barotrauma
                 }
             }
 
-            AIObjectiveCombat.CombatMode DetermineCombatMode(Character c, float cumulativeDamage = 0, bool isWitnessing = false)
+            AIObjectiveCombat.CombatMode DetermineCombatMode(Character c, float damageToReactTo = 0, bool isWitnessing = false)
             {
                 if (c.AIController is not HumanAIController humanAI) { return AIObjectiveCombat.CombatMode.None; }
                 if (!IsFriendly(attacker))
@@ -1525,7 +1696,7 @@ namespace Barotrauma
                             humanAI.ObjectiveManager.CurrentOrder is AIObjectiveOperateItem operateOrder && operateOrder.GetTarget() is Controller ? 
                                 AIObjectiveCombat.CombatMode.None : AIObjectiveCombat.CombatMode.Retreat;
                     }
-                    if (c.IsKiller)
+                    if (c.ForceOffensiveCombatBehavior)
                     {
                         return AIObjectiveCombat.CombatMode.Offensive;
                     }
@@ -1535,12 +1706,13 @@ namespace Barotrauma
                 {
                     if (isAttackerInfected)
                     {
-                        cumulativeDamage = 100;
+                        damageToReactTo = 100;
                     }
-                    if (attacker.IsPlayer && c.TeamID == attacker.TeamID)
+                    if (attacker.IsPlayer &&
+                        c.IsOnFriendlyTeam(attacker) && (c.TeamID == attacker.TeamID || Level.IsLoadedTeam1Outpost))
                     {
-                        // Bots in the player team never act aggressively when attacked by the player
-                        return Character == c && cumulativeDamage > minorDamageThreshold ? AIObjectiveCombat.CombatMode.Retreat : AIObjectiveCombat.CombatMode.None;
+                        // Bots in the player team (or outpost) never act aggressively when attacked by the player
+                        return Character == c && damageToReactTo > minorDamageThreshold ? AIObjectiveCombat.CombatMode.Retreat : AIObjectiveCombat.CombatMode.None;
                     }
                     if (c.Submarine == null || !c.Submarine.GetConnectedSubs().Contains(attacker.Submarine))
                     {
@@ -1553,7 +1725,7 @@ namespace Barotrauma
                         isAttackerFightingEnemy = true;
                         return AIObjectiveCombat.CombatMode.None;
                     }
-                    if (c.IsKiller)
+                    if (c.ForceOffensiveCombatBehavior)
                     {
                         return AIObjectiveCombat.CombatMode.Offensive;
                     }
@@ -1583,7 +1755,7 @@ namespace Barotrauma
                         if (humanAI.ObjectiveManager.GetLastActiveObjective<AIObjectiveCombat>() is AIObjectiveCombat currentCombatObjective && currentCombatObjective.Enemy == attacker)
                         {
                             // Already targeting the attacker -> treat as a more serious threat.
-                            cumulativeDamage *= 2;
+                            damageToReactTo *= 2;
                             currentCombatObjective.AllowHoldFire = false;
                             attacker.IsCriminal = true;
                             attacker.IsActingOffensively = true;
@@ -1591,9 +1763,9 @@ namespace Barotrauma
                         if (attacker.IsCriminal)
                         {
                             // Always react if the attacker has been misbehaving earlier.
-                            cumulativeDamage = Math.Max(cumulativeDamage, minorDamageThreshold);
+                            damageToReactTo = Math.Max(damageToReactTo, minorDamageThreshold);
                         }
-                        if (cumulativeDamage > majorDamageThreshold)
+                        if (damageToReactTo > majorDamageThreshold)
                         {
                             attacker.IsCriminal = true;
                             attacker.IsActingOffensively = true;
@@ -1606,7 +1778,7 @@ namespace Barotrauma
                                 return c == Character ? AIObjectiveCombat.CombatMode.Defensive : AIObjectiveCombat.CombatMode.Retreat;
                             }
                         }
-                        else if (cumulativeDamage > minorDamageThreshold)
+                        else if (damageToReactTo > minorDamageThreshold)
                         {
                             attacker.IsActingOffensively = true;
                             return c.IsSecurity ? AIObjectiveCombat.CombatMode.Arrest : AIObjectiveCombat.CombatMode.Retreat;
@@ -1646,10 +1818,25 @@ namespace Barotrauma
             if (mode == AIObjectiveCombat.CombatMode.None) { return; }
             if (Character.IsDead || Character.IsIncapacitated || Character.Removed) { return; }
             if (!Character.IsBot) { return; }
+            // All NPC reactions to the player team (attacks, damaged walls, theft etc) go through here
+            if (Ceasefire && mode != AIObjectiveCombat.CombatMode.Retreat && target is { IsOnPlayerTeam: true }) { return; }
             if (ObjectiveManager.Objectives.FirstOrDefault(o => o is AIObjectiveCombat) is AIObjectiveCombat combatObjective)
             {
                 // Don't replace offensive mode with something else
                 if (combatObjective.Mode == AIObjectiveCombat.CombatMode.Offensive && mode != AIObjectiveCombat.CombatMode.Offensive) { return; }
+
+                // Don't replace combat target if the existing target is close to the new target, this prevents the bot from rapidly
+                // switching between multiple attacking targets that are close together, resulting in the bot not attacking anyone
+                // (e.g. bunch of scurrywags in the same spot bitting the bot)
+                if (combatObjective.Enemy != null &&
+                    !combatObjective.Enemy.IsDead && 
+                    !combatObjective.Enemy.IsIncapacitated && 
+                    !combatObjective.Enemy.Removed &&
+                    Vector2.DistanceSquared(combatObjective.Enemy.WorldPosition, target.WorldPosition) < SimilarCombatTargetDistance * SimilarCombatTargetDistance)
+                {
+                    return;
+                }
+
                 if (combatObjective.Mode != mode || combatObjective.Enemy != target || (combatObjective.Enemy == null && target == null))
                 {
                     // Replace the old objective with the new.
@@ -1689,12 +1876,12 @@ namespace Barotrauma
             }
         }
 
-        public void SetOrder(Order order, bool speak = true)
+        public AIObjective SetOrder(Order order, bool speak = true)
         {
-            objectiveManager.SetOrder(order, speak);
 #if CLIENT
             HintManager.OnSetOrder(Character, order);
 #endif
+            return objectiveManager.SetOrder(order, speak);
         }
 
         public AIObjective SetForcedOrder(Order order)
@@ -1814,11 +2001,21 @@ namespace Barotrauma
         /// <summary>
         /// Check whether the character has a diving suit in usable condition, suitable pressure protection for the depth, plus some oxygen.
         /// </summary>
-        public static bool HasDivingSuit(Character character, float conditionPercentage = 0, bool requireOxygenTank = true, bool requireSuitablePressureProtection = true) 
-            => HasItem(character, Tags.HeavyDivingGear, out _, requireOxygenTank ? Tags.OxygenSource : Identifier.Empty, conditionPercentage, requireEquipped: true,
-                predicate: (Item item) => 
+        public static bool HasDivingSuit(Character character, float conditionPercentage = 0, bool requireOxygenTank = true, bool requireSuitablePressureProtection = true)
+            => HasDivingSuit(character, out _, conditionPercentage, requireOxygenTank, requireSuitablePressureProtection);
+
+        /// <summary>
+        /// Check whether the character has a diving suit in usable condition, suitable pressure protection for the depth, plus some oxygen.
+        /// </summary>
+        public static bool HasDivingSuit(Character character, out Item suit, float conditionPercentage = 0, bool requireOxygenTank = true, bool requireSuitablePressureProtection = true)
+        {
+            bool hasSuit = HasItem(character, Tags.HeavyDivingGear, out IEnumerable<Item> suits, requireOxygenTank ? Tags.OxygenSource : Identifier.Empty, conditionPercentage, requireEquipped: true,
+                predicate: (Item item) =>
                     character.HasEquippedItem(item, InvSlotType.OuterClothes | InvSlotType.InnerClothes) &&
                     (!requireSuitablePressureProtection || AIObjectiveFindDivingGear.IsSuitablePressureProtection(item, Tags.HeavyDivingGear, character)));
+            suit = hasSuit ? suits.FirstOrDefault() : null;
+            return hasSuit;
+        }
 
         /// <summary>
         /// Check whether the character has a diving mask in usable condition plus some oxygen.
@@ -1865,82 +2062,179 @@ namespace Barotrauma
             return false;
         }
 
-        public static void StructureDamaged(Structure structure, float damageAmount, Character character)
+        private static IEnumerable<Character> GetCharactersToReactToOffenses(Character offender, Submarine sub, float maxDist, bool checkVisibility)
         {
-            const float MaxDamagePerSecond = 5.0f;
-            const float MaxDamagePerFrame = MaxDamagePerSecond * (float)Timing.Step;
-
-            const float WarningThreshold = 5.0f;
-            const float ArrestThreshold = 20.0f;
-            const float KillThreshold = 50.0f;
-
-            if (character == null || damageAmount <= 0.0f) { return; }
-            if (structure?.Submarine == null || !structure.Submarine.Info.IsOutpost || character.TeamID == structure.Submarine.TeamID) { return; }
-            //structure not indestructible = something that's "meant" to be destroyed, like an ice wall in mines
-            if (!structure.Prefab.IndestructibleInOutposts) { return; }
-
-            bool someoneSpoke = false;
-            float maxAccumulatedDamage = 0.0f;
+            if (sub == null)
+            {
+                yield break;
+            }
             foreach (Character otherCharacter in Character.CharacterList)
             {
-                if (otherCharacter == character || otherCharacter.TeamID == character.TeamID || otherCharacter.IsDead ||
+                bool isOwnSub = otherCharacter.TeamID == sub.TeamID;
+                //friendly NPCs in an outpost belonging to the player team consider it their own
+                if (sub is { Info.IsOutpost: true } &&
+                    sub.TeamID == CharacterTeamType.Team1 &&
+                    otherCharacter.TeamID == CharacterTeamType.FriendlyNPC)
+                {
+                    isOwnSub = true;
+                }
+                if (!isOwnSub) { continue; }
+
+                if (Vector2.DistanceSquared(otherCharacter.WorldPosition, offender.WorldPosition) > maxDist * maxDist) { continue; }
+                if (checkVisibility && !otherCharacter.CanSeeTarget(offender, seeThroughWindows: true)) { continue; }
+
+                if (otherCharacter == offender || otherCharacter.TeamID == offender.TeamID || otherCharacter.IsDead ||
                     otherCharacter.Info?.Job == null ||
-                    otherCharacter.AIController is not HumanAIController otherHumanAI ||
-                    Vector2.DistanceSquared(otherCharacter.WorldPosition, character.WorldPosition) > 1000.0f * 1000.0f)
+                    otherCharacter.AIController is not HumanAIController otherHumanAI)
                 {
                     continue;
                 }
-                if (!otherCharacter.CanSeeTarget(character, seeThroughWindows: true)) { continue; }
+                yield return otherCharacter;
+            }
+        }
 
-                otherHumanAI.structureDamageAccumulator.TryAdd(character, 0.0f);
-                float prevAccumulatedDamage = otherHumanAI.structureDamageAccumulator[character];
-                otherHumanAI.structureDamageAccumulator[character] += MathHelper.Clamp(damageAmount, -MaxDamagePerFrame, MaxDamagePerFrame);
-                float accumulatedDamage = Math.Max(otherHumanAI.structureDamageAccumulator[character], maxAccumulatedDamage);
-                maxAccumulatedDamage = Math.Max(accumulatedDamage, maxAccumulatedDamage);
+        public static void PlantUprooted(Item planter, Character offender)
+        {
+            if (offender == null) { return; }
+            if (planter?.Submarine == null || offender.TeamID == planter.Submarine.TeamID || !offender.IsPlayer) { return; }
 
-                if (GameMain.GameSession?.Campaign?.Map?.CurrentLocation?.Reputation != null && character.IsPlayer)
+            if (GameMain.GameSession?.Campaign is { } campaign && offender.IsPlayer)
+            {
+                Reputation reputation = null;
+                if (planter.Submarine?.Faction is { IsEmpty: false } submarineFaction)
                 {
-                    var reputationLoss = damageAmount * Reputation.ReputationLossPerWallDamage;
-                    GameMain.GameSession.Campaign.Map.CurrentLocation.Reputation.AddReputation(-reputationLoss, Reputation.MaxReputationLossFromWallDamage);
+                    reputation = campaign.GetFaction(submarineFaction)?.Reputation;
+                }
+                reputation ??= campaign.CurrentLocation?.Reputation;
+                if (reputation != null)
+                {
+                    reputation.AddReputation(-Reputation.MinReputationLossPerUprootedPlant);
+                }
+            }
+
+            bool someoneSpoke = false;
+            foreach (Character otherCharacter in GetCharactersToReactToOffenses(offender, planter.Submarine, maxDist: 1000.0f, checkVisibility: true))
+            {
+                if (otherCharacter.AIController is not HumanAIController otherHumanAI) { continue; }
+
+                if (!someoneSpoke)
+                {
+                    if (otherHumanAI.ObjectiveManager.CurrentObjective is AIObjectiveIdle idleObjective)
+                    {
+                        idleObjective.FaceTargetAndWait(offender, 5.0f);
+                    }                    
+                    otherCharacter.Speak(TextManager.Get("dialogplantuprooted").Value, null, Rand.Range(0.5f, 1.0f), "plantuprooted".ToIdentifier(), 10.0f);
+                    someoneSpoke = true;
                 }
 
-                if (!character.IsCriminal)
+                if (!TriggerSecurity(otherHumanAI, offender, AIObjectiveCombat.CombatMode.Arrest))
+                {
+                    // Else call the others
+                    foreach (Character security in Character.CharacterList
+                            .Where(c => c.TeamID == otherCharacter.TeamID)
+                            .OrderBy(c => Vector2.DistanceSquared(offender.WorldPosition, c.WorldPosition)))
+                    {
+                        if (TriggerSecurity(security.AIController as HumanAIController, offender, AIObjectiveCombat.CombatMode.Arrest))
+                        {
+                            // Only alert one guard at a time
+                            return;
+                        }
+                    }
+                }                
+            }
+        }
+
+        public static void StructureDamaged(MapEntity structure, float damageAmount, Character attacker)
+        {
+            const float WarningThreshold = 5.0f;
+            const float ArrestThreshold = 20.0f;
+            const float KillThreshold = 50.0f;
+            const float MarkTeamAsHostileThreshold = 150.0f;
+
+            if (attacker == null || damageAmount <= 0.0f) { return; }
+            if (structure?.Submarine == null || attacker.TeamID == structure.Submarine.TeamID) { return; }
+            //structure not indestructible = something that's "meant" to be destroyed, like an ice wall in mines
+            if (structure is Structure { Prefab.IndestructibleInOutposts: false }) { return; }
+
+            //if the damage is coming from some other sub (player shooting at an outpost with their sub's turrets?)
+            //ignore the distance and visibility checks and assume the NPCs know where the damage is coming from
+            bool damageFromOtherSub = attacker.Submarine != null && attacker.Submarine != structure.Submarine;
+
+            bool reputationLossApplied = false;
+            bool someoneSpoke = false;
+            float maxAccumulatedDamage = 0.0f;
+            foreach (Character otherCharacter in GetCharactersToReactToOffenses(attacker, structure.Submarine,
+                maxDist: damageFromOtherSub ? float.MaxValue : 1000.0f, checkVisibility: !damageFromOtherSub))
+            {
+                if (otherCharacter.AIController is not HumanAIController otherHumanAI) { continue; }
+
+                otherHumanAI.ShipCommandManager?.StructureDamaged(structure, damageAmount, attacker);
+                otherHumanAI.AddStructureDamageToAccumulator(damageAmount, attacker, out float prevAccumulatedDamage, out float accumulatedDamage);
+                accumulatedDamage = maxAccumulatedDamage = Math.Max(accumulatedDamage, maxAccumulatedDamage);
+
+                if (GameMain.GameSession?.Campaign is { } campaign && attacker.IsPlayer && !reputationLossApplied)
+                {
+                    Reputation reputation = null;
+                    if (structure.Submarine?.Faction is { IsEmpty: false } submarineFaction)
+                    {
+                        reputation = campaign.GetFaction(submarineFaction)?.Reputation;
+                    }
+                    reputation ??= campaign.CurrentLocation?.Reputation;
+                    if (reputation != null)
+                    {
+                        float reputationLoss = damageAmount * Reputation.ReputationLossPerWallDamage;
+                        reputation.AddReputation(-reputationLoss, Reputation.MaxReputationLossFromWallDamage);
+                    }
+                    //only apply rep loss per one NPC that witnesses the attack
+                    reputationLossApplied = true;
+                }
+
+                if (accumulatedDamage > MarkTeamAsHostileThreshold)
+                {
+                    otherHumanAI.TryMarkTeamAsHostile(attacker.TeamID, attacker: attacker);
+                }
+
+                if (damageFromOtherSub) { continue; }
+                
+                if (!attacker.IsCriminal)
                 {
                     if (accumulatedDamage <= WarningThreshold) { return; }
-
                     if (accumulatedDamage > WarningThreshold && prevAccumulatedDamage <= WarningThreshold &&
-                        !someoneSpoke && !character.IsIncapacitated && character.Stun <= 0.0f)
+                        !someoneSpoke && !attacker.IsIncapacitated && attacker.Stun <= 0.0f)
                     {
                         //if the damage is still fairly low, wait and see if the character keeps damaging the walls to the point where we need to intervene
                         if (accumulatedDamage < ArrestThreshold)
                         {
                             if (otherHumanAI.ObjectiveManager.CurrentObjective is AIObjectiveIdle idleObjective)
                             {
-                                idleObjective.FaceTargetAndWait(character, 5.0f);
+                                idleObjective.FaceTargetAndWait(attacker, 5.0f);
                             }
                         }
-                        otherCharacter.Speak(TextManager.Get("dialogdamagewallswarning").Value, null, Rand.Range(0.5f, 1.0f), "damageoutpostwalls".ToIdentifier(), 10.0f);
+                        //only say the line about damaging walls if the target is a wall
+                        if (structure is Structure)
+                        {
+                            otherCharacter.Speak(TextManager.Get("dialogdamagewallswarning").Value, null, Rand.Range(0.5f, 1.0f), "damageoutpostwalls".ToIdentifier(), 10.0f);
+                        }
                         someoneSpoke = true;
                     }
                 }
-                
                 // React if we are security
-                if (character.IsCriminal ||
+                if (attacker.IsCriminal ||
                     (accumulatedDamage > ArrestThreshold && prevAccumulatedDamage <= ArrestThreshold) ||
                     (accumulatedDamage > KillThreshold && prevAccumulatedDamage <= KillThreshold))
                 {
                     var combatMode = accumulatedDamage > KillThreshold ? AIObjectiveCombat.CombatMode.Offensive : AIObjectiveCombat.CombatMode.Arrest;
                     if (combatMode == AIObjectiveCombat.CombatMode.Offensive)
                     {
-                        character.IsCriminal = true;
-                        character.IsActingOffensively = true;
+                        attacker.IsCriminal = true;
                     }
-                    if (!TriggerSecurity(otherHumanAI, character, combatMode))
+
+                    if (!TriggerSecurity(otherHumanAI, attacker, combatMode))
                     {
                         // Else call the others
-                        foreach (Character security in Character.CharacterList.Where(c => c.TeamID == otherCharacter.TeamID).OrderBy(c => Vector2.DistanceSquared(character.WorldPosition, c.WorldPosition)))
+                        foreach (Character security in Character.CharacterList.Where(c => c.TeamID == otherCharacter.TeamID).OrderBy(c => Vector2.DistanceSquared(attacker.WorldPosition, c.WorldPosition)))
                         {
-                            if (!TriggerSecurity(security.AIController as HumanAIController, character, combatMode))
+                            if (TriggerSecurity(security.AIController as HumanAIController, attacker, combatMode))
                             {
                                 // Only alert one guard at a time
                                 return;
@@ -1949,8 +2243,8 @@ namespace Barotrauma
                     }
                 }
             }
-
         }
+
         private static bool TriggerSecurity(HumanAIController humanAI, Character targetCharacter, AIObjectiveCombat.CombatMode combatMode)
         {
             if (humanAI == null) { return false; }
@@ -1971,6 +2265,29 @@ namespace Barotrauma
             return true;
         }
 
+        private void AddStructureDamageToAccumulator(float damageAmount, Character attacker, out float prevAccumulatedDamage, out float newAccumulatedDamage)
+        {
+            if (Timing.TotalTime > lastStructureDamageAccumulatorReset + StructureDamageAccumulatorResetInterval)
+            {
+                structureDamageAccumulatedPerSecond.Clear();
+                lastStructureDamageAccumulatorReset = Timing.TotalTime;
+            }
+            structureDamageAccumulator.TryAdd(attacker, 0.0f);
+            structureDamageAccumulatedPerSecond.TryAdd(attacker, 0.0f);
+
+            prevAccumulatedDamage = structureDamageAccumulator[attacker];
+            structureDamageAccumulatedPerSecond.TryGetValue(attacker, out float accumulatedPerSecond);
+            //clamp below MaxDamagePerSecond if the total accumulated damage within the past second goes above it
+            newAccumulatedDamage = prevAccumulatedDamage + damageAmount;
+            if (Math.Abs(damageAmount + accumulatedPerSecond) > MaxAccumulatedStructureDamagePerSecond)
+            {
+                float excess = Math.Abs(damageAmount + accumulatedPerSecond) - MaxAccumulatedStructureDamagePerSecond;
+                newAccumulatedDamage -= excess * Math.Sign(damageAmount + accumulatedPerSecond);
+            }
+            structureDamageAccumulator[attacker] = newAccumulatedDamage;
+            structureDamageAccumulatedPerSecond[attacker] += newAccumulatedDamage - prevAccumulatedDamage;
+        }
+
         public static void ItemTaken(Item item, Character thief)
         {
             if (item == null || thief == null || item.GetComponent<LevelResource>() != null) { return; }
@@ -1980,6 +2297,7 @@ namespace Barotrauma
                 return;
             }
             bool someoneSpoke = false;
+            bool someoneNoticed = false;
             if (item.Illegitimate && item.GetRootInventoryOwner() is Character itemOwner && itemOwner != thief && itemOwner.TeamID == thief.TeamID)
             {
                 // The player attempts to use a bot as a mule or get them arrested -> just arrest the player instead.
@@ -1988,11 +2306,26 @@ namespace Barotrauma
             bool foundIllegitimateItems = item.Illegitimate || item.OwnInventory?.FindItem(it => it.Illegitimate, recursive: true) != null;
             if (foundIllegitimateItems && thief.TeamID != CharacterTeamType.FriendlyNPC)
             {
+                const float MaxDistanceFromCameraOrNPC = 1000.0f;
+                const float MaxDistanceFromCameraOrNPCSqr = MaxDistanceFromCameraOrNPC * MaxDistanceFromCameraOrNPC;
+
+                foreach (var camera in Item.ItemList)
+                {
+                    if (!camera.HasTag(Tags.Camera) || camera.Submarine == null || camera.Submarine != thief.Submarine) { continue; }
+                    if (Vector2.DistanceSquared(camera.WorldPosition, thief.WorldPosition) > MaxDistanceFromCameraOrNPCSqr) { continue; }
+                    if (!ISpatialEntity.IsCharacterVisible(thief, seeingEntity: camera, seeThroughWindows: true)) { continue; }
+                    someoneNoticed = true;
+                    if (TriggerAnySecurityOfficer(camera.Submarine.TeamID))
+                    {
+                        break;
+                    }
+                }
+
                 foreach (Character otherCharacter in Character.CharacterList)
                 {
                     if (otherCharacter == thief || otherCharacter.TeamID == thief.TeamID || otherCharacter.IsIncapacitated || otherCharacter.Stun > 0.0f ||
                         otherCharacter.Info?.Job == null || otherCharacter.AIController is not HumanAIController otherHumanAI || otherCharacter.IsEscorted ||
-                        Vector2.DistanceSquared(otherCharacter.WorldPosition, thief.WorldPosition) > 1000.0f * 1000.0f)
+                        Vector2.DistanceSquared(otherCharacter.WorldPosition, thief.WorldPosition) > MaxDistanceFromCameraOrNPCSqr)
                     {
                         continue;
                     }
@@ -2004,21 +2337,14 @@ namespace Barotrauma
                     {
                         var connectedHulls = thief.Submarine.GetHulls(alsoFromConnectedSubs: true);
                         if (item.HasTag(Tags.FireExtinguisher) && connectedHulls.Any(h => h.FireSources.Any())) { continue; }
-                        if (item.HasTag(Tags.DivingGear) && connectedHulls.Any(h => h.ConnectedGaps.Any(g => AIObjectiveFixLeaks.IsValidTarget(g, thief)))) { continue; }
+                        if (item.HasTag(Tags.DivingGear) && connectedHulls.Any(h => h.ConnectedGaps.Any(g => AIObjectiveFixLeaks.IsValidTarget(g, thief, allowInAnySub: true, allowInFriendlySubs: true)))) { continue; }
                     }
                     if (item.HasTag(Tags.Handcuffs) && thief.HasEquippedItem(item))
                     {
                         // Handcuffed -> don't react.
                         continue;
                     }
-                    if (!item.StolenDuringRound)
-                    {
-                        item.StolenDuringRound = true;
-                        ApplyStealingReputationLoss(item);
-#if CLIENT
-                        HintManager.OnStoleItem(thief, item);
-#endif
-                    }
+                    someoneNoticed = true;
                     if (!someoneSpoke)
                     {
                         otherCharacter.Speak(TextManager.Get("dialogstealwarning").Value, null, Rand.Range(0.5f, 1.0f), "thief".ToIdentifier(), 10.0f);
@@ -2028,20 +2354,48 @@ namespace Barotrauma
                     if (!TriggerSecurity(otherHumanAI))
                     {
                         // Else call the others
-                        foreach (Character security in Character.CharacterList.Where(c => c.TeamID == otherCharacter.TeamID).OrderBy(c => Vector2.DistanceSquared(thief.WorldPosition, c.WorldPosition)))
-                        {
-                            if (TriggerSecurity(security.AIController as HumanAIController))
-                            {
-                                // Only alert one guard at a time
-                                break;
-                            }
-                        }
+                        TriggerAnySecurityOfficer(otherCharacter.TeamID);
                     }
                 }
             }
             else if (item.OwnInventory?.FindItem(it => it.Illegitimate, true) is { } foundItem)
             {
                 ItemTaken(foundItem, thief);
+            }
+
+            if (!item.StolenDuringRound)
+            {
+                item.StolenDuringRound = true;
+                foreach (var containedItem in item.ContainedItemsRecursive)
+                {
+                    containedItem.StolenDuringRound = true;
+                }
+                //immediate reputation penalty if someone sees you stealing
+                //there's also an additional penalty at the end of the round for any stolen item,
+                //regardless if caught or not (outpost dwellers later notice you must've taken something?)
+                if (someoneNoticed)
+                {
+                    ApplyStealingReputationLoss(item);
+                }
+#if CLIENT
+                HintManager.OnStoleItem(thief, item);
+#endif
+            }
+            bool TriggerAnySecurityOfficer(CharacterTeamType team)
+            {
+                // Else call the others
+                foreach (Character security in Character.CharacterList
+                    .Where(c => c.TeamID == team)
+                    .OrderBy(c => Vector2.DistanceSquared(thief.WorldPosition, c.WorldPosition)))
+                {
+                    if (TriggerSecurity(security.AIController as HumanAIController))
+                    {
+                        // Only alert one guard at a time
+                        someoneNoticed = true;
+                        return true;
+                    }
+                }
+                return false;
             }
 
             bool TriggerSecurity(HumanAIController humanAI)
@@ -2072,16 +2426,22 @@ namespace Barotrauma
             }
         }
 
-        public static void ApplyStealingReputationLoss(Item item)
+        /// <summary>
+        /// Applies the reputation loss for stealing the item (calculated based on the item's value).
+        /// </summary>
+        /// <returns>The amount of reputation lost (positive value).</returns>
+        public static float ApplyStealingReputationLoss(Item item)
         {
             if (Level.Loaded?.Type == LevelData.LevelType.Outpost &&
                 GameMain.GameSession?.Campaign?.Map?.CurrentLocation != null)
             {
-                var reputationLoss = MathHelper.Clamp(
+                float reputationLoss = MathHelper.Clamp(
                     (item.Prefab.GetMinPrice() ?? 0) * Reputation.ReputationLossPerStolenItemPrice,
                     Reputation.MinReputationLossPerStolenItem, Reputation.MaxReputationLossPerStolenItem);
                 GameMain.GameSession.Campaign.Map.CurrentLocation.Reputation?.AddReputation(-reputationLoss);
+                return reputationLoss;
             }
+            return 0.0f;
         }
 
         // 0.225 - 0.375
@@ -2123,7 +2483,7 @@ namespace Barotrauma
                 case "reportbreach":
                     foreach (var gap in hull.ConnectedGaps)
                     {
-                        if (AIObjectiveFixLeaks.IsValidTarget(gap, character))
+                        if (AIObjectiveFixLeaks.IsValidTarget(gap, character, allowInAnySub: false, allowInFriendlySubs: true))
                         {
                             AddTargets<AIObjectiveFixLeaks, Gap>(character, gap);
                         }
@@ -2133,7 +2493,7 @@ namespace Barotrauma
                     foreach (var item in Item.RepairableItems)
                     {
                         if (item.CurrentHull != hull) { continue; }
-                        if (AIObjectiveRepairItems.IsValidTarget(item, character))
+                        if (AIObjectiveRepairItems.IsValidTarget(item, character, allowInAnySub: false, allowInFriendlySubs: true))
                         {
                             if (item.Repairables.All(r => r.IsBelowRepairThreshold)) { continue; }
                             AddTargets<AIObjectiveRepairItems, Item>(character, item);
@@ -2390,6 +2750,15 @@ namespace Barotrauma
 
         public static bool IsFriendly(Character me, Character other, bool onlySameTeam = false, bool ignoreHuskDisguising = false)
         {
+            if (me == other) { return true; }
+
+            bool wantsToAttackMe = other.IsTryingToAttack(me);
+            if (other.ForceDisableTargetingTimer > 0f && !wantsToAttackMe)
+            {
+                // Don't be hostile to creatures that have targeting disabled, unless they are currently targeting me
+                return true;
+            }
+
             if (onlySameTeam)
             {
                 ignoreHuskDisguising = true;
@@ -2426,47 +2795,148 @@ namespace Barotrauma
             {
                 if (!me.IsSameSpeciesOrGroup(other)) { return false; }
             }
-            if (GameMain.GameSession?.GameMode is CampaignMode && 
-                //ignore hostile faction if offering services that don't get disabled by faction hostility
-                (me.CampaignInteractionType == CampaignMode.InteractionType.None || CampaignMode.HostileFactionDisablesInteraction(me.CampaignInteractionType)))
-            {
-                if ((me.TeamID == CharacterTeamType.FriendlyNPC && other.TeamID == CharacterTeamType.Team1) ||
-                    (me.TeamID == CharacterTeamType.Team1 && other.TeamID == CharacterTeamType.FriendlyNPC))
-                {
-                    Character npc = me.TeamID == CharacterTeamType.FriendlyNPC ? me : other;
+            
+            if (sameTeam) { return true; }
 
-                    if (npc.AIController is HumanAIController npcAI)
+            if (me.AIController is HumanAIController humanAi)
+            {
+                if (humanAi.IsInHostileTeam(other)) { return false; }
+            }
+            if (other.AIController is HumanAIController otherHumanAi)
+            {
+                if (otherHumanAi.IsInHostileTeam(me)) { return false; }
+            }
+
+            if (GameMain.GameSession?.GameMode is CampaignMode && (me.IsOnPlayerTeam || other.IsOnPlayerTeam))
+            {
+                Character npc = me.IsOnPlayerTeam ? other : me;
+                if (npc.AIController is HumanAIController npcAI)
+                {
+                    if (Level.IsLoadedFriendlyOutpost)
                     {
-                        return !npcAI.IsInHostileFaction();
+                        if (npc.CampaignInteractionType != CampaignMode.InteractionType.None && !CampaignMode.HostileFactionDisablesInteraction(npc.CampaignInteractionType))
+                        {
+                            //ignore hostile faction if offering services that don't get disabled by faction hostility
+                            return true;
+                        }
                     }
+                    return !npcAI.IsInHostileFaction();
                 }
             }
+
             return true;
         }
 
+        private void OnCharacterDeath(Character character, CauseOfDeath causeOfDeath)
+        {
+            //character died as a result of the attack -> consider attacking team hostile
+            if (causeOfDeath.Killer is Character killer && killer.TeamID != character.TeamID)
+            {
+                TryMarkTeamAsHostile(killer.TeamID, attacker: killer);
+            }
+        }
+
+        public override bool TryGetAttackTarget<T>(out T character)
+        {
+            if (ObjectiveManager.CurrentObjective is AIObjectiveCombat combatObjective && combatObjective.Enemy is T enemy)
+            {
+                character = enemy;
+                return true;
+            }
+
+            character = null;
+            return false;
+        }
+
+        public bool IsInHostileTeam(Character target) => target != null && IsTeamHostile(target.TeamID);
+        public bool IsTeamHostile(CharacterTeamType team) => !Ceasefire && hostileTeams.Contains(team);
+
+        /// <summary>
+        /// Makes the NPC stop considering the team hostile, undoing <see cref="TryMarkTeamAsHostile"/>.
+        /// </summary>
+        public void ClearHostileTeam(CharacterTeamType team) => hostileTeams.Remove(team);
+
+        /// <summary>
+        /// Attempt to make the NPC consider another team hostile. Also triggers an event that notifies about this in the campaign mode. 
+        /// Requires certain conditions to be met: e.g. characters in the player team or dwellers in 
+        /// a player-owned outpost cannot consider the player team hostile.
+        /// </summary>
+        /// <param name="triggerPets">Should pets owned by this character become hostile to characters in the specified as well?</param>
+        /// <param name="attacker">The character whose actions caused the team to be marked as hostile, if any. Used to determine whether to trigger the hostility announcement (e.g. not when a monster is the attacker).</param>
+        public void TryMarkTeamAsHostile(CharacterTeamType team, bool triggerPets = true, Character attacker = null)
+        {
+            //player teams should never start considering another team hostile
+            //we don't want the player team to start slaughtering an outpost because some outpost dweller damaged them
+            if (Character.IsOnPlayerTeam)
+            {
+                return;
+            }
+
+            //don't consider the player team hostile if the outpost belongs to them
+            //we don't want all the outpost dwellers to turn hostile if you let's say accidentally damage them or the outpost during an outpost combat mission
+            if (team == CharacterTeamType.Team1 &&
+                Character.TeamID == CharacterTeamType.FriendlyNPC && 
+                Level.IsLoadedTeam1Outpost)
+            {
+                return;
+            }
+
+            if (triggerPets)
+            {
+                foreach (var potentialPet in Character.CharacterList)
+                {
+                    if (potentialPet.IsPet && 
+                        potentialPet.AIController is EnemyAIController enemyAI && 
+                        enemyAI.PetBehavior?.Owner == Character &&
+                        enemyAI.AIParams.AttackWhenProvoked)
+                    {
+                        //arbitrary high damage value to make the pet react
+                        foreach (var enemy in Character.CharacterList.Where(c => c.TeamID == team))
+                        {
+                            potentialPet.AddAttacker(enemy, damage: 100.0f);
+                        }
+                    }
+                }
+            }
+
+            System.Diagnostics.Debug.Assert(team != Character.TeamID);
+            if (hostileTeams.Add(team) && GameMain.GameSession?.EventManager is { } eventManager)
+            {
+                //we can assume the attack is coming from some hostile crew if it's not being done by any character (must be a sub), or if the attacker is human or player
+                bool attackerCanBeHostileSub = attacker == null || attacker.IsHuman || attacker.IsOnPlayerTeam;
+                if (Level.IsLoadedFriendlyOutpost &&
+                    !Level.IsLoadedTeam1Outpost &&
+                    Character.TeamID == CharacterTeamType.FriendlyNPC &&
+                    attackerCanBeHostileSub)
+                {
+                    if (eventManager.FindTriggeredEvent(ev => ev.Prefab.Tags.Contains(Tags.CrewHostileAnnouncementEventTag)) == null)
+                    {
+                        eventManager.TryTriggerEvent(Identifier.Empty, Tags.CrewHostileAnnouncementEventTag, callingContentPackage: null);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Used for NPCs to check whether they are in a hostile faction towards the player.
+        /// </summary>
         public bool IsInHostileFaction()
         {
+            if (Ceasefire) { return false; }
             if (GameMain.GameSession?.GameMode is not CampaignMode campaign) { return false; }
             if (Character.IsEscorted) { return false; }
 
             Identifier npcFaction = Character.Faction;
             Identifier currentLocationFaction = campaign.Map?.CurrentLocation?.Faction?.Prefab.Identifier ?? Identifier.Empty;
 
-            if (npcFaction.IsEmpty)
+            if (npcFaction.IsEmpty && Level.IsLoadedOutpost && Character.TeamID == CharacterTeamType.FriendlyNPC)
             {
-                //if faction identifier is not specified, assume the NPC is a member of the faction that owns the outpost
+                //if faction identifier is not specified, assume that friendly NPCs are members of the faction that owns the outpost
                 npcFaction = currentLocationFaction;
             }
-            if (!currentLocationFaction.IsEmpty && npcFaction == currentLocationFaction)
-            {
-                if (campaign.CurrentLocation is { IsFactionHostile: true })
-                {
-                    return true;
-                }
-            }
-            return false;
+            return !npcFaction.IsEmpty && campaign.IsFactionHostile(npcFaction);
         }
-
+        
         public static bool IsActive(Character c) => c is { Enabled: true, IsUnconscious: false };
 
         public static bool IsTrueForAllBotsInTheCrew(Character character, Func<HumanAIController, bool> predicate)
@@ -2565,7 +3035,7 @@ namespace Barotrauma
             }
             else
             {
-                return character.CurrentHull.GetApproximateDistance(character.Position, target.Position, target.CurrentHull, range, distanceMultiplierPerClosedDoor: 2) <= range;
+                return character.CurrentHull.GetApproximateDistance(character.WorldPosition, target.WorldPosition, target.CurrentHull, range, distanceMultiplierPerClosedDoor: 2) <= range;
             }
         }
 

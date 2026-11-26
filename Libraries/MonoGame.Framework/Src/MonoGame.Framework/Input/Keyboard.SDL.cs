@@ -58,7 +58,18 @@ namespace Microsoft.Xna.Framework.Input
                 _ => -1
             };
             if (scancode < 0) { return qwertyKey; }
-            return KeyboardUtil.ToXna(Sdl.Keyboard.GetKeyFromScancode(scancode));
+
+            var key = KeyboardUtil.ToXna(Sdl.Keyboard.GetKeyFromScancode(scancode));
+
+            // On non-Latin layouts SDL_GetKeyFromScancode returns a layout-dependent
+            // keycode that may not map to XNA Keys. Fall back to physical scancode,
+            // otherwise resetting default bindings can produce Keys.None.
+            if (key == Keys.None)
+            {
+                key = KeyboardUtil.ToXnaFromScancode(scancode);
+            }
+
+            return key;
         }
     }
 }

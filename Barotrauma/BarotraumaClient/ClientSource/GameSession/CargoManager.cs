@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class CargoManager
+    public partial class CargoManager
     {
         private List<SoldEntity> SoldEntities { get; } = new List<SoldEntity>();
 
@@ -18,7 +18,11 @@ namespace Barotrauma
             InvSlotType.OuterClothes,
             InvSlotType.Headset,
             InvSlotType.Card,
-            InvSlotType.HealthInterface
+            InvSlotType.HealthInterface,
+            InvSlotType.RightHandProsthetic,
+            InvSlotType.LeftHandProsthetic,
+            InvSlotType.RightLegProsthetic,
+            InvSlotType.LeftLegProsthetic
         };
 
         public IEnumerable<Item> GetSellableItems(Character character)

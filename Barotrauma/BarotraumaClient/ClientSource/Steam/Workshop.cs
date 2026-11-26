@@ -143,7 +143,15 @@ namespace Barotrauma.Steam
                         using var dataStream = new System.IO.MemoryStream();
                         await dataStream.WriteAsync(response.RawBytes, cancellationToken);
                         dataStream.Seek(0, System.IO.SeekOrigin.Begin);
-                        return TextureLoader.FromStream(dataStream, compress: false);
+                        try
+                        {
+                            var texture = TextureLoader.FromStream(dataStream, compress: false, handleExceptions: false);
+                            return texture;
+                        }
+                        catch
+                        {
+                            return null;
+                        }
                     }
                     return null;
                 }

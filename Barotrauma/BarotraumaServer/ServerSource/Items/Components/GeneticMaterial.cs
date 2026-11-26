@@ -4,6 +4,11 @@ namespace Barotrauma.Items.Components
 {
     partial class GeneticMaterial : ItemComponent
     {
+        public override void OnLoadCharacterInventory(Character character)
+        {
+            item.CreateServerEvent(this);
+        }
+
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.WriteBoolean(tainted);

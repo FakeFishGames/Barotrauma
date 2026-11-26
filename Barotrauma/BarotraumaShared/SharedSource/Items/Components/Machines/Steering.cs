@@ -1,16 +1,16 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Xml.Linq;
 using Voronoi2;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Steering : Powered, IServerSerializable, IClientSerializable
+    public partial class Steering : Powered, IServerSerializable, IClientSerializable
     {
         public const float AutopilotMinDistToPathNode = 30.0f;
 
@@ -39,6 +39,10 @@ namespace Barotrauma.Items.Components
         private bool autoPilot;
 
         private Vector2? posToMaintain;
+        /// <summary>
+        /// Set when <see cref="RefreshPosToMaintain"/> couldn't determine the controlled sub yet (no signal from the transducers yet).
+        /// </summary>
+        private bool posToMaintainRefreshPending;
 
         private SteeringPath steeringPath;
 
@@ -63,10 +67,9 @@ namespace Barotrauma.Items.Components
         private Submarine controlledSub;
         public Submarine ControlledSub => controlledSub;
 
-        // AI interfacing
-        public Vector2 AITacticalTarget { get; set; }
         public float AIRamTimer { get; set; }
-        bool navigateTactically; // this will be removed after rewriting steering to use an enum
+        private Vector2? aiTacticalTarget;
+        bool navigateTactically;
 
         private bool showIceSpireWarning;
 
@@ -249,22 +252,33 @@ namespace Barotrauma.Items.Components
             sonar = item.GetComponent<Sonar>();
         }
 
-        public override bool Select(Character character)
-        {
-            if (!CanBeSelected) return false;
-
-            user = character;
-            return true;
-        }
-
         /// <summary>
         /// Sets the position the autopilot tries to maintain to the current position of the sub.
         /// </summary>
         public void RefreshPosToMaintain()
         {
+            //controlledSub is normally refreshed in Update, make sure it's up to date
+            //(e.g. if we're refreshing the position right after loading, before the item has been updated)
+            RefreshControlledSub();
             posToMaintain = controlledSub != null ?
                 controlledSub.WorldPosition :
                 item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
+            //if we're controlling the sub via transducers, but haven't received a signal from them yet (e.g. right after loading),
+            //we don't know which sub we're controlling yet: refresh the position again once we do (see Update)
+            posToMaintainRefreshPending = controlledSub == null && item.GetComponent<Sonar>() is { UseTransducers: true };
+        }
+
+        /// <summary>
+        /// Refreshes which submarine this steering component controls: either the sub the item is in, or the sub the connected sonar transducers are in.
+        /// </summary>
+        private void RefreshControlledSub()
+        {
+            controlledSub = item.Submarine;
+            var sonar = item.GetComponent<Sonar>();
+            if (sonar != null && sonar.UseTransducers)
+            {
+                controlledSub = sonar.ConnectedTransducers.Any() ? sonar.ConnectedTransducers.First().Item.Submarine : null;
+            }
         }
 
         public override void OnMapLoaded()
@@ -302,11 +316,17 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            controlledSub = item.Submarine;
-            var sonar = item.GetComponent<Sonar>();
-            if (sonar != null && sonar.UseTransducers)
+            RefreshControlledSub();
+            if (posToMaintainRefreshPending && controlledSub != null)
             {
-                controlledSub = sonar.ConnectedTransducers.Any() ? sonar.ConnectedTransducers.First().Item.Submarine : null;
+                posToMaintainRefreshPending = false;
+                if (MaintainPos && posToMaintain.HasValue)
+                {
+                    posToMaintain = controlledSub.WorldPosition;
+#if SERVER
+                    unsentChanges = true;
+#endif
+                }
             }
 
             if (!HasPower) { return; }
@@ -326,10 +346,10 @@ namespace Barotrauma.Items.Components
             }
 
             // override autopilot pathing while the AI rams, and go full speed ahead
-            if (AIRamTimer > 0f && controlledSub != null)
+            if (AIRamTimer > 0f && aiTacticalTarget.HasValue && controlledSub != null)
             {
                 AIRamTimer -= deltaTime;
-                TargetVelocity = GetSteeringVelocity(AITacticalTarget, 0f);
+                TargetVelocity = GetSteeringVelocity(aiTacticalTarget.Value, 0f);
             }
             else if (AutoPilot)
             {
@@ -428,6 +448,30 @@ namespace Barotrauma.Items.Components
                 SkillSettings.Current.SkillIncreasePerSecondWhenSteering * speedMultiplier * deltaTime);
         }
 
+        public bool CanSeePosition(Vector2 worldPosition)
+        {
+            Vector2 diff = ConvertUnits.ToSimUnits(worldPosition - controlledSub.WorldPosition);
+            //check if the next waypoint is visible from all corners of the sub
+            //(i.e. if we can navigate directly towards it or if there's obstacles in the way)
+            for (int x = -1; x < 2; x += 2)
+            {
+                for (int y = -1; y < 2; y += 2)
+                {
+                    Vector2 cornerOffset =
+                        new Vector2(controlledSub.Borders.Width * x, controlledSub.Borders.Height * y) / 2.0f;
+                    Vector2 cornerPos = ConvertUnits.ToSimUnits(cornerOffset * 1.1f + controlledSub.WorldPosition);
+                    if (Submarine.PickBody(cornerPos, cornerPos + diff, 
+                        ignoredBodies: item.Submarine?.PhysicsBody?.FarseerBody.ToEnumerable(),
+                        collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) == null)
+                    { 
+                        continue; 
+                    }
+                    return false;
+                }
+            }
+            return true;
+        }
+
         private void UpdateAutoPilot(float deltaTime)
         {
             if (controlledSub == null) { return; }
@@ -454,7 +498,8 @@ namespace Barotrauma.Items.Components
                 showIceSpireWarning = false;
                 return;
             }
-            steeringPath.CheckProgress(ConvertUnits.ToSimUnits(controlledSub.WorldPosition), 10.0f);
+
+            steeringPath.CheckProgress(controlledSub.WorldPosition, minDistance: 1000.0f);
 
             connectedSubUpdateTimer -= deltaTime;
             if (connectedSubUpdateTimer <= 0.0f)
@@ -467,36 +512,11 @@ namespace Barotrauma.Items.Components
             if (autopilotRayCastTimer <= 0.0f && steeringPath.NextNode != null)
             {
                 Vector2 diff = ConvertUnits.ToSimUnits(steeringPath.NextNode.Position - controlledSub.WorldPosition);
-
                 //if the node is close enough, check if it's visible
                 float lengthSqr = diff.LengthSquared();
                 if (lengthSqr > 0.001f && lengthSqr < AutopilotMinDistToPathNode * AutopilotMinDistToPathNode)
                 {
-                    diff = Vector2.Normalize(diff);
-
-                    //check if the next waypoint is visible from all corners of the sub
-                    //(i.e. if we can navigate directly towards it or if there's obstacles in the way)
-                    bool nextVisible = true;
-                    for (int x = -1; x < 2; x += 2)
-                    {
-                        for (int y = -1; y < 2; y += 2)
-                        {
-                            Vector2 cornerPos =
-                                new Vector2(controlledSub.Borders.Width * x, controlledSub.Borders.Height * y) / 2.0f;
-
-                            cornerPos = ConvertUnits.ToSimUnits(cornerPos * 1.1f + controlledSub.WorldPosition);
-
-                            float dist = Vector2.Distance(cornerPos, steeringPath.NextNode.SimPosition);
-
-                            if (Submarine.PickBody(cornerPos, cornerPos + diff * dist, null, Physics.CollisionLevel) == null) { continue; }
-
-                            nextVisible = false;
-                            x = 2;
-                            y = 2;
-                        }
-                    }
-
-                    if (nextVisible) steeringPath.SkipToNextNode();
+                    if (CanSeePosition(steeringPath.NextNode.Position)) { steeringPath.SkipToNextNode(); }
                 }
 
                 autopilotRayCastTimer = AutopilotRayCastInterval;
@@ -581,8 +601,6 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            avoidStrength = Vector2.Lerp(avoidStrength, newAvoidStrength, deltaTime * 10.0f);
-            TargetVelocity = Vector2.Lerp(TargetVelocity, newVelocity + avoidStrength * 100.0f, AutoPilotSteeringLerp);
 
             //steer away from other subs
             foreach (Submarine sub in Submarine.Loaded)
@@ -591,15 +609,21 @@ namespace Barotrauma.Items.Components
                 Point sizeSum = controlledSub.Borders.Size + sub.Borders.Size;
                 Vector2 minDist = sizeSum.ToVector2() / 2;
                 Vector2 diff = controlledSub.WorldPosition - sub.WorldPosition;
+                //guard against NaN: if the subs were somehow at almost the same position, consider the sub to be above and try avoiding downwards
+                if (diff.NearlyEquals(Vector2.Zero)) { diff = Vector2.One; }
                 float xDist = Math.Abs(diff.X);
                 float yDist = Math.Abs(diff.Y);
-                Vector2 maxAvoidDistance = minDist * 2;
+                //20% of margin
+                Vector2 maxAvoidDistance = minDist * 1.2f;
                 if (xDist > maxAvoidDistance.X || yDist > maxAvoidDistance.Y)
                 {
                     //far enough -> ignore
                     continue;
                 }
-                float dot = controlledSub.Velocity == Vector2.Zero ? 0.0f : Vector2.Dot(Vector2.Normalize(controlledSub.Velocity), -diff);
+                Vector2 normalizedDiff = Vector2.Normalize(diff);
+                float dot = controlledSub.Velocity == Vector2.Zero ? 
+                    0.0f : 
+                    Vector2.Dot(Vector2.Normalize(controlledSub.Velocity), -normalizedDiff);
                 if (dot < 0.0f)
                 {
                     //heading away -> ignore
@@ -607,8 +631,11 @@ namespace Barotrauma.Items.Components
                 }
                 float distanceFactor = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(maxAvoidDistance.X + maxAvoidDistance.Y, minDist.X + minDist.Y, xDist + yDist));
                 float velocityFactor = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, 3, controlledSub.Velocity.Length()));
-                TargetVelocity += 100 * Vector2.Normalize(diff) * distanceFactor * velocityFactor;
+                newAvoidStrength += 100 * normalizedDiff * distanceFactor * velocityFactor * dot;
             }
+
+            avoidStrength = Vector2.Lerp(avoidStrength, newAvoidStrength, deltaTime * 10.0f);
+            TargetVelocity = Vector2.Lerp(TargetVelocity, newVelocity + avoidStrength * 100.0f, AutoPilotSteeringLerp);
 
             //clamp velocity magnitude to 100.0f (Is this required? The X and Y components are clamped in the property setter)
             float velMagnitude = TargetVelocity.Length();
@@ -645,9 +672,9 @@ namespace Barotrauma.Items.Components
 
             Vector2 target;
 
-            if (navigateTactically)
+            if (navigateTactically && aiTacticalTarget.HasValue)
             {
-                target = ConvertUnits.ToSimUnits(AITacticalTarget);
+                target = ConvertUnits.ToSimUnits(aiTacticalTarget.Value);
             }
             else if (LevelEndSelected)
             {
@@ -688,8 +715,17 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void SetDestinationTactical()
+        /// <summary>
+        /// Makes the AI use "tactical navigation", navigating manually towards a specific position instead of using the level start or end as the target.
+        /// If the targetPosition is omitted, the steering will keep the previously set <see cref="aiTacticalTarget"/>.
+        /// </summary>
+        /// <param name="targetPosition"></param>
+        public void SetDestinationTactical(Vector2? targetPosition)
         {
+            if (targetPosition != null)
+            {
+                aiTacticalTarget = targetPosition.Value;
+            }
             AutoPilot = true;
             MaintainPos = false;
             posToMaintain = null;
@@ -702,7 +738,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void SetMaintainPosition()
+        public void SetMaintainPosition()
         {
             if (!MaintainPos)
             {
@@ -712,10 +748,12 @@ namespace Barotrauma.Items.Components
             if (!posToMaintain.HasValue)
             {
                 unsentChanges = true;
+                RefreshControlledSub();
                 posToMaintain = controlledSub != null ?
                     controlledSub.WorldPosition :
                     item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
             }
+            navigateTactically = false;
         }
 
         /// <summary>
@@ -751,7 +789,7 @@ namespace Barotrauma.Items.Components
             }
             user = character;
 
-            if (Item.ConditionPercentage <= 0 && AIObjectiveRepairItems.IsValidTarget(Item, character))
+            if (Item.ConditionPercentage <= 0 && AIObjectiveRepairItems.IsValidTarget(Item, character, allowInAnySub: true))
             {
                 if (Item.Repairables.Average(r => r.DegreeOfSuccess(character)) > 0.4f)
                 {
@@ -826,8 +864,7 @@ namespace Barotrauma.Items.Components
                         {
                             unsentChanges = true;
                         }
-
-                        SetDestinationTactical();
+                        SetDestinationTactical(targetPosition: null);
                     }
                 }
             }

@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    internal sealed class DisembarkPerkFile : GenericPrefabFile<DisembarkPerkPrefab>
+    public sealed class DisembarkPerkFile : GenericPrefabFile<DisembarkPerkPrefab>
     {
         public DisembarkPerkFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

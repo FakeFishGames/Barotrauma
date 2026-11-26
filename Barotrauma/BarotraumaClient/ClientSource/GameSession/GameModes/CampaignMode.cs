@@ -3,13 +3,14 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Barotrauma
 {
-    internal abstract partial class CampaignMode : GameMode
+    public abstract partial class CampaignMode : GameMode
     {
         public bool CrewDead
         {
@@ -94,15 +95,8 @@ namespace Barotrauma
         public override void ShowStartMessage()
         {
             foreach (Mission mission in Missions.OrderBy(m => m.Prefab.IsSideObjective).ToList())
-            {
-                if (!mission.Prefab.ShowStartMessage) { continue; }
-                new GUIMessageBox(
-                    RichString.Rich(mission.Prefab.IsSideObjective ? TextManager.AddPunctuation(':', TextManager.Get("sideobjective"), mission.Name) : mission.Name), 
-                    RichString.Rich(mission.Description), Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: mission.Prefab.Icon)
-                {
-                    IconColor = mission.Prefab.IconColor,
-                    UserData = "missionstartmessage"
-                };
+            {                
+                mission.ShowMissionStartMessageIfNeeded();
             }
         }
 
@@ -155,7 +149,7 @@ namespace Barotrauma
         }
 
 
-        public override void Draw(SpriteBatch spriteBatch)
+        protected override void DrawGameModeSpecific(SpriteBatch spriteBatch)
         {
             if (overlayColor.A > 0)
             {
@@ -174,7 +168,8 @@ namespace Barotrauma
             SlideshowPlayer?.DrawManually(spriteBatch);
 
             if (GUI.DisableHUD || GUI.DisableUpperHUD || ForceMapUI || 
-                CoroutineManager.IsCoroutineRunning("LevelTransition"))
+                CoroutineManager.IsCoroutineRunning("LevelTransition") ||
+                GameMain.GameSession?.DisallowLeavingLocation == true)
             {
                 endRoundButton.Visible = false;
                 if (ReadyCheckButton != null) 
@@ -217,7 +212,7 @@ namespace Barotrauma
                     break;
                 case TransitionType.None:
                 default:
-                    bool inFriendlySub = Character.Controlled is { IsInFriendlySub: true };
+                    bool inFriendlySub = Character.Controlled?.Submarine != null && Character.Controlled.IsOnFriendlyTeam(Character.Controlled.Submarine.TeamID);
                     if (Level.Loaded.Type == LevelData.LevelType.Outpost && !Level.Loaded.IsEndBiome &&
                         (inFriendlySub || (Character.Controlled?.CurrentHull?.OutpostModuleTags.Contains("airlock".ToIdentifier()) ?? false)))
                     {
@@ -236,10 +231,15 @@ namespace Barotrauma
                     }
                     break;
             }
+            //don't show the end round button yet if there's more (tutorial) objectives to complete and the main sub is still connected to the outpost
+            // = the button appears if you undock, making it possible to leave "manually"
             if (Level.IsLoadedOutpost && 
                 (!ObjectiveManager.AllActiveObjectivesCompleted() && this is not MultiPlayerCampaign))
             {
-                allowEndingRound = false;
+                if (Submarine.MainSub != null && Submarine.MainSub.GetConnectedSubs().Contains(Level.Loaded.StartOutpost))
+                {
+                    allowEndingRound = false;
+                }
             }
             if (ReadyCheckButton != null) 
             { 
@@ -311,7 +311,7 @@ namespace Barotrauma
                 Rand.ThreadId = Environment.CurrentManagedThreadId;
                 try
                 {
-                    GameMain.GameSession.StartRound(newLevel, mirrorLevel: mirror, startOutpost: GetPredefinedStartOutpost());
+                    GameMain.GameSession.StartRound(newLevel, mirrorLevel: mirror);
                 }
                 catch (Exception e)
                 {
@@ -348,7 +348,14 @@ namespace Barotrauma
         {
             if (npc == null || interactor == null) { return; }
 
-            switch (npc.CampaignInteractionType)
+            ShowNPCMenuInteractionProjSpecific(npc, interactor, npc.CampaignInteractionType);
+        }
+
+        partial void ShowNPCMenuInteractionProjSpecific(Character npc, Character interactor, InteractionType interactionType)
+        {
+            if (npc == null || interactor == null) { return; }
+
+            switch (interactionType)
             {
                 case InteractionType.None:
                 case InteractionType.Talk:
@@ -365,7 +372,7 @@ namespace Barotrauma
                     goto default;
                 default:
                     ShowCampaignUI = true;
-                    CampaignUI.SelectTab(npc.CampaignInteractionType, npc);
+                    CampaignUI.SelectTab(interactionType, npc);
                     CampaignUI.UpgradeStore?.RequestRefresh(refreshUpgrades: true);
                     break;
             }
@@ -376,7 +383,7 @@ namespace Barotrauma
             }
         }
 
-        public override void AddToGUIUpdateList()
+        protected override void AddToGUIUpdateListGameModeSpecific()
         {
             if (ShowCampaignUI || ForceMapUI)
             {
@@ -387,7 +394,6 @@ namespace Barotrauma
                     CampaignUI?.UpgradeStore?.ItemInfoFrame.AddToGUIUpdateList(order: 1);
                 }
             }
-            base.AddToGUIUpdateList();
             CrewManager.AddToGUIUpdateList();
             endRoundButton.AddToGUIUpdateList();
             ReadyCheckButton?.AddToGUIUpdateList();
@@ -409,6 +415,7 @@ namespace Barotrauma
                     new GUIMessageBox(TextManager.Get("lowfuelheader"),
                     TextManager.Get("lowfuelwarning"),
                     new LocalizedString[2] { TextManager.Get("ok"), TextManager.Get("cancel") });
+                extraConfirmationBox.UserData = "verificationprompt"; // Handles esc automatically
                 extraConfirmationBox.Buttons[0].OnClicked = (b, o) => { Confirm(); return true; };
                 extraConfirmationBox.Buttons[0].OnClicked += extraConfirmationBox.Close;
                 extraConfirmationBox.Buttons[1].OnClicked = extraConfirmationBox.Close;
@@ -421,15 +428,18 @@ namespace Barotrauma
             void Confirm()
             {
                 var availableTransition = GetAvailableTransition(out _, out _);
-                if (Character.Controlled != null &&
-                    availableTransition == TransitionType.ReturnToPreviousLocation &&
-                    Character.Controlled?.Submarine == Level.Loaded?.StartOutpost)
+
+                if (!AllowedToManageCampaign(ClientPermissions.ManageMap))
+                {
+                    onReturnToMapScreen();
+                }
+                else if (Character.Controlled != null &&
+                    availableTransition == TransitionType.ReturnToPreviousLocation)
                 {
                     onConfirm();
                 }
                 else if (Character.Controlled != null &&
-                    availableTransition == TransitionType.ProgressToNextLocation &&
-                    Character.Controlled?.Submarine == Level.Loaded?.EndOutpost)
+                    availableTransition == TransitionType.ProgressToNextLocation)
                 {
                     onConfirm();
                 }
@@ -440,10 +450,74 @@ namespace Barotrauma
             }
         }
 
-        public override void Update(float deltaTime)
-        {
-            base.Update(deltaTime);
+        /// <summary>
+        /// If this fraction of the player sub's volume (excluding wet rooms) is flooded, the player is warned when leaving an outpost
+        /// </summary>
+        private const float FloodedSubWarningThreshold = 0.25f;
 
+        /// <summary>
+        /// Shows a confirmation prompt if the player sub is flooded or has monsters inside, otherwise calls onConfirm immediately.
+        /// </summary>
+        public static void TryLeaveOutpostWithSubmarineSafetyCheck(Action onConfirm)
+        {
+            if (!Level.IsLoadedOutpost || Submarine.MainSub == null)
+            {
+                onConfirm();
+                return;
+            }
+
+            // GetHulls excludes connected subs of a different type, e.g. the outpost we're docked to
+            float totalVolume = 0.0f, totalWaterVolume = 0.0f;
+            HashSet<Submarine> playerSubs = new HashSet<Submarine>();
+            foreach (Hull hull in Submarine.MainSub.GetHulls(alsoFromConnectedSubs: true))
+            {
+                if (hull.Submarine != null) { playerSubs.Add(hull.Submarine); }
+                if (hull.IsWetRoom) { continue; }
+                totalVolume += hull.Volume;
+                totalWaterVolume += hull.WaterVolume;
+            }
+            bool isFlooded = totalVolume > 0.0f && totalWaterVolume / totalVolume >= FloodedSubWarningThreshold;
+
+            bool hasMonstersInside = Character.CharacterList.Any(c =>
+                !c.IsDead && !c.Removed &&
+                !c.IsHuman && !c.IsPet &&
+                c.Params.Group != "pest" &&
+                !c.IsOnFriendlyTeam(CharacterTeamType.Team1) &&
+                c.CurrentHull?.Submarine is Submarine sub && playerSubs.Contains(sub));
+
+            if (!isFlooded && !hasMonstersInside)
+            {
+                onConfirm();
+                return;
+            }
+
+            LocalizedString warningText = string.Empty;
+            if (isFlooded)
+            {
+                warningText += TextManager.Get("leaveoutpostwarning.flooded") + "\n";
+            }
+            if (hasMonstersInside)
+            {
+                warningText += TextManager.Get("leaveoutpostwarning.monsters") + "\n";
+            }
+            warningText += "\n" + TextManager.Get("leaveoutpostwarning.confirm");
+
+            var warningBox = new GUIMessageBox(TextManager.Get("warning"), warningText,
+                [TextManager.Get("yes"), TextManager.Get("no")])
+            {
+                UserData = "verificationprompt"
+            };
+            warningBox.Buttons[0].OnClicked = (btn, userdata) =>
+            {
+                warningBox.Close();
+                onConfirm();
+                return true;
+            };
+            warningBox.Buttons[1].OnClicked = warningBox.Close;
+        }
+
+        protected override void UpdateGameModeSpecific(float deltaTime)
+        {
             MedicalClinic?.Update(deltaTime);
 
             if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape))
@@ -451,7 +525,9 @@ namespace Barotrauma
                 GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData is RoundSummary);
             }
 #if DEBUG
-            if (GUI.KeyboardDispatcher.Subscriber == null && PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.M))
+            if (GUI.KeyboardDispatcher.Subscriber == null && 
+                PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.M) &&
+                PlayerInput.IsCtrlDown())
             {
                 if (GUIMessageBox.MessageBoxes.Any()) { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.MessageBoxes.Last()); }
 

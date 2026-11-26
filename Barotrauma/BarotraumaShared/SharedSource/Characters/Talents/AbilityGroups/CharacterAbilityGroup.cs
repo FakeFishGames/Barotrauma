@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace Barotrauma.Abilities
 {
-    abstract class CharacterAbilityGroup
+    public abstract class CharacterAbilityGroup
     {
         public CharacterTalent CharacterTalent { get; }
         public Character Character { get; }

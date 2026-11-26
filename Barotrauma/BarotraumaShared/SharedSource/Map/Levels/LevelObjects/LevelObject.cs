@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class LevelObject : ISpatialEntity, IDamageable, ISerializableEntity
+    public partial class LevelObject : ISpatialEntity, IDamageable, ISerializableEntity
     {
         public readonly LevelObjectPrefab Prefab;
         public Vector3 Position { get; set; }
@@ -200,8 +200,8 @@ namespace Barotrauma
                     trigger.PhysicsBody.Enabled = false;
                     foreach (StatusEffect effect in trigger.StatusEffects)
                     {
-                        if (effect.type != ActionType.OnBroken) { continue; }
-                        effect.Apply(effect.type, deltaTime, attacker, this, worldPosition: WorldPosition);
+                        if (effect.Type != ActionType.OnBroken) { continue; }
+                        effect.Apply(effect.Type, deltaTime, attacker, this, worldPosition: WorldPosition);
                     }
                 }
             }

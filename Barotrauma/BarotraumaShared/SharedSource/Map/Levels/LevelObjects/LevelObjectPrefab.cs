@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class LevelObjectPrefab : PrefabWithUintIdentifier, ISerializableEntity
+    public partial class LevelObjectPrefab : PrefabWithUintIdentifier, ISerializableEntity
     {
         public readonly static PrefabCollection<LevelObjectPrefab> Prefabs = new PrefabCollection<LevelObjectPrefab>();
 
@@ -185,14 +185,14 @@ namespace Barotrauma
             private set;
         }
 
-        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Can the object be placed near the start of the level.")]
+        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Can the object be placed near the start of the level (20% of the level width being considered too close).")]
         public bool AllowAtStart
         {
             get;
             private set;
         }
 
-        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Can the object be placed near the end of the level.")]
+        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Can the object be placed near the end of the level (20% of the level width being considered too close).")]
         public bool AllowAtEnd
         {
             get;

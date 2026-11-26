@@ -12,9 +12,9 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    public class NetStructReadException : Exception
+    public class MalformedDataException : Exception
     {
-        public NetStructReadException(string message, Exception? innerException = null) : base(message, innerException) { }
+        public MalformedDataException(string message, Exception? innerException = null) : base(message, innerException) { }
     }
 
     /// <summary>
@@ -651,6 +651,9 @@ namespace Barotrauma
         {
             return type.IsGenericType && type.GetGenericTypeDefinition() == comparedTo;
         }
+
+        public static void PurgeCache()
+            => CachedVariables.Clear();
     }
 
     /// <summary>
@@ -705,7 +708,7 @@ namespace Barotrauma
     /// Using <see cref="Nullable{T}"/> or <see cref="Option{T}"/> will make the field or property optional.
     /// </remarks>
     /// <seealso cref="NetworkSerialize"/>
-    internal interface INetSerializableStruct
+    public interface INetSerializableStruct
     {
         /// <summary>
         /// Deserializes a network message into a struct.
@@ -741,7 +744,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                throw new NetStructReadException($"Failed to read {nameof(INetSerializableStruct)}", e);
+                throw new MalformedDataException($"Failed to read {nameof(INetSerializableStruct)}", e);
             }
         }
 
@@ -760,7 +763,7 @@ namespace Barotrauma
                 }
                 catch (Exception exception)
                 {
-                    throw new NetStructReadException($"Failed to assign" +
+                    throw new MalformedDataException($"Failed to assign" +
                                         $" {value ?? "[NULL]"} ({value?.GetType().Name ?? "[NULL]"})" +
                                         $" to {typeof(T).Name}.{property.Name} ({property.Type.Name})", exception);
                 }
@@ -768,6 +771,13 @@ namespace Barotrauma
 
             return (T)newObject;
         }
+
+        public static object? ReadGeneric(Type type, IReadMessage inc)
+            => ReflectionUtils.InvokeGenericMethod(
+                genericParam: type,
+                module: typeof(INetSerializableStruct),
+                name: nameof(Read),
+                args: (typeof(IReadMessage), inc));
 
         /// <summary>
         /// Serializes the struct into a network message

@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    internal sealed partial class CircuitBoxLabelNode
+    public sealed partial class CircuitBoxLabelNode
     {
         private CircuitBoxLabel headerLabel;
         private readonly GUITextBlock bodyLabel;
@@ -31,10 +31,7 @@ namespace Barotrauma
             var size = new Point((int)rect.Width - CircuitBoxSizes.NodeBodyTextPadding * 2, (int)rect.Height - CircuitBoxSizes.NodeBodyTextPadding * 2);
             bodyLabel.RectTransform.NonScaledSize = size;
             bodyLabel.Text = GetLocalizedText(BodyText);
-            if (bodyLabel.Font != null)
-            {
-                bodyLabel.Text = ToolBox.LimitStringHeight(bodyLabel.WrappedText.Value, bodyLabel.Font!, size.Y);
-            }
+            ToolBox.LimitStringHeight(bodyLabel, size.Y, setTooltip: false);
             headerLabel = new CircuitBoxLabel(ToolBox.LimitString(GetLocalizedText(HeaderText), GUIStyle.LargeFont, size.X), GUIStyle.LargeFont);
 
             static LocalizedString GetLocalizedText(NetLimitedString text) => TextManager.Get(text.Value).Fallback(text.Value);

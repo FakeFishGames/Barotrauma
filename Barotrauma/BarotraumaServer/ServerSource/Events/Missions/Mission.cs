@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class Mission
+    public partial class Mission
     {
         partial void ShowMessageProjSpecific(int missionState)
         {

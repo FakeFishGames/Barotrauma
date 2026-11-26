@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Xml.Linq;
 using Barotrauma.Networking;
 
 namespace Barotrauma
 {
-    internal readonly struct WalletChangedEvent
+    public readonly struct WalletChangedEvent
     {
         public readonly Option<Character> Owner;
         public readonly Wallet Wallet;
@@ -21,7 +21,7 @@ namespace Barotrauma
     }
 
     [NetworkSerialize]
-    internal struct WalletInfo : INetSerializableStruct
+    public struct WalletInfo : INetSerializableStruct
     {
         public int RewardDistribution;
         public int Balance;
@@ -64,7 +64,7 @@ namespace Barotrauma
     /// Not really used right now but could be used for notifications when receiving funds similar to how talents do it
     /// </summary>
     [NetworkSerialize]
-    internal struct WalletChangedData : INetSerializableStruct
+    public struct WalletChangedData : INetSerializableStruct
     {
         public Option<int> RewardDistributionChanged;
         public Option<int> BalanceChanged;
@@ -102,7 +102,7 @@ namespace Barotrauma
     /// Represents an update that changed the amount of money or salary of the wallet
     /// </summary>
     [NetworkSerialize]
-    internal struct NetWalletTransaction : INetSerializableStruct
+    public struct NetWalletTransaction : INetSerializableStruct
     {
         public Option<ushort> CharacterID;
         public WalletChangedData ChangedData;
@@ -127,7 +127,7 @@ namespace Barotrauma
         }
     }
 
-    internal partial class Wallet
+    public partial class Wallet
     {
         public static readonly Wallet Invalid = new InvalidWallet();
 
@@ -141,6 +141,10 @@ namespace Barotrauma
 
         private int balance;
 
+        /// <summary>
+        /// Note that modifying the balance directly via this property does not trigger syncing the balance in multiplayer.
+        /// Use <see cref="Give(int)"/> or <see cref="Deduct(int)"/> if the changes should be synced.
+        /// </summary>
         public virtual int Balance
         {
             get => balance;

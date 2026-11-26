@@ -1,10 +1,11 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
+using System.Linq;
 
 namespace Barotrauma
 {
-    abstract class ShipIssueWorker
+    public abstract class ShipIssueWorker
     {
         public const float MaxImportance = 100f;
         public const float MinImportance = 0f;
@@ -32,10 +33,11 @@ namespace Barotrauma
         public Item TargetItem => SuggestedOrder.TargetEntity as Item;
         public bool Active { get; protected set; } = true; // used to turn off the instance if errors are detected
 
-        protected virtual Character CommandingCharacter => shipCommandManager.character;
+        protected virtual Character CommandingCharacter => shipCommandManager.Commander;
+
         public virtual float TimeSinceLastAttempt { get; set; }
         public virtual float RedundantIssueModifier => 0.5f;
-        public virtual bool StopDuringEmergency => true; // limit certain issue assessments when invaded by the enemies
+        public virtual bool StopIfHostilesOnBoard => true; // limit certain issue assessments when invaded by the enemies
         public virtual bool AllowEasySwitching => false;
 
         public ShipIssueWorker(ShipCommandManager shipCommandManager, Order suggestedOrder)
@@ -47,22 +49,34 @@ namespace Barotrauma
         public void SetOrder(Character orderedCharacter)
         {
             OrderedCharacter = orderedCharacter;
-            if (OrderedCharacter.AIController is HumanAIController humanAI && 
-                humanAI.ObjectiveManager.CurrentOrders.None(o => o.MatchesOrder(SuggestedOrder.Identifier, Option) && o.TargetEntity == TargetItem))
+            TimeSinceLastAttempt = 0f;
+            if (OrderedCharacter.AIController is not HumanAIController) { return; }
+            if (OrderedCharacter.GetCurrentOrderWithTopPriority() is Order order &&
+                order.MatchesOrder(SuggestedOrder.Identifier, Option) && order.TargetEntity == TargetItem)
             {
+                //the character is already doing this as their top priority (e.g. ordered by someone else), no need to reissue
+                CurrentOrder = order;
+            }
+            else
+            {
+                //note that the character may still have this order at a lower priority:
+                //reissue it in that case, otherwise the issue would never be considered attended to
                 bool orderGivenByDifferentCharacter = orderedCharacter != CommandingCharacter;
                 if (orderGivenByDifferentCharacter)
                 {
                     CommandingCharacter.Speak(SuggestedOrder.GetChatMessage(OrderedCharacter.Name, "", givingOrderToSelf: false),
-                        minDurationBetweenSimilar: 5,
-                        identifier: ("GiveOrder." + SuggestedOrder.Prefab.Identifier).ToIdentifier());
+                        //large duration between similar: these orders can be reissued frequently if the ordered character is busy doing something else
+                        minDurationBetweenSimilar: 60,
+                        identifier: ("GiveOrder." + SuggestedOrder.Prefab.Identifier + orderedCharacter.Name).ToIdentifier());
                 }
                 CurrentOrder = SuggestedOrder
                     .WithOption(Option)
                     .WithItemComponent(TargetItem, TargetItemComponent)
                     .WithOrderGiver(CommandingCharacter)
                     .WithManualPriority(CharacterInfo.HighestManualOrderPriority);
-                OrderedCharacter.SetOrder(CurrentOrder, CommandingCharacter != OrderedCharacter);
+                //cheat a bit and force the order to be set: otherwise we might have issues with orders
+                //not being issued due to the character being at the other side of the outpost, too far to hear the order
+                OrderedCharacter.SetOrder(CurrentOrder, isNewOrder: CommandingCharacter != OrderedCharacter, force: true);
                 if (orderGivenByDifferentCharacter)
                 {
                     OrderedCharacter.Speak(TextManager.Get("DialogAffirmative").Value, delay: 1.0f,
@@ -75,6 +89,12 @@ namespace Barotrauma
 
         public void RemoveOrder()
         {
+            if (CurrentOrder != null && OrderedCharacter is { IsDead: false, Removed: false, AIController: HumanAIController humanAi } &&
+                // CurrentOrder is the order we gave, but the objective is attached to the character's own copy of it, find it here
+                humanAi.ObjectiveManager.CurrentOrders.FirstOrDefault(o => o.MatchesOrder(CurrentOrder) && o.TargetEntity == CurrentOrder.TargetEntity)?.Objective is AIObjective orderObjective)
+            {
+                orderObjective.Abandon = true;
+            }
             OrderedCharacter = null;
             CurrentOrder = null;
         }
@@ -84,7 +104,7 @@ namespace Barotrauma
             return true;
         }
 
-        public float CalculateImportance(bool isEmergency)
+        public float CalculateImportance(bool hostilesOnBoard)
         {
             Importance = 0f; // reset anything that needs resetting
 
@@ -95,7 +115,7 @@ namespace Barotrauma
 
             Active = IsIssueViable();
 
-            if (isEmergency && StopDuringEmergency)
+            if (hostilesOnBoard && StopIfHostilesOnBoard)
             {
                 return Importance;
             }
@@ -128,15 +148,15 @@ namespace Barotrauma
             if (CurrentOrder == null || OrderedCharacter.GetCurrentOrderWithTopPriority() != CurrentOrder)
             {
 #if DEBUG
-                ShipCommandManager.ShipCommandLog($"{this} is no longer the top priority of {OrderedCharacter}, considering the issue unattended.");
+                ShipCommandManager.LogDebugMessage($"{this} is no longer the top priority of {OrderedCharacter}, considering the issue unattended.");
 #endif
                 return false;
             }
 
-            if (!shipCommandManager.AbleToTakeOrder(OrderedCharacter))
+            if (!shipCommandManager.AbleToContinueOrder(OrderedCharacter))
             {
 #if DEBUG
-                ShipCommandManager.ShipCommandLog(OrderedCharacter + " was unable to perform assigned order in " + this);
+                ShipCommandManager.LogDebugMessage(OrderedCharacter + " was unable to perform assigned order in " + this);
 #endif
                 return false;
             }

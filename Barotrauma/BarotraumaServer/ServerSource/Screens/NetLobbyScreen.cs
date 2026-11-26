@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class NetLobbyScreen : Screen
+    public partial class NetLobbyScreen : Screen
     {
         private SubmarineInfo selectedSub;
         private SubmarineInfo selectedEnemySub;

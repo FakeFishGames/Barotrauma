@@ -10,7 +10,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class CharacterHealth
+    public partial class CharacterHealth
     {
         class LimbHealth
         {
@@ -166,26 +166,7 @@ namespace Barotrauma
 
         public float HealthPercentage => MathUtils.Percentage(Vitality, MaxVitality);
 
-        public float MaxVitality
-        {
-            get
-            {
-                float max = UnmodifiedMaxVitality;
-                if (Character?.Info?.Job?.Prefab != null)
-                {
-                    max += Character.Info.Job.Prefab.VitalityModifier;
-                }
-                max *= Character.HumanPrefabHealthMultiplier;
-                if (GameMain.GameSession?.Campaign is CampaignMode campaign)
-                {
-                    max *= Character.IsOnPlayerTeam
-                        ? campaign.Settings.CrewVitalityMultiplier
-                        : campaign.Settings.NonCrewVitalityMultiplier;
-                }
-                max *= 1f + Character.GetStatValue(StatTypes.MaximumHealthMultiplier);
-                return max * Character.HealthMultiplier;
-            }
-        }
+        public float MaxVitality { get; private set; }
 
         public float MinVitality
         {
@@ -285,7 +266,7 @@ namespace Barotrauma
             this.Character = character;
             InitIrremovableAfflictions();
 
-            vitality = UnmodifiedMaxVitality;
+            vitality = MaxVitality = UnmodifiedMaxVitality;
 
             minVitality = element.GetAttributeFloat(nameof(MinVitality), character.IsHuman ? -100.0f : 0.0f);
 
@@ -858,7 +839,11 @@ namespace Barotrauma
                     RecalculateVitality();
                 }
                 return;
-            }            
+            }
+
+            //don't add a new affliction if its strength is zero after resistances (e.g. husk infection on a character with husk symbiosis).
+            //it'd get removed on the next health update, and be treated as if an existing affliction got cured (triggering AchievementOnRemoved)
+            if (modifiedStrength <= 0.0f) { return; }
 
             //create a new instance of the affliction to make sure we don't use the same instance for multiple characters
             //or modify the affliction instance of an Attack or a StatusEffect
@@ -888,12 +873,36 @@ namespace Barotrauma
             AddLimbAffliction(limbHealth: null, limb: null, newAffliction, allowStacking);
         }
 
+        /// <summary>
+        /// Applies the one-time karma change to the source of the affliction when its strength reaches <see cref="AfflictionPrefab.FlatKarmaChangeThreshold"/>.
+        /// Handles afflictions that grow by themselves after being applied (e.g. husk infection), which <see cref="AfflictionPrefab.KarmaChangeOnApplied"/> can't account for.
+        /// </summary>
+        private void CheckKarmaThreshold(Affliction affliction)
+        {
+            AfflictionPrefab prefab = affliction.Prefab;
+            if (MathUtils.NearlyEqual(prefab.FlatKarmaChange, 0.0f)) { return; }
+            //threshold of 0 = any amount of the affliction
+            if (affliction.Strength <= 0.0f || affliction.Strength < prefab.FlatKarmaChangeThreshold)
+            {
+                affliction.KarmaThresholdReached = false;
+                return;
+            }
+            if (affliction.KarmaThresholdReached) { return; }
+            affliction.KarmaThresholdReached = true;
+
+            if (Character.IsDead) { return; }
+            Character source = affliction.Source;
+            if (source == null || source == Character || source.Removed) { return; }
+            Character.ApplyKarmaChangeFromSource(source, prefab.FlatKarmaChange);
+        }
+
         partial void UpdateSkinTint();
 
         partial void UpdateLimbAfflictionOverlays();
 
         public void Update(float deltaTime)
         {
+            CalculateMaxVitality();
             WasInFullHealth = vitality >= MaxVitality;
 
             UpdateOxygen(deltaTime);
@@ -934,10 +943,14 @@ namespace Barotrauma
                     {
                         int healthIndex = limbHealths.IndexOf(kvp.Value);
                         targetLimb =
-                            Character.AnimController.Limbs.LastOrDefault(l => !l.IsSevered && !l.Hidden && l.HealthIndex == healthIndex) ??
+                            Character.AnimController.Limbs.LastOrDefault(l => l.HealthIndex == healthIndex && !l.IsSevered && !l.Hidden && l.IsAmputable) ?? // IsAmputable applies more narrowly, so check first
+                            Character.AnimController.Limbs.LastOrDefault(l => l.HealthIndex == healthIndex && !l.IsSevered && !l.Hidden && l.Params.CanBeSeveredAlive) ??
+                            Character.AnimController.Limbs.LastOrDefault(l => l.HealthIndex == healthIndex && !l.IsSevered && !l.Hidden) ??
                             Character.AnimController.MainLimb;
                     }
+                    
                     affliction.Update(this, targetLimb, deltaTime);
+                    CheckKarmaThreshold(affliction);
                     affliction.DamagePerSecondTimer += deltaTime;
                     if (affliction is AfflictionBleeding bleeding)
                     {
@@ -1059,6 +1072,7 @@ namespace Barotrauma
         public void SetVitality(float newVitality)
         {
             UnmodifiedMaxVitality = newVitality;
+            CalculateMaxVitality();
             CalculateVitality();
         }
 
@@ -1091,6 +1105,24 @@ namespace Barotrauma
             }
 #endif
         }
+
+        public void CalculateMaxVitality()
+        {
+            float max = UnmodifiedMaxVitality;
+            if (Character?.Info?.Job?.Prefab != null)
+            {
+                max += Character.Info.Job.Prefab.VitalityModifier;
+            }
+            max *= Character.HumanPrefabHealthMultiplier;
+            if (GameMain.GameSession?.Campaign is CampaignMode campaign)
+            {
+                max *= Character.IsOnPlayerTeam
+                    ? campaign.Settings.CrewVitalityMultiplier
+                    : campaign.Settings.NonCrewVitalityMultiplier;
+            }
+            max *= 1f + Character.GetStatValue(StatTypes.MaximumHealthMultiplier);
+            MaxVitality = max * Character.HealthMultiplier;
+        }
         
         public void RecalculateVitality()
         {
@@ -1117,7 +1149,15 @@ namespace Barotrauma
         /// </summary>
         private float GetVitalityDecreaseWithVitalityMultipliers(Affliction affliction)
         {
-            float vitalityDecrease = affliction.GetVitalityDecrease(this);
+            return GetVitalityDecreaseWithVitalityMultipliers(affliction, affliction.Strength);
+        }
+
+        /// <summary>
+        /// How much vitality the affliction would reduce at the given strength, taking into account the effects of vitality modifiers on the limb the affliction is on (if limb-based)
+        /// </summary>
+        public float GetVitalityDecreaseWithVitalityMultipliers(Affliction affliction, float strength)
+        {
+            float vitalityDecrease = affliction.GetVitalityDecrease(this, strength);
             if (afflictions.TryGetValue(affliction, out LimbHealth limbHealth) && limbHealth != null)
             {
                 vitalityDecrease *= GetVitalityMultiplier(affliction, limbHealth);
@@ -1478,6 +1518,10 @@ namespace Barotrauma
                         new XAttribute("strength", affliction.Strength.ToString("G", CultureInfo.InvariantCulture))));
                 }
             }
+
+            healthElement.Add(new XAttribute("severedjoints", 
+                string.Join(',', Character.AnimController.LimbJoints.Where(l => l.IsSevered || l.LimbA.HiddenByProsthesis || l.LimbB.HiddenByProsthesis).Select(l => Character.AnimController.LimbJoints.IndexOf(l)))));
+
         }
 
         public void Load(XElement element, Func<AfflictionPrefab, bool> afflictionPredicate = null)
@@ -1501,6 +1545,22 @@ namespace Barotrauma
                             LoadAffliction(afflictionElement, limbHealths[limbHealthIndex]);
                         }
                         break;
+                }
+            }
+
+            int[] severedJointIndices = element.GetAttributeIntArray("severedjoints", []);
+            foreach (int severedJointIndex in severedJointIndices)
+            {
+                if (severedJointIndex < 0 || severedJointIndex >= Character.AnimController.LimbJoints.Length)
+                {
+                    DebugConsole.ThrowError($"Error when loading {nameof(CharacterHealth)} for character {Character.Name}: severed joint index out of bounds ({severedJointIndex}).");
+                    continue;
+                }
+                Character.AnimController.SeverLimbJoint(Character.AnimController.LimbJoints[severedJointIndex],
+                    showHints: false, disableSeverEffects: true, dropProstheses: false);
+                foreach (Limb limb in Character.AnimController.Limbs)
+                {
+                    if (limb.IsSevered) { limb.SkipSeveredFadeOutTimer(); }
                 }
             }
 

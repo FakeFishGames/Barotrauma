@@ -33,6 +33,8 @@ namespace Barotrauma.Steam
                     msgBox.Close();
                     if (!t.TryGetResult(out IReadOnlyList<Steamworks.Ugc.Item>? items)) { return; }
 
+                    if (!MutableWorkshopMenu.CheckIfCanSafelyUpdateFiles(items)) { return; }
+
                     InitiateDownloads(items);
                 });
         }
@@ -40,6 +42,7 @@ namespace Barotrauma.Steam
         internal static void SubscribeToServerMods(IEnumerable<UInt64> missingIds, ConnectCommand rejoinCommand)
         {
             CloseAllMessageBoxes();
+
             GUIMessageBox msgBox = new GUIMessageBox(headerText: "", text: TextManager.Get("PreparingWorkshopDownloads"),
                 buttons: Array.Empty<LocalizedString>());
             TaskPool.Add(
@@ -59,6 +62,11 @@ namespace Barotrauma.Steam
                         }
                     }
 
+                    if (!MutableWorkshopMenu.CheckIfCanSafelyUpdateFiles(itemsToDownload))
+                    {
+                        return;
+                    }
+
                     itemsToDownload.ForEach(it => it.Subscribe());
                     InitiateDownloads(itemsToDownload, onComplete: () =>
                     {
@@ -68,7 +76,7 @@ namespace Barotrauma.Steam
                 });
         }
 
-        public static async Task<IReadOnlyList<Steamworks.Ugc.Item>> GetItemsThatNeedUpdating()
+        private static async Task<IReadOnlyList<Steamworks.Ugc.Item>> GetItemsThatNeedUpdating()
         {
             var determiningTasks = ContentPackageManager.WorkshopPackages.Select(async p => (p, await p.IsUpToDate()));
             (ContentPackage Package, bool IsUpToDate)[] outOfDatePackages = await Task.WhenAll(determiningTasks);
@@ -81,7 +89,7 @@ namespace Barotrauma.Steam
                 .NotNone().ToArray();
         }
 
-        public static void InitiateDownloads(IReadOnlyList<Steamworks.Ugc.Item> itemsToDownload, Action? onComplete = null)
+        private static void InitiateDownloads(IReadOnlyList<Steamworks.Ugc.Item> itemsToDownload, Action? onComplete = null)
         {
             var msgBox = new GUIMessageBox(TextManager.Get("WorkshopItemDownloading"), "", relativeSize: (0.5f, 0.6f),
                 buttons: new LocalizedString[] { TextManager.Get("Cancel") });

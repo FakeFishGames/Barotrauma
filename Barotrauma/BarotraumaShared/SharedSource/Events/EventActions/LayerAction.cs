@@ -1,4 +1,6 @@
-﻿namespace Barotrauma;
+﻿using Microsoft.Xna.Framework;
+
+namespace Barotrauma;
 
 /// <summary>
 /// Enable or disable a specific layer in a specific submarine.
@@ -10,6 +12,12 @@ class LayerAction : EventAction
 
     [Serialize(false, IsPropertySaveable.Yes, description: "Whether to enable or disable the layer.")]
     public bool Enabled { get; set; }
+
+    [Serialize(0.0f, IsPropertySaveable.Yes, description: "Makes the layer shake if set to a value.")]
+    public float ShakeAmount { get; set; }
+
+    [Serialize("0,0", IsPropertySaveable.Yes, description: "Makes the layer accelerate every frame with specified amount.")]
+    public Vector2 Acceleration { get; set; }
 
     [Serialize(TagAction.SubType.Any, IsPropertySaveable.Yes, description: "The type of submatine to enable or disable the layer in.")]
     public TagAction.SubType SubmarineType { get; set; }
@@ -25,7 +33,7 @@ class LayerAction : EventAction
     {
         return isFinished;
     }
-    public override void Reset()
+    public override void Reset(bool shouldEndConversations = true)
     {
         isFinished = false;
     }
@@ -40,7 +48,13 @@ class LayerAction : EventAction
             if (!TagAction.SubmarineTypeMatches(submarine, SubmarineType)) { continue; }
             if (submarine.LayerExists(Layer))
             {
-                submarine.SetLayerEnabled(Layer, Enabled, sendNetworkEvent: true);
+                submarine.SetLayerEnabled(
+                    layer: Layer, 
+                    enabled: Enabled, 
+                    shakeAmount: ShakeAmount, 
+                    acceleration: Acceleration, 
+                    sendNetworkEvent: true);
+
                 layerFound = true;
             }
         }

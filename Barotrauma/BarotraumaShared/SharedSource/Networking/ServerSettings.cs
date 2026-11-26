@@ -42,13 +42,13 @@ namespace Barotrauma.Networking
     }
 
 
-    internal enum LootedMoneyDestination
+    public enum LootedMoneyDestination
     {
         Bank,
         Wallet
     }
 
-    partial class ServerSettings : ISerializableEntity
+    public partial class ServerSettings : ISerializableEntity
     {
         public const int PacketLimitMin = 1200,
                          PacketLimitWarning = 3500,
@@ -84,11 +84,11 @@ namespace Barotrauma.Networking
         {
             public readonly Either<Address, AccountId> AddressOrAccountId;
             public readonly string Name;
-            public readonly ImmutableHashSet<DebugConsole.Command> PermittedCommands;
+            internal readonly ImmutableHashSet<DebugConsole.Command> PermittedCommands;
 
             public readonly ClientPermissions Permissions;
 
-            public SavedClientPermission(string name, Either<Address, AccountId> addressOrAccountId, ClientPermissions permissions, IEnumerable<DebugConsole.Command> permittedCommands)
+            internal SavedClientPermission(string name, Either<Address, AccountId> addressOrAccountId, ClientPermissions permissions, IEnumerable<DebugConsole.Command> permittedCommands)
             {
                 this.Name = name;
                 this.AddressOrAccountId = addressOrAccountId;
@@ -845,7 +845,7 @@ namespace Barotrauma.Networking
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.Yes)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool DestructibleOutposts
         {
             get;
@@ -1435,9 +1435,16 @@ namespace Barotrauma.Networking
 
         public bool ReadPerks(IReadMessage msg)
         {
+            int perkMaxCount = DisembarkPerkPrefab.Prefabs.Count();
+
             uint coalitionCount = msg.ReadVariableUInt32();
+            if (coalitionCount > perkMaxCount)
+            {
+                throw new MalformedDataException($"Failed to read disembark perks: received {coalitionCount} coalition perks, but there are only {perkMaxCount} perks in total.");
+            }
+
             Identifier[] newCoalitionPerks = new Identifier[coalitionCount];
-            for (int i = 0; i < coalitionCount; i++)
+            for (int i = 0; i < newCoalitionPerks.Length; i++)
             {
                 uint id = msg.ReadUInt32();
                 DisembarkPerkPrefab prefab = DisembarkPerkPrefab.Prefabs.Find(p => p.UintIdentifier == id);
@@ -1451,8 +1458,13 @@ namespace Barotrauma.Networking
             }
 
             uint separatistsCount = msg.ReadVariableUInt32();
+            if (separatistsCount > perkMaxCount)
+            {
+                throw new MalformedDataException($"Failed to read disembark perks: received {separatistsCount} coalition perks, but there are only {perkMaxCount} perks in total.");
+            }
+
             Identifier[] newSeparatistsPerks = new Identifier[separatistsCount];
-            for (int i = 0; i < separatistsCount; i++)
+            for (int i = 0; i < newSeparatistsPerks.Length; i++)
             {
                 uint id = msg.ReadUInt32();
                 DisembarkPerkPrefab prefab = DisembarkPerkPrefab.Prefabs.Find(p => p.UintIdentifier == id);
@@ -1526,11 +1538,6 @@ namespace Barotrauma.Networking
             set("gamemode", GameModeIdentifier);
             set("playstyle", PlayStyle);
             set("language", Language.ToString());
-#if SERVER
-            set("eoscrossplay", EosInterface.Core.IsInitialized);
-#else
-            set("eoscrossplay", EosInterface.IdQueries.IsLoggedIntoEosConnect || Eos.EosSessionManager.CurrentOwnedSession.IsSome());
-#endif
             if (GameMain.NetLobbyScreen?.SelectedSub != null)
             {
                 set("submarine", GameMain.NetLobbyScreen.SelectedSub.Name);
@@ -1557,10 +1564,10 @@ namespace Barotrauma.Networking
         private void ValidateMissionTypes(IEnumerable<Type> availableMissionClasses)
         {
             if (AllowedRandomMissionTypes.Contains(Tags.MissionTypeAll)) { return; }
-            //no selectable mission types that match any of the available mission classes
-            //(e.g. no mission types that use pvp-specific mission classes)
+            //if there are no selectable mission types that match any of the available mission classes
+            //(e.g. no mission types that use pvp-specific mission classes), force some mission type to be selected
             if (MissionPrefab.GetAllMultiplayerSelectableMissionTypes().None(missionType =>
-                MissionPrefab.Prefabs.Any(p => p.Type == missionType && AllowedRandomMissionTypes.Contains(p.Type) && availableMissionClasses.Contains(p.MissionClass))))
+                    MissionPrefab.Prefabs.Any(p => p.Type == missionType && AllowedRandomMissionTypes.Contains(p.Type) && availableMissionClasses.Contains(p.MissionClass))))
             {
                 var matchingMission = MissionPrefab.Prefabs.First(p => availableMissionClasses.Contains(p.MissionClass));
                 if (matchingMission == null)
@@ -1569,6 +1576,7 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
+                    DebugConsole.AddWarning($"No mission types with suitable missions selected, forcing the mission type {matchingMission.Type} to be selected.");
                     AllowedRandomMissionTypes.Add(matchingMission.Type);
                 }
             }

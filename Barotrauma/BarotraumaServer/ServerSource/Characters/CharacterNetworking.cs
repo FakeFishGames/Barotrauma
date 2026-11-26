@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class Character
+    public partial class Character
     {
         private Address ownerClientAddress;
         private Option<AccountId> ownerClientAccountId;
@@ -430,10 +430,10 @@ namespace Barotrauma
             tempBuffer.WriteSingle(SimPosition.Y);
             float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
             AnimController.Collider.LinearVelocity = new Vector2(
-                NetConfig.Quantize(AnimController.Collider.LinearVelocity.X, -MaxVel, MaxVel, 12),
-                NetConfig.Quantize(AnimController.Collider.LinearVelocity.Y, -MaxVel, MaxVel, 12));
-            tempBuffer.WriteRangedSingle(AnimController.Collider.LinearVelocity.X, -MaxVel, MaxVel, 12);
-            tempBuffer.WriteRangedSingle(AnimController.Collider.LinearVelocity.Y, -MaxVel, MaxVel, 12);
+                MathHelper.Clamp(AnimController.Collider.LinearVelocity.X, -MaxVel, MaxVel),
+                MathHelper.Clamp(AnimController.Collider.LinearVelocity.Y, -MaxVel, MaxVel));
+            tempBuffer.WriteSingle(AnimController.Collider.LinearVelocity.X);
+            tempBuffer.WriteSingle(AnimController.Collider.LinearVelocity.Y);
 
             AnimController.TargetMovement = new Vector2(
                 NetConfig.Quantize(AnimController.TargetMovement.X, -Ragdoll.MAX_SPEED, Ragdoll.MAX_SPEED, 12),
@@ -487,10 +487,11 @@ namespace Barotrauma
                     Client owner = controlEventData.Owner;
                     msg.WriteBoolean(owner == c && owner.Character == this);
                     msg.WriteByte(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.SessionId : (byte)0);
+                    msg.WriteUInt16(controlEventData.PreviousCharacter?.ID ?? Entity.NullEntityID);
                     msg.WriteBoolean(info is { RenamingEnabled: true });
                     break;
                 case CharacterStatusEventData statusEventData:
-                    WriteStatus(msg, statusEventData.ForceAfflictionData);
+                    WriteStatus(msg, statusEventData.ForceAfflictionData, statusEventData.ForceLimbSeveringData, statusEventData.DisableSeverEffects);
                     msg.WriteBoolean(GodMode);
                     break;
                 case UpdateSkillsEventData updateSkillsData:
@@ -534,8 +535,13 @@ namespace Barotrauma
                     {
                         canClientInteract = ActiveConversation.CanClientStartConversation(c);
                     }
-                    msg.WriteByte((byte)(canClientInteract ? CampaignInteractionType : CampaignMode.InteractionType.None));
+                    var interactionType = canClientInteract ? CampaignInteractionType : CampaignMode.InteractionType.None;
+                    msg.WriteByte((byte)interactionType);
                     msg.WriteBoolean(RequireConsciousnessForCustomInteract);
+                    if (interactionType == CampaignMode.InteractionType.Store)
+                    {
+                        msg.WriteIdentifier(MerchantIdentifier);
+                    }
                     break;
                 case ObjectiveManagerStateEventData objectiveManagerStateEventData:
                     AIObjectiveManager.ObjectiveType type = objectiveManagerStateEventData.ObjectiveType;
@@ -663,9 +669,10 @@ namespace Barotrauma
         }
 
         private readonly List<int> severedJointIndices = new List<int>();
+        private readonly List<int> severedLimbIndices = new List<int>();
 
         /// <param name="forceAfflictionData">Normally full affliction data is not written for dead characters, this can be used to force them to be written</param>
-        private void WriteStatus(IWriteMessage msg, bool forceAfflictionData = false)
+        private void WriteStatus(IWriteMessage msg, bool forceAfflictionData = false, bool writeLimbSeveringData = false, bool disableSeverEffects = true)
         {
             msg.WriteBoolean(IsDead);
             if (IsDead)
@@ -687,27 +694,47 @@ namespace Barotrauma
                 CharacterHealth.ServerWrite(msg);
             }
 
-            if (AnimController?.LimbJoints == null)
+            msg.WriteBoolean(writeLimbSeveringData);
+            if (writeLimbSeveringData)
             {
-                //0 limbs severed
-                msg.WriteByte((byte)0);
-            }
-            else
-            {
-                severedJointIndices.Clear();
-                for (int i = 0; i < AnimController.LimbJoints.Length; i++)
+                msg.WriteBoolean(disableSeverEffects);
+                if (AnimController?.LimbJoints == null)
                 {
-                    if (AnimController.LimbJoints[i] != null && AnimController.LimbJoints[i].IsSevered)
+                    //0 limbs severed
+                    msg.WriteByte((byte)0);
+                    msg.WriteByte((byte)0);
+                }
+                else
+                {
+                    severedJointIndices.Clear();
+                    for (int i = 0; i < AnimController.LimbJoints.Length; i++)
                     {
-                        severedJointIndices.Add(i);
+                        if (AnimController.LimbJoints[i] != null && AnimController.LimbJoints[i].IsSevered)
+                        {
+                            severedJointIndices.Add(i);
+                        }
+                    }
+                    msg.WriteByte((byte)severedJointIndices.Count);
+                    foreach (int jointIndex in severedJointIndices)
+                    {
+                        msg.WriteByte((byte)jointIndex);
+                    }
+
+                    severedLimbIndices.Clear();
+                    for (int i = 0; i < AnimController.Limbs.Length; i++)
+                    {
+                        if (AnimController.Limbs[i] != null && AnimController.Limbs[i].IsSevered)
+                        {
+                            severedLimbIndices.Add(i);
+                        }
+                    }
+                    msg.WriteByte((byte)severedLimbIndices.Count);
+                    foreach (int limbIndex in severedLimbIndices)
+                    {
+                        msg.WriteByte((byte)limbIndex);
                     }
                 }
-                msg.WriteByte((byte)severedJointIndices.Count);
-                foreach (int jointIndex in severedJointIndices)
-                {
-                    msg.WriteByte((byte)jointIndex);
-                }
-            }
+            }            
         }
 
         public void WriteSpawnData(IWriteMessage msg, UInt16 entityId, bool restrictMessageSize)
@@ -766,6 +793,8 @@ namespace Barotrauma
             int msgLengthBeforeInfo = msg.LengthBytes;
             info.ServerWrite(msg);
             int infoLength = msg.LengthBytes - msgLengthBeforeInfo;
+
+            msg.WriteBoolean(Level.Loaded?.StartOutpost is { } outpost && outpost.Info.OutpostNPCs.Values.Any(npcList => npcList.Contains(this)));
 
             msg.WriteByte((byte)CampaignInteractionType);
             if (CampaignInteractionType == CampaignMode.InteractionType.Store)

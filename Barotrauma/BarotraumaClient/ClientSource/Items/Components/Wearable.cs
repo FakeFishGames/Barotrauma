@@ -23,12 +23,23 @@ namespace Barotrauma.Items.Components
 
         public override void AddTooltipInfo(ref LocalizedString name, ref LocalizedString description)
         {
-            AddTooltipInfo(damageModifiers, SkillModifiers, ref description);
+            AddTooltipInfo(this, damageModifiers, SkillModifiers, ref description);
         }
 
         public static void AddTooltipInfo(IReadOnlyList<DamageModifier> damageModifiers, IReadOnlyDictionary<Identifier, float> skillModifiers, ref LocalizedString description)
         {
-            if (damageModifiers.Any())
+            AddTooltipInfo(thisWearable: null, damageModifiers, skillModifiers, ref description);
+        }
+
+        public static void AddTooltipInfo(Wearable thisWearable, IReadOnlyList<DamageModifier> damageModifiers, IReadOnlyDictionary<Identifier, float> skillModifiers, ref LocalizedString description)
+        {
+            //if the item has multiple wearable components with damage modifiers, only show the modifiers of the first one
+            //(e.g. a prosthetic that can be equipped in either arm)
+            bool hasOtherWearableWithDamageModifiers = 
+                thisWearable?.item.GetComponent<Wearable>() is Wearable firstWearable &&
+                firstWearable != thisWearable && firstWearable.damageModifiers.Any();
+
+            if (!hasOtherWearableWithDamageModifiers && damageModifiers.Any())
             {
                 foreach (DamageModifier damageModifier in damageModifiers)
                 {

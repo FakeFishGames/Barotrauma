@@ -37,10 +37,8 @@ namespace Barotrauma
             }
         }
 
-        public override void AddToGUIUpdateList()
+        protected override void AddToGUIUpdateListGameModeSpecific()
         {
-            base.AddToGUIUpdateList();
-
             if (scoreContainer == null) { InitUI(); }
 
             scoreContainer.Visible = false;

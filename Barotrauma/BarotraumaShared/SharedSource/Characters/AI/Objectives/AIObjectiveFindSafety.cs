@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveFindSafety : AIObjective
+    public class AIObjectiveFindSafety : AIObjective
     {
         public override Identifier Identifier { get; set; } = "find safety".ToIdentifier();
         public override bool ForceRun => true;
@@ -17,7 +17,6 @@ namespace Barotrauma
         protected override bool ConcurrentObjectives => true;
         protected override bool AllowOutsideSubmarine => true;
         protected override bool AllowInAnySub => true;
-        public override bool AbandonWhenCannotCompleteSubObjectives => false;
 
         private const float PriorityIncrease = 100;
         private const float PriorityDecrease = 10;
@@ -30,7 +29,19 @@ namespace Barotrauma
         private AIObjectiveGoTo goToObjective;
         private AIObjectiveFindDivingGear divingGearObjective;
 
-        public AIObjectiveFindSafety(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
+        private readonly bool immuneToFire;
+
+        public AIObjectiveFindSafety(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
+        {
+            AbandonWhenCannotCompleteSubObjectives = false;
+            //if all limbs have burn immunity, no need to care about fires
+            if (character.AnimController.Limbs.All(
+                limb => limb.DamageModifiers.Any(
+                    dm => dm.MatchesAfflictionIdentifier(AfflictionPrefab.Burn.Identifier) && dm.DamageMultiplier <= 0.01f)))
+            {
+                immuneToFire = true;
+            }
+        }
 
         protected override bool CheckObjectiveState() => false;
         public override bool CanBeCompleted => true;
@@ -41,11 +52,20 @@ namespace Barotrauma
         {
             if (character.CurrentHull == null)
             {
-                Priority = (
-                    objectiveManager.CurrentOrder is AIObjectiveGoTo ||
+                // When outside, FindSafety priority is 0 if there's a legitimate reason to be outside
+                // AND the character has proper protection
+                var exploreOutside = objectiveManager.GetFirstActiveObjective<AIObjectiveExploreOutside>();
+                bool hasExploreOutside = exploreOutside != null && !exploreOutside.Abandon && exploreOutside.CanBeCompleted;
+
+                bool hasLegitimateOutsideObjective =
+                    objectiveManager.CurrentOrder is AIObjectiveGoTo or AIObjectiveReturn ||
                     objectiveManager.HasActiveObjective<AIObjectiveRescue>() ||
-                    objectiveManager.Objectives.Any(o => o is AIObjectiveCombat or AIObjectiveReturn && o.Priority > 0))
-                    && ((!character.IsLowInOxygen && character.IsImmuneToPressure)|| HumanAIController.HasDivingSuit(character)) ? 0 : AIObjectiveManager.EmergencyObjectivePriority - 10;
+                    objectiveManager.Objectives.Any(o => o is AIObjectiveCombat or AIObjectiveReturn && o.Priority > 0) ||
+                    hasExploreOutside;
+
+                bool hasProperProtection = (!character.IsLowInOxygen && character.IsImmuneToPressure) || HumanAIController.HasDivingSuit(character);
+
+                Priority = hasLegitimateOutsideObjective && hasProperProtection ? 0 : AIObjectiveManager.EmergencyObjectivePriority - 10;
             }
             else
             {
@@ -138,6 +158,12 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// When returning for safety, another friendly sub's airlock is used over the home one if it's this many times closer.
+        /// Fine when it's clearly the safer choice, but entering eg. the player's sub shouldn't be done lightly.
+        /// </summary>
+        private const float OtherFriendlySubAirlockDistanceMultiplier = 5.0f;
+
         private Hull currentSafeHull;
         private Hull previousSafeHull;
         private bool cannotFindSafeHull;
@@ -152,7 +178,7 @@ namespace Barotrauma
             var currentHull = character.CurrentHull;
             bool dangerousPressure =  (currentHull == null || currentHull.LethalPressure > 0) && !character.IsProtectedFromPressure;
             bool shouldActOnSuffocation = character.IsLowInOxygen && !character.AnimController.HeadInWater && HumanAIController.HasDivingSuit(character, requireOxygenTank: false);
-            if (!character.LockHands && (!dangerousPressure || shouldActOnSuffocation || cannotFindSafeHull))
+            if (!character.BothHandsDisabled && (!dangerousPressure || shouldActOnSuffocation || cannotFindSafeHull))
             {
                 bool needsDivingGear = HumanAIController.NeedsDivingGear(currentHull, out bool needsDivingSuit, objectiveManager);
                 if (character.TeamID == CharacterTeamType.FriendlyNPC && character.Submarine?.Info is { IsOutpost: true })
@@ -280,14 +306,17 @@ namespace Barotrauma
                 if (subObjectives.Any(so => so.CanBeCompleted)) { return; }
                 UpdateSimpleEscape(deltaTime);
 
-                bool inFriendlySub = 
-                    character.IsInFriendlySub || 
+                bool inFriendlySub =
+                    (character.Submarine != null && character.IsHomeSubmarine(character.Submarine)) ||
                     (character.IsEscorted && character.IsInPlayerSub);
-                if (cannotFindSafeHull && !inFriendlySub && character.IsOnPlayerTeam && objectiveManager.Objectives.None(o => o is AIObjectiveReturn))
+                bool anyFriendlySubAvailable = Submarine.Loaded.Any(sub => character.IsOnFriendlyTeam(sub.TeamID));
+                if (cannotFindSafeHull && !inFriendlySub && anyFriendlySubAvailable && objectiveManager.Objectives.None(o => o is AIObjectiveReturn))
                 {
                     if (OrderPrefab.Prefabs.TryGet("return".ToIdentifier(), out OrderPrefab orderPrefab))
                     {
-                        objectiveManager.AddObjective(new AIObjectiveReturn(character, character, objectiveManager));
+                        objectiveManager.AddObjective(new AIObjectiveReturn(character, character, objectiveManager,
+                            preferredTarget: character.IsEscorted ? Submarine.MainSub : null, // escortees are FriendlyNPC too, and should keep the main sub as home
+                            otherFriendlySubAirlockDistanceMultiplier: OtherFriendlySubAirlockDistanceMultiplier));
                     }
                 }
             }
@@ -347,6 +376,7 @@ namespace Barotrauma
         }
 
         private readonly List<Hull> hulls = new List<Hull>();
+        private readonly Dictionary<Hull, float> hullSafeties = new Dictionary<Hull, float>();
         private int hullSearchIndex = -1;
         float bestHullValue = 0;
         bool bestHullIsAirlock = false;
@@ -362,8 +392,43 @@ namespace Barotrauma
         /// </summary>
         public HullSearchStatus FindBestHull(out Hull bestHull, IEnumerable<Hull> ignoredHulls = null, bool allowChangingSubmarine = true)
         {
+            bool allHullsInCurrentSubUnsafe =
+                character.Submarine != null &&
+                character.Submarine.GetHulls(alsoFromConnectedSubs: false).All(HumanAIController.UnsafeHulls.Contains);
+
             if (hullSearchIndex == -1)
             {
+                //optimization: check if all the surrounding hulls are unsafe, and unsafer than the current hull.
+                //if that's the case, there's no point in searching for the hull: that'd lead us to going through a ton of hulls, finding paths to them,
+                //and discarding all of them later in the method because the paths lead through unsafe hulls.
+                bool allSurroundingHullsUnsafe = false;
+                if (character.CurrentHull != null && !allHullsInCurrentSubUnsafe)
+                {
+                    allSurroundingHullsUnsafe = true;
+                    foreach (var connectedHull in character.CurrentHull.GetConnectedHulls(includingThis: false, searchDepth: 1))
+                    {
+                        if (!HumanAIController.UnsafeHulls.Contains(connectedHull))
+                        {
+                            allSurroundingHullsUnsafe = false;
+                            break;
+                        }
+                        // Compare safety of the node hull to the current hull safety.
+                        float nodeHullSafety = HumanAIController.GetHullSafety(connectedHull, visibleHulls: null, character);
+                        if (nodeHullSafety >= HumanAIController.HULL_SAFETY_THRESHOLD || nodeHullSafety >= HumanAIController.CurrentHullSafety)
+                        {
+                            allSurroundingHullsUnsafe = false;
+                            break;
+                        }
+                    }
+                }
+                if (allSurroundingHullsUnsafe)
+                {
+                    bestHull = null;
+                    hullSearchIndex = -1;
+                    return HullSearchStatus.Finished;
+                }
+
+                hullSafeties.Clear();
                 bestHullValue = 0;
                 potentialBestHull = null;
                 bestHullIsAirlock = false;
@@ -382,22 +447,28 @@ namespace Barotrauma
                     if (ignoredHulls != null && ignoredHulls.Contains(hull)) { continue; }
                     if (HumanAIController.UnreachableHulls.Contains(hull)) { continue; }
                     if (connectedSubs != null && !connectedSubs.Contains(hull.Submarine)) { continue; }
+
+                    float hullSuitability = HumanAIController.GetHullSafety(hull, hull.GetConnectedHulls(true, 1), character, ignoreOxygen: !character.NeedsOxygen, ignoreFire: immuneToFire);
+                    float distanceFactor = GetDistanceFactor(hull.WorldPosition, factorAtMaxDistance: 0.9f);
+                    hullSuitability *= distanceFactor;
+                    hullSafeties.Add(hull, hullSuitability);
+
                     if (hulls.None())
                     {
                         hulls.Add(hull);
                     }
                     else
                     {
-                        //sort the hulls first based on distance and a rough suitability estimation
+                        //sort the hulls first based on safety first
                         //tends to make the method much faster, because we find a potential hull earlier and can discard further-away hulls more easily
                         //(for instance, an NPC in an outpost might otherwise go through all the hulls in the main sub first and do tons of expensive
                         //path calculations, only to discard all of them when going through the hulls in the outpost)
                         bool addLast = true;
-                        float hullSuitability = EstimateHullSuitability(hull);
+
                         for (int i = 0; i < hulls.Count; i++)
                         {
                             Hull otherHull = hulls[i];
-                            float otherHullSuitability = EstimateHullSuitability(otherHull);
+                            float otherHullSuitability = hullSafeties[otherHull];
                             if (hullSuitability > otherHullSuitability)
                             {
                                 hulls.Insert(i, hull);
@@ -409,39 +480,6 @@ namespace Barotrauma
                         {
                             hulls.Add(hull);
                         }
-                    }
-                    
-                    float EstimateHullSuitability(Hull h)
-                    {
-                        float distX = Math.Abs(h.WorldPosition.X - character.WorldPosition.X);
-                        float distY = Math.Abs(h.WorldPosition.Y - character.WorldPosition.Y);
-                        if (character.CurrentHull != null)
-                        {
-                            distY *= 3;
-                        }
-                        float dist = distX + distY;
-                        float suitability = -dist;
-                        const float suitabilityReduction = 10000.0f;
-                        if (h.Submarine != character.Submarine)
-                        {
-                            suitability -= suitabilityReduction;
-                        }
-                        if (character.CurrentHull != null)
-                        {
-                            if (h.AvoidStaying)
-                            {
-                                suitability -= suitabilityReduction;
-                            }
-                            if (HumanAIController.UnsafeHulls.Contains(h))
-                            {
-                                suitability -= suitabilityReduction;
-                            }
-                            if (HumanAIController.NeedsDivingGear(h, out _))
-                            {
-                                suitability -= suitabilityReduction;
-                            }
-                        }
-                        return suitability;
                     }
                 }
                 if (hulls.None())
@@ -457,34 +495,32 @@ namespace Barotrauma
             }
 
             Hull potentialHull = hulls[hullSearchIndex];
-
-            float hullSafety = 0;
+            float hullSafety = hullSafeties[potentialHull];
             bool hullIsAirlock = false;
             bool isCharacterInside = character.CurrentHull != null && character.Submarine != null;
             if (isCharacterInside)
             {
-                hullSafety = HumanAIController.GetHullSafety(potentialHull, potentialHull.GetConnectedHulls(true, 1), character);
-                float distanceFactor = GetDistanceFactor(potentialHull.WorldPosition, factorAtMaxDistance: 0.9f);
-                hullSafety *= distanceFactor;
                 //skip the hull if the safety is already less than the best hull
                 //(no need to do the expensive pathfinding if we already know we're not going to choose this hull)
                 if (hullSafety > bestHullValue) 
                 { 
                     //avoid airlock modules if not allowed to change the sub
-                    if (allowChangingSubmarine || potentialHull.OutpostModuleTags.All(t => t != "airlock"))
+                    if (!allowChangingSubmarine && !potentialHull.OutpostModuleTags.Contains(Tags.Airlock))
                     {
                         // Don't allow to go outside if not already outside.
-                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, character.GetRelativeSimPosition(potentialHull), character.Submarine, nodeFilter: node => node.Waypoint.CurrentHull != null);
+                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, character.GetRelativeSimPosition(potentialHull), character.Submarine, nodeFilter: node => node.Waypoint.CurrentHull != null, startHull: character.CurrentHull);
                         if (path.Unreachable)
                         {
                             hullSafety = 0;
                             HumanAIController.UnreachableHulls.Add(potentialHull);
                         }
-                        else
+                        // if all hulls in the current sub are unsafe,
+                        // let's not care about having to through unsafe hulls to find a path somewhere safer
+                        else if (!allHullsInCurrentSubUnsafe)
                         {
                             // Check the path safety. Each unsafe node reduces the hull safety value.
                             Hull previousHull = null;
-                            foreach (WayPoint node in path.Nodes)
+                            foreach (WayPoint node in path.Nodes.DistinctBy(n => n.CurrentHull))
                             {
                                 Hull hull = node.CurrentHull;
                                 if (hull == previousHull)
@@ -502,7 +538,7 @@ namespace Barotrauma
                                 if (HumanAIController.UnsafeHulls.Contains(hull))
                                 {
                                     // Compare safety of the node hull to the current hull safety.
-                                    float nodeHullSafety = HumanAIController.GetHullSafety(hull, hull.GetConnectedHulls(true, 1), character);
+                                    float nodeHullSafety = HumanAIController.GetHullSafety(hull, visibleHulls: null, character);
                                     if (nodeHullSafety < HumanAIController.HULL_SAFETY_THRESHOLD && nodeHullSafety < HumanAIController.CurrentHullSafety)
                                     {
                                         // If the node hull is considered unsafe and less safe than the current hull, let's ignore the target.
@@ -511,9 +547,9 @@ namespace Barotrauma
                                     }
                                     else
                                     {
-                                        // Otherwise, each unsafe hull on the path reduces the safety of the target hull by 50% of their threat value.
+                                        // Otherwise, each unsafe hull on the path reduces the safety of the target hull by 25% of their threat value.
                                         float hullThreat = 100 - nodeHullSafety;
-                                        hullSafety -= hullThreat / 2;
+                                        hullSafety -= hullThreat / 4;
                                         if (hullSafety <= 0)
                                         {
                                             break;
@@ -522,7 +558,10 @@ namespace Barotrauma
                                 }
                             }
                             // If the target is not inside a friendly submarine, considerably reduce the hull safety.
-                            if (!character.Submarine.IsEntityFoundOnThisSub(potentialHull, includingConnectedSubs: true))
+                            if (!character.Submarine.IsEntityFoundOnThisSub(potentialHull, includingConnectedSubs: true,
+                                    //allow different type (sub to outpost or vice versa) as long as the team is friendly (docked to your own outpost)
+                                    allowDifferentTeam: Character.IsOnFriendlyTeam(character.TeamID, potentialHull.Submarine.TeamID), 
+                                    allowDifferentType: true))
                             {
                                 hullSafety /= 10;
                             }
@@ -551,7 +590,7 @@ namespace Barotrauma
                 hullSafety *= distanceFactor;
                 // If the target is not inside a friendly submarine, considerably reduce the hull safety.
                 // Intentionally exclude wrecks from this check
-                if (potentialHull.Submarine.TeamID != character.TeamID && potentialHull.Submarine.TeamID != CharacterTeamType.FriendlyNPC)
+                if (!Character.IsOnFriendlyTeam(character.TeamID, potentialHull.Submarine.TeamID))
                 {
                     hullSafety /= 10;
                 }

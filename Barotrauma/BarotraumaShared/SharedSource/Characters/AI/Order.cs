@@ -36,7 +36,7 @@ namespace Barotrauma
         public override void Dispose() { Sprite?.Remove(); }
     }
 
-    class OrderPrefab : PrefabWithUintIdentifier
+    public class OrderPrefab : PrefabWithUintIdentifier
     {
         public readonly static PrefabCollection<OrderPrefab> Prefabs = new PrefabCollection<OrderPrefab>();
 
@@ -118,7 +118,16 @@ namespace Barotrauma
         public readonly bool CanBeGeneralized;
         public readonly Identifier AppropriateSkill;
         public readonly bool Hidden;
+
+        /// <summary>
+        /// Should the order be ignored in outposts? Does not apply to outpost NPCs, they can always do objectives in outposts.
+        /// </summary>
         public readonly bool IgnoreAtOutpost;
+
+        /// <summary>
+        /// Should the order be ignored in outposts belonging to the character's own team (e.g. should the player crew be allowed to do the objective in a player outpost)
+        /// </summary>
+        public readonly bool IgnoreAtOwnOutpost;
 
         public bool HasOptions => Options.Length > 1;
         public readonly bool MustManuallyAssign;
@@ -220,11 +229,12 @@ namespace Barotrauma
             var category = orderElement.GetAttributeString("category", null);
             this.Category = !string.IsNullOrWhiteSpace(category) ? Enum.Parse<OrderCategory>(category, true) : (OrderCategory?)null;
             this.CategoryIdentifier = (this.Category?.ToString() ?? string.Empty).ToIdentifier();
-            MustSetTarget = orderElement.GetAttributeBool("mustsettarget", false);
-            CanBeGeneralized = !MustSetTarget && orderElement.GetAttributeBool("canbegeneralized", true);
-            AppropriateSkill = orderElement.GetAttributeIdentifier("appropriateskill", Identifier.Empty);
-            Hidden = orderElement.GetAttributeBool("hidden", false);
-            IgnoreAtOutpost = orderElement.GetAttributeBool("ignoreatoutpost", false);
+            MustSetTarget = orderElement.GetAttributeBool(nameof(MustSetTarget), false);
+            CanBeGeneralized = !MustSetTarget && orderElement.GetAttributeBool(nameof(CanBeGeneralized), true);
+            AppropriateSkill = orderElement.GetAttributeIdentifier(nameof(AppropriateSkill), Identifier.Empty);
+            Hidden = orderElement.GetAttributeBool(nameof(Hidden), false);
+            IgnoreAtOutpost = orderElement.GetAttributeBool(nameof(IgnoreAtOutpost), false);
+            IgnoreAtOwnOutpost = orderElement.GetAttributeBool(nameof(IgnoreAtOwnOutpost), false);
 
             OptionNames =
                 new ListDictionary<Identifier, LocalizedString>(
@@ -357,7 +367,7 @@ namespace Barotrauma
         }
 
         /// <param name="interactableFor">Only returns items which are interactable for this character</param>
-        public List<Item> GetMatchingItems(Submarine submarine, bool mustBelongToPlayerSub, CharacterTeamType? requiredTeam = null, Character interactableFor = null, Identifier orderOption = default)
+        public List<Item> GetMatchingItems(Submarine submarine, bool mustBelongToPlayerSubOrOutpost, CharacterTeamType? requiredTeam = null, Character interactableFor = null, Identifier orderOption = default)
         {
             List<Item> matchingItems = new List<Item>();
             if (submarine == null) { return matchingItems; }
@@ -368,11 +378,20 @@ namespace Barotrauma
                     if (RequireItems.Any() && !TargetItemsMatchItem(RequireItems, item)) { continue; }
                     if (TargetItems.Any() && !TargetItemsMatchItem(item, orderOption)) { continue; }
                     if (RequireItems.None() && TargetItems.None() && !TryGetTargetItemComponent(item, out _)) { continue; }
-                    if (mustBelongToPlayerSub && item.Submarine?.Info != null && item.Submarine.Info.Type != SubmarineType.Player) { continue; }
-                    if (item.Submarine != submarine && !submarine.DockedTo.Contains(item.Submarine)) { continue; }
+                    if (mustBelongToPlayerSubOrOutpost && item.Submarine?.Info != null) 
+                    {
+                        bool isPlayerSubOrOutpost = 
+                            item.Submarine.Info.Type == SubmarineType.Player || 
+                            (item.Submarine.Info.Type == SubmarineType.Outpost && item.Submarine.TeamID == CharacterTeamType.Team1);
+                        if (!isPlayerSubOrOutpost)
+                        {
+                            continue;
+                        }
+                    }
+                    if (item.Submarine != submarine && !submarine.GetConnectedSubs().Contains(item.Submarine)) { continue; }
                     if (requiredTeam.HasValue && (item.Submarine == null || item.Submarine.TeamID != requiredTeam.Value)) { continue; }
                     if (item.NonInteractable) { continue; }
-                    if (ItemComponentType != null && item.Components.None(c => c.GetType() == ItemComponentType)) { continue; }
+                    if (ItemComponentType != null && item.Components.None(c => c.GetType() == ItemComponentType || (CanTypeBeSubclass && c.GetType().IsSubclassOf(ItemComponentType)))) { continue; }
                     Controller controller = null;
                     if (UseController && !item.TryFindController(out controller, tags: ControllerTags)) { continue; }
                     if (interactableFor != null && (!item.IsInteractable(interactableFor) || (UseController && !controller.Item.IsInteractable(interactableFor)))) { continue; }
@@ -386,7 +405,7 @@ namespace Barotrauma
         public List<Item> GetMatchingItems(bool mustBelongToPlayerSub, Character interactableFor = null, Identifier orderOption = default)
         {
             Submarine submarine = Character.Controlled != null && Character.Controlled.TeamID == CharacterTeamType.Team2 && Submarine.MainSubs.Length > 1 ?
-                Submarine.MainSubs[1] :
+                Submarine.AnotherMainSub :
                 Submarine.MainSub;
             return GetMatchingItems(submarine, mustBelongToPlayerSub, interactableFor: interactableFor, orderOption: orderOption);
         }
@@ -471,13 +490,13 @@ namespace Barotrauma
         /// <summary>
         /// Create an Order instance with a null target
         /// </summary>
-        public Order CreateInstance(OrderTargetType targetType, Character orderGiver = null, bool isAutonomous = false)
+        public Order CreateInstance(OrderTargetType targetType, Character orderGiver = null)
         {
             try
             {
                 return targetType switch
                 {
-                    OrderTargetType.Entity => new Order(this, targetEntity: null, targetItem: null, orderGiver, isAutonomous),
+                    OrderTargetType.Entity => new Order(this, targetEntity: null, targetItem: null, orderGiver),
                     OrderTargetType.Position => new Order(this, target: null, orderGiver),
                     OrderTargetType.WallSection => new Order(this, wall: null, sectionIndex: null, orderGiver),
                     _ => throw new NotImplementedException()
@@ -492,7 +511,7 @@ namespace Barotrauma
         }
     }
 
-    class Order
+    public class Order
     {
         public readonly OrderPrefab Prefab;
         public readonly Identifier Option;
@@ -576,6 +595,7 @@ namespace Barotrauma
         public bool DrawIconWhenContained => Prefab.DrawIconWhenContained;
         public bool Hidden => Prefab.Hidden;
         public bool IgnoreAtOutpost => Prefab.IgnoreAtOutpost;
+        public bool IgnoreAtOwnOutpost => Prefab.IgnoreAtOwnOutpost;
         public bool IsReport => Prefab.IsReport;
         public bool AutoDismiss => Prefab.AutoDismiss;
         public int AssignmentPriority => Prefab.AssignmentPriority;
@@ -588,14 +608,14 @@ namespace Barotrauma
         /// <summary>
         /// Constructor for orders with the target type OrderTargetType.Entity
         /// </summary>
-        public Order(OrderPrefab prefab, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null, bool isAutonomous = false)
-            : this(prefab, Identifier.Empty, 0, OrderType.Current, null, targetEntity, targetItem, orderGiver, isAutonomous) { }
+        public Order(OrderPrefab prefab, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null)
+            : this(prefab, Identifier.Empty, 0, OrderType.Current, null, targetEntity, targetItem, orderGiver) { }
 
         /// <summary>
         /// Constructor for orders with the target type OrderTargetType.Entity
         /// </summary>
-        public Order(OrderPrefab prefab, Identifier option, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null, bool isAutonomous = false)
-            : this(prefab, option, 0, OrderType.Current, null, targetEntity, targetItem, orderGiver, isAutonomous) { }
+        public Order(OrderPrefab prefab, Identifier option, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null)
+            : this(prefab, option, 0, OrderType.Current, null, targetEntity, targetItem, orderGiver) { }
 
         /// <summary>
         /// Constructor for orders with the target type OrderTargetType.Position
@@ -624,10 +644,17 @@ namespace Barotrauma
         /// <summary>
         /// Constructor for orders with the target type OrderTargetType.Entity
         /// </summary>
-        private Order(OrderPrefab prefab, Identifier option, int manualPriority, OrderType orderType, AIObjective aiObjective, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null, bool isAutonomous = false)
+        private Order(OrderPrefab prefab, Identifier option, int manualPriority, OrderType orderType, AIObjective aiObjective, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null)
         {
             Prefab = prefab;
             Option = option;
+            if (manualPriority > CharacterInfo.HighestManualOrderPriority)
+            {
+                DebugConsole.AddWarning(
+                    $"Potential error when creating the order {Prefab.Identifier}: manual priority set to {manualPriority}. " +
+                    $"The highest possible priority for an order is {CharacterInfo.HighestManualOrderPriority}. " +
+                    "Are you getting the order priority mixed up with AIObjective priority (which is an arbitrary value between 0-100)?\n" + Environment.StackTrace);
+            }
             ManualPriority = manualPriority;
             Type = orderType;
             Objective = aiObjective;
@@ -691,7 +718,14 @@ namespace Barotrauma
             bool? useController = null)
         {
             Prefab = prefab ?? other.Prefab;
-            Option = option.IfEmpty(other.Option);
+            Option = option.IfEmpty(other.Option); 
+            if (manualPriority > CharacterInfo.HighestManualOrderPriority)
+            {
+                DebugConsole.AddWarning(
+                    $"Potential error when creating the order {Prefab.Identifier}: manual priority set to {manualPriority}. " +
+                    $"The highest possible priority for an order is {CharacterInfo.HighestManualOrderPriority}. " +
+                    "Are you getting the order priority mixed up with AIObjective priority (which is an arbitrary value between 0-100)?\n" + Environment.StackTrace);
+            }
             ManualPriority = manualPriority ?? other.ManualPriority;
             Type = type ?? other.Type;
             Objective = objective ?? other.Objective;
@@ -739,7 +773,8 @@ namespace Barotrauma
 
         public Order WithTargetEntity(Entity entity)
         {
-            return new Order(this, targetEntity: entity, targetType: OrderTargetType.Entity);
+            return new Order(this, targetEntity: entity, 
+                targetType: entity is Structure && WallSectionIndex.HasValue ? OrderTargetType.WallSection : OrderTargetType.Entity);
         }
 
         public Order WithTargetSpatialEntity(ISpatialEntity spatialEntity)
@@ -847,6 +882,27 @@ namespace Barotrauma
         public LocalizedString GetOptionName(int index)
         {
             return Prefab.GetOptionName(index);
+        }
+
+        /// <summary>
+        /// Is the option valid for this order in the current situation (e.g. are we in a level with a start and end to give the "navigateback" or "navigatetodestination" option for the steering order).
+        /// </summary>
+        /// <param name="option"></param>
+        /// <returns></returns>
+        public bool IsOptionValid(Identifier option)
+        {
+            //"no option" is only valid if the order has no options at all
+            if (option.IsEmpty) { return AllOptions.None(); }
+            switch (Prefab.Identifier.Value)
+            {
+                case "steer":
+                    if (option == "navigatetodestination" || option == "navigateback")
+                    {
+                        return Level.Loaded is { Type: LevelData.LevelType.LocationConnection };
+                    }
+                    break;
+            }
+            return true;
         }
 
         /// <summary>

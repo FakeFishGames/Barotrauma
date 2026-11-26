@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Barotrauma.Networking;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +18,12 @@ partial class HighlightAction : EventAction
                     .Select(c => GameMain.Server.ConnectedClients.FirstOrDefault(client => client.Character == c))
                     .Where(c => c != null)!;
             }
-            GameMain.Server?.CreateEntityEvent(item, new Item.SetHighlightEventData(State, highlightColor, targetClients));
+            //don't send an update if TargetCharacter is set and no target clients were found
+            if (TargetCharacter.IsEmpty || (targetClients != null && targetClients.Any()))
+            {
+                GameMain.Server?.CreateEntityEvent(item, new Item.SetHighlightEventData(State, highlightColor, targetClients));
+            }
+
         }
     }
 }

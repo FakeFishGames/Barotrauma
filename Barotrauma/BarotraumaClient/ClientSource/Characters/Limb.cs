@@ -1,14 +1,14 @@
-﻿using Barotrauma.Lights;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
+using Barotrauma.Lights;
 using Barotrauma.Particles;
 using Barotrauma.SpriteDeformations;
-using Barotrauma.Extensions;
+using Barotrauma.Utils;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
-using Barotrauma.Utils;
 using System.Linq;
 using System.Xml.Linq;
 using SpriteParams = Barotrauma.RagdollParams.SpriteParams;
@@ -217,22 +217,9 @@ namespace Barotrauma
             public bool IsActive = true;
         }
 
-        public Color InitialLightSourceColor
-        {
-            get;
-            private set;
-        }
-        public float? InitialLightSpriteAlpha
-        {
-            get;
-            private set;
-        }
-
-        public LightSource LightSource
-        {
-            get;
-            private set;
-        }
+        public IEnumerable<LimbLight> LimbLights => limbLights;
+        private readonly HashSet<LimbLight> limbLights = new HashSet<LimbLight>();
+        public record LimbLight(LightSource LightSource, Color InitialColor, float? InitialAlpha);
 
         private float damageOverlayStrength;
         public float DamageOverlayStrength
@@ -249,6 +236,8 @@ namespace Barotrauma
         }
 
         public string HitSoundTag => Params?.Sound?.Tag;
+
+        public float HitSoundVolume => Params?.Sound?.Volume ?? 1.0f;
 
         private readonly List<WearableSprite> wearableTypeHidingSprites = new List<WearableSprite>();
         private readonly HashSet<WearableType> wearableTypesToHide = new HashSet<WearableType>();
@@ -303,6 +292,7 @@ namespace Barotrauma
             }
             TintMask = null;
             float sourceRectScale = ragdoll.RagdollParams.SourceRectScale;
+            limbLights.Clear();
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -342,17 +332,16 @@ namespace Barotrauma
                         randomColor = subElement.GetAttributeColorArray("colors", null)?.GetRandomUnsynced();
                         break;
                     case "lightsource":
-                        LightSource = new LightSource(subElement, GetConditionalTarget())
+                        var lightSource = new LightSource(subElement, GetConditionalTarget())
                         {
                             ParentBody = body,
                             SpriteScale = Vector2.One * Scale * TextureScale
                         };
                         if (randomColor.HasValue)
                         {
-                            LightSource.Color = new Color(randomColor.Value.R, randomColor.Value.G, randomColor.Value.B, LightSource.Color.A);
+                            lightSource.Color = new Color(randomColor.Value.R, randomColor.Value.G, randomColor.Value.B, lightSource.Color.A);
                         }
-                        InitialLightSourceColor = LightSource.Color;
-                        InitialLightSpriteAlpha = LightSource.OverrideLightSpriteAlpha;
+                        limbLights.Add(new LimbLight(lightSource, lightSource.Color, lightSource.OverrideLightSpriteAlpha));
                         break;
                     case "tintmask":
                         ContentPath tintMaskPath = subElement.GetAttributeContentPath("texture");
@@ -420,7 +409,7 @@ namespace Barotrauma
                 }
             }
             DefaultSpriteDepth = GetActiveSprite()?.Depth ?? 0.0f;
-            LightSource?.CheckConditionals();
+            UpdateLights();
         }
 
         private void RefreshDeformations()
@@ -707,23 +696,70 @@ namespace Barotrauma
                 conditionalSprite.CheckConditionals();
             }
 
-            if (LightSource != null)
+            foreach (LimbLight limbLight in LimbLights)
             {
-                LightSource.ParentSub = body.Submarine;
-                LightSource.Rotation = (dir == Direction.Right) ? body.Rotation : body.Rotation - MathHelper.Pi;
-                if (LightSource.LightSprite != null)
+                LightSource lightSource = limbLight.LightSource;
+                lightSource.ParentSub = body.Submarine;
+                lightSource.Rotation = (dir == Direction.Right) ? body.Rotation : body.Rotation - MathHelper.Pi;
+                if (lightSource.LightSprite != null)
                 {
-                    LightSource.LightSprite.Depth = ActiveSprite.Depth;
+                    lightSource.LightSprite.Depth = ActiveSprite.Depth;
                 }
-                if (LightSource.DeformableLightSprite != null)
+                if (lightSource.DeformableLightSprite != null)
                 {
-                    LightSource.DeformableLightSprite.Sprite.Depth = ActiveSprite.Depth;
+                    lightSource.DeformableLightSprite.Sprite.Depth = ActiveSprite.Depth;
                 }
-                LightSource.CheckConditionals();
+                UpdateLightSource(lightSource);
             }
 
             UpdateSpriteStates(deltaTime);
             RefreshDeformations();
+        }
+        
+        public void DisableLights()
+        {
+            lightSourcesDisabled = true;
+            UpdateLights();
+        }
+        
+        public void EnableLights(bool setToInitialColorAndAlpha = false)
+        {
+            lightSourcesDisabled = false;
+            if (setToInitialColorAndAlpha)
+            {
+                foreach (LimbLight light in LimbLights)
+                {
+                    light.LightSource.Color = light.InitialColor;
+                    if (light.InitialAlpha.HasValue) { light.LightSource.OverrideLightSpriteAlpha = light.InitialAlpha.Value; }
+                }
+            }
+            UpdateLights();
+        }
+        
+        public void UpdateLights()
+        {
+            foreach (LimbLight limbLight in LimbLights)
+            {
+                UpdateLightSource(limbLight.LightSource);
+            }
+        }
+        
+        private bool lightSourcesDisabled;
+        private void UpdateLightSource(LightSource lightSource)
+        {
+            if (lightSource == null) { return; }
+            if (lightSourcesDisabled)
+            {
+                lightSource.Enabled = false;
+                return;
+            }
+            lightSource.Enabled = character.Enabled && !Hidden && !isSevered;
+            //only check conditionals if the light is otherwise enabled
+            //(we don't want a conditional to turn it on on a disabled/hidden/severed limb!)
+            if (lightSource.Enabled)
+            {
+                lightSource.CheckConditionals();
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch, Camera cam, Color? overrideColor = null, bool disableDeformations = false)
@@ -769,7 +805,7 @@ namespace Barotrauma
             {
                 if (severedFadeOutTimer > SeveredFadeOutTime)
                 {
-                    if (LightSource != null) { LightSource.Enabled = false; }
+                    UpdateLights();
                     return;
                 }
                 else if (severedFadeOutTimer > SeveredFadeOutTime - 1.0f)
@@ -798,7 +834,7 @@ namespace Barotrauma
                 {
                     if (wearable.HideLimb) { return true; }
                 }
-                foreach (var wearable in limb.WearingItems)
+                foreach (var wearable in limb.ActiveWearingItems)
                 {
                     if (wearable.HideLimb) { return true; }
                 }
@@ -825,12 +861,15 @@ namespace Barotrauma
                     {
                         var deformation = SpriteDeformation.GetDeformation(ActiveDeformations, deformSprite.Size, flippedHorizontally: IsFlipped, false);
                         deformSprite.Deform(deformation);
-                        if (LightSource != null && LightSource.DeformableLightSprite != null)
+                        foreach (LimbLight limbLight in limbLights)
                         {
-                            //apparently inversing on the y-axis is only necessary for light sprites (see 345a65ca6)
-                            //it's a mystery why this is the case, something to do with sprite flipping being handled differently in light rendering?
-                            deformation = SpriteDeformation.GetDeformation(ActiveDeformations, deformSprite.Size, flippedHorizontally: IsFlipped, inverseY: dir == Direction.Left);
-                            LightSource.DeformableLightSprite.Deform(deformation);
+                            if (limbLight.LightSource.DeformableLightSprite is DeformableSprite lightSprite)
+                            {
+                                //apparently inversing on the y-axis is only necessary for light sprites (see 345a65ca6)
+                                //it's a mystery why this is the case, something to do with sprite flipping being handled differently in light rendering?
+                                deformation = SpriteDeformation.GetDeformation(ActiveDeformations, deformSprite.Size, flippedHorizontally: IsFlipped, inverseY: dir == Direction.Left);
+                                lightSprite.Deform(deformation);
+                            }
                         }
                     }
                     else
@@ -896,12 +935,12 @@ namespace Barotrauma
                 }
             }
             SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-            if (LightSource != null)
+            foreach (LimbLight limbLight in limbLights)
             {
-                LightSource.LightSpriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipVertically;
+                limbLight.LightSource.LightSpriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipVertically;
             }
             float step = depthStep;
-            WearableSprite onlyDrawable = WearingItems.Find(w => w.HideOtherWearables);
+            WearableSprite onlyDrawable = ActiveWearingItems.FirstOrDefault(w => w.HideOtherWearables);
             if (Params.MirrorHorizontally)
             {
                 spriteEffect = spriteEffect == SpriteEffects.None ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
@@ -961,13 +1000,13 @@ namespace Barotrauma
                     }
                 }
             }
-            foreach (WearableSprite wearable in WearingItems)
+            foreach (WearableSprite wearable in ActiveWearingItems)
             {
                 if (onlyDrawable != null && onlyDrawable != wearable && wearable.CanBeHiddenByOtherWearables) { continue; }
                 if (wearable.CanBeHiddenByItem.Any())
                 {
                     bool hiddenByOtherItem = false;
-                    foreach (var otherWearable in WearingItems)
+                    foreach (var otherWearable in ActiveWearingItems)
                     {
                         if (otherWearable == wearable) { continue; }
                         if (wearable.CanBeHiddenByItem.Contains(otherWearable.WearableComponent.Item.Prefab.Identifier))
@@ -1007,7 +1046,8 @@ namespace Barotrauma
                     var sa = (float)Math.Sin(-body.Rotation);
                     Vector2 transformedOffset = new Vector2(ca * offset.X + sa * offset.Y, -sa * offset.X + ca * offset.Y);
                     decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X + transformedOffset.X, -(body.DrawPosition.Y + transformedOffset.Y)), c, decorativeSprite.Sprite.Origin,
-                        -body.Rotation + rotation, decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, spriteEffect,
+                        -body.Rotation + rotation, decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, 
+                        spriteEffect ^ decorativeSprite.SpriteEffects,
                         depth: activeSprite.Depth - depthStep);
                     depthStep += step;
                 }
@@ -1017,7 +1057,7 @@ namespace Barotrauma
                         new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
                         colorWithoutTint * damageOverlayStrength, activeSprite.Origin,
                         -body.DrawRotation,
-                        Scale * TextureScale, spriteEffect, activeSprite.Depth - depthStep * Math.Max(1, WearingItems.Count * 2)); // Multiply by 2 to get rid of z-fighting with some clothing combos
+                        Scale * TextureScale, spriteEffect, activeSprite.Depth - depthStep * Math.Max(1, ActiveWearingItems.Count() * 2)); // Multiply by 2 to get rid of z-fighting with some clothing combos
                 }
             }
 
@@ -1058,21 +1098,36 @@ namespace Barotrauma
             }
         }
 
+
+        partial void FlipProjSpecific()
+        {
+            FlipSprite(DeformSprite?.Sprite ?? Sprite);
+            foreach (var conditionalSprite in ConditionalSprites)
+            {
+                FlipSprite(conditionalSprite.DeformableSprite?.Sprite ?? conditionalSprite.Sprite);
+            }
+            static void FlipSprite(Sprite sprite)
+            {
+                if (sprite == null) { return; }
+                Vector2 spriteOrigin = sprite.Origin;
+                spriteOrigin.X = sprite.SourceRect.Width - spriteOrigin.X;
+                sprite.Origin = spriteOrigin;
+            }
+        }
+
         public void UpdateWearableTypesToHide()
         {
             alphaClipEffectParams?.Clear();
 
             wearableTypeHidingSprites.Clear();
 
-            void addWearablesFrom(IReadOnlyList<WearableSprite> wearableSprites)
+            void addWearablesFrom(IEnumerable<WearableSprite> wearableSprites)
             {
-                if (wearableSprites.Count <= 0) { return; }
-
                 wearableTypeHidingSprites.AddRange(
                     wearableSprites.Where(w => w.HideWearablesOfType.Count > 0));
             }
 
-            addWearablesFrom(WearingItems);
+            addWearablesFrom(ActiveWearingItems);
             addWearablesFrom(OtherWearables);
 
             wearableTypesToHide.Clear();
@@ -1208,11 +1263,17 @@ namespace Barotrauma
 
             if (wearable.InheritLimbDepth)
             {
-                depth = sprite.Depth - depthStep;
+                depth = sprite.Depth + wearable.RelativeDepth - depthStep;
                 Limb depthLimb = (wearable.DepthLimb == LimbType.None) ? this : character.AnimController.GetLimb(wearable.DepthLimb);
                 if (depthLimb != null)
                 {
-                    depth = depthLimb.ActiveSprite.Depth - depthStep;
+                    depth = depthLimb.ActiveSprite.Depth + wearable.RelativeDepth - depthStep;
+                    if (wearable.DepthLimb != LimbType.None)
+                    {
+                        //if we are inheriting the depth of another limb, and there's some items worn on it,
+                        //modify the depth to ensure there's no z-fighting with the items on that limb
+                        depth -= depthStep * depthLimb.ActiveWearingItems.Count();
+                    }
                 }
             }
             var wearableItemComponent = wearable.WearableComponent;
@@ -1359,7 +1420,7 @@ namespace Barotrauma
             if (wearable.Sprite?.Texture == null) { return; }
             var (finalColor, origin, rotation, scale, depth) = CalculateDrawParameters(wearable, depthStep, color, alpha);
             var prevEffect = spriteBatch.GetCurrentEffect();
-            var alphaClipper = WearingItems.Find(w => w.AlphaClipOtherWearables);
+            var alphaClipper = ActiveWearingItems.FirstOrDefault(w => w.AlphaClipOtherWearables);
             bool shouldApplyAlphaClip = alphaClipper?.Sprite?.Texture != null && wearable != alphaClipper;
             if (shouldApplyAlphaClip)
             {
@@ -1396,9 +1457,9 @@ namespace Barotrauma
 
             ConditionalSprites.ForEach(s => s.Remove());
             ConditionalSprites.Clear();
-
-            LightSource?.Remove();
-            LightSource = null;
+            
+            limbLights.ForEach(l => l.LightSource.Remove());
+            limbLights.Clear();
 
             OtherWearables.ForEach(w => w.Sprite.Remove());
             OtherWearables.Clear();

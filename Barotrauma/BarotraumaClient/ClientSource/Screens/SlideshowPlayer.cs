@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class SlideshowPlayer : GUIComponent
+    public class SlideshowPlayer : GUIComponent
     {
         private readonly SlideshowPrefab slideshowPrefab;
         private readonly LocalizedString pressAnyKeyText;
@@ -158,9 +158,9 @@ namespace Barotrauma
                 GUI.DrawString(spriteBatch, textPos + Vector2.One, wrappedText, Color.Black * (textColor.A / 255.0f));
                 GUI.DrawString(spriteBatch, textPos, wrappedText, textColor);
 
-                if (timer > slide.TextFadeInDelay * 2)
+                if (timer > slide.PressAnyKeyDelay)
                 {
-                    float alpha = Math.Min(timer - slide.TextFadeInDelay * 2, 1.0f);
+                    float alpha = Math.Min(timer - slide.PressAnyKeyDelay, 1.0f);
                     Vector2 bottomTextPos = centerPos + new Vector2(0.0f, textSize.Y / 2 + 40 * GUI.Scale) - GUIStyle.Font.MeasureString(pressAnyKeyText) / 2;
                     GUI.DrawString(spriteBatch, bottomTextPos + Vector2.One, pressAnyKeyText, Color.Black * (textColor.A / 255.0f) * alpha);
                     GUI.DrawString(spriteBatch, bottomTextPos, pressAnyKeyText, textColor * alpha);

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    abstract partial class Screen
+    public abstract partial class Screen
     {
         public readonly GUIFrame Frame;
 
@@ -31,14 +31,14 @@ namespace Barotrauma
         {
         }
 
-        public void ColorFade(Color from, Color to, float duration)
+        public void ColorFade(Color from, Color to, float duration, bool ignorePausing = true)
         {
             if (duration <= 0.0f) return;
             
-            CoroutineManager.StartCoroutine(UpdateColorFade(from, to, duration));
+            CoroutineManager.StartCoroutine(UpdateColorFade(from, to, duration, ignorePausing));
         }
 
-        private IEnumerable<CoroutineStatus> UpdateColorFade(Color from, Color to, float duration)
+        private IEnumerable<CoroutineStatus> UpdateColorFade(Color from, Color to, float duration, bool ignorePausing = true)
         {
             while (Selected != this)
             {
@@ -46,11 +46,13 @@ namespace Barotrauma
             }
 
             float timer = 0.0f;
-
             while (timer < duration)
             {
-                GUI.ScreenOverlayColor = Color.Lerp(from, to, Math.Min(timer / duration, 1.0f));
-                timer += CoroutineManager.DeltaTime;
+                if (!CoroutineManager.Paused || ignorePausing)
+                {
+                    GUI.ScreenOverlayColor = Color.Lerp(from, to, Math.Min(timer / duration, 1.0f));
+                    timer += CoroutineManager.DeltaTime;
+                }
                 yield return CoroutineStatus.Running;
             }
 

@@ -2,11 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    internal partial class CampaignMetadata
+    public partial class CampaignMetadata
     {
         private readonly Dictionary<Identifier, object> data = new Dictionary<Identifier, object>();
 
@@ -71,6 +72,28 @@ namespace Barotrauma
             }
 
             data[identifier] = value;
+        }
+
+        public void RemoveValue(Identifier identifier)
+        {
+            if (!data.ContainsKey(identifier))
+            {
+                return;
+            }
+
+            DebugConsole.Log($"Removed \"{identifier}\" from {nameof(CampaignMetadata)}.");
+            data.Remove(identifier);
+        }
+
+        /// <summary>
+        /// Removes all the values whose key matches the predicate.
+        /// </summary>
+        public void RemoveAll(Func<Identifier, bool> predicate)
+        {
+            foreach (Identifier identifier in data.Keys.Where(predicate).ToList())
+            {
+                RemoveValue(identifier);
+            }
         }
 
         public float GetFloat(Identifier identifier, float? defaultValue = null)

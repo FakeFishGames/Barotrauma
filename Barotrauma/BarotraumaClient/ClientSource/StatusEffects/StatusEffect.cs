@@ -57,6 +57,13 @@ namespace Barotrauma
                             }
                             sounds.Add(sound);
                         }
+                        if (!IsOverride)
+                        {
+                            if (subElement.GetAttributeEnum("type", def: Type) != Type)
+                            {
+                                DebugConsole.AddWarning($"Potential error in {parentDebugName} ({subElement}): the sound has a different type than the status effect. Sounds in status effects cannot have specific types anyway, they depend on the type of the effect and play when the effect executes.");
+                            }
+                        }
                         break;
                 }
             }
@@ -124,29 +131,42 @@ namespace Barotrauma
                                     targetLimb = limb;
                                     break;
                                 }
+                                else if (targets[i] is Character character && GetFirstTargetLimb(character) is Limb characterLimb)
+                                {
+                                    targetLimb = characterLimb;
+                                    break;
+                                }
                             }
                         }
                     }
                     if (targetLimb != null && !targetLimb.Removed)
                     {
+                        //emission direction, in world space (counter-clockwise). When facing left, Pi turns it to point the other way.
                         angle = targetLimb.body.Rotation + ((targetLimb.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                        //particle sprite rotation is in display space (y-down, clockwise), hence the negation.
+                        //offset accounts for the limb's sprite orientation in the spritesheet.
                         particleRotation = -targetLimb.body.Rotation;
                         float offset = targetLimb.Params.GetSpriteOrientation() - MathHelper.PiOver2;
                         particleRotation += offset;
                         if (emitter.Prefab.Properties.CopyEntityDir && targetLimb.body.Dir < 0.0f)
                         {
-                            angle = targetLimb.body.Rotation + ((targetLimb.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
-                            particleRotation = -targetLimb.body.Rotation;
-                            if (targetLimb.body.Dir < 0.0f)
-                            {
-                                particleRotation += MathHelper.Pi;
-                                mirrorAngle = true;
-                            }
+                            //Mirror the facing-right rotation horizontally: mirrored = Pi - (-rot + offset).
+                            //The ragdoll already mirrors the limb when flipping (rot facing left == -rot facing right),
+                            //so written in terms of the current rotation this becomes Pi - rot - offset.
+                            particleRotation = -targetLimb.body.Rotation + MathHelper.Pi - offset;
+                            // Also mirror the emitter's AngleMin/AngleMax spread
+                            mirrorAngle = true;
                         }
                     }
                 }
 
-                emitter.Emit(deltaTime, worldPosition, hull, angle: angle, particleRotation: particleRotation, mirrorAngle: mirrorAngle);
+                // Entities in a moving submarine layer give the particles the velocity of the layer, otherwise they would lag behind as the layer moves
+                Vector2 baseVelocity = 
+                    entity is MapEntity { Submarine: Submarine sub } mapEntity && !string.IsNullOrEmpty(mapEntity.Layer) ?
+                    sub.GetLayerVelocity(mapEntity.Layer.ToIdentifier()) :
+                    Vector2.Zero;
+
+                emitter.Emit(deltaTime, worldPosition, hull, angle: angle, particleRotation: particleRotation, mirrorAngle: mirrorAngle, baseVelocity: baseVelocity);
             }
         }
 
@@ -247,7 +267,7 @@ namespace Barotrauma
                     soundChannel == null || !soundChannel.IsPlaying || soundChannel.FadingOutAndDisposing || !soundChannel.Looping,
                     "A StatusEffect attempted to play a sound, but an looping sound is already playing. The looping sound should be stopped before playing a new one, or it will keep looping indefinitely.");
                 
-                soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: hull, ignoreMuffling: selectedSound.IgnoreMuffling, freqMult: selectedSound.GetRandomFrequencyMultiplier());
+                soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.GetSoundVolume(entity as ISerializableEntity), selectedSound.Range, hullGuess: hull, ignoreMuffling: selectedSound.IgnoreMuffling, freqMult: selectedSound.GetRandomFrequencyMultiplier());
                 ignoreMuffling = selectedSound.IgnoreMuffling;
                 if (soundChannel != null)
                 {
@@ -289,11 +309,26 @@ namespace Barotrauma
                 }
                 else if (statusEffect.soundEmitter is { Removed: false })
                 {
-                    statusEffect.soundChannel.Position = new Vector3(statusEffect.soundEmitter.WorldPosition, 0.0f);
-                    if (doMuffleCheck && !statusEffect.ignoreMuffling)
+                    if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(statusEffect.soundEmitter.WorldPosition, 0.0f)) > statusEffect.soundChannel.Far * statusEffect.soundChannel.Far *1.1f)
                     {
-                        statusEffect.soundChannel.Muffled = SoundPlayer.ShouldMuffleSound(
-                            Character.Controlled, statusEffect.soundEmitter.WorldPosition, statusEffect.soundChannel.Far, Character.Controlled?.CurrentHull);
+                        statusEffect.soundChannel.FadeOutAndDispose();
+                        statusEffect.soundChannel = null;
+                        return;
+                    }
+                    else
+                    {
+                        statusEffect.soundChannel.Position = new Vector3(statusEffect.soundEmitter.WorldPosition, 0.0f);
+                        if (statusEffect.lastPlayingSound != null)
+                        {
+                            float targetGain = statusEffect.lastPlayingSound.GetSoundVolume(statusEffect.soundEmitter as ISerializableEntity);
+                            float gainDiff = targetGain - statusEffect.soundChannel.Gain;
+                            statusEffect.soundChannel.Gain += Math.Abs(gainDiff) < 0.1f ? gainDiff : Math.Sign(gainDiff) * 0.1f;
+                        }
+                        if (doMuffleCheck && !statusEffect.ignoreMuffling)
+                        {
+                            statusEffect.soundChannel.Muffled = SoundPlayer.ShouldMuffleSound(
+                                Character.Controlled, statusEffect.soundEmitter.WorldPosition, statusEffect.soundChannel.Far, Character.Controlled?.CurrentHull);
+                        }
                     }
                 }
             }

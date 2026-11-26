@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class CampaignUI
+    public class CampaignUI
     {
         private CampaignMode.InteractionType selectedTab;
 
@@ -20,6 +20,9 @@ namespace Barotrauma
         private Point prevResolution;
 
         private GUIComponent locationInfoPanel;
+        public GUIComponent LocationInfoPanel => locationInfoPanel;
+
+        public GUIComponent LocationShortcutsPanel;
 
         private GUIListBox missionList;
         private readonly List<GUITickBox> missionTickBoxes = new List<GUITickBox>();
@@ -117,20 +120,34 @@ namespace Barotrauma
 
             // Submarine buying tab
             tabs[(int)CampaignMode.InteractionType.PurchaseSub] = new GUIFrame(new RectTransform(Vector2.One, container.RectTransform, Anchor.TopLeft), color: Color.Black * 0.9f);
+                        
+            submarineSelection = null;
 
             tabs[(int)CampaignMode.InteractionType.MedicalClinic] = new GUIFrame(new RectTransform(Vector2.One, container.RectTransform), color: Color.Black * 0.9f);
             MedicalClinic = new MedicalClinicUI(Campaign.MedicalClinic, GetTabContainer(CampaignMode.InteractionType.MedicalClinic));
-
+            
             // mission info -------------------------------------------------------------------------
 
             locationInfoPanel = new GUIFrame(new RectTransform(new Vector2(0.35f, 0.75f), GetTabContainer(CampaignMode.InteractionType.Map).RectTransform, Anchor.CenterRight)
-            { RelativeOffset = new Vector2(0.02f, 0.0f) }, 
-                color: Color.Black)
+            { AbsoluteOffset = new Point(GUI.IntScale(10), 0) }, 
+                color: Color.Black * 0.8f)
             {
                 Visible = false
             };
 
+            foreach (var hook in PluginData.GetHooks<PluginCampaignDrawUIDelegate>())
+            {
+                hook(Campaign, this);
+            }
+
             // -------------------------------------------------------------------------
+
+            //the location may have been selected before the UI was created (e.g. a client receiving the campaign state before opening the map),
+            //or the UI is being recreated, so populate the location info panel (mission list) for the existing selection
+            if (Campaign.Map.SelectedLocation != null)
+            {
+                SelectLocation(Campaign.Map.SelectedLocation, Campaign.Map.SelectedConnection);
+            }
 
             SelectTab(CampaignMode.InteractionType.Map);
 
@@ -229,6 +246,11 @@ namespace Barotrauma
             }
         }
 
+        public void HideLocationInfoPanel()
+        {
+            locationInfoPanel.Visible = false;
+        }
+
         public void SelectLocation(Location location, LocationConnection connection)
         {
             missionTickBoxes.Clear();
@@ -262,11 +284,11 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.GetLocationTypeToDisplay().Name, font: GUIStyle.SubHeadingFont);
 
             Sprite portrait = location.Type.GetPortrait(location.PortraitId);
-            portrait.EnsureLazyLoaded();
+            portrait?.EnsureLazyLoaded();
 
             var portraitContainer = new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform), onDraw: (sb, customComponent) =>
             {
-                portrait.Draw(sb, customComponent.Rect.Center.ToVector2(), Color.Gray, portrait.size / 2, scale: Math.Max(customComponent.Rect.Width / portrait.size.X, customComponent.Rect.Height / portrait.size.Y));
+                portrait?.Draw(sb, customComponent.Rect.Center.ToVector2(), Color.Gray, portrait.size / 2, scale: Math.Max(customComponent.Rect.Width / portrait.size.X, customComponent.Rect.Height / portrait.size.Y));
             })
             {
                 HideElementsOutsideFrame = true
@@ -292,6 +314,12 @@ namespace Barotrauma
                 var difficultyLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), textContent.RectTransform),
                     TextManager.Get("LevelDifficulty"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), difficultyLabel.RectTransform), TextManager.GetWithVariable("percentageformat", "[value]", ((int)connection.LevelData.Difficulty).ToString()), textAlignment: Alignment.CenterRight);
+
+                if (location.IsBelowInsufficientPopulationThreshold)
+                {
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), textContent.RectTransform), TextManager.Get("location.insufficientpopulation"),
+                        textColor: GUIStyle.Orange, wrap: true, textAlignment: Alignment.Center);
+                }
 
                 if (connection.LevelData.HasBeaconStation)
                 {
@@ -352,11 +380,19 @@ namespace Barotrauma
             Location currentDisplayLocation = Campaign.GetCurrentDisplayLocation();
             if (connection != null && connection.Locations.Contains(currentDisplayLocation))
             {
+                //get the missions originating from current location
                 List<Mission> availableMissions = currentDisplayLocation.GetMissionsInConnection(connection).Where(m => m.Prefab.ShowInMenus || GameMain.DebugDraw).ToList();
-
+                //and also the side objectives that take place in the specified level, no matter which location they originate from (these are automatically selected)
+                foreach (var mission in connection.AvailableMissions.Where(m => (m.Prefab.ShowInMenus || GameMain.DebugDraw) && m.Prefab.IsSideObjective))
+                {
+                    if (!availableMissions.Contains(mission))
+                    {
+                        availableMissions.Add(mission);
+                    }
+                }
                 if (availableMissions.None()) { availableMissions.Insert(0, null); }
 
-                availableMissions.AddRange(location.AvailableMissions.Where(m => m.Locations[0] == m.Locations[1]));
+                availableMissions.AddRange(location.AvailableMissions.Where(m => m.Prefab.ShowInMenus && m.Locations[0] == m.Locations[1]));
                 //show side objectives last
                 availableMissions.Sort((m1, m2) => (m1?.Prefab.IsSideObjective ?? false).CompareTo(m2?.Prefab.IsSideObjective ?? false));
 
@@ -365,7 +401,7 @@ namespace Barotrauma
                 bool isPrevMissionInNextLocation = false;
                 foreach (Mission mission in availableMissions)
                 {
-                    bool isMissionInNextLocation = mission != null && location.AvailableMissions.Contains(mission);
+                    bool isMissionInNextLocation = mission != null && mission.Locations[0] == mission.Locations[1] && location.AvailableMissions.Contains(mission);
                     if (isMissionInNextLocation && !isPrevMissionInNextLocation)
                     {
                         new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionList.Content.RectTransform), TextManager.Get("outpostmissions"),
@@ -392,17 +428,13 @@ namespace Barotrauma
                     };
 
                     LocalizedString missionName = mission?.Name ?? TextManager.Get("NoMission");
-                    if (mission is { Prefab.IsSideObjective: true })
-                    {
-                        missionName = TextManager.AddPunctuation(':', TextManager.Get("sideobjective"), missionName);
-                    }
                     if (GameMain.DebugDraw && mission != null)
                     {
                         if (!mission.Prefab.ShowInMenus) { missionName = $"[HIDDEN] {missionName}"; }
                         missionName += $" ({mission.Prefab.Identifier})";
                     }
 
-                    var missionNameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), missionName, font: GUIStyle.SubHeadingFont, wrap: true);
+                    var missionNameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), RichString.Rich(missionName), font: GUIStyle.SubHeadingFont, wrap: true);
                     missionNameBlock.RectTransform.MinSize = new Point(0, GUI.IntScale(15));
                     if (mission == null)
                     {
@@ -484,9 +516,18 @@ namespace Barotrauma
                             missionNameBlock.Padding.W);
                         missionNameBlock.CalculateHeightFromText();
 
+                        if (mission.Prefab.ContentPackage is ContentPackage contentPackage && contentPackage != ContentPackageManager.VanillaCorePackage)
+                        {
+                            var contentPackageBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform),
+                                text: $"[{contentPackage.Name}]", textColor: contentPackage.GetAccentColor(), font: GUIStyle.SubHeadingFont,
+                                wrap: true);
+                            contentPackageBlock.Padding = new Vector4(missionNameBlock.Padding.X, 0, contentPackageBlock.Padding.Z, 0);
+                            contentPackageBlock.CalculateHeightFromText();
+                        }
+
                         //spacing
                         new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform) { MinSize = new Point(0, GUI.IntScale(10)) }, style: null);
-                        
+
                         var rewardText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), RichString.Rich(mission.GetMissionRewardText(Submarine.MainSub)), wrap: true)
                         {
                             UserData = mission
@@ -533,8 +574,11 @@ namespace Barotrauma
                     missionList.UpdateScrollBarSize();
                 }
             }
-            var destination = connection.OtherLocation(currentDisplayLocation);
-            UpdateMaxMissions(destination);
+            if (connection != null)
+            {
+                var destination = connection.OtherLocation(currentDisplayLocation);
+                UpdateMaxMissions(destination);
+            }
 
             var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), isHorizontal: true);
 
@@ -545,7 +589,8 @@ namespace Barotrauma
                     int missionCount = 0;
                     if (GameMain.GameSession != null && Campaign.Map?.CurrentLocation?.SelectedMissions != null)
                     {
-                        missionCount = Campaign.Map.CurrentLocation.SelectedMissions.Count(m => m.Locations.Contains(location) && !GameMain.GameSession.Missions.Contains(m) && !m.Prefab.IsSideObjective);
+                        missionCount = Campaign.Map.CurrentLocation.SelectedMissions.Count(
+                            m => m.Locations.Contains(location) && !GameMain.GameSession.Missions.Contains(m) && !m.Prefab.IsSideObjective && m.Prefab.ShowInMenus);
                     }
                     return TextManager.AddPunctuation(':', TextManager.Get("Missions"), $"{missionCount}/{Campaign.Settings.TotalMaxMissionCount}");
                 }
@@ -556,22 +601,25 @@ namespace Barotrauma
             {
                 OnClicked = (GUIButton btn, object obj) =>
                 {
-                    if (missionList.Content.FindChild(c => c is GUITickBox tickBox && tickBox.Selected, recursive: true) == null &&
-                        missionList.Content.Children.Any(c => c.UserData is Mission { Prefab.ShowInMenus: true, Prefab.IsSideObjective: false } mission && mission.Locations.Contains(Campaign?.Map?.CurrentLocation)))
+                    CampaignMode.TryLeaveOutpostWithSubmarineSafetyCheck(onConfirm: () =>
                     {
-                        var noMissionVerification = new GUIMessageBox(string.Empty, TextManager.Get("nomissionprompt"), [TextManager.Get("yes"), TextManager.Get("no")]);
-                        noMissionVerification.Buttons[0].OnClicked = (btn, userdata) =>
+                        if (missionList.Content.FindChild(c => c is GUITickBox tickBox && tickBox.Selected, recursive: true) == null &&
+                            missionList.Content.Children.Any(c => c.UserData is Mission { Prefab.ShowInMenus: true, Prefab.IsSideObjective: false } mission && mission.Locations.Contains(Campaign?.Map?.CurrentLocation)))
+                        {
+                            var noMissionVerification = new GUIMessageBox(string.Empty, TextManager.Get("nomissionprompt"), [TextManager.Get("yes"), TextManager.Get("no")]);
+                            noMissionVerification.Buttons[0].OnClicked = (btn, userdata) =>
+                            {
+                                StartRound?.Invoke();
+                                noMissionVerification.Close();
+                                return true;
+                            };
+                            noMissionVerification.Buttons[1].OnClicked = noMissionVerification.Close;
+                        }
+                        else
                         {
                             StartRound?.Invoke();
-                            noMissionVerification.Close();
-                            return true;
-                        };
-                        noMissionVerification.Buttons[1].OnClicked = noMissionVerification.Close;
-                    }
-                    else
-                    {
-                        StartRound?.Invoke();
-                    }
+                        }
+                    });
                     return true;
                 },
                 Enabled = true,
@@ -630,6 +678,11 @@ namespace Barotrauma
                     }
                     break;
             }
+            
+            foreach (var hook in PluginData.GetHooks<PluginCampaignSelectTabDelegate>())
+            {
+                hook(this, selectedTab);
+            }
         }
 
         public static LocalizedString GetMoney()
@@ -663,13 +716,20 @@ namespace Barotrauma
             public readonly GUILayoutGroup ParentComponent;
             public readonly GUILayoutGroup TotalBalanceContainer;
             public readonly GUILayoutGroup BankBalanceContainer;
+            public readonly GUITextBlock TotalBalanceText;
+            public readonly GUITextBlock BankBalanceText;
+            public readonly GUITextBlock WalletBalanceText;
 
-            public PlayerBalanceElement(bool displaySeparateBalances, GUILayoutGroup parentComponent, GUILayoutGroup totalBalanceContainer, GUILayoutGroup bankBalanceContainer)
+            public PlayerBalanceElement(bool displaySeparateBalances, GUILayoutGroup parentComponent, GUILayoutGroup totalBalanceContainer, GUILayoutGroup bankBalanceContainer,
+                GUITextBlock totalBalanceText, GUITextBlock bankBalanceText, GUITextBlock walletBalanceText)
             {
                 DisplaySeparateBalances = displaySeparateBalances;
                 ParentComponent = parentComponent;
                 TotalBalanceContainer = totalBalanceContainer;
                 BankBalanceContainer = bankBalanceContainer;
+                TotalBalanceText = totalBalanceText;
+                BankBalanceText = bankBalanceText;
+                WalletBalanceText = walletBalanceText;
             }
 
             public PlayerBalanceElement(PlayerBalanceElement element, bool displaySeparateBalances)
@@ -678,12 +738,15 @@ namespace Barotrauma
                 ParentComponent = element.ParentComponent;
                 TotalBalanceContainer = element.TotalBalanceContainer;
                 BankBalanceContainer = element.BankBalanceContainer;
+                TotalBalanceText = element.TotalBalanceText;
+                BankBalanceText = element.BankBalanceText;
+                WalletBalanceText = element.WalletBalanceText;
             }
         }
 
         public static PlayerBalanceElement? AddBalanceElement(GUIComponent elementParent, Vector2 relativeSize)
         {
-            var parent = new GUILayoutGroup(new RectTransform(relativeSize, elementParent.RectTransform), isHorizontal: true, childAnchor: Anchor.TopRight);
+            GUILayoutGroup parent = new GUILayoutGroup(new RectTransform(relativeSize, elementParent.RectTransform), isHorizontal: true, childAnchor: Anchor.TopRight);
             if (GameMain.IsSingleplayer)
             {
                 AddBalance(parent, true, TextManager.Get("campaignstore.balance"), GetTotalBalance);
@@ -692,22 +755,23 @@ namespace Barotrauma
             else
             {
                 bool displaySeparateBalances = CampaignMode.AllowedToManageWallets();
-                var totalBalanceContainer = AddBalance(parent, displaySeparateBalances, TextManager.Get("campaignstore.total"), GetTotalBalance);
-                var bankBalanceContainer = AddBalance(parent, displaySeparateBalances, TextManager.Get("crewwallet.bank"), GetBankBalance);
-                AddBalance(parent, true, TextManager.Get("crewwallet.wallet"), GetWalletBalance);
-                var playerBalanceElement = new PlayerBalanceElement(displaySeparateBalances, parent, totalBalanceContainer, bankBalanceContainer);
+                (GUILayoutGroup totalBalanceContainer, GUITextBlock totalBalanceText) = AddBalance(parent, displaySeparateBalances, TextManager.Get("campaignstore.total"), GetTotalBalance);
+                (GUILayoutGroup bankBalanceContainer, GUITextBlock bankBalanceText) = AddBalance(parent, displaySeparateBalances, TextManager.Get("crewwallet.bank"), GetBankBalance);
+                (GUILayoutGroup _, GUITextBlock walletBalanceText) = AddBalance(parent, true, TextManager.Get("crewwallet.wallet"), GetWalletBalance);
+                PlayerBalanceElement playerBalanceElement = new PlayerBalanceElement(displaySeparateBalances, parent, totalBalanceContainer, bankBalanceContainer,
+                    totalBalanceText, bankBalanceText, walletBalanceText);
                 parent.Recalculate();
                 return playerBalanceElement;
             }
 
-            static GUILayoutGroup AddBalance(GUIComponent parent, bool visible, LocalizedString text, GUITextBlock.TextGetterHandler textGetter)
+            static (GUILayoutGroup Container, GUITextBlock ValueText) AddBalance(GUIComponent parent, bool visible, LocalizedString text, GUITextBlock.TextGetterHandler textGetter)
             {
                 float balanceContainerWidth = GameMain.IsSingleplayer ? 1 : 1 / 3f;
-                var rt = new RectTransform(new Vector2(balanceContainerWidth, 1.0f), parent.RectTransform)
+                RectTransform rt = new RectTransform(new Vector2(balanceContainerWidth, 1.0f), parent.RectTransform)
                 {
                     MaxSize = new Point(GUI.IntScale(GUI.AdjustForTextScale(120)), int.MaxValue)
                 };
-                var balanceContainer = new GUILayoutGroup(rt, childAnchor: Anchor.TopRight)
+                GUILayoutGroup balanceContainer = new GUILayoutGroup(rt, childAnchor: Anchor.TopRight)
                 {
                     RelativeSpacing = 0.005f,
                     Visible = visible
@@ -718,14 +782,17 @@ namespace Barotrauma
                     AutoScaleVertical = true,
                     ForceUpperCase = ForceUpperCase.Yes
                 };
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), balanceContainer.RectTransform), "",
+                GUITextBlock valueText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), balanceContainer.RectTransform), "",
                     textColor: Color.White, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.TopRight)
                 {
                     AutoScaleVertical = true,
+                    //the column has a fixed max width, and large sums (e.g. once bank interest piles up) can otherwise
+                    //overflow past it since only vertical auto-scaling was applied - shrink the font to fit instead
+                    AutoScaleHorizontal = true,
                     TextScale = 1.1f,
                     TextGetter = textGetter
                 };
-                return balanceContainer;
+                return (balanceContainer, valueText);
             }
         }
 
@@ -741,6 +808,11 @@ namespace Barotrauma
                     playerBalanceElement = new PlayerBalanceElement(balanceElement, displaySeparateBalances);
                     balanceElement.ParentComponent.Recalculate();
                 }
+                //each value text block auto-scales itself down independently to avoid overflowing its own column,
+                //so a "0" next to sums in the billions ends up visibly larger than its neighbours - normalize them
+                //to a shared scale instead (same helper used for e.g. reactor/power readouts elsewhere)
+                GUITextBlock.AutoScaleAndNormalize(scaleHorizontal: true, scaleVertical: true,
+                    balanceElement.TotalBalanceText, balanceElement.BankBalanceText, balanceElement.WalletBalanceText);
             }
             return playerBalanceElement;
         }

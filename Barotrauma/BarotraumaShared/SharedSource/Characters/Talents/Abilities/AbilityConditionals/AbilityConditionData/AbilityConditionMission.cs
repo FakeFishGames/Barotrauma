@@ -1,6 +1,5 @@
-﻿using System;
+﻿using Barotrauma.Extensions;
 using System.Collections.Immutable;
-using System.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -13,6 +12,11 @@ namespace Barotrauma.Abilities
         {
             missionType = conditionElement.GetAttributeIdentifierImmutableHashSet("missiontype", ImmutableHashSet<Identifier>.Empty)!;
             isAffiliated = conditionElement.GetAttributeBool("isaffiliated", false);
+
+            if (!missionType.IsEmpty && MissionPrefab.Prefabs.None(m => missionType.Contains(m.Type)))
+            {
+                DebugConsole.AddWarning($"Potential error in talent \"{characterTalent.DebugIdentifier}\": no mission has the mission type \"{missionType}\".");
+            }
         }
 
         protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
@@ -21,7 +25,7 @@ namespace Barotrauma.Abilities
             {
                 if (!isAffiliated) { return CheckMissionType(); }
 
-                if (GameMain.GameSession?.Campaign?.Factions is not { } factions) { return false; }
+                if (GameMain.GameSession?.Campaign is not CampaignMode campaign) { return false; }
 
                 foreach (var reputationReward in mission.ReputationRewards)
                 {
@@ -38,7 +42,7 @@ namespace Barotrauma.Abilities
                 Faction GetMatchingFaction(Identifier factionIdentifier) =>
                     factionIdentifier == "location"
                         ? mission.OriginLocation?.Faction
-                        : factions.FirstOrDefault(f => factionIdentifier == f.Prefab.Identifier);
+                        : campaign.GetFaction(factionIdentifier);
 
                 bool CheckMissionType() => missionType.IsEmpty || missionType.Contains(mission.Prefab.Type);
             }

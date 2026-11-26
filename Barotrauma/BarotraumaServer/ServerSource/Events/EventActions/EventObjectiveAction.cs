@@ -1,6 +1,6 @@
 namespace Barotrauma
 {
-    partial class EventObjectiveAction : EventAction
+    public partial class EventObjectiveAction : EventAction
     {
         partial void UpdateProjSpecific()
         {

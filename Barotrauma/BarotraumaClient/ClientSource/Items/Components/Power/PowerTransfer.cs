@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class PowerTransfer : Powered
+    public partial class PowerTransfer : Powered
     {
         public override bool RecreateGUIOnResolutionChange => true;
         protected GUIComponent guiContent;

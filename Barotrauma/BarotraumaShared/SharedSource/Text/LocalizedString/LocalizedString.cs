@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -29,6 +30,26 @@ namespace Barotrauma
         public int Length => Value.Length;
 
         public abstract bool Loaded { get; }
+
+        /// <summary>
+        /// Did the text fail to load in the selected language, but we ended up using the text in the default language (English) instead?
+        /// </summary>
+        public abstract bool UsingDefaultLanguageAsFallback { get; }
+
+        /// <summary>
+        /// Are all of the strings either loaded, or using the default language as a fallback (and at least one of them using the default language)?
+        /// </summary>
+        protected static bool CombinedUsingDefaultLanguageAsFallback(IEnumerable<LocalizedString> strs)
+        {
+            bool anyUsingDefaultLanguage = false;
+            foreach (var str in strs)
+            {
+                if (str.Loaded) { continue; }
+                if (!str.UsingDefaultLanguageAsFallback) { return false; }
+                anyUsingDefaultLanguage = true;
+            }
+            return anyUsingDefaultLanguage;
+        }
 
         protected void UpdateLanguage()
         {
@@ -106,6 +127,11 @@ namespace Barotrauma
         public static LocalizedString Join(string separator, IEnumerable<LocalizedString> subStrs)
         {
             return new JoinLString(separator, subStrs);
+        }
+
+        public static LocalizedString JoinIfNotNullOrEmpty(string separator, params LocalizedString?[] subStrs)
+        {
+            return Join(separator, subStrs.Where(subStr => !subStr.IsNullOrEmpty()).Cast<LocalizedString>());
         }
 
         /// <summary>

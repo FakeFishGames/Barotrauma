@@ -60,7 +60,7 @@
     MissionRewardMultiplier="1.0"
     ExperienceRewardMultiplier="1.0"
     ShopPriceMultiplier="1.5"
-    ShipyardPriceMultiplier="1.5"
+    ShipyardPriceMultiplier="1.0"
     RepairFailMultiplier="2.0"
     PatdownProbability="high"
     ShowHuskWarning="false"/>
@@ -79,7 +79,7 @@
     MissionRewardMultiplier="0.8"
     ExperienceRewardMultiplier="0.8"
     ShopPriceMultiplier="2.0"
-    ShipyardPriceMultiplier="2.0"
+    ShipyardPriceMultiplier="1.2"
     RepairFailMultiplier="5.0"
     PatdownProbability="high"
     ShowHuskWarning="false"/>

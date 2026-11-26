@@ -7,7 +7,7 @@ namespace Barotrauma
     /// <summary>
     /// Makes an NPC switch to a combat state (with options for different kinds of behaviors, such as offensive, arresting or retreating).
     /// </summary>
-    class CombatAction : EventAction
+    public class CombatAction : EventAction
     {
         [Serialize(AIObjectiveCombat.CombatMode.Offensive, IsPropertySaveable.Yes, description: $"What kind of combat mode should the NPC switch to (Defensive, Offensive, Arrest, Retreat, None)?")]
         public AIObjectiveCombat.CombatMode CombatMode { get; set; }
@@ -82,7 +82,7 @@ namespace Barotrauma
             return isFinished;
         }
 
-        public override void Reset()
+        public override void Reset(bool shouldEndConversations = true)
         {
             if (affectedNpcs != null && AbandonOnReset)
             {

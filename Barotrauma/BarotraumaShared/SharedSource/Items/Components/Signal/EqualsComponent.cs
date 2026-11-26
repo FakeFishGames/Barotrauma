@@ -58,6 +58,23 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private string value1, value2;
+
+        //not virtual on purpose: overriding would change the declaring type of the property, which is used for the localization tags in the editor
+        [InGameEditable, Serialize("", IsPropertySaveable.Yes, description: "Used instead of the first input value if no value is received through wiring, or if the first signal input is not wired to anything.", alwaysUseInstanceValues: true)]
+        public string Value1
+        {
+            get { return value1; }
+            set { value1 = OnFixedValueChanged(0, value); }
+        }
+
+        [InGameEditable, Serialize("", IsPropertySaveable.Yes, description: "Used instead of the second input value if no value is received through wiring, or if the second signal input is not wired to anything.", alwaysUseInstanceValues: true)]
+        public string Value2
+        {
+            get { return value2; }
+            set { value2 = OnFixedValueChanged(1, value); }
+        }
+
         [InGameEditable(DecimalCount = 2), Serialize(0.0f, IsPropertySaveable.Yes, description: "The maximum amount of time between the received signals. If set to 0, the signals must be received at the same time.", alwaysUseInstanceValues: true)]
         public float TimeFrame
         {
@@ -80,12 +97,44 @@ namespace Barotrauma.Items.Components
             IsActive = true;
         }
 
+        /// <summary>
+        /// Called when <see cref="Value1"/> or <see cref="Value2"/> is set. Can be overridden to validate or cache the value.
+        /// </summary>
+        /// <param name="index">0 = Value1, 1 = Value2</param>
+        /// <returns>The value that should be assigned to the property.</returns>
+        protected virtual string OnFixedValueChanged(int index, string value)
+        {
+            return value;
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             bool sendOutput = false;
             for (int i = 0; i < timeSinceReceived.Length; i++)
             {
-                if (timeSinceReceived[i] <= timeFrame) sendOutput = true;
+                if (timeSinceReceived[i] <= timeFrame)
+                {
+                    sendOutput = true;
+                }
+                else
+                {
+                    if (i == 0)
+                    {
+                        if (!Value1.IsNullOrEmpty())
+                        {
+                            receivedSignal[0] = Value1;
+                            sendOutput = true;
+                        }
+                    }
+                    else if (i == 1)
+                    {
+                        if (!Value2.IsNullOrEmpty())
+                        {
+                            receivedSignal[1] = Value2;
+                            sendOutput = true;
+                        }
+                    }
+                }
                 timeSinceReceived[i] += deltaTime;
             }
 
@@ -113,6 +162,9 @@ namespace Barotrauma.Items.Components
                     break;
                 case "set_output":
                     output = signal.value;
+                    break;
+                case "set_falseoutput":
+                    falseOutput = signal.value;
                     break;
             }
         }

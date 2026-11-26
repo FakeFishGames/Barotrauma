@@ -7,7 +7,7 @@ using Barotrauma.Networking;
 
 namespace Barotrauma
 {
-    internal sealed class DoSProtection
+    public sealed class DoSProtection
     {
         /// <summary>
         /// A struct that executes an action when it's created and another one when it's disposed.
@@ -38,6 +38,16 @@ namespace Barotrauma
             public readonly Stopwatch Stopwatch = new();
 
             /// <summary>
+            /// Processing time that happened outside the stopwatch, e.g. decompressing the packet before it was passed to the server.
+            /// </summary>
+            public TimeSpan ExtraProcessingTime;
+
+            /// <summary>
+            /// Total time spent processing the client's packets since the timer was last reset.
+            /// </summary>
+            public TimeSpan Elapsed => Stopwatch.Elapsed + ExtraProcessingTime;
+
+            /// <summary>
             /// Amount of strikes the client has received for causing the server to slow down.
             /// </summary>
             public int Strikes;
@@ -59,7 +69,11 @@ namespace Barotrauma
             /// <summary>
             /// Resets the timer.
             /// </summary>
-            public void ResetTimer() => Stopwatch.Reset();
+            public void ResetTimer()
+            {
+                Stopwatch.Reset();
+                ExtraProcessingTime = TimeSpan.Zero;
+            }
         }
 
         private readonly Dictionary<Client, OffenseData> clients = new();
@@ -129,6 +143,17 @@ namespace Barotrauma
         /// </example>
         public DoSAction Pause(Client client) => new DoSAction(client, PauseFor, ResumeFor);
 
+        /// <summary>
+        /// Adds processing time that couldn't be measured with the timer, because it happened before the packet was passed to the server
+        /// (e.g. decompressing the packet). Should be called after <see cref="Start"/>, so the time is taken into account when the timed region ends.
+        /// </summary>
+        public void AddProcessingTime(Client client, TimeSpan time)
+        {
+            if (time <= TimeSpan.Zero) { return; }
+            if (GetData(client) is not { } data) { return; }
+            data.ExtraProcessingTime += time;
+        }
+
         private void StartFor(Client client)
         {
             clients.TryAdd(client, new OffenseData());
@@ -162,7 +187,7 @@ namespace Barotrauma
             }
 
             // if the stopwatch has been running for an entire second without the Update() method resetting it (which it does every second) then something is wrong
-            if (data.Stopwatch.ElapsedMilliseconds < 100) { return; }
+            if (data.Elapsed.TotalMilliseconds < 100) { return; }
 
             data.Strikes++;
             data.ResetTimer();

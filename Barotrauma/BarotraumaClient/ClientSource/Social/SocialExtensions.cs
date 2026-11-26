@@ -9,7 +9,6 @@ static class SocialExtensions
         => accountId switch
         {
             SteamId => TextManager.Get("ViewSteamProfile"),
-            EpicAccountId => TextManager.Get("ViewEpicProfile"),
             _ => "View profile of unknown origin"
         };
 
@@ -18,7 +17,6 @@ static class SocialExtensions
         string url = accountId switch
         {
             SteamId steamId => $"https://steamcommunity.com/profiles/{steamId.Value}",
-            EpicAccountId epicAccountId => $"https://store.epicgames.com/u/{epicAccountId.EosStringRepresentation}",
             _ => ""
         };
 

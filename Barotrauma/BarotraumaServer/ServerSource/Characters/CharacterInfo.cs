@@ -55,7 +55,11 @@ namespace Barotrauma
         {
             msg.WriteUInt16(ID);
             msg.WriteString(Name);
-            msg.WriteString(OriginalName);
+            msg.WriteBoolean(Name != OriginalName);
+            if (Name != OriginalName)
+            {
+                msg.WriteString(OriginalName);
+            }
             msg.WriteBoolean(RenamingEnabled);
             msg.WriteByte((byte)BotStatus);
             msg.WriteInt32(Salary);
@@ -71,7 +75,8 @@ namespace Barotrauma
             msg.WriteColorR8G8B8(Head.SkinColor);
             msg.WriteColorR8G8B8(Head.HairColor);
             msg.WriteColorR8G8B8(Head.FacialHairColor);
-            
+
+            msg.WriteIdentifier(HumanPrefabIds.NpcSetIdentifier);
             msg.WriteIdentifier(HumanPrefabIds.NpcIdentifier);
             msg.WriteIdentifier(MinReputationToHire.factionId);
             if (!MinReputationToHire.factionId.IsEmpty)
@@ -100,8 +105,8 @@ namespace Barotrauma
             msg.WriteInt32(ExperiencePoints);
             msg.WriteRangedInteger(AdditionalTalentPoints, 0, MaxAdditionalTalentPoints);
             msg.WriteBoolean(PermanentlyDead);
-            msg.WriteInt32(TalentRefundPoints);
-            msg.WriteInt32(TalentResetCount);
+            msg.WriteRangedInteger(TalentRefundPoints, 0, MaxTalentRefundPoints);
+            msg.WriteRangedInteger(TalentResetCount, 0, MaxTalentResetCount);
         }
     }
 }

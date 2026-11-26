@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class Job
+    public class Job
     {
         private readonly JobPrefab prefab;
 
@@ -73,6 +73,16 @@ namespace Barotrauma
                 skills.Add(skillIdentifier, skill);
                 if (skillIdentifier == prefab.PrimarySkill?.Identifier) { PrimarySkill = skill; }
             }
+            if (skills.Count == 0)
+            {
+                //no skills defined in the element (e.g. a bare <job identifier="..."/> in an NPC definition): use the prefab's default skills
+                foreach (SkillPrefab skillPrefab in prefab.Skills)
+                {
+                    var skill = new Skill(skillPrefab, isPvP: false, Rand.RandSync.Unsynced);
+                    skills.Add(skillPrefab.Identifier, skill);
+                    if (skillPrefab.IsPrimarySkill) { PrimarySkill = skill; }
+                }
+            }
         }
 
         public static Job Random(bool isPvP, Rand.RandSync randSync)
@@ -82,9 +92,9 @@ namespace Barotrauma
             return new Job(prefab, isPvP, randSync, variant);
         }
 
-        public IEnumerable<Skill> GetSkills()
+        public IEnumerable<Skill> GetSkills(bool exceptOutpostSkills = false)
         {
-            return skills.Values;
+            return exceptOutpostSkills ? skills.Values.Where(static skill => !skill.IsOutpostSkill) : skills.Values;
         }
 
         public float GetSkillLevel(Identifier skillIdentifier)

@@ -98,7 +98,7 @@ namespace Barotrauma.Items.Components
                     //existing wire not in the list of new wires -> disconnect it
                     if (!wires[i].Contains(existingWire))
                     {
-                        if (existingWire.Locked || existingWire.Item.IsLayerHidden)
+                        if (existingWire.Locked || existingWire.Item.IsDisabled)
                         {
                             //this should not be possible unless the client is running a modified version of the game
                             GameServer.Log(GameServer.CharacterLogName(c.Character) + " attempted to disconnect a locked wire from " +

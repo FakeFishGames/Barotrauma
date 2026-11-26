@@ -29,7 +29,7 @@ class DamageBeaconStationAction : EventAction
 
     public override bool IsFinished(ref string goToLabel) => isFinished;
 
-    public override void Reset()
+    public override void Reset(bool shouldEndConversations = true)
     {
         isFinished = false;
     }

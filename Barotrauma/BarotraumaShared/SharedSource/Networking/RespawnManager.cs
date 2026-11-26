@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    partial class RespawnManager : Entity, IServerSerializable
+    public partial class RespawnManager : Entity, IServerSerializable
     {
         /// <summary>
         /// How much skills drop towards the job's default skill levels when dying
@@ -114,9 +114,13 @@ namespace Barotrauma.Networking
                 throw new InvalidOperationException("Attempted to instantiate a respawn manager before a level was loaded.");
             }
 
+            bool crewCanSpawnInSubmarine =
+                !Level.Loaded.ShouldSpawnCrewInsideOutpost(CharacterTeamType.Team1, isInitialSpawn: false) ||
+                !Level.Loaded.ShouldSpawnCrewInsideOutpost(CharacterTeamType.Team2, isInitialSpawn: false);
+
             bool shouldLoadShuttle =
                 shuttleInfo != null &&
-                !Level.Loaded.ShouldSpawnCrewInsideOutpost();
+                crewCanSpawnInSubmarine;
 
             respawnShuttles.Clear();
             List<WifiComponent> wifiComponents = new List<WifiComponent>();

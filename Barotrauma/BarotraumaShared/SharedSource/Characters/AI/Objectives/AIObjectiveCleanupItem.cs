@@ -7,15 +7,24 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveCleanupItem : AIObjective
+    public class AIObjectiveCleanupItem : AIObjective
     {
         public override Identifier Identifier { get; set; } = "cleanup item".ToIdentifier();
         public override bool KeepDivingGearOn => true;
         public override bool AllowAutomaticItemUnequipping => false;
-        protected override bool AllowWhileHandcuffed => false;
+        protected override bool RequireBothHandsAvailable => true;
 
         public readonly Item item;
         public bool IsPriority { get; set; }
+
+        public override bool AllowMultipleInstances => true;
+
+        public override bool IsDuplicate<T>(T otherObjective) => otherObjective is AIObjectiveCleanupItem otherCleanup && otherCleanup.item == item;
+
+        /// <summary>
+        /// Optional preferred container where the bot will try to put the item if possible.
+        /// </summary>
+        public ItemContainer PreferredContainer;
 
         private readonly List<Item> ignoredContainers = new List<Item>();
         private AIObjectiveMoveItem moveItemObjective;
@@ -65,55 +74,71 @@ namespace Barotrauma
         protected override void Act(float deltaTime)
         {
             if (subObjectives.Any()) { return; }
-            if (HumanAIController.FindSuitableContainer(character, item, ignoredContainers, ref itemIndex, out Item suitableContainer))
-            {
-                if (suitableContainer != null)
-                {
-                    bool equip = item.GetComponent<Holdable>() != null ||
-                        item.AllowedSlots.Any(s => s != InvSlotType.Any) &&
-                        item.AllowedSlots.None(s =>
-                            s == InvSlotType.Card ||
-                            s == InvSlotType.Head ||
-                            s == InvSlotType.Headset ||
-                            s == InvSlotType.InnerClothes ||
-                            s == InvSlotType.OuterClothes ||
-                            s == InvSlotType.HealthInterface);
 
-                    TryAddSubObjective(ref moveItemObjective, () => new AIObjectiveMoveItem(character, item, objectiveManager, targetContainer: suitableContainer.GetComponent<ItemContainer>())
-                    {
-                        Equip = equip,
-                        TakeWholeStack = true,
-                        DropIfFails = true
-                    }, 
-                    onCompleted: () =>
-                    {
-                        if (equip)
-                        {
-                            HumanAIController.ReequipUnequipped();
-                        }
-                        IsCompleted = true;
-                    }, 
-                    onAbandon: () =>
-                    {
-                        if (equip)
-                        {
-                            HumanAIController.ReequipUnequipped();
-                        }
-                        if (moveItemObjective is { ContainObjective.CanBeCompleted: true })
-                        {
-                            ignoredContainers.Add(suitableContainer);
-                        }
-                        else
-                        {
-                            Abandon = true;
-                        }
-                    });
-                }
-                else
+            Item suitableContainer = null;
+            if (PreferredContainer != null &&
+                !ignoredContainers.Contains(PreferredContainer.Item) &&
+                PreferredContainer.Item.HasAccess(character) &&
+                PreferredContainer.Inventory.CanBePut(item))
+            {
+                suitableContainer = PreferredContainer.Item;
+            }
+            else
+            {
+                //FindSuitableContainer returns true when the search is finished.
+                //If the suitable container is still null, we couldn't find anything and need to abandon.
+                if (HumanAIController.FindSuitableContainer(character, item, ignoredContainers, ref itemIndex, out suitableContainer) && 
+                    suitableContainer == null)
                 {
                     Abandon = true;
+                    return;                    
                 }
             }
+
+
+            if (suitableContainer != null)
+            {
+                bool equip = item.GetComponent<Holdable>() != null ||
+                    item.AllowedSlots.Any(s => s != InvSlotType.Any) &&
+                    item.AllowedSlots.None(s =>
+                        s == InvSlotType.Card ||
+                        s == InvSlotType.Head ||
+                        s == InvSlotType.Headset ||
+                        s == InvSlotType.InnerClothes ||
+                        s == InvSlotType.OuterClothes ||
+                        CharacterInventory.HealthInterfaceSlots.HasFlag(s));
+
+                TryAddSubObjective(ref moveItemObjective, () => new AIObjectiveMoveItem(character, item, objectiveManager, targetContainer: suitableContainer.GetComponent<ItemContainer>())
+                {
+                    Equip = equip,
+                    TakeWholeStack = true,
+                    DropIfFails = true
+                }, 
+                onCompleted: () =>
+                {
+                    if (equip)
+                    {
+                        HumanAIController.ReequipUnequipped();
+                    }
+                    IsCompleted = true;
+                }, 
+                onAbandon: () =>
+                {
+                    if (equip)
+                    {
+                        HumanAIController.ReequipUnequipped();
+                    }
+                    if (moveItemObjective is { ContainObjective.CanBeCompleted: true })
+                    {
+                        ignoredContainers.Add(suitableContainer);
+                    }
+                    else
+                    {
+                        Abandon = true;
+                    }
+                });
+            }
+            
             objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
         }
 

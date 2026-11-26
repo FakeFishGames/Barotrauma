@@ -4,7 +4,7 @@ using System;
 
 namespace Barotrauma
 {
-    partial class PhysicsBody
+    public partial class PhysicsBody
     {
         public void ServerWrite(IWriteMessage msg)
         {
@@ -31,7 +31,7 @@ namespace Barotrauma
             }
             if (FarseerBody.Awake)
             {
-                FarseerBody.Enabled = true;
+                Enabled = true;
                 FarseerBody.LinearVelocity = new Vector2(
                     MathHelper.Clamp(FarseerBody.LinearVelocity.X, -MaxVel, MaxVel),
                     MathHelper.Clamp(FarseerBody.LinearVelocity.Y, -MaxVel, MaxVel));

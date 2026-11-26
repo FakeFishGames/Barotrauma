@@ -13,6 +13,7 @@ namespace Barotrauma
 
         // TODO: should this be && instead of ||?
         public override bool Loaded => left.Loaded || right.Loaded;
+        public override bool UsingDefaultLanguageAsFallback => !Loaded && left.UsingDefaultLanguageAsFallback && right.UsingDefaultLanguageAsFallback;
         public override void RetrieveValue()
         {
             cachedValue = (left.Value ?? string.Empty) + (right.Value ?? string.Empty);

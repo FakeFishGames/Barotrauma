@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    enum CauseOfDeathType
+    public enum CauseOfDeathType
     {
         Unknown, Pressure, Suffocation, Drowning, Affliction, Disconnected,
         /// <summary>
@@ -11,7 +11,7 @@ namespace Barotrauma
         None
     }
 
-    class CauseOfDeath
+    public class CauseOfDeath
     {
         public readonly CauseOfDeathType Type;
         public readonly AfflictionPrefab Affliction;

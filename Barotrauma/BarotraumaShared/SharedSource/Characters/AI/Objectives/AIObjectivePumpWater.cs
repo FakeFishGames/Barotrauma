@@ -12,7 +12,9 @@ namespace Barotrauma
         public override Identifier Identifier { get; set; } = "pump water".ToIdentifier();
         public override bool KeepDivingGearOn => true;
         public override bool AllowAutomaticItemUnequipping => true;
-        protected override bool AllowWhileHandcuffed => false;
+        protected override bool RequireOneHandAvailable => true;
+
+        protected override bool RequireReports => false;
 
         private List<Pump> pumpList;
 

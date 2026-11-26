@@ -58,7 +58,7 @@ namespace Barotrauma
         }
     }
 
-    static class SaveUtil
+    public static class SaveUtil
     {
         public const string GameSessionFileName = "gamesession.xml";
 
@@ -441,7 +441,8 @@ namespace Barotrauma
                         SaveTime: Option.None,
                         SubmarineName: "",
                         RespawnMode: RespawnMode.None,
-                        EnabledContentPackageNames: ImmutableArray<string>.Empty));
+                        EnabledContentPackageNames: ImmutableArray<string>.Empty,
+                        AccentColor: Color.White));
                 }
                 else
                 {
@@ -477,7 +478,8 @@ namespace Barotrauma
                         SaveTime: docRoot.GetAttributeDateTime("savetime"),
                         SubmarineName: docRoot.GetAttributeStringUnrestricted("submarine", ""),
                         RespawnMode: docRoot.GetAttributeEnum("respawnmode", RespawnMode.None),
-                        EnabledContentPackageNames: enabledContentPackageNames.ToImmutableArray()));
+                        EnabledContentPackageNames: enabledContentPackageNames.ToImmutableArray(),
+                        AccentColor: docRoot.GetAttributeColor("accentcolor")));
                 }
             }
             

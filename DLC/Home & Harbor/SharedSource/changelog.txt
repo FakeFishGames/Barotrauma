@@ -1,0 +1,95 @@
+﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.24.0.0 (Home & Harbor Expansion release)
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+The Home & Harbor Expansion lets you take control of your very own deep-sea outpost: expand it, keep its dwellers fed and happy, research new technology and defend it against attackers, while a new faction, the Descendants, brings a whole new storyline to the campaign. The expansion requires starting a new campaign.
+
+Outpost ownership:
+- There are several ways to gain ownership of an outpost:
+    - Complete certain events or missions that reward you with an outpost.
+    - Take over an outpost by force. The faction that owned the outpost (including the Descendants) immediately becomes hostile, and will try to take it back by sending attack subs.
+    - Claim an abandoned outpost.
+    - Outposts can also be claimed for a faction instead of yourself, if you have a high enough reputation with that faction.
+- An introduction event helps you get started when you gain ownership of an outpost.
+- Expand your outpost by purchasing and adding new modules, such as living quarters, farms, ranches, research labs, a mining module with a remote-controlled drone, and defenses such as turret modules. Modules take time to build, and cancelling the construction refunds the materials.
+- Install and swap devices such as reactors, oxygen generators and fabricators in your outpost, and upgrade them the same way as the devices in your submarine.
+- Use the device and decoration catalogs to purchase and install items, devices and decorations in both your outpost and your submarine. Sprite depth can be adjusted with the mouse wheel when placing items. Husk and clown decorations can be unlocked by having a high reputation with the faction.
+- Use the new Link Tool to link cabinets to fabricators and deconstructors (displaying them alongside the fabricator/deconstructor UI), or nav terminals to sonar monitors.
+- The outpost management UI gives you an overview of outposts’ resources, dwellers, modules and research. It's accessible anywhere, not just in the outpost.
+- Time passes in "work shifts": the outpost produces resources and progresses on construction and research as you complete rounds elsewhere. The amount of work shifts that passed is shown in the tab menu and the round summary.
+- The difficulty of your outpost's level, the levels around it and the missions given by the outpost scale with the furthest level you've reached on the map.
+- An ancient network of what seem to be alien portals has been discovered across Europa, and it is about to come back to life - possibly with your help. Once the network is active, you can use the portals to quickly travel between different points on the campaign map, letting you keep exploring further while still being able to easily return to your outpost.
+- Outposts get dirty over time, and dirty outposts are more likely to get infested by scurrywags: small pests that spawn through infested vents. Infestations can be cleared with a welding tool, a flamer or fire. Scurrywags avoid humans in small numbers, but get brave and attack in groups.
+
+Outpost dwellers:
+- Assign dwellers roles such as Outpost Manager, Store Keeper, HR Manager and Outpost Doctor, which makes them offer the corresponding services the same way as the NPCs in normal outposts.
+- Assign dwellers to workstations, which makes them generate resources for your outpost over time. There are workstations for farmers, fishers, diver-gatherers, miners, mechanics, electricians, chefs, ranchers, researchers and security officers (both guard posts and ammunition crafting).
+- Dwellers' skills affect the output of their workstations, and improve while they work. Dwellers have their own skills, such as farming and hospitality (which affects how much wealth they generate at storefronts and other services).
+- Dwellers equip appropriate gear for their workstation, e.g. security officers find the best weapons and armor they can get their hands on.
+- Move outpost dwellers to your crew or vice versa.
+- New dwellers ask for your permission to move into the outpost, as long as there are spare bunks. The further you've progressed in the campaign, the more skilled the applicants are.
+- The outpost manager can arrange trades with neighboring outposts (buying and selling resources), and send out expeditions to discover the nearest unvisited location, revealing the path gradually as they progress. You can also collect the tax revenue from the outpost manager.
+- Happiness: the dwellers' happiness is affected by things such as food, power, lighting, decorations, bunks, events and missions. Luxury food, nightclubs, bathhouses and private bedrooms make dwellers happier, while overcrowding, dormitories and only having raw food make them less happy. The dwellers' expectations grow as the population grows. Happy outposts produce more resources, and very high or very low happiness can cause special events.
+- Lots of new scripted events and NPC conversations for player outposts, e.g. dwellers' personal matters, injuries, husk infections, strikes, and Coalition or Separatist officials visiting to collect "taxes". Many of the conversations are affected by the state of the outpost.
+
+Economy:
+- A new economy system simulates resources in all outposts, both player-owned and NPC-owned:
+    - Most importantly, outposts need food to survive. Sources of food include farming, fishing, ranching and food shipments from other outposts (or perhaps from your crew). A lack of food will make the population starve.
+    - The amount of people an outpost can support is limited by the amount of food, oxygen and bunks.
+    - Outposts also need power, essential goods, security and more, and manufacture different kinds of goods depending on the type of the outpost.
+    - The consumed reactor fuel and essential goods deplete the fuel rods and tanks rather than removing them, so you can recycle or refill them.
+- Submarines travel between outposts to trade and transport goods and personnel, and you can see them on the campaign map. Interfering with the trade routes affects the economy of the outposts: if for instance someone were to stop a food shipment to an outpost that's running low on food, it might eventually lead to starvation in that outpost.
+- The outposts' resources affect the prices in their shops: plentiful goods are cheaper, and goods in short supply more expensive.
+- Wealth: your outpost generates wealth through services and workstations, and excess resources are converted into wealth. You collect taxes relative to the outpost's wealth and population. Beware of corruption, which slowly eats away the wealth.
+- Security: calculated from the outpost's turrets, weapons, ammo and security officers. High-security outposts can send raids to hostile low-security outposts, and defending against attacks costs security.
+- The resources UI shows the production and consumption of all the resources, the workstations' conversion recipes, and logs of how the resources have changed over time. Item tooltips show which resources the item counts towards, and depleted items (e.g. empty fuel rods) are listed separately.
+
+Outpost combat:
+- Your outpost may get attacked by hostile factions, pirates and monsters. Failing to stop an attack can lead to a loss of lives and resources.
+- Enemy subs can use tethers to keep themselves from sinking, and launch boarding pods. They're defeated when they've sunk deep enough. Monsters attack in waves, and prioritize attacking the outpost over the submarine.
+- Uncleared nests in your outpost's level can cause monsters to attack the outpost.
+- The outpost combat missions are also available in the multiplayer mission mode.
+
+Research:
+- Use research stations to research new technologies for your outpost, submarine and crew: new devices and items, modules, and outpost and submarine upgrades. The research points go directly to the currently selected project.
+- The research UI is accessible anywhere when you own an outpost.
+- Higher-tier research stations unlock new tiers of technology. The Descendant research station must be unlocked through a pair of events.
+
+Farming, ranching and food:
+- Several new plants, including ones that must be grown underwater or in low light conditions. Breathemore plants and bladder kelp produce lots of oxygen, and spawn bulbs which are a source of seeds and briefly reduce oxygen deprivation.
+- Hydroponic planters, which remove the need for manual watering.
+- Ranching: build pens with (electrified) fences, assign a rancher to take care of the creatures, and feed them compacted chunks of meat from the food trough. Even hostile creatures like mudraptors and crawlers can be ranched: use a creature cage to capture and transport creatures to your outpost.
+- Fishing: non-hostile fish (tatterfish, charyb, ferrulus, illusoroid and ashacle) swim outside outposts, and can be caught and deconstructed for food. The fish depend on the biome.
+- Dozens of new food items. Food gives the "nourished" buff, which increases your maximum health and buffs your skills.
+- Chef's workstation, which can be used to cook better food (and assigned dwellers will do so when you're away).
+- Biofuel processor, which converts excess plants into ethanol. Ethanol power generators and oxygen dispensers can be used to power and oxygenate in-construction outposts, and come in handy in other situations as well.
+
+The Descendants:
+- A new, mysterious faction enters the scene. Descending from the brightest of the original colonizers of Europa (as well as some of the original astronauts, kept alive through technological means), the Descendants seek to bring about a prosperous and fair technocratic society - or at least so they say.
+- A new storyline with lots of new events and missions. The main story keeps a quest log in the mission tab to help you keep track of what to do next, and culminates in an ending of its own.
+- After getting far enough in the story, Descendant outposts start spreading to the earlier biomes. Descendant outposts have their own modules, merchants and music, and only sell Descendant submarines.
+- New Descendant submarines: DSV Moral Compass, DAV Knuckleduster, DAV Disproportionate Escalation and DTV Logistical Supremacy.
+- Descendant variants of most of the existing devices (generally more powerful, but also more power-hungry than the originals), and a whole new set of wall/structure pieces for Descendant submarines, shuttles and outposts.
+- Singularity Reactor: an entirely new type of power source that harvests energy from the Hawking radiation of an artificially created black hole. More complex to operate than a fission reactor, and comes with the risk of the singularity escaping, but generates significantly more power.
+- Rotatable plasma thrusters, which are extremely power-hungry (and loud!) and as such must be used sparingly for rapid maneuvering.
+- New submarine weapons: Thales Arc Cannon (fires lightning arcs that burn and stun targets), Sarissa Laser (can cut through walls), laser-guided swarm torpedoes, and a large torpedo launcher with explosive, hullbuster, boarding, nuclear and singularity torpedoes. The most powerful weapon in the game, the Leviathan Torpedo, can only be fabricated in limited numbers.
+- New handheld weapons: Gloop Lobber, Gloop Blaster, Kinetic Carbine, Chaos Bazooka and the gravity-altering Suspension Grenade.
+- Advanced cybernetic augmentations (you're no longer limited to crude hooks and peg legs if you happen to lose a limb!):
+    - Cybernetic arms and legs that replace lost limbs without the penalties of the cruder prosthetics, and more advanced ones that boost attack speed or movement speed.
+    - Arm prosthetics with built-in tools and weapons: armblade, utility arm, harpoon gun, HMG, flamer, kinetic hammer, and the propulsion arm, which lets you propel yourself around.
+    - Scooter legs that let you move faster underwater.
+    - Eye prosthetics that make your eyes emit light or give you thermal vision.
+    - A collaboration between the Children of the Honkmother and the Descendants: a prosthetic bike horn, which you can install in place of your hand. You won't be able to hold anything else in that hand, but why would you even want to?
+- Nugget virus syringes, which give you a disease that eventually makes your limbs fall off.
+
+New enemies:
+- Pentalith, a starfish-like organism that can harness electricity as an energy source. It's most commonly found in the Great Sea, where it 'feeds' on piezo crystals, but it's often attracted to other biomes by the electrical signals from submarines and outposts. Pentaliths lurk like sea mines until disturbed, and can latch onto submarines to leech power from them.
+- Cyberraptors, mudraptors modified by the Descendants with cybernetics.
+- Cyberfiends, cyborgs found in abandoned outposts and beacon stations, including the flamethrower-wielding Cooker and the very tanky Mincer, which can eat characters to regenerate health. Their cybernetics can be looted.
+
+Miscellaneous:
+- New submarine encounter missions, including one with a clown submarine.
+- New sounds and music for the new creatures, items, devices and outposts.
+- New PvP perks for purchasing Descendant turrets.
+- Jovian radiation is disabled when the expansion is enabled.
+

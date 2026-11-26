@@ -4,6 +4,8 @@ using System.Linq;
 using Barotrauma.Extensions;
 using System;
 using SpriteParams = Barotrauma.RagdollParams.SpriteParams;
+using Barotrauma.IO;
+
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 #endif
@@ -16,6 +18,27 @@ namespace Barotrauma
         /// Reference to the xml element from where the sprite was created. Can be null if the sprite was not defined in xml!
         /// </summary>
         public ContentXElement SourceElement { get; private set; }
+        
+        public static readonly string[] SpriteElementNames = 
+        {
+            "Sprite",
+            "DeformableSprite",
+            "BackgroundSprite",
+            "BrokenSprite",
+            "ContainedSprite",
+            "InventoryIcon",
+            "Icon",
+            "VineSprite",
+            "LeafSprite",
+            "FlowerSprite",
+            "DecorativeSprite",
+            "BarrelSprite",
+            "RailSprite",
+            "ChargeSprite",
+            "SpinningBarrelSprite",
+            "SchematicSprite",
+            "WeldedSprite"
+        };
 
         //the area in the texture that is supposed to be drawn
         private Rectangle sourceRect;
@@ -136,6 +159,13 @@ namespace Barotrauma
             {
                 LoadTexture(ref sourceVector, ref shouldReturn);
             }
+#if CLIENT
+            else if (!File.Exists(FilePath.Value))
+            {
+                DebugConsole.AddSafeError($"Could not find the sprite defined in '{SourceElement.Element}', file: {element.Document?.BaseUri ?? "unknown"}!", 
+                    contentPackage: element.ContentPackage);                
+            }
+#endif
             if (shouldReturn) { return; }
             sourceRect = new Rectangle((int)(sourceVector.X * sourceRectScale), (int)(sourceVector.Y * sourceRectScale), (int)(sourceVector.Z * sourceRectScale), (int)(sourceVector.W * sourceRectScale));
             size = SourceElement.GetAttributeVector2("size", Vector2.One);
@@ -233,30 +263,34 @@ namespace Barotrauma
             string path = SourceElement.ParseContentPathFromUri();
             if (string.IsNullOrWhiteSpace(path))
             {
-                DebugConsole.NewMessage($"[Sprite] Could not parse the content path from the source element ({SourceElement}) uri: {SourceElement.BaseUri}", Color.Yellow);
+                DebugConsole.AddWarning($"[Sprite] Could not parse the content path from the source element ({SourceElement}) uri: {SourceElement.BaseUri}");
                 return;
             }
-            var doc = XMLExtensions.TryLoadXml(path);
-            if (doc == null) { return; }
+            XDocument doc = XMLExtensions.TryLoadXml(path);
+            if (doc?.Root == null)
+            {
+                DebugConsole.AddWarning($"[Sprite] Failed to load the document from {path}.");
+                return;
+            }
             if (string.IsNullOrWhiteSpace(Name) && string.IsNullOrWhiteSpace(EntityIdentifier.Value)) { return; }
-            var spriteElements = doc.Descendants("sprite").Concat(doc.Descendants("Sprite"));
-            var sourceElements = spriteElements.Where(e => e.GetAttributeString("name", null) == Name);
-            if (sourceElements.None())
+            var spriteElements = doc.Root.GetAllChildElements(SpriteElementNames);
+            var sourceElements = spriteElements.Where(e => e.GetAttributeIdentifier("name", Identifier.Empty) == Name);
+            if (sourceElements.None() || Name.IsNullOrWhiteSpace())
             {
                 // Try parents by first comparing the entity id and then the name, if no match was found.
-                sourceElements = spriteElements.Where(e => e.Parent?.GetAttributeString("identifier", null) == EntityIdentifier);
-                if (sourceElements.None())
+                sourceElements = spriteElements.Where(e => e.Parent?.GetAttributeIdentifier("identifier", Identifier.Empty) == EntityIdentifier);
+                if (sourceElements.None() && !Name.IsNullOrWhiteSpace())
                 {
-                    sourceElements = spriteElements.Where(e => e.Parent?.GetAttributeString("name", null) == Name);
+                    sourceElements = spriteElements.Where(e => e.Parent?.GetAttributeIdentifier("name", Identifier.Empty) == Name);
                 }
             }
             if (sourceElements.Multiple())
             {
-                DebugConsole.NewMessage($"[Sprite] Multiple matching elements found by name ({Name}) or identifier ({EntityIdentifier})!: {SourceElement}", Color.Yellow);
+                DebugConsole.AddWarning($"[Sprite] Multiple matching elements found by name ({Name}) or identifier ({EntityIdentifier})! Cannot reload the xml for sprite element \"{SourceElement}\"!");
             }
             else if (sourceElements.None())
             {
-                DebugConsole.NewMessage($"[Sprite] Cannot find matching source element by comparing the name attribute ({Name}) or identifier ({EntityIdentifier})! Cannot reload the xml for sprite element \"{SourceElement.ToString()}\"!", Color.Yellow);
+                DebugConsole.AddWarning($"[Sprite] Cannot find matching source element by comparing the name attribute ({Name}) or identifier ({EntityIdentifier})! Cannot reload the xml for sprite element \"{SourceElement}\"!");
             }
             else
             {
@@ -302,7 +336,7 @@ namespace Barotrauma
             }
             if (file == "")
             {
-                DebugConsole.ThrowError("Sprite " + SourceElement.Element + " doesn't have a texture specified!",
+                DebugConsole.ThrowError($"Sprite {SourceElement.Element} doesn't have a texture specified (file: {file ?? "unknown"})!",
                     contentPackage: SourceElement.ContentPackage);
                 return false;
             }

@@ -2,14 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma.Items.Components
 {
-    internal class VineSprite
+    public class VineSprite
     {
         [Serialize("0,0,0,0", IsPropertySaveable.No)]
         public Rectangle SourceRect { get; private set; }
@@ -26,7 +25,7 @@ namespace Barotrauma.Items.Components
         }
     }
 
-    internal partial class Growable
+    public partial class Growable
     {
         public readonly Dictionary<VineTileType, VineSprite> VineSprites = new Dictionary<VineTileType, VineSprite>();
         public readonly List<Sprite> FlowerSprites = new List<Sprite>();
@@ -53,12 +52,15 @@ namespace Barotrauma.Items.Components
         public void Draw(SpriteBatch spriteBatch, Planter planter, Vector2 offset, float depth)
         {
             const float zStep = 0.0001f;
-            float leafDepth = 0f;
+            float branchDepth = 0f;
+
+            offset += DrawOffset;
 
             foreach (VineTile vine in Vines)
             {
-                leafDepth += zStep;
-                DrawBranch(vine, spriteBatch, planter.Item.DrawPosition + offset, depth, leafDepth);
+                //newer leaves render in front of older ones
+                branchDepth -= zStep;
+                DrawBranch(vine, spriteBatch, planter.Item.DrawPosition + offset, depth, branchDepth);
             }
 
             if (GameMain.DebugDraw)
@@ -72,8 +74,10 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-        
-        private void DrawBranch(VineTile vine, SpriteBatch spriteBatch, Vector2 position, float depth, float leafDepth)
+
+        /// <param name="depth">"Base depth" of the sprites; modified to get different parts of the branch to render in front</param>
+        /// <param name="perBranchDepth">Small per-branch offset to prevent z-fighting between different branches</param>
+        private void DrawBranch(VineTile vine, SpriteBatch spriteBatch, Vector2 position, float depth, float perBranchDepth)
         {
             Vector2 pos = position + vine.Position;
             pos.Y = -pos.Y;
@@ -83,30 +87,31 @@ namespace Barotrauma.Items.Components
 
             float layer1 = depth + 0.01f, // flowers
                   layer2 = depth + 0.02f, // decay atlas
-                  layer3 = depth + 0.03f; // branches and leaves
+                  layer3 = depth + 0.03f, // leaves
+                  layer4 = depth + 0.04f; // branches
 
             float scale = VineScale * vine.VineStep;
 
             if (VineAtlas != null && VineAtlas.Loaded)
             {
-                spriteBatch.Draw(VineAtlas.Texture, pos + vine.offset, vineSprite.SourceRect, color, 0f, vineSprite.AbsoluteOrigin, scale, SpriteEffects.None, layer3);
+                spriteBatch.Draw(VineAtlas.Texture, pos + vine.offset, vineSprite.SourceRect, color, 0f, vineSprite.AbsoluteOrigin, scale, SpriteEffects.None, layer4 + perBranchDepth);
             }
 
             if (DecayAtlas != null && DecayAtlas.Loaded)
             {
-                spriteBatch.Draw(DecayAtlas.Texture, pos, vineSprite.SourceRect, vine.HealthColor, 0f, vineSprite.AbsoluteOrigin, scale, SpriteEffects.None, layer2);
+                spriteBatch.Draw(DecayAtlas.Texture, pos, vineSprite.SourceRect, vine.HealthColor, 0f, vineSprite.AbsoluteOrigin, scale, SpriteEffects.None, layer2 + perBranchDepth);
             }
 
-            if (vine.FlowerConfig.Variant >= 0 && !Decayed)
+            if (vine.FlowerConfig.Variant >= 0 && !Decayed && FlowerSprites.Any())
             {
                 Sprite flowerSprite = FlowerSprites[vine.FlowerConfig.Variant];
-                flowerSprite.Draw(spriteBatch, pos, FlowerTint, flowerSprite.Origin, scale: BaseFlowerScale * vine.FlowerConfig.Scale * vine.FlowerStep, rotate: vine.FlowerConfig.Rotation, depth: layer1);
+                flowerSprite.Draw(spriteBatch, pos, FlowerTint, flowerSprite.Origin, scale: BaseFlowerScale * vine.FlowerConfig.Scale * vine.FlowerStep, rotate: vine.FlowerConfig.RotationRad, depth: layer1 + perBranchDepth);
             }
 
-            if (vine.LeafConfig.Variant >= 0)
+            if (vine.LeafConfig.Variant >= 0 && LeafSprites.Any())
             {
                 Sprite leafSprite = LeafSprites[vine.LeafConfig.Variant];
-                leafSprite.Draw(spriteBatch, pos, Decayed ? DeadTint : LeafTint, leafSprite.Origin, scale: BaseLeafScale * vine.LeafConfig.Scale * vine.FlowerStep, rotate: vine.LeafConfig.Rotation, depth: layer3 + leafDepth);
+                leafSprite.Draw(spriteBatch, pos, Decayed ? DeadTint : LeafTint, leafSprite.Origin, scale: BaseLeafScale * vine.LeafConfig.Scale * vine.FlowerStep, rotate: vine.LeafConfig.RotationRad, depth: layer3 + perBranchDepth);
             }
         }
 
@@ -147,6 +152,8 @@ namespace Barotrauma.Items.Components
 
             foreach (VineTileType type in Enum.GetValues(typeof(VineTileType)).Cast<VineTileType>())
             {
+                //ok to have just the stem sprite if there's no more than one vine
+                if (type != VineTileType.Stem && MaximumVines <= 1) { continue; }
                 if (!VineSprites.ContainsKey(type))
                 {
                     DebugConsole.ThrowError($"Vine sprite missing from {item.Prefab.Identifier}: {type}");
@@ -158,21 +165,23 @@ namespace Barotrauma.Items.Components
 
         public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
-            Health = msg.ReadRangedSingle(0, MaxWater, 8);
+            Health = msg.ReadRangedSingle(0, MaxHealth, 8);
+            
             int startOffset = msg.ReadRangedInteger(-1, MaximumVines);
             if (startOffset > -1)
             {
                 int vineCount = msg.ReadRangedInteger(0, VineChunkSize);
+                bool growImmediately = msg.ReadBoolean();
                 List<VineTile> tiles = new List<VineTile>();
                 for (int i = 0; i < vineCount; i++)
                 {
                     VineTileType vineType = (VineTileType)msg.ReadRangedInteger(0b0000, 0b1111);
-                    int flowerConfig = msg.ReadRangedInteger(0, 0xFFF);
-                    int leafConfig = msg.ReadRangedInteger(0, 0xFFF);
+                    FoliageConfig flowerConfig = FoliageConfig.ReadFoliageConfig(rotationMin: MinFlowerRotation, rotationMax: MaxFlowerRotation, msg);
+                    FoliageConfig leafConfig = FoliageConfig.ReadFoliageConfig(rotationMin: MinLeafRotation, rotationMax: MaxLeafRotation, msg);
                     sbyte posX = (sbyte)msg.ReadByte(), posY = (sbyte)msg.ReadByte();
                     Vector2 pos = new Vector2(posX * VineTile.Size, posY * VineTile.Size);
 
-                    tiles.Add(new VineTile(this, pos, vineType, FoliageConfig.Deserialize(flowerConfig), FoliageConfig.Deserialize(leafConfig)));
+                    tiles.Add(new VineTile(this, pos, vineType, flowerConfig, leafConfig));
                 }
 
                 // is this even needed??
@@ -183,6 +192,8 @@ namespace Barotrauma.Items.Components
                         int index = i + startOffset;
                         if (index >= Vines.Count)
                         {
+                            // Only the newly added vines, the existing ones keep their visual growth
+                            if (growImmediately) { tiles[i].GrowthStep = VineTile.FullyGrownWithFlowers; }
                             Vines.Add(tiles[i]);
                             continue;
                         }
@@ -195,19 +206,14 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            UpdateBranchHealth();
+            UpdateMaxHealth();
+            UpdateVineHealthVisuals();
             ResetPlanterSize();
         }
 
         private void ResetPlanterSize()
         {
-            if (item.ParentInventory is ItemInventory itemInventory && itemInventory.Owner is Item parentItem)
-            {
-                if (parentItem.GetComponent<Planter>() is { } planter)
-                {
-                    planter.Item.ResetCachedVisibleSize();
-                }
-            }
+            GetPlanter()?.Item.ResetCachedVisibleSize();
         }
 
 #if DEBUG
@@ -221,9 +227,11 @@ namespace Barotrauma.Items.Components
 
             GUILayoutGroup content = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.85f), msgBox.Content.RectTransform)) { Stretch = true };
             GUINumberInput seedInput = CreateIntEntry("Random Seed", seed, content.RectTransform);
-            GUINumberInput vineTileSizeInput = CreateIntEntry("Vine Tile Size (Global)", VineTile.Size, content.RectTransform);
-            GUINumberInput[] leafScaleRangeInput = CreateMinMaxEntry("Leaf Scale Range (Global)", new []{ MinLeafScale, MaxLeafScale }, 1.5f, content.RectTransform);
-            GUINumberInput[] flowerScaleRangeInput = CreateMinMaxEntry("Flower Scale Range (Global)", new []{ MinFlowerScale, MaxFlowerScale }, 1.5f, content.RectTransform);
+            GUINumberInput vineTileSizeInput = CreateIntEntry("Vine Tile Size", VineTileSize, content.RectTransform);
+            GUINumberInput[] leafScaleRangeInput = CreateMinMaxEntry("Leaf Scale Range", new []{ MinLeafScale, MaxLeafScale }, 2.0f, content.RectTransform);
+            GUINumberInput[] flowerScaleRangeInput = CreateMinMaxEntry("Flower Scale Range", new []{ MinFlowerScale, MaxFlowerScale }, 2.0f, content.RectTransform);
+            GUINumberInput[] leafRotationRangeInput = CreateMinMaxEntry("Leaf Rotation Range", new []{ MinLeafRotation, MaxLeafRotation }, 360f, content.RectTransform, min: -360f);
+            GUINumberInput[] flowerRotationRangeInput = CreateMinMaxEntry("Flower Rotation Range", new []{ MinFlowerRotation, MaxFlowerRotation }, max: 360f, content.RectTransform, min: -360f);
             GUINumberInput vineCountInput = CreateIntEntry("Vine Count", MaximumVines, content.RectTransform);
             GUINumberInput vineScaleInput = CreateFloatEntry("Vine Scale", VineScale, content.RectTransform);
             GUINumberInput flowerInput = CreateIntEntry("Flower Quantity", FlowerQuantity, content.RectTransform);
@@ -244,12 +252,16 @@ namespace Barotrauma.Items.Components
                 VineScale = vineScaleInput.FloatValue;
                 BaseLeafScale = leafScaleInput.FloatValue;
                 LeafProbability = leafProbabilityInput.FloatValue;
-                VineTile.Size = vineTileSizeInput.IntValue;
+                VineTileSize = vineTileSizeInput.IntValue;
 
                 MinFlowerScale = flowerScaleRangeInput[0].FloatValue;
                 MaxFlowerScale = flowerScaleRangeInput[1].FloatValue;
                 MinLeafScale = leafScaleRangeInput[0].FloatValue;
                 MaxLeafScale = leafScaleRangeInput[1].FloatValue;
+                MinFlowerRotation = flowerRotationRangeInput[0].FloatValue;
+                MaxFlowerRotation = flowerRotationRangeInput[1].FloatValue;
+                MinLeafRotation = leafRotationRangeInput[0].FloatValue;
+                MaxLeafRotation = leafRotationRangeInput[1].FloatValue;
 
                 LeafTint = new Color(leafTintInputs[0].FloatValue, leafTintInputs[1].FloatValue, leafTintInputs[2].FloatValue);
                 FlowerTint = new Color(flowerTintInputs[0].FloatValue, flowerTintInputs[1].FloatValue, flowerTintInputs[2].FloatValue);
@@ -282,6 +294,26 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
 
+                if (MinFlowerRotation > MaxFlowerRotation)
+                {
+                    foreach (GUINumberInput input in flowerRotationRangeInput)
+                    {
+                        input.Flash(Color.Red);
+                    }
+
+                    return false;
+                }
+
+                if (MinLeafRotation > MaxLeafRotation)
+                {
+                    foreach (GUINumberInput input in leafRotationRangeInput)
+                    {
+                        input.Flash(Color.Red);
+                    }
+
+                    return false;
+                }
+
                 msgBox.Close();
 
                 Random random = new Random(seed);
@@ -296,7 +328,6 @@ namespace Barotrauma.Items.Components
                 {
                     if (!CanGrowMore())
                     {
-                        Decayed = true;
                         break;
                     }
 
@@ -310,8 +341,10 @@ namespace Barotrauma.Items.Components
 
                 foreach (VineTile vineTile in Vines)
                 {
-                    vineTile.GrowthStep = 2.0f;
+                    vineTile.GrowthStep = VineTile.FullyGrownWithFlowers;
                 }
+                //make sure the health reflects the new size of the plant after we've "artificially" modified the size
+                RestoreFullHealth();
 
                 return true;
             };

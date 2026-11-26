@@ -3,6 +3,7 @@ using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
@@ -257,11 +258,9 @@ namespace Barotrauma
             Vector2 pos = new Vector2(
                 msg.ReadSingle(),
                 msg.ReadSingle());
-            float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
             Vector2 linearVelocity = new Vector2(
-                msg.ReadRangedSingle(-MaxVel, MaxVel, 12),
-                msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
-            linearVelocity = NetConfig.Quantize(linearVelocity, -MaxVel, MaxVel, 12);
+                msg.ReadSingle(),
+                msg.ReadSingle());
 
             Vector2 targetMovement = new Vector2(
                 msg.ReadRangedSingle(-Ragdoll.MAX_SPEED, Ragdoll.MAX_SPEED, 12),
@@ -368,17 +367,22 @@ namespace Barotrauma
                     }
                     break;
                 case EventType.Control:
-                    bool myCharacter = msg.ReadBoolean();
+                    bool isMyCharacter = msg.ReadBoolean();
                     byte ownerID = msg.ReadByte();
+                    UInt16 previousCharacterID = msg.ReadUInt16();
                     bool renamingEnabled = msg.ReadBoolean();
                     ResetNetState();
-                    if (myCharacter)
+                    if (FindEntityByID(previousCharacterID) is Character previousCharacter)
+                    {
+                        //the character previously controlled by the client is no longer a remote player
+                        previousCharacter.IsRemotePlayer = false;
+                    }
+                    if (isMyCharacter)
                     {
                         if (controlled != null)
                         {
                             LastNetworkUpdateID = controlled.LastNetworkUpdateID;
                         }
-
                         if (!IsDead) { Controlled = this; }
                         IsRemotePlayer = false;
                         GameMain.Client.HasSpawned = true;
@@ -392,6 +396,7 @@ namespace Barotrauma
                     }
                     else
                     {
+                        //someone else taking control of this character
                         if (controlled == this)
                         {
                             Controlled = null;
@@ -477,9 +482,14 @@ namespace Barotrauma
                     }
                     break;
                 case EventType.AssignCampaignInteraction:
-                    byte campaignInteractionType = msg.ReadByte();
+                    var campaignInteractionType = (CampaignMode.InteractionType)msg.ReadByte();
                     bool requireConsciousness = msg.ReadBoolean();
-                    (GameMain.GameSession?.GameMode as CampaignMode)?.AssignNPCMenuInteraction(this, (CampaignMode.InteractionType)campaignInteractionType);
+                    Identifier? merchantIdentifier = null;
+                    if (campaignInteractionType == CampaignMode.InteractionType.Store)
+                    {
+                        merchantIdentifier = msg.ReadIdentifier();
+                    }
+                    (GameMain.GameSession?.GameMode as CampaignMode)?.AssignNPCMenuInteraction(this, campaignInteractionType, merchantIdentifier);
                     RequireConsciousnessForCustomInteract = requireConsciousness;
                     break;
                 case EventType.ObjectiveManagerState:
@@ -626,15 +636,7 @@ namespace Barotrauma
                 {
                     if (FindEntityByID(itemID) is not Item item) { continue; }
                     item.AllowStealing = allowStealing;
-                    if (item.GetComponent<WifiComponent>() is { } wifiComponent)
-                    {
-                        wifiComponent.TeamID = itemTeamChange.TeamId;
-                    }
-                    if (item.GetComponent<IdCard>() is { } idCard)
-                    {
-                        idCard.TeamID = itemTeamChange.TeamId;
-                        idCard.SubmarineSpecificID = 0;
-                    }
+                    CrewManager.ApplyTeamChangeToItem(item, itemTeamChange.TeamId);
                 }
             }
         }
@@ -697,18 +699,30 @@ namespace Barotrauma
                     throw;
                 }
                 character.TeamID = (CharacterTeamType)teamID;
-                character.CampaignInteractionType = (CampaignMode.InteractionType)inc.ReadByte();
-                if (character.CampaignInteractionType == CampaignMode.InteractionType.Store)
-                {
-                    character.MerchantIdentifier = inc.ReadIdentifier();
-                }
-                character.Faction = inc.ReadIdentifier();
+                character.HumanPrefab = info.HumanPrefab;
                 character.HumanPrefabHealthMultiplier = humanPrefabHealthMultiplier;
                 character.Wallet.Balance = balance;
                 character.Wallet.RewardDistribution = rewardDistribution;
+
+                //is the the character an outpost NPC?
+                if (inc.ReadBoolean())
+                {
+                    if (Level.Loaded?.StartOutpost is { } outpost)
+                    {
+                        outpost.Info.AddOutpostNPC(character);
+                    }
+                }
+
+                character.CampaignInteractionType = (CampaignMode.InteractionType)inc.ReadByte();
+                Identifier networkMerchantIdentifier = Identifier.Empty;
+                if (character.CampaignInteractionType == CampaignMode.InteractionType.Store)
+                {
+                    networkMerchantIdentifier = inc.ReadIdentifier();
+                }
+                character.Faction = inc.ReadIdentifier();
                 if (character.CampaignInteractionType != CampaignMode.InteractionType.None)
                 {
-                    (GameMain.GameSession.GameMode as CampaignMode)?.AssignNPCMenuInteraction(character, character.CampaignInteractionType);
+                    (GameMain.GameSession.GameMode as CampaignMode)?.AssignNPCMenuInteraction(character, character.CampaignInteractionType, networkMerchantIdentifier);
                 }
 
                 // Check if the character has current orders
@@ -764,7 +778,8 @@ namespace Barotrauma
                     character.ReadStatus(inc);
                 }
 
-                if (character.IsHuman && character.TeamID != CharacterTeamType.FriendlyNPC && character.TeamID != CharacterTeamType.None)
+                if (character.IsHuman && 
+                    (character.TeamID == CharacterTeamType.Team1 || (GameMain.GameSession.GameMode is PvPMode && character.TeamID == CharacterTeamType.Team2)))
                 {
                     CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos(includeReserveBench: true).FirstOrDefault(c => c.ID == info.ID);
                     GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);
@@ -810,6 +825,9 @@ namespace Barotrauma
 
             return character;
         }
+
+        private readonly List<int> severedJointIndices = new List<int>();
+        private readonly List<int> severedLimbIndices = new List<int>();
 
         private void ReadStatus(IReadMessage msg)
         {
@@ -860,18 +878,63 @@ namespace Barotrauma
                 CharacterHealth.ClientRead(msg);
             }
 
-            byte severedLimbCount = msg.ReadByte();
-            for (int i = 0; i < severedLimbCount; i++)
+            bool includesSeveringData = msg.ReadBoolean();
+            if (includesSeveringData)
             {
-                int severedJointIndex = msg.ReadByte();
-                if (severedJointIndex < 0 || severedJointIndex >= AnimController.LimbJoints.Length)
+                bool disableSeverEffects = msg.ReadBoolean();
+
+                severedJointIndices.Clear();
+                byte severedJointCount = msg.ReadByte();
+                for (int i = 0; i < severedJointCount; i++)
                 {
-                    string errorMsg = $"Error in CharacterNetworking.ReadStatus: severed joint index out of bounds (index: {severedJointIndex}, joint count: {AnimController.LimbJoints.Length})";
-                    GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:JointIndexOutOfBounts", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                    int severedJointIndex = msg.ReadByte();
+                    if (severedJointIndex < 0 || severedJointIndex >= AnimController.LimbJoints.Length)
+                    {
+                        string errorMsg = $"Error in CharacterNetworking.ReadStatus: severed joint index out of bounds (index: {severedJointIndex}, joint count: {AnimController.LimbJoints.Length})";
+                        GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:JointIndexOutOfBounts", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                    }
+                    else
+                    {
+                        severedJointIndices.Add(severedJointIndex);
+                    }
                 }
-                else
+                for (int i = 0; i < AnimController.LimbJoints.Length; i++)
                 {
-                    AnimController.SeverLimbJoint(AnimController.LimbJoints[severedJointIndex]);
+                    if (AnimController.LimbJoints[i] is not LimbJoint limbJoint) { continue; }
+                    if (severedJointIndices.Contains(i))
+                    {
+                        // The server sends its full set of severed joints in every severing update, most of them are ones we've already severed and need not be repeated
+                        if (!limbJoint.IsSevered)
+                        {
+                            // We're just reconstructing limb state received from the server, so don't drop the prostheses, the server will tell us explicitly if any should be dropped
+                            AnimController.SeverLimbJoint(limbJoint, showHints: !disableSeverEffects, disableSeverEffects: disableSeverEffects, dropProstheses: false);
+                        }
+                    }
+                    else
+                    {
+                        limbJoint.IsSevered = false;
+                    }
+                }
+
+                severedLimbIndices.Clear();
+                byte severedLimbCount = msg.ReadByte();
+                for (int i = 0; i < severedLimbCount; i++)
+                {
+                    int severedLimbIndex = msg.ReadByte();
+                    if (severedLimbIndex < 0 || severedLimbIndex >= AnimController.Limbs.Length)
+                    {
+                        string errorMsg = $"Error in CharacterNetworking.ReadStatus: severed limb index out of bounds (index: {severedLimbIndex}, limb count: {AnimController.Limbs.Length})";
+                        GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:LimbIndexOutOfBounts", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                    }
+                    else
+                    {
+                        severedLimbIndices.Add(severedLimbIndex);
+                    }
+                }
+                for (int i = 0; i < AnimController.Limbs.Length; i++)
+                {
+                    if (AnimController.Limbs[i] is not Limb limb) { continue; }
+                    limb.IsSevered = severedLimbIndices.Contains(i);
                 }
             }
         }

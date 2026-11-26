@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    internal readonly struct CircuitBoxLabel
+    public readonly struct CircuitBoxLabel
     {
         public LocalizedString Value { get; }
 

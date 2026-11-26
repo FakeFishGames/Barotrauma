@@ -9,9 +9,9 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    internal class MapLocationTypeGenerator
+    public class MapLocationTypeGenerator
     {
-        internal class LocationTypeCount
+        public class LocationTypeCount
         {
             public int AmountToAssign;
             public int? DifficultyZone;
@@ -276,8 +276,9 @@ namespace Barotrauma
 
                 float desiredMapPosition = MathHelper.Lerp(areaStart, areaEnd, desiredPosition);
 
-                List<Location> sortedLocations = locations.Where(location => !IsFilled(location)).ToList();
-                sortedLocations.Sort((firstLocation, secondLocation) => Math.Abs(firstLocation.MapPosition.X - desiredMapPosition).CompareTo(secondLocation.MapPosition.X - desiredMapPosition));
+                List<Location> sortedLocations = locations
+                    .Where(location => !IsFilled(location))
+                    .OrderBy(location => Math.Abs(location.MapPosition.X - desiredMapPosition)).ToList();
 
                 for (int i = 0; i < locationCount; i++)
                 {

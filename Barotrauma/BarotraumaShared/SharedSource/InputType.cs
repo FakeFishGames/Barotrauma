@@ -26,6 +26,8 @@
         ActiveChat,
         ToggleChatMode,
         ChatBox,
-        ShowInteractionLabels
+        ShowInteractionLabels,
+        ScrollUp,
+        ScrollDown
     }
 }

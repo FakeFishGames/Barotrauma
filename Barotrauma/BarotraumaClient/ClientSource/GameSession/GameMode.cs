@@ -5,6 +5,17 @@ namespace Barotrauma
     {
         public virtual void HUDScaleChanged() { }
 
-        public virtual void Draw(SpriteBatch spriteBatch) { }
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            DrawGameModeSpecific(spriteBatch);
+            foreach (var hook in PluginData.GetHooks<PluginGameModeDrawDelegate>())
+            {
+                hook(this, spriteBatch);
+            }
+        }
+
+        protected virtual void DrawGameModeSpecific(SpriteBatch spriteBatch)
+        {
+        }
     }
 }

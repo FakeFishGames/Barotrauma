@@ -2,20 +2,70 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using Barotrauma.Particles;
 
 namespace Barotrauma.Items.Components
 {
     partial class ElectricalDischarger : Powered
     {
+        [Serialize("1.0,1.0", IsPropertySaveable.No), Editable(DecimalCount = 2)]
+        public Vector2 ElectricityScale { get; set; }
+        
+        [Serialize("0.5,2.0", IsPropertySaveable.No), Editable(DecimalCount = 2)]
+        public Vector2 ElectricityScaleRandomMultiplier { get; set; }
+        
+        [Serialize("173,216,230,255", IsPropertySaveable.Yes, description: "The discharger effects are lerped randomly between two colors. This is the first color."), Editable]
+        public Color ElectricityColor1 { get; set; }
+        
+        [Serialize("255,255,255,255", IsPropertySaveable.Yes, description: "The discharger effects are lerped randomly between two colors. This is the second color."), Editable]
+        public Color ElectricityColor2 { get; set; }
+        
+        [Serialize("ElectricShock", IsPropertySaveable.No)]
+        public Identifier SparkParticle { get; set; }
+        private ParticlePrefab sparkParticlePrefab;
+        
+        [Serialize("0.3,0.3", IsPropertySaveable.No), Editable]
+        public Vector2 SparkParticleSize { get; set; } 
+        
+        [Serialize("swirlysmoke", IsPropertySaveable.No)]
+        public Identifier SmokeParticle { get; set; }
+        private ParticlePrefab smokeParticlePrefab;
+        
+        [Serialize("1.0,1.0", IsPropertySaveable.No), Editable]
+        public Vector2 SmokeParticleSize { get; set; } 
+        
+        [Editable, Serialize("255,255,255,255", IsPropertySaveable.No)]
+        public Color SparkParticleColorMultiplier { get; set; }
+        
+        [Serialize(50f, IsPropertySaveable.No), Editable]
+        public float SparkParticleInterval { get; set; }
+        
+        [Serialize(0f, IsPropertySaveable.No, description: "Overrides the particle lifetime. By default, uses the lifetime defined for the particle prefab."), Editable]
+        public float SparkParticleLifetime { get; set; }
+        
         private static SpriteSheet electricitySprite;
 
         private int frameOffset;
+
+        //the ammo of the turret this discharger belongs to can change how the discharge looks
+        private Color CurrentElectricityColor1 => dischargeAmmo?.DischargeColor1 ?? ElectricityColor1;
+        private Color CurrentElectricityColor2 => dischargeAmmo?.DischargeColor2 ?? ElectricityColor2;
+        private Color CurrentSparkParticleColorMultiplier => dischargeAmmo?.DischargeSparkColor ?? SparkParticleColorMultiplier;
+        private Vector2 CurrentElectricityScale => dischargeAmmo?.DischargeElectricityScale ?? ElectricityScale;
 
         partial void InitProjSpecific()
         {
             if (electricitySprite == null)
             {
                 electricitySprite = new SpriteSheet("Content/Lights/Electricity.png", 4, 4, new Vector2(0.5f, 0.0f));
+            }
+            if (!SparkParticle.IsEmpty)
+            {
+                sparkParticlePrefab = ParticleManager.FindPrefab(SparkParticle);   
+            }
+            if (!SmokeParticle.IsEmpty)
+            {
+                smokeParticlePrefab = ParticleManager.FindPrefab(SmokeParticle);   
             }
         }
 
@@ -24,8 +74,14 @@ namespace Barotrauma.Items.Components
             PlaySound(ActionType.OnUse);
             foreach (Node node in nodes)
             {
-                GameMain.ParticleManager.CreateParticle("swirlysmoke", node.WorldPosition, Vector2.Zero);
-
+                if (smokeParticlePrefab != null)
+                {
+                    Particle smoke = GameMain.ParticleManager.CreateParticle(smokeParticlePrefab, node.WorldPosition, Vector2.Zero);
+                    if (smoke != null)
+                    {
+                        smoke.Size *= SmokeParticleSize;
+                    }
+                }
                 if (node.ParentIndex > -1)
                 {
                     CreateParticlesBetween(nodes[node.ParentIndex].WorldPosition, node.WorldPosition);
@@ -36,18 +92,29 @@ namespace Barotrauma.Items.Components
                 CreateParticlesBetween(character.character.WorldPosition, character.node.WorldPosition);
             }
 
-            static void CreateParticlesBetween(Vector2 start, Vector2 end)
+            void CreateParticlesBetween(Vector2 start, Vector2 end)
             {
-                const float ParticleInterval = 50.0f;
+                if (sparkParticlePrefab == null) { return; }
+                if (SparkParticleInterval <= 0) { return; }
                 Vector2 diff = end - start;
                 float dist = diff.Length();
                 Vector2 normalizedDiff = MathUtils.NearlyEqual(dist, 0.0f) ? Vector2.Zero : diff / dist;
-                for (float x = 0.0f; x < dist; x += ParticleInterval)
+                
+                for (float x = 0.0f; x < dist; x += SparkParticleInterval)
                 {
-                    var spark = GameMain.ParticleManager.CreateParticle("ElectricShock", start + normalizedDiff * x, Vector2.Zero);
+                    Particle spark = GameMain.ParticleManager.CreateParticle(sparkParticlePrefab, start + normalizedDiff * x, Vector2.Zero);
                     if (spark != null)
                     {
-                        spark.Size *= 0.3f;
+                        if (SparkParticleLifetime > 0)
+                        {
+                            spark.SetLifeTime(SparkParticleLifetime);
+                        }
+                        spark.Size *= SparkParticleSize;
+                        Color sparkParticleColorMultiplier = CurrentSparkParticleColorMultiplier;
+                        if (sparkParticleColorMultiplier != Color.White)
+                        {
+                            spark.ColorMultiplier = sparkParticleColorMultiplier.ToVector4();
+                        }
                     }
                 }
             }
@@ -63,11 +130,11 @@ namespace Barotrauma.Items.Components
                 electricitySprite.Draw(spriteBatch,
                     (i + frameOffset) % electricitySprite.FrameCount,
                     new Vector2(node.WorldPosition.X, -node.WorldPosition.Y),
-                    Color.Lerp(Color.LightBlue, Color.White, Rand.Range(0.0f, 1.0f)),
+                    Color.Lerp(CurrentElectricityColor1, CurrentElectricityColor2, Rand.Range(0.0f, 1.0f)),
                     electricitySprite.Origin, -node.Angle - MathHelper.PiOver2,
                     new Vector2(
-                        Math.Min(node.Length / electricitySprite.FrameSize.X, 1.0f) * Rand.Range(0.5f, 2.0f), 
-                        node.Length / electricitySprite.FrameSize.Y) * Rand.Range(1.0f, 1.2f));
+                        Math.Min(node.Length / electricitySprite.FrameSize.X, 1.0f) * Rand.Range(ElectricityScaleRandomMultiplier.X, ElectricityScaleRandomMultiplier.Y),
+                        node.Length / electricitySprite.FrameSize.Y) * CurrentElectricityScale);
             }
 
             if (GameMain.DebugDraw)
@@ -95,7 +162,8 @@ namespace Barotrauma.Items.Components
             }
             CurrPowerConsumption = powerConsumption;
             charging = true;
-            timer = Duration;
+            dischargeAmmo = GetTurretAmmo();
+            timer = CurrentDischargeDuration;
             IsActive = true;
         }
     }

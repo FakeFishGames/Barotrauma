@@ -27,7 +27,7 @@ namespace Barotrauma
     /// Event sets are sets of random events that occur within a level (most commonly, monster spawns and scripted events).
     /// Event sets can also be nested: a "parent set" can choose from several "subsets", either randomly or by some kind of criteria.
     /// </summary>
-    sealed class EventSet : Prefab
+    public sealed class EventSet : Prefab
     {
         internal class EventDebugStats
         {
@@ -103,6 +103,8 @@ namespace Barotrauma
             return AllEventPrefabs.GetValueOrDefault(identifier);
         }
 
+        public readonly EventSet ParentSet;
+
         /// <summary>
         /// If enabled, this set can only be chosen in the campaign mode.
         /// </summary>
@@ -116,6 +118,15 @@ namespace Barotrauma
         /// The difficulty of the current level must be equal to or less than this for this set to be chosen. 
         /// </summary>
         public readonly float MaxLevelDifficulty;
+
+        /// <summary>
+        /// The current level must be located at least this far into the campaign map, as a percentage of the width of the map. 0.16 would mean it can take place at the end of cold caverns at the earliest (there's 6 biomes, so 1/6 = 0.16...).
+        /// </summary>
+        public readonly float MinMapPosition;
+        /// <summary>
+        /// The current level must be located at most this far into the campaign map, as a percentage of the width of the map. 0.16 would mean it must take place somewhere in the cold caverns (there's 6 biomes, so 1/6 = 0.16...).
+        /// </summary>
+        public readonly float MaxMapPosition;
 
         /// <summary>
         /// If set, the event set can only be chosen in this biome.
@@ -141,6 +152,11 @@ namespace Barotrauma
         /// If set, the event set can only be chosen in locations of this type.
         /// </summary>
         public readonly ImmutableArray<Identifier> LocationTypeIdentifiers;
+
+        /// <summary>
+        /// Minimum required population (number of NPCs) in the outpost for the event to trigger. Only relevant for events triggering in outpost levels.
+        /// </summary>
+        public int MinPopulation;
 
         /// <summary>
         /// If set, the event set can only be chosen in locations that belong to this faction.
@@ -374,6 +390,8 @@ namespace Barotrauma
         public EventSet(ContentXElement element, RandomEventsFile file, EventSet parentSet = null)
             : base(file, DetermineIdentifier(parentSet, element, file))
         {
+            ParentSet = parentSet;
+
             var eventPrefabs = new List<SubEventPrefab>();
             var childSets = new List<EventSet>();
             var overrideCommonness = new Dictionary<Identifier, float>();
@@ -381,6 +399,8 @@ namespace Barotrauma
             BiomeIdentifier = element.GetAttributeIdentifier("biome", Barotrauma.Identifier.Empty);
             MinLevelDifficulty = element.GetAttributeFloat("minleveldifficulty", 0);
             MaxLevelDifficulty = Math.Max(element.GetAttributeFloat("maxleveldifficulty", 100), MinLevelDifficulty);
+            MinMapPosition = element.GetAttributeFloat(nameof(MinMapPosition), 0);
+            MaxMapPosition = Math.Max(element.GetAttributeFloat(nameof(MaxMapPosition), 1.0f), MinMapPosition);
 
             Additive = element.GetAttributeBool(nameof(Additive), false);
             SelectAlways = element.GetAttributeBool(nameof(SelectAlways), false);
@@ -393,6 +413,8 @@ namespace Barotrauma
             }
 
             Faction = element.GetAttributeIdentifier(nameof(Faction), Identifier.Empty);
+
+            MinPopulation = element.GetAttributeInt(nameof(MinPopulation), 0);
 
             Identifier[] locationTypeStr = element.GetAttributeIdentifierArray("locationtype", null);
             if (locationTypeStr != null)
@@ -424,6 +446,11 @@ namespace Barotrauma
             IsCampaignSet = element.GetAttributeBool("campaign", LevelType == LevelData.LevelType.Outpost || (parentSet?.IsCampaignSet ?? false));
             ResetTime = element.GetAttributeFloat(nameof(ResetTime), parentSet?.ResetTime ?? 0);
             CampaignTutorialOnly = element.GetAttributeBool(nameof(CampaignTutorialOnly), parentSet?.CampaignTutorialOnly ?? false);
+
+            if (element.GetAttribute("probability") != null)
+            {
+                DebugConsole.AddWarning($"Error in event set \"{Identifier}\": the attribute \"probability\" is not supported in event sets. Did you mean to configure the probability of an event included in the set?");
+            }
 
             RequiredLayer = element.GetAttributeIdentifier(nameof(RequiredLayer), Identifier.Empty);
             RequiredSpawnPointTag = element.GetAttributeIdentifier(nameof(RequiredSpawnPointTag), Identifier.Empty);
@@ -503,6 +530,7 @@ namespace Barotrauma
             if (LocationTypeIdentifiers == null) { return; }
             foreach (Identifier locationTypeId in LocationTypeIdentifiers)
             {
+                if (locationTypeId == Tags.AnyOutpost) { continue; }
                 if (!LocationType.Prefabs.ContainsKey(locationTypeId))
                 {
                     DebugConsole.ThrowError($"Error in event set \"{Identifier}\". Location type \"{locationTypeId}\" not found.");

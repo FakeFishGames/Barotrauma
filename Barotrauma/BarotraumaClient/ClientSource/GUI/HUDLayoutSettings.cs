@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    static class HUDLayoutSettings
+    public static class HUDLayoutSettings
     {
         public static bool DebugDraw;
 

@@ -12,7 +12,7 @@ namespace Barotrauma
     /// <summary>
     /// Triggers a "conversation popup" with text and support for different branching options.
     /// </summary>
-    partial class ConversationAction : EventAction
+    public partial class ConversationAction : EventAction
     {
         public class OptionActionGroup : SubactionGroup
         {
@@ -37,8 +37,21 @@ namespace Barotrauma
             [Serialize(true, IsPropertySaveable.Yes, description: "Should the chat message be stripped of any quotation mark characters?")]
             public bool ForceSayRemoveQuotes { get; set; }
 
+            [Serialize(false, IsPropertySaveable.Yes, description: $"If enabled, the character will say the line even if it can't normally speak.")]
+            public bool ForceSayEvenIfCantSpeak { get; set; }
+
+            [Serialize(true, IsPropertySaveable.Yes, description: "Should the chat message be stripped of all text between square brackets (including the brackets themselves)?")]
+            public bool ForceSayRemoveSquareBrackets { get; set; }
+
+            [Serialize(true, IsPropertySaveable.Yes, description: "Should the chat message only be sent to other players (in singleplayer this would mean force say is disabled, in multiplayer everyone except the person interacting with the NPC would be able to see the messages)")]
+            public bool ForceSayOnlyShowToOthers { get; set; }
+
+            public ForceSayOptions ForceSayOptions { get; set; }
+
             public OptionActionGroup(ScriptedEvent scriptedEvent, ContentXElement element) : base(scriptedEvent, element)
             {
+                if (ForceSayRemoveQuotes) { ForceSayOptions |= ForceSayOptions.RemoveQuotes; }
+                if (ForceSayRemoveSquareBrackets) { ForceSayOptions |= ForceSayOptions.RemoveSquaresBrackets; }
             }
         }
 
@@ -72,10 +85,19 @@ namespace Barotrauma
         [Serialize(true, IsPropertySaveable.Yes, description: "Should the chat message be stripped of any quotation mark characters?")]
         public bool ForceSayRemoveQuotes { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes, description: $"If enabled, the character will say the line even if it can't normally speak.")]
+        public bool ForceSayEvenIfCantSpeak { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should the chat message be stripped of all text between square brackets (including the brackets themselves)?")]
+        public bool ForceSayRemoveSquareBrackets { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should the chat message only be sent to other players (in singleplayer this would mean force say is disabled, in multiplayer everyone except the person interacting with the NPC would be able to see the messages)")]
+        public bool ForceSayOnlyShowToOthers { get; set; }
+
         [Serialize("", IsPropertySaveable.Yes, description: "Tag of the character who's speaking. Makes a speech bubble icon appear above the character to indicate you can speak with them, and stops the character in place when the conversation triggers. Also allows the conversation to be interrupted if the speaker dies or becomes incapacitated mid-conversation.")]
         public Identifier SpeakerTag { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the player the conversation is shown to. If empty, the conversation is shown to everyone. If SpeakerTag is defined, the conversation is always only shown to the player who interacts with the speaker.")]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the player the conversation is shown to. If empty, the conversation is shown to everyone. If SpeakerTag is defined, the conversation is always only shown to the player who interacts with the speaker, and if TargetTag is then empty, that player is also the one checked for interruptions (death, incapacitation, distance etc).")]
         public Identifier TargetTag { get; set; }
 
         [Serialize(true, IsPropertySaveable.Yes, "Should someone interact with the speaker for the conversation to trigger?")]
@@ -89,6 +111,9 @@ namespace Barotrauma
 
         [Serialize(true, IsPropertySaveable.Yes, "Should the event end if the conversations is interrupted (e.g. if the speaker dies or falls unconscious mid-conversation). Defaults to true.")]
         public bool EndEventIfInterrupted { get; set; }
+
+        [Serialize("_end", IsPropertySaveable.Yes, $"If {nameof(EndEventIfInterrupted)} is true, the label that the action jumps into when the event is interrupted. Jumps to the end of the event by default.")]
+        public string InterruptedGotoLabel { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes, description: "Identifier of an event sprite to display in the corner of the conversation prompt.")]
         public string EventSprite { get; set; }
@@ -105,14 +130,47 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes, description: "If SpeakerTag is defined, the conversation is interrupted by default if the speaker and the target end up too far from each other. This can be used to disable that behavior, keeping the dialog prompt open regardless of the distance.")]
         public bool IgnoreInterruptDistance { get; set; }
 
+        [Serialize(1, IsPropertySaveable.Yes, description: "Priority of this conversation. If the speaker is assigned to a conversation with a lower priority that hasn't been opened yet, this conversation can take over (equal or higher priority ones, or already-open dialogs, will keep the current conversation). Defaults to 1, while outpost service conversations are explicitly set to 0, so other events will have priority over them by default.")]
+        public int Priority { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "Only relevant for conversations without any options, disables the close button when there's no option to prevent the player from being able to close the conversation.")]
+        public bool DisableCloseButton { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes, description: "Whether the conversation should only be considered interrupted after the dialogue has started (ignoring if the speaker dies before the conversation begins).")]
+        public bool OnlyInterruptInDialogue { get; set; }
+
+        public ForceSayOptions ForceSayOptions { get; set; }
+
+        public override Mission ParentMission
+        {
+            get => base.ParentMission;
+            set
+            {
+                foreach (var option in Options)
+                {
+                    option.Actions.ForEach(subAction => subAction.ParentMission = value);
+                }
+                base.ParentMission = value;
+            }
+        }
+
         public Character Speaker
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// A fallback speaking entity resolved from the <see cref="SpeakerTag"/> when no matching characters are found.
+        /// </summary>
+        /// <remarks>
+        /// Ideally, this would not need to be stored separately. However, <see cref="Speaker"/> is used extensively throughout this class, 
+        /// and refactoring it to support generic speaking entities would be unnecessarily complex.
+        /// </remarks>
+        private ISpeakable forceSaySpeakingEntity;
+
         private AIObjective prevIdleObjective, prevGotoObjective;
-        private AIObjective npcWaitObjective;
+        private AIObjective npcFollowObjective;
 
         public List<OptionActionGroup> Options { get; private set; }
 
@@ -127,10 +185,17 @@ namespace Barotrauma
 
         private int selectedOption = -1;
         private bool dialogOpened = false;
+        private bool openingFromSubConversation = false;
 
         private double lastActiveTime;
 
         private bool interrupt;
+
+        /// <summary>
+        /// The character who started the conversation with the speaker, also passed down to nested conversations.
+        /// Used as the target when checking for interruptions if the conversation has no <see cref="TargetTag"/>.
+        /// </summary>
+        private Character invokingCharacter;
 
         private readonly XElement textElement;
 
@@ -164,6 +229,9 @@ namespace Barotrauma
                         contentPackage: element.ContentPackage);
                 }
             }
+
+            if (ForceSayRemoveQuotes) { ForceSayOptions |= ForceSayOptions.RemoveQuotes; }
+            if (ForceSayRemoveSquareBrackets) { ForceSayOptions |= ForceSayOptions.RemoveSquaresBrackets; }
         }
 
         public LocalizedString GetDisplayText()
@@ -211,7 +279,15 @@ namespace Barotrauma
                         if (c.InGame && c.Character != null)
                         {
                             DebugConsole.Log($"Conversation {ParentEvent.Prefab.Identifier} finished, communicating to clients...");
-                            ServerWrite(Speaker, c, interrupt); 
+                            ServerWrite(Speaker, c, interrupt);
+                            // If the client is looking at a conversation prompt created by another action belonging to this same event, interrupt that too.
+                            // Similar to how we interrupt whichever prompt is open in the #if CLIENT block above.
+                            // Otherwise if the parent of the currently open conversation interrupts instead of this one, the prompt would get stuck.
+                            if (lastActiveAction.TryGetValue(c, out ConversationAction activeAction) &&
+                                activeAction != this && activeAction.ParentEvent != null && activeAction.ParentEvent == ParentEvent)
+                            {
+                                activeAction.ServerWrite(Speaker, c, interrupt);
+                            }
                         }
                     }
 #endif
@@ -221,7 +297,7 @@ namespace Barotrauma
 
                 if (Interrupted == null)
                 {
-                    if (EndEventIfInterrupted) { goTo = "_end"; }
+                    if (EndEventIfInterrupted) { goTo = InterruptedGotoLabel; }
                     return true;
                 }
                 else
@@ -246,17 +322,22 @@ namespace Barotrauma
             return false;
         }
 
-        public override void Reset()
+        public override void Reset(bool shouldEndConversations = true)
         {
-            Options.ForEach(a => a.Reset());
+            Options.ForEach(a => a.Reset(shouldEndConversations));
             ResetSpeaker();
             selectedOption = -1;
             interrupt = false;
             dialogOpened = false;
             Speaker = null;
+            // Keep the invoker if the dialog stays open, otherwise we'll have no way of getting it back
+            if (shouldEndConversations) { invokingCharacter = null; }
 #if CLIENT
-            dialogBox?.Close();
-            dialogBox = null;
+            if (shouldEndConversations)
+            {
+                dialogBox?.Close();
+                dialogBox = null;
+            }
 #endif
         }
 
@@ -268,6 +349,7 @@ namespace Barotrauma
             startDelay = delay;
             dialogOpened = false;
             selectedOption = -1;
+            invokingCharacter = null;
         }
 
         public override bool SetGoToTarget(string goTo)
@@ -288,13 +370,9 @@ namespace Barotrauma
 
         private void ResetSpeaker()
         {
+            forceSaySpeakingEntity = null;
             if (Speaker == null) { return; }
-            Speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
-            Speaker.ActiveConversation = null;
-            Speaker.SetCustomInteract(null, null);
-#if SERVER
-            GameMain.NetworkMember.CreateEntityEvent(Speaker, new Character.AssignCampaignInteractionEventData());
-#endif
+            ClearTalkInteraction(Speaker);
             if (Speaker.AIController is HumanAIController humanAI && !Speaker.IsDead && !Speaker.Removed)
             {
                 humanAI.ClearForcedOrder();
@@ -302,6 +380,19 @@ namespace Barotrauma
                 if (prevGotoObjective != null && !prevGotoObjective.Abandon) { humanAI.ObjectiveManager.AddObjective(prevGotoObjective); }
                 humanAI.ObjectiveManager.SortObjectives();
             }
+        }
+
+        private static void ClearTalkInteraction(Character speaker)
+        {
+            speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
+            speaker.ActiveConversation = null;
+            speaker.SetCustomInteract(null, null);
+#if SERVER
+            if (!speaker.Removed)
+            {
+                GameMain.NetworkMember.CreateEntityEvent(speaker, new Character.AssignCampaignInteractionEventData());
+            }
+#endif
         }
 
         public int[] GetEndingOptions()
@@ -332,6 +423,13 @@ namespace Barotrauma
             }
             else if (selectedOption < 0)
             {
+                if ((dialogOpened || !OnlyInterruptInDialogue) && ShouldInterrupt(requireTarget: true))
+                {
+                    ResetSpeaker();
+                    interrupt = true;
+                    return;
+                }
+
                 if (dialogOpened)
                 {
                     lastActiveTime = Timing.TotalTime;
@@ -346,48 +444,64 @@ namespace Barotrauma
                         Reset();
                     }
 #endif
-                    if (ShouldInterrupt(requireTarget: true))
-                    {
-                        ResetSpeaker();
-                        interrupt = true;
-                    }
                     return;
                 }
 
                 if (!SpeakerTag.IsEmpty)
                 {
-                    if (npcWaitObjective != null)
+                    if (npcFollowObjective != null)
                     {
-                        npcWaitObjective.ForceHighestPriority = true;
+                        npcFollowObjective.ForceHighestPriority = true;
                     }
-                    if (Speaker != null && !Speaker.Removed && Speaker.CampaignInteractionType == CampaignMode.InteractionType.Talk && Speaker.ActiveConversation?.ParentEvent != this.ParentEvent) { return; }
-                    Speaker = ParentEvent.GetTargets(SpeakerTag).FirstOrDefault(e => e is Character) as Character;
+                    if (Speaker != null && !Speaker.Removed && Speaker.CampaignInteractionType == CampaignMode.InteractionType.Talk && Speaker.ActiveConversation?.ParentEvent != this.ParentEvent)
+                    {
+                        //another conversation already active, lets see if it should block this one
+                        if (SpeakerHasBlockingConversationActive(Speaker)) { return; }
+                    }
+                    Character newSpeaker = ParentEvent.GetTargets(SpeakerTag).FirstOrDefault(e => e is Character) as Character;
+                    if (Speaker != null && Speaker != newSpeaker && Speaker.ActiveConversation == this)
+                    {
+                        // The speaker tag moved to someone else, so take the talk interaction off the previous speaker
+                        ClearTalkInteraction(Speaker);
+                    }
+                    Speaker = newSpeaker;
                     if (Speaker == null || Speaker.Removed)
                     {
+                        forceSaySpeakingEntity = ParentEvent.GetTargets(SpeakerTag).FirstOrDefault(e => e is ISpeakable) as ISpeakable;
+                        if (forceSaySpeakingEntity != null)
+                        {
+                            TryStartConversation(Speaker);
+                        }
                         return;
                     }
-                    //some conversation already assigned to the speaker, wait for it to be removed
+                    bool setupTalkInteraction = false; // Do we need to register this conversation as the speaker's active talk interaction?    
                     if (Speaker.CampaignInteractionType == CampaignMode.InteractionType.Talk && Speaker.ActiveConversation?.ParentEvent != this.ParentEvent)
                     {
-                        return;
+                        //some conversation already assigned to the speaker, wait for it to be removed (unless this conversation has higher priority and the dialog hasn't been opened yet, in which case it can take over)
+                        if (SpeakerHasBlockingConversationActive(Speaker)) { return; }
+                        setupTalkInteraction = true;
                     }
-                    else if (!WaitForInteraction)
+                    else if (!WaitForInteraction || openingFromSubConversation)
                     {
                         TryStartConversation(Speaker);
                     }
-                    else if (Speaker.ActiveConversation != this)
+                    else
+                    {
+                        setupTalkInteraction = true;
+                    }
+                    if (setupTalkInteraction && Speaker.ActiveConversation != this)
                     {
                         Speaker.CampaignInteractionType = CampaignMode.InteractionType.Talk;
                         Speaker.ActiveConversation = this;
 #if CLIENT
                         Speaker.SetCustomInteract(
-                            TryStartConversation, 
+                            TryStartConversation,
                             TextManager.GetWithVariable("CampaignInteraction.Talk", "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Use)));
 #else
-                        Speaker.SetCustomInteract( 
-                            TryStartConversation, 
+                        Speaker.SetCustomInteract(
+                            TryStartConversation,
                             TextManager.Get("CampaignInteraction.Talk"));
-                        GameMain.NetworkMember.CreateEntityEvent(Speaker, new Character.AssignCampaignInteractionEventData());   
+                        GameMain.NetworkMember.CreateEntityEvent(Speaker, new Character.AssignCampaignInteractionEventData());
 #endif
                     }
                     return;
@@ -413,18 +527,68 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Is the dialog of this action open and waiting for the target(s) to choose an option?
+        /// </summary>
+        private bool IsWaitingForResponse => dialogOpened && selectedOption < 0 && !interrupt && !ParentEvent.IsFinished;
+
+        /// <summary>
+        /// Does the character currently have a conversation prompt open? Only applies to player-controlled characters.
+        /// </summary>
+        public static bool IsConversationOpenFor(Character character)
+        {
+            if (character == null || character.Removed) { return false; }
+#if CLIENT
+            // Only the local player's prompts are known client-side (AI runs on the client only in SP)
+            return character == Character.Controlled && IsDialogOpen;
+#elif SERVER
+            if (!character.IsRemotePlayer) { return false; }
+            Client client = GameMain.Server?.ConnectedClients.Find(c => c.Character == character);
+            if (client == null) { return false; }
+            return lastActiveAction.TryGetValue(client, out ConversationAction action) && action.IsWaitingForResponse;
+#else
+            return false;
+#endif
+        }
+
+        private bool SpeakerHasBlockingConversationActive(Character speaker)
+        {
+            //another conversation already active, lets see if it should block this one
+            if (speaker.ActiveConversation?.dialogOpened == true) { return true; }
+            //active conversation has a higher/same prio, we might need to block this one...
+            if (Priority <= (speaker.ActiveConversation?.Priority ?? 0))
+            {
+                //...except if this one doesn't wait for interaction, i.e. it may be the continuation of some other conversation or something triggered based on distance
+                //in that case, lets allow this one to take priority.
+                if (WaitForInteraction)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private bool ShouldInterrupt(bool requireTarget)
         {
             IEnumerable<Entity> targets = Enumerable.Empty<Entity>();
-            if (!TargetTag.IsEmpty && requireTarget)
+            if (requireTarget)
             {
-                targets = ParentEvent.GetTargets(TargetTag).Where(e => IsValidTarget(e, requireTarget));
-                if (!targets.Any()) { return true; }
+                if (!TargetTag.IsEmpty)
+                {
+                    targets = ParentEvent.GetTargets(TargetTag).Where(e => IsValidTarget(e, requireTarget));
+                    if (!targets.Any()) { return true; }
+                }
+                // Without a TargetTag, the dialog is only shown to the character who interacted with the speaker, so they're the de facto target
+                else if (invokingCharacter != null)
+                {
+                    if (!IsValidTarget(invokingCharacter, requireTarget)) { return true; }
+                    targets = invokingCharacter.ToEnumerable();
+                }
             }
 
             if (Speaker != null)
             {
-                if (!TargetTag.IsEmpty && requireTarget && !IgnoreInterruptDistance)
+                if (targets.Any() && !IgnoreInterruptDistance)
                 {
                     if (targets.All(t => Vector2.DistanceSquared(t.WorldPosition, Speaker.WorldPosition) > InterruptDistance * InterruptDistance)) { return true; }
                 }
@@ -432,7 +596,12 @@ namespace Barotrauma
                 {
                     return true;                    
                 }
-                return Speaker.Removed || Speaker.IsDead || Speaker.IsIncapacitated;
+                return 
+                    Speaker.Removed || 
+                    Speaker.IsDead ||
+                    // Don't interrupt yet if the speaker just falls unconscious before the conversation even starts, since they can still
+                    // be revived and have the conversation be started with them
+                    (dialogOpened && Speaker.IsIncapacitated);
             }
 
             return false;
@@ -450,7 +619,7 @@ namespace Barotrauma
                 isValid &= !ignoredClients.Keys.Any(c => c.Character == e);
             }
 #elif CLIENT
-            bool block = GUI.InputBlockingMenuOpen && !dialogOpened;
+            bool block = IsBlockedByMenu && !dialogOpened;
             isValid &= (e != Character.Controlled || !block);
 #endif
             return isValid;
@@ -484,8 +653,6 @@ namespace Barotrauma
             {
                 prevIdleObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>();
                 prevGotoObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveGoTo>();
-                npcWaitObjective = humanAI.SetForcedOrder(
-                    new Order(OrderPrefab.Prefabs["wait"], Barotrauma.Identifier.Empty, null, orderGiver: null));
                 if (targets.Any() || targetCharacter != null) 
                 {
                     Entity closestTarget = targetCharacter;
@@ -501,35 +668,64 @@ namespace Barotrauma
                     }
                     if (closestTarget != null)
                     {
+                        if (closestTarget is Character character)
+                        {
+                            npcFollowObjective = humanAI.SetForcedOrder(new Order(OrderPrefab.Prefabs["follow"], Barotrauma.Identifier.Empty, null, orderGiver: character));
+                            npcFollowObjective.ForceHighestPriority = true;
+                        }
+
                         humanAI.FaceTarget(closestTarget);
                     }
                 }
             }
 
+            // Nested conversations aren't started by interaction, so keep the invoker passed down from the parent
+            if (targetCharacter != null) { invokingCharacter = targetCharacter; }
             if (targetCharacter != null && !InvokerTag.IsEmpty)
             {
+                ParentEvent.RemoveTag(InvokerTag);
                 ParentEvent.AddTarget(InvokerTag, targetCharacter);
             }
 
-            if (ForceSay)
+            if (ForceSay
+#if CLIENT
+                && !(ForceSayOnlyShowToOthers && !GameMain.DebugDraw)
+#endif
+                )
             {
-                speaker?.ForceSay(
+                Client invokerClient = ForceSayOnlyShowToOthers ?
+                    GameMain.NetworkMember?.ConnectedClients.FirstOrDefault(c => c.Character != null && (c.Character == invokingCharacter || targets.Contains(c.Character))) :
+                    null;
+
+                ISpeakable forceSaySpeaker = Speaker ?? forceSaySpeakingEntity;
+
+                forceSaySpeaker?.ForceSay(
                     ForceSayText.IsNullOrEmpty() ? TextManager.Get(Text).Fallback(Text) : TextManager.Get(ForceSayText).Fallback(ForceSayText), 
-                    ForceSayInRadio, 
-                    ForceSayRemoveQuotes,
+                    sayInRadio: ForceSayInRadio,
+                    ForceSayOptions,
+                    ignoreSpeechImpediments: ForceSayEvenIfCantSpeak,
                     // Small delay so the speaking character doesn't talk at the same time as the player
-                    delay: 0.7f);
+                    delay: 0.7f,
+                    ignoredClient: invokerClient);
             }
 
             ShowDialog(Speaker, targetCharacter);
+
+            // Set the Speaker of the child conversation actions so they know which character is speaking
+            Options.SelectMany(static op => op.Actions).OfType<ConversationAction>().ForEach(action =>
+            {
+                if (Speaker != null) { action.Speaker = speaker; }
+                if (forceSaySpeakingEntity != null) { action.forceSaySpeakingEntity = forceSaySpeakingEntity; }
+                action.invokingCharacter = invokingCharacter;
+
+                // Prevents conversations inside options from waiting for interaction (which is not possible, since the conversation box is already open)
+                action.openingFromSubConversation = true;
+            });
 
             dialogOpened = true;
             if (Speaker != null)
             {
                 Speaker = speaker;
-
-                // Set the Speaker of the child conversation actions so they know which character is speaking
-                Options.SelectMany(static op => op.Actions).OfType<ConversationAction>().ForEach(action => action.Speaker = speaker);
 
                 speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
                 speaker.SetCustomInteract(null, null);

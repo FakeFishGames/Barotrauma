@@ -268,10 +268,10 @@ namespace Barotrauma.MapCreatures.Behavior
 
                     if (HasBrokenThrough) { flowerScale *= branch.Pulse; }
 
-                    flowerSprite.Draw(spriteBatch, pos, branchColor, flowerSprite.Origin, scale: flowerScale, rotate: branch.FlowerConfig.Rotation, depth: layer1 - flowerDepth);
+                    flowerSprite.Draw(spriteBatch, pos, branchColor, flowerSprite.Origin, scale: flowerScale, rotate: branch.FlowerConfig.RotationRad, depth: layer1 - flowerDepth);
                     if (isDamaged && HasBrokenThrough && DamagedFlowerSprites.Count > variant)
                     {
-                        DamagedFlowerSprites[variant].Draw(spriteBatch, pos, branch.HealthColor, flowerSprite.Origin, scale: flowerScale, rotate: branch.FlowerConfig.Rotation, depth: layer1 - flowerDepth - zStep);
+                        DamagedFlowerSprites[variant].Draw(spriteBatch, pos, branch.HealthColor, flowerSprite.Origin, scale: flowerScale, rotate: branch.FlowerConfig.RotationRad, depth: layer1 - flowerDepth - zStep);
                     }
                     flowerDepth -= zStep;
                     if (flowerDepth > 0.01f)
@@ -284,10 +284,10 @@ namespace Barotrauma.MapCreatures.Behavior
                 {
                     int variant = branch.LeafConfig.Variant;
                     Sprite leafSprite = LeafSprites[variant];
-                    leafSprite.Draw(spriteBatch, pos, branchColor, leafSprite.Origin, scale: BaseLeafScale * branch.LeafConfig.Scale * branch.FlowerStep, rotate: branch.LeafConfig.Rotation, depth: layer3 + leafDepth);
+                    leafSprite.Draw(spriteBatch, pos, branchColor, leafSprite.Origin, scale: BaseLeafScale * branch.LeafConfig.Scale * branch.FlowerStep, rotate: branch.LeafConfig.RotationRad, depth: layer3 + leafDepth);
                     if (isDamaged && DamagedLeafSprites.Count > variant)
                     {
-                        DamagedLeafSprites[variant].Draw(spriteBatch, pos, branch.HealthColor, leafSprite.Origin, scale: BaseLeafScale * branch.LeafConfig.Scale * branch.FlowerStep, rotate: branch.LeafConfig.Rotation, depth: layer3 + leafDepth - zStep);
+                        DamagedLeafSprites[variant].Draw(spriteBatch, pos, branch.HealthColor, leafSprite.Origin, scale: BaseLeafScale * branch.LeafConfig.Scale * branch.FlowerStep, rotate: branch.LeafConfig.RotationRad, depth: layer3 + leafDepth - zStep);
                     }
                     leafDepth += zStep;
                     if (leafDepth > 0.01f)
@@ -387,8 +387,8 @@ namespace Barotrauma.MapCreatures.Behavior
             bool isRootGrowth = msg.ReadBoolean();
             byte type = (byte)msg.ReadRangedInteger(0b0000, 0b1111);
             byte sides = (byte)msg.ReadRangedInteger(0b0000, 0b1111);
-            int flowerConfig = msg.ReadRangedInteger(0, 0xFFF);
-            int leafConfig = msg.ReadRangedInteger(0, 0xFFF);
+            FoliageConfig flowerConfig = FoliageConfig.ReadFoliageConfig(rotationMin: 0f, rotationMax: 360f, msg);
+            FoliageConfig leafConfig = FoliageConfig.ReadFoliageConfig(rotationMin: 0f, rotationMax: 360f, msg);
             int maxHealth = msg.ReadUInt16();
             int posX = msg.ReadInt32(), posY = msg.ReadInt32();
             int parentBranchIndex = msg.ReadInt32();
@@ -396,7 +396,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
             BallastFloraBranch? parentBranch = parentBranchIndex < 0 || parentBranchIndex >= Branches.Count ? null : Branches[parentBranchIndex];
 
-            return new BallastFloraBranch(this, parentBranch, pos, (VineTileType)type, FoliageConfig.Deserialize(flowerConfig), FoliageConfig.Deserialize(leafConfig))
+            return new BallastFloraBranch(this, parentBranch, pos, (VineTileType)type, flowerConfig, leafConfig)
             {
                 ID = id,
                 MaxHealth = maxHealth,

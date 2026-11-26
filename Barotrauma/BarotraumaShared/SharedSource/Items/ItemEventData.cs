@@ -25,9 +25,12 @@ namespace Barotrauma
             DroppedStack = 10,
             SetHighlight = 11,
             SwapItem = 12,
+            FlipItem = 13,
+            SayMessage = 14,
+            SetTags = 15,
 
             MinValue = 0,
-            MaxValue = 12
+            MaxValue = 15
         }
 
         public interface IEventData : NetEntityEvent.IData
@@ -78,6 +81,21 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Client request to change the container tags of the item, see <see cref="ContainerTagPrefab.SetTags"/>.
+        /// </summary>
+        public readonly struct SetTagsEventData : IEventData
+        {
+            public EventType EventType => EventType.SetTags;
+
+            public readonly ImmutableArray<Identifier> Tags;
+
+            public SetTagsEventData(ImmutableArray<Identifier> tags)
+            {
+                Tags = tags;
+            }
+        }
+
         public readonly struct SetItemStatEventData : IEventData
         {
             public EventType EventType => EventType.ItemStat;
@@ -87,6 +105,20 @@ namespace Barotrauma
             public SetItemStatEventData(Dictionary<TalentStatIdentifier, float> stats)
             {
                 Stats = stats;
+            }
+        }
+
+        public readonly struct FlipItemEventData : IEventData
+        {
+            public EventType EventType => EventType.FlipItem;
+
+            public readonly bool FlipX;
+            public readonly bool FlipY;
+
+            public FlipItemEventData(bool flipX, bool flipY)
+            {
+                FlipX = flipX;
+                FlipY = flipY;
             }
         }
 

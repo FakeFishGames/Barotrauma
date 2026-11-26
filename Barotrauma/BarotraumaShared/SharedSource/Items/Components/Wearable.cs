@@ -1,13 +1,14 @@
-﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Extensions;
 using Barotrauma.IO;
-using System.Linq;
-using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
-using Barotrauma.Abilities;
+using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -22,8 +23,10 @@ namespace Barotrauma
         Herpes
     }
 
-    class WearableSprite
+    public class WearableSprite
     {
+        public bool IsActive { get; private set; } = true;
+
         public ContentPath UnassignedSpritePath { get; private set; }
         public string SpritePath { get; private set; }
         public ContentXElement SourceElement { get; private set; }
@@ -78,6 +81,8 @@ namespace Barotrauma
         public float Rotation { get; private set; }
 
         public LimbType DepthLimb { get; private set; }
+        public float RelativeDepth { get; private set; }
+
         private Wearable _wearableComponent;
         public Wearable WearableComponent
         {
@@ -129,6 +134,9 @@ namespace Barotrauma
                 Init(_picker);
             }
         }
+
+        /// <summary>The sprite is only drawn if these conditions are fulfilled.</summary>
+        public ImmutableList<PropertyConditional> IsActiveConditionals { get; private set; } = [];
 
         public WearableSprite(ContentXElement subElement, WearableType type)
         {
@@ -246,6 +254,7 @@ namespace Barotrauma
             InheritOrigin = SourceElement.GetAttributeBool("inheritorigin", Type != WearableType.Item);
             InheritSourceRect = SourceElement.GetAttributeBool("inheritsourcerect", Type != WearableType.Item);
             DepthLimb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("depthlimb", "None"), true);
+            RelativeDepth = SourceElement.GetAttributeFloat(nameof(RelativeDepth), 0);
             Sound = SourceElement.GetAttributeString("sound", "");
             Scale = SourceElement.GetAttributeFloat("scale", 1.0f);
             Rotation = MathHelper.ToRadians(SourceElement.GetAttributeFloat("rotation", 0.0f));
@@ -268,8 +277,22 @@ namespace Barotrauma
                 }
             }
 
+            ImmutableList<PropertyConditional>.Builder builder = ImmutableList.CreateBuilder<PropertyConditional>();
+            foreach (ContentXElement subElement in SourceElement.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "conditional" or "isactiveconditional":
+                        builder.AddRange(PropertyConditional.FromXElement(subElement));
+                        break;
+                }
+            }
+            IsActiveConditionals = builder.ToImmutable();
+
             IsInitialized = true;
         }
+
+        public void UpdateIsActive() => IsActive = IsActiveConditionals.All(WearableComponent.Item.ConditionalMatches);
 
         public void Remove()
         {
@@ -277,17 +300,87 @@ namespace Barotrauma
             //don't use the Picker setter, because it causes the sprite to be re-initialized for "no character"
             _picker = null;
         }
+
+        public void Equip(Limb limb)
+        {
+            if (WearableComponent.Item.body != null)
+            {
+                WearableComponent.Item.body.Enabled = false;
+            }
+            WearableComponent.IsActive = true;
+            foreach (LightComponent light in LightComponents)
+            {
+                light.ParentBody = limb.body;
+            }
+
+            if (!limb.WearingItems.Contains(this))
+            {
+                limb.WearingItems.Add(this);
+                limb.WearingItems.Sort(static (wearable, nextWearable) =>
+                {
+                    float depth = wearable?.Sprite?.Depth ?? 0f;
+                    float nextDepth = nextWearable?.Sprite?.Depth ?? 0f;
+                    return nextDepth.CompareTo(depth);
+                });
+                limb.WearingItems.Sort(static (wearable, nextWearable) =>
+                {
+                    Wearable wearableComponent = wearable?.WearableComponent;
+                    Wearable nextWearableComponent = nextWearable?.WearableComponent;
+                    if (wearableComponent == null && nextWearableComponent == null) { return 0; }
+                    if (wearableComponent == null) { return -1; }
+                    if (nextWearableComponent == null) { return 1; }
+                    return wearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes).CompareTo(nextWearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes));
+                });
+            }
+#if CLIENT
+            limb.UpdateWearableTypesToHide();
+#endif
+        }
+
+        public void Unequip(Limb limb)
+        {
+            foreach (LightComponent light in LightComponents)
+            {
+                light.ParentBody = null;
+            }
+
+            limb.WearingItems.RemoveAll(w => w == this);
+#if CLIENT
+            limb.UpdateWearableTypesToHide();
+#endif
+        }
     }
 }
 
 namespace Barotrauma.Items.Components
 {
-    partial class Wearable : Pickable, IServerSerializable
+    public partial class Wearable : Pickable, IServerSerializable
     {
         private readonly ContentXElement[] wearableElements;
         private readonly WearableSprite[] wearableSprites;
         private readonly LimbType[] limbType;
-        private readonly Limb[] limb;
+
+        /// <summary>
+        /// Did the wearable have the required items when it was last updated? Used to refresh the wearer's stat values if e.g. the battery in the item runs out.
+        /// </summary>
+        private bool hadRequiredItems;
+
+        /// <summary>
+        /// Which types of limbs this item replaces as a prosthetic?
+        /// </summary>
+        private readonly LimbType[] prostheticsLimbTypes;
+
+        public IEnumerable<LimbType> ProstheticsLimbTypes => prostheticsLimbTypes;
+
+        /// <summary>
+        /// Which limb(s) is this item currently serving as a prosthetic for?
+        /// </summary>
+        private readonly List<Limb> prostheticForLimbs = [];
+
+        /// <summary>
+        /// Which limb(s) is this item currently serving as a prosthetic for?
+        /// </summary>
+        public IEnumerable<Limb> ProstheticForLimbs => prostheticForLimbs;
 
         private readonly List<DamageModifier> damageModifiers;
         public readonly Dictionary<Identifier, float> SkillModifiers;
@@ -363,10 +456,12 @@ namespace Barotrauma.Items.Components
             variant = Rand.Range(1, Variants + 1, Rand.RandSync.ServerAndClient);
             wearableSprites = new WearableSprite[spriteCount];
             wearableElements = new ContentXElement[spriteCount];
-            limbType    = new LimbType[spriteCount];
-            limb        = new Limb[spriteCount];
+            limbType = new LimbType[spriteCount];
             AutoEquipWhenFull = element.GetAttributeBool("autoequipwhenfull", true);
             DisplayContainedStatus = element.GetAttributeBool("displaycontainedstatus", false);
+
+            prostheticsLimbTypes = element.GetAttributeEnumArray<LimbType>("prostheticslimbtypes", []);
+
             int i = 0;
             foreach (var subElement in element.Elements())
             {
@@ -419,6 +514,11 @@ namespace Barotrauma.Items.Components
                     case "statvalue":
                         StatTypes statType = CharacterAbilityGroup.ParseStatType(subElement.GetAttributeString("stattype", ""), Name);
                         float statValue = subElement.GetAttributeFloat("value", 0f);
+                        if (MathUtils.NearlyEqual(statValue, 0.0f))
+                        {
+                            DebugConsole.AddWarning($"Potential error in {item.Name} ({nameof(Wearable)}): stat value {statType} has a value of 0, meaning it won't do anything.",
+                                contentPackage: item.ContentPackage);
+                        }
                         if (WearableStatValues.ContainsKey(statType))
                         {
                             WearableStatValues[statType] += statValue;
@@ -440,6 +540,11 @@ namespace Barotrauma.Items.Components
 
         public override void Equip(Character character)
         {
+            Equip(character, disableEquipEffects: false);
+        }
+
+        public void Equip(Character character, bool disableEquipEffects)
+        {
             foreach (var allowedSlot in allowedSlots)
             {
                 if (allowedSlot == InvSlotType.Any) { continue; }
@@ -454,56 +559,138 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            bool isInProstheticSlot = false;
+            foreach (var prostheticSlot in EnumExtensions.GetIndividualFlags(CharacterInventory.ProstheticSlots))
+            {
+                if (character.Inventory.IsInLimbSlot(item, prostheticSlot))
+                {
+                    isInProstheticSlot = true;
+                    break;
+                }
+            }
             picker = character;
+
+            if (isInProstheticSlot)
+            {
+                if (!TryEquipProsthetic(character, disableEquipEffects)) { return; }
+            }
 
             for (int i = 0; i < wearableSprites.Length; i++ )
             {
-                var wearableSprite = wearableSprites[i];
+                WearableSprite wearableSprite = wearableSprites[i];
                 if (!wearableSprite.IsInitialized) { wearableSprite.Init(picker); }
                 // If the item is gender specific (it has a different textures for male and female), we have to change the gender here so that the texture is updated.
                 wearableSprite.Picker = picker;
 
-                Limb equipLimb  = character.AnimController.GetLimb(limbType[i]);
+                Limb equipLimb = character.AnimController.GetLimb(limbType[i], excludeSevered: false);
                 if (equipLimb == null) { continue; }
-                
-                if (item.body != null)
+
+                if (!isInProstheticSlot && equipLimb.IsSevered) // If this is being worn as a prosthesis, we can immediately add the item to the severed limb, as it's hidden.
                 {
-                    item.body.Enabled = false;
-                }
-                IsActive = true;
-                if (wearableSprite.LightComponent != null)
-                {
-                    foreach (var light in wearableSprite.LightComponents)
+                    if (!equipLimb.SeveredWearableChanges.TryGetValue(wearableSprite, out bool equip))
                     {
-                        light.ParentBody = equipLimb.body;
+                        equipLimb.SeveredWearableChanges.Add(wearableSprite, true);
                     }
+                    else if (!equip)
+                    {
+                        equipLimb.SeveredWearableChanges.Remove(wearableSprite);
+                    }
+                    continue;
                 }
 
-                limb[i] = equipLimb;
-                if (!equipLimb.WearingItems.Contains(wearableSprite))
-                {
-                    equipLimb.WearingItems.Add(wearableSprite);
-                    equipLimb.WearingItems.Sort((wearable, nextWearable) =>
-                    {
-                        float depth = wearable?.Sprite?.Depth ?? 0;
-                        float nextDepth = nextWearable?.Sprite?.Depth ?? 0;
-                        return nextDepth.CompareTo(depth);
-                    });
-                    equipLimb.WearingItems.Sort((wearable, nextWearable) => 
-                    {
-                        var wearableComponent = wearable?.WearableComponent;
-                        var nextWearableComponent = nextWearable?.WearableComponent;
-                        if (wearableComponent == null && nextWearableComponent == null) { return 0; }
-                        if (wearableComponent == null) { return -1; }
-                        if (nextWearableComponent == null) { return 1; }
-                        return wearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes).CompareTo(nextWearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes));
-                    });
-                }
-#if CLIENT
-                equipLimb.UpdateWearableTypesToHide();
-#endif
+                wearableSprite.Equip(equipLimb);
             }
             character.OnWearablesChanged();
+        }
+
+        private bool TryEquipProsthetic(Character character, bool disableEquipEffects = false)
+        {
+            //unequip first (can't be equipped on anything else at the same time)
+            foreach (var wearable in item.GetComponents<Wearable>())
+            {
+                wearable.Unequip(character);
+            }
+
+            prostheticForLimbs.Clear();
+            foreach (var limbType in prostheticsLimbTypes)
+            {
+                var limb = character.AnimController.GetLimb(limbType, excludeSevered: false);
+                if (limb == null) { continue; }
+                foreach (var connectedLimb in character.AnimController.GetConnectedLimbsFurtherFromMainLimb(limb))
+                {
+                    foreach (var limbJoint in character.AnimController.LimbJoints.Where(lj => lj.LimbA == connectedLimb || lj.LimbB == connectedLimb))
+                    {
+                        limbJoint.IsSevered = false;
+                    }
+                    connectedLimb.HiddenByProsthesis = true;
+                    connectedLimb.IsSevered = false;
+                    connectedLimb.body.ResetDynamics();
+                }
+                prostheticForLimbs.Add(limb);
+            }
+
+            //The prosthetic must now be connected to the character's main limb.
+            //Lets check that e.g. the character's elbow isn't severed when we're trying to equip a prosthetic for the forearm.
+            //Should not happen in the vanilla game because only the joints that can be "fixed" by a prosthetic should be severable while the character is alive.
+            foreach (var limbType in prostheticsLimbTypes)
+            {
+                var limb = character.AnimController.GetLimb(limbType, excludeSevered: false);
+                if (limb == null) { continue; }
+                if (!character.AnimController.GetConnectedLimbs(limb).Contains(character.AnimController.MainLimb))
+                {
+                    DebugConsole.AddWarning(
+                        $"Failed to equip a prosthetic. The limb {limbType} replaced by the prosthetic are not connected to the main limb."+
+                        " This can happen e.g. if equipping an arm prosthetic for the forearm when the shoulder has been severed, and probably a problem with how the joints or the prosthetics have been configured: "+
+                        " Only joints that can be fixed by equipping a prosthetic should be severable.");
+                    Drop(dropper: null);
+                    return false;
+                }
+            }
+
+            if (!disableEquipEffects)
+            {
+                ApplyStatusEffects(ActionType.OnEquippedAsProsthetic, 1.0f, character);
+#if CLIENT
+                PlaySound(ActionType.OnEquippedAsProsthetic);
+#endif
+            }
+#if SERVER
+            GameMain.NetworkMember?.CreateEntityEvent(character, new Character.CharacterStatusEventData(forceAfflictionData: false, forceLimbSeveringData: true, disableSeverEffects: true));
+#endif
+            return true;        
+        }
+
+        private void UnequipProsthetic(Character character)
+        {
+            //create a new list out of prostheticForLimbs because it can get modified as a result of unequipping prosthetics inside the loop 
+            foreach (var limbWithProsthetic in prostheticForLimbs.ToList())
+            {
+                //only "re-sever" the limb if there's no other prostheses worn on it
+                bool otherItemAsProsthesis = limbWithProsthetic.WearingItems.Any(it => it.WearableComponent.item.GetComponents<Wearable>().Any(w => w != this && w.prostheticForLimbs.Contains(limbWithProsthetic)));
+                DebugConsole.NewMessage($"Unequipped item {item.Name} {item.ID} as a prosthesis on limb {limbWithProsthetic.type}", Color.Orange);
+                if (!otherItemAsProsthesis)
+                {
+                    DebugConsole.NewMessage($"Re-severing limb {limbWithProsthetic.type}, no other prostheses on limb", Color.Orange);
+                    foreach (var connectedLimb in character.AnimController.GetConnectedLimbsFurtherFromMainLimb(limbWithProsthetic))
+                    {
+                        connectedLimb.HiddenByProsthesis = false;
+                        connectedLimb.IsSevered = true;
+                        connectedLimb.SkipSeveredFadeOutTimer();
+                    }
+                    foreach (var limbJoint in character.AnimController.LimbJoints.Where(lj => lj.LimbA == limbWithProsthetic || lj.LimbB == limbWithProsthetic))
+                    {
+                        if (limbJoint.IsSevered) { continue; }
+                        //no particles here (the limb was "already gone", we're just removing a prosthesis)
+                        character.AnimController.SeverLimbJoint(limbJoint, showHints: false, disableSeverEffects: true, dropProstheses: false);
+                    }
+                }
+                ApplyStatusEffects(ActionType.OnSevered, 1.0f, character, targetLimb: limbWithProsthetic);
+            }
+            prostheticForLimbs.Clear();
+
+#if SERVER
+            GameMain.NetworkMember?.CreateEntityEvent(character, new Character.CharacterStatusEventData(forceAfflictionData: false, forceLimbSeveringData: true, disableSeverEffects: true));            
+#endif
         }
 
         public override void Drop(Character dropper, bool setTransform = true)
@@ -521,24 +708,29 @@ namespace Barotrauma.Items.Components
             if (character == null || character.Removed) { return; }
             if (picker == null) { return; }
 
+            bool isProsthesis = prostheticForLimbs.Any();
+            UnequipProsthetic(character);            
+
             for (int i = 0; i < wearableSprites.Length; i++)
             {
-                Limb equipLimb = character.AnimController.GetLimb(limbType[i]);
+                WearableSprite wearableSprite = wearableSprites[i];
+                Limb equipLimb = character.AnimController.GetLimb(limbType[i], excludeSevered: false);
                 if (equipLimb == null) { continue; }
 
-                if (wearableSprites[i].LightComponent != null)
+                if (!isProsthesis && equipLimb.IsSevered) // If this is being worn as a prosthesis, we can immediately remove the item from the severed limb, as it's hidden.
                 {
-                    foreach (var light in wearableSprites[i].LightComponents)
+                    if (!equipLimb.SeveredWearableChanges.TryGetValue(wearableSprite, out bool equip))
                     {
-                        light.ParentBody = null;
+                        equipLimb.SeveredWearableChanges.Add(wearableSprite, false);
                     }
+                    else if (equip)
+                    {
+                        equipLimb.SeveredWearableChanges.Remove(wearableSprite);
+                    }
+                    continue;
                 }
 
-                equipLimb.WearingItems.RemoveAll(w => w != null && w == wearableSprites[i]);
-#if CLIENT
-                equipLimb.UpdateWearableTypesToHide();
-#endif
-                limb[i] = null;
+                wearableSprite.Unequip(equipLimb);
             }
 
             IsActive = false;
@@ -561,13 +753,26 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            //if the state of required items changes, we may need to refresh the stats given by the wearable
+            bool hasRequiredItems = HasRequiredContainedItems(picker, addMessage: false);
+            if (hasRequiredItems != hadRequiredItems)
+            {
+                picker.OnWearablesChanged();
+                hadRequiredItems = hasRequiredItems;
+            }
+
             //if the item is also being held, let the Holdable component control the position
             if (item.GetComponent<Holdable>() is not { IsActive: true })
             {
                 item.SetTransform(picker.SimPosition, 0.0f);
             }
-            item.ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
-
+            foreach (ItemComponent ic in item.Components)
+            {
+                //if the item has multiple wearable components, don't execute them here - let that wearable handle them itself if it's currently worn
+                if (ic is Wearable && ic != this) { continue; }
+                ic.ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
+            }
+            wearableSprites.ForEach(static wearableSprite => wearableSprite.UpdateIsActive());
 #if CLIENT
             PlaySound(ActionType.OnWearing, picker);
 #endif

@@ -12,7 +12,7 @@ namespace Barotrauma.Extensions
         /// <summary>
         /// Randomizes the collection (using OrderBy) and returns it.
         /// </summary>
-        public static T[] Randomize<T>(this IList<T> source, Rand.RandSync randSync)
+        public static T[] Randomize<T>(this IEnumerable<T> source, Rand.RandSync randSync)
         {
             return source.OrderBy(i => Rand.Value(randSync)).ToArray();
         }

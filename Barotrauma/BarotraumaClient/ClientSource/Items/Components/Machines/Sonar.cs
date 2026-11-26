@@ -518,7 +518,7 @@ namespace Barotrauma.Items.Components
 
             Steering steering = item.GetComponent<Steering>();
             if (sonarView.Rect.Contains(PlayerInput.MousePosition) && 
-                (GUI.MouseOn == null || GUI.MouseOn == sonarView || sonarView.IsParentOf(GUI.MouseOn) || GUI.MouseOn == steering?.GuiFrame || (steering?.GuiFrame?.IsParentOf(GUI.MouseOn) ?? false)))
+                (GUI.MouseOn == null || GUI.IsMouseOn(sonarView) || GUI.MouseOn == steering?.GuiFrame || (steering?.GuiFrame?.IsParentOf(GUI.MouseOn) ?? false)))
             {
                 float scrollSpeed = PlayerInput.ScrollWheelSpeed / 1000.0f;
                 if (Math.Abs(scrollSpeed) > 0.0001f)
@@ -1014,21 +1014,38 @@ namespace Barotrauma.Items.Components
             {
                 if (Level.Loaded.StartLocation?.Type is { ShowSonarMarker: true })
                 {
-                    DrawMarker(spriteBatch,
-                        Level.Loaded.StartLocation.DisplayName.Value,
-                        (Level.Loaded.StartOutpost != null ? "outpost" : "location").ToIdentifier(),
-                        "startlocation",
-                        Level.Loaded.StartExitPosition, transducerCenter,
-                        DisplayScale, center, DisplayRadius);
+                    DrawOutpostMarker(Level.Loaded.StartLocation, Level.Loaded.StartOutpost, "startlocation", Level.Loaded.StartExitPosition);
                 }
 
                 if (Level.Loaded is { EndLocation.Type.ShowSonarMarker: true, Type: LevelData.LevelType.LocationConnection })
                 {
+                    DrawOutpostMarker(Level.Loaded.EndLocation, Level.Loaded.EndOutpost, "endlocation", Level.Loaded.EndExitPosition);
+                }
+
+                void DrawOutpostMarker(Location location, Submarine outpost, string identifier, Vector2 position)
+                {
+                    //if there's a docking port in the outpost, draw the marker at its x-position to guide the sub to where they'll dock
+                    var outpostDockingPort = DockingPort.List.FirstOrDefault(d => d.Item.Submarine == outpost && !d.Docked);
+                    if (outpostDockingPort != null)
+                    {
+                        position.X = outpostDockingPort.Item.WorldPosition.X;
+                    }
+
+                    Identifier entranceTag =
+                        outpost?.Info.OutpostGenerationParams is { } outpostGenParams && !outpostGenParams.EntranceTag.IsEmpty ?
+                            outpostGenParams.EntranceTag :
+                            "OutpostEntrance".ToIdentifier();
+
+                    string label =
+                            !Level.IsLoadedOutpost && outpost != null && outpost.Info.OutpostTags.Contains(entranceTag) ?
+                            TextManager.GetWithVariable("sonarlabel.outpostentrance", "[locationname]", location.DisplayName.Value).Value :
+                            location.DisplayName.Value;
+
                     DrawMarker(spriteBatch,
-                        Level.Loaded.EndLocation.DisplayName.Value,
-                        (Level.Loaded.EndOutpost != null ? "outpost" : "location").ToIdentifier(),
-                        "endlocation",
-                        Level.Loaded.EndExitPosition, transducerCenter,
+                        label,
+                        (outpost != null ? "outpost" : "location").ToIdentifier(),
+                        identifier,
+                        position, transducerCenter,
                         DisplayScale, center, DisplayRadius);
                 }
 
@@ -1047,8 +1064,8 @@ namespace Barotrauma.Items.Components
                 if (GameMain.NetworkMember is { } networkMember && GameMain.GameSession?.GameMode is PvPMode)
                 {
                     if (networkMember.ServerSettings.TrackOpponentInPvP
-                        && Submarine.MainSubs[0] is { } coalitionSub
-                        && Submarine.MainSubs[1] is { } separatistSub
+                        && Submarine.MainSub is { } coalitionSub
+                        && Submarine.AnotherMainSub is { } separatistSub
                         && Character.Controlled is { } player)
                     {
                         Submarine whichSubToDraw = player.TeamID switch
@@ -1263,6 +1280,13 @@ namespace Barotrauma.Items.Components
                 {
                     // specifically checking for friendlyNPC seems more logical here
                     if (dockingPort.Item.Submarine.TeamID != item.Submarine.TeamID && dockingPort.Item.Submarine.TeamID != CharacterTeamType.FriendlyNPC) { continue; } 
+                }
+
+                //don't show docking ports between different parts of an outpost (e.g. between the outpost and the "extension piece" below the airlock)
+                if (dockingPort.Item.Submarine?.Info is { IsOutpost: true } && dockingPort.Docked && 
+                    dockingPort.DockingTarget?.Item.Submarine?.Info is { IsOutpost: true })
+                {
+                    continue;
                 }
 
                 Vector2 offset = (dockingPort.Item.WorldPosition - transducerCenter) * scale;
@@ -1911,10 +1935,13 @@ namespace Barotrauma.Items.Components
         {
             float linearDist = Vector2.Distance(worldPosition, transducerPosition);
             float dist = linearDist;
+            bool isApproximateDistance = false;
+            string formattedLabel = null;
             if (linearDist > Range)
             {
                 if (markerDistances.TryGetValue(targetIdentifier, out CachedDistance cachedDistance))
                 {
+                    formattedLabel = cachedDistance.Label;
                     if (cachedDistance.ShouldUpdateDistance(transducerPosition, worldPosition))
                     {
                         markerDistances.Remove(targetIdentifier);
@@ -1929,6 +1956,7 @@ namespace Barotrauma.Items.Components
                 {
                     CalculateDistance();
                 }
+                isApproximateDistance = true;
             }
 
             void CalculateDistance()
@@ -1937,13 +1965,15 @@ namespace Barotrauma.Items.Components
                 var path = pathFinder.FindPath(ConvertUnits.ToSimUnits(transducerPosition), ConvertUnits.ToSimUnits(worldPosition));
                 if (!path.Unreachable)
                 {
-                    var cachedDistance = new CachedDistance(transducerPosition, worldPosition, path.TotalLength, Timing.TotalTime + Rand.Range(1.0f, 5.0f));
+                    formattedLabel = GetSonarMarkerLabel(label, path.TotalLength);
+                    var cachedDistance = new CachedDistance(transducerPosition, worldPosition, path.TotalLength, formattedLabel, Timing.TotalTime + Rand.Range(1.0f, 5.0f));
                     markerDistances.Add(targetIdentifier, cachedDistance);
                     dist = path.TotalLength;
                 }
                 else
                 {
-                    var cachedDistance = new CachedDistance(transducerPosition, worldPosition, linearDist, Timing.TotalTime + Rand.Range(4.0f, 7.0f));
+                    formattedLabel = GetSonarMarkerLabel(label, linearDist);
+                    var cachedDistance = new CachedDistance(transducerPosition, worldPosition, linearDist, formattedLabel, Timing.TotalTime + Rand.Range(4.0f, 7.0f));
                     markerDistances.Add(targetIdentifier, cachedDistance);
                 }
             }
@@ -1998,11 +2028,10 @@ namespace Barotrauma.Items.Components
 
             if (alpha <= 0.0f) { return; }
 
-            string wrappedLabel = ToolBox.WrapText(label, 150, GUIStyle.SmallFont.Value);
-            wrappedLabel += "\n" + ((int)(dist * Physics.DisplayToRealWorldRatio) + " m");
+            formattedLabel ??= GetSonarMarkerLabel(label, dist);
 
             Vector2 labelPos = markerPos;
-            Vector2 textSize = GUIStyle.SmallFont.MeasureString(wrappedLabel);
+            Vector2 textSize = GUIStyle.SmallFont.MeasureString(formattedLabel);
 
             //flip the text to left side when the marker is on the left side or goes outside the right edge of the interface
             if (GuiFrame != null && (dir.X < 0.0f || labelPos.X + textSize.X + 10 > GuiFrame.Rect.X) && labelPos.X - textSize.X > 0) 
@@ -2012,9 +2041,16 @@ namespace Barotrauma.Items.Components
 
             GUI.DrawString(spriteBatch,
                 new Vector2(labelPos.X + 10, labelPos.Y),
-                wrappedLabel,
+                formattedLabel,
                 Color.LightBlue * textAlpha * alpha, Color.Black * textAlpha * 0.8f * alpha,
                 2, GUIStyle.SmallFont);
+        }
+
+        private string GetSonarMarkerLabel(string label, float dist)
+        {
+            string wrappedLabel = ToolBox.WrapText(label, 150, GUIStyle.SmallFont.Value) + "\n";
+            wrappedLabel += TextManager.GetWithVariable("meterformat", "[meters]", ((int)(dist * Physics.DisplayToRealWorldRatio)).ToString()).Value;
+            return wrappedLabel;
         }
 
         public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)

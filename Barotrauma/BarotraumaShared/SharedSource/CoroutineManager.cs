@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace Barotrauma
 {
-    abstract class CoroutineStatus
+    public abstract class CoroutineStatus
     {
         public static CoroutineStatus Running => EnumCoroutineStatus.Running;
         public static CoroutineStatus Success => EnumCoroutineStatus.Success;
@@ -95,7 +95,7 @@ namespace Barotrauma
         }
     }
 
-    sealed class CoroutineHandle
+    public sealed class CoroutineHandle
     {
         public readonly IEnumerator<CoroutineStatus> Coroutine;
         public readonly string Name;
@@ -113,7 +113,7 @@ namespace Barotrauma
     }
 
     // Keeps track of all running coroutines, and runs them till the end.
-    static class CoroutineManager
+    public static class CoroutineManager
     {
         static readonly List<CoroutineHandle> Coroutines = new List<CoroutineHandle>();
 

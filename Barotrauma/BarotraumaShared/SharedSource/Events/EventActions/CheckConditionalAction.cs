@@ -129,7 +129,7 @@ namespace Barotrauma
             }
         }
 
-        private static bool ConditionalMatches(ISerializableEntity target, PropertyConditional conditional)
+        public static bool ConditionalMatches(ISerializableEntity target, PropertyConditional conditional)
         {
             if (target is Item item)
             {

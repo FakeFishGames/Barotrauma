@@ -11,7 +11,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class ItemContainer : ItemComponent, IDrawableComponent
+    public partial class ItemContainer : ItemComponent, IDrawableComponent
     {
         readonly record struct ActiveContainedItem(Item Item, StatusEffect StatusEffect, bool ExcludeBroken, bool ExcludeFullCondition, bool BlameEquipperForDeath);
 
@@ -50,7 +50,7 @@ namespace Barotrauma.Items.Components
 
         public readonly NamedEvent<ItemContainer> OnContainedItemsChanged = new NamedEvent<ItemContainer>();
 
-        private bool alwaysContainedItemsSpawned;
+        public bool AlwaysContainedItemsSpawned { get; set; }
 
         public readonly ItemInventory Inventory;
 
@@ -125,7 +125,7 @@ namespace Barotrauma.Items.Components
             set;
         }
         
-        [Serialize(true, IsPropertySaveable.No)]
+        [Serialize(true, IsPropertySaveable.No, description: "Can an item already inside this container be swapped out by dropping another item on it? If false, the contained item needs to be taken out first.")]
         public bool AllowSwappingContainedItems
         {
             get;
@@ -137,6 +137,9 @@ namespace Barotrauma.Items.Components
 
         [Serialize(true, IsPropertySaveable.No, description: "Should a button that merges items into stacks be shown in the container's UI panel?")]
         public bool ShowMergeButton { get; set; }
+
+        [Serialize(false, IsPropertySaveable.No, description: "Should the type of the container (based on the container tags of the item) be shown under the label in the container's UI panel? Defaults to true if the container has a capacity of 8 or more, false otherwise.")]
+        public bool ShowContainerType { get; set; }
 
         [Serialize(true, IsPropertySaveable.Yes, description: "When this item is equipped, and you 'quick use' (double click / equip button) another equippable item, should the game attempt to move that item inside this one?")]
         public bool QuickUseMovesItemsInside { get; set; }
@@ -201,7 +204,7 @@ namespace Barotrauma.Items.Components
             set { itemRotation = MathHelper.ToRadians(value); }
         }
 
-        [Serialize("", IsPropertySaveable.No, description: "Specify an item for the container to spawn with.")]
+        [Serialize("", IsPropertySaveable.No, description: "Specify an item (or multiple comma-separated items) for the container to spawn with.")]
         public string SpawnWithId
         {
             get;
@@ -214,7 +217,14 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-        
+
+        [Serialize(false, IsPropertySaveable.No, description: "Should the items configured using SpawnWithId spawn only once (the first time the item spawns, i.e. the item won't reappear if you take it out and save and reload).")]
+        public bool SpawnWithIdOnce
+        {
+            get;
+            set;
+        }
+
         [Serialize(false, IsPropertySaveable.No, description: "Should the items be injected into the user.")]
         public bool AutoInject
         {
@@ -262,6 +272,11 @@ namespace Barotrauma.Items.Components
             get => Inventory.ExtraStackSize;
             set => Inventory.ExtraStackSize = value;
         }
+
+        /// <summary>
+        /// Can be used by status effects to check whether the inventory is full.
+        /// </summary>
+        public bool IsFull => Inventory.IsFull();
 
         private readonly ImmutableArray<SlotRestrictions> slotRestrictions;
 
@@ -379,6 +394,11 @@ namespace Barotrauma.Items.Components
             capacity = totalCapacity;
             slotRestrictions = newSlotRestrictions.ToImmutableArray();
             System.Diagnostics.Debug.Assert(totalCapacity == slotRestrictions.Length);
+            if (element.GetAttribute("showcontainertype") == null)
+            {
+                // When the XML doesn't set the showcontainertype attribute, we only show the container type text if the container has at least 8 slots
+                ShowContainerType = Inventory.Capacity >= 8;
+            }
             InitProjSpecific(element);
         }
 
@@ -443,20 +463,22 @@ namespace Barotrauma.Items.Components
                         {
                             ActiveContainedItem activeContainedItem = new(containedItem, effect, containableItem.ExcludeBroken, containableItem.ExcludeFullCondition, containableItem.BlameEquipperForDeath);
                             activeContainedItems.Add(activeContainedItem);
-
                             if (triggerOnInsertedEffects)
                             {
-                                if (!ShouldApplyEffects(activeContainedItem) || item.Submarine is { Loading: true} || initializingLoadedItems || 
-                                    containedItem.OnInsertedEffectsApplied) 
-                                { 
-                                    continue; 
+                                if (item.Submarine is { Loading: true } || initializingLoadedItems || containedItem.OnInsertedEffectsApplied)
+                                {
+                                    // Don't trigger OnInserted on related items when loading the sub or initializing loaded items (i.e. when the item was "already in" the container).
+                                    continue;
                                 }
-                                activeContainedItem.StatusEffect.Apply(ActionType.OnInserted, deltaTime: 1, item, targets);
+                                if (ShouldApplyEffects(activeContainedItem))
+                                {
+                                    activeContainedItem.StatusEffect.Apply(ActionType.OnInserted, deltaTime: 1, item, targets); 
+                                }
                             }
                         }
                         if (triggerOnInsertedEffects)
                         {
-                            containedItem.OnInsertedEffectsApplied = true;
+                            containedItem.OnInsertedEffectsApplied = true;   
                         }
                     }
                 }
@@ -527,12 +549,11 @@ namespace Barotrauma.Items.Components
                 if (activeContainedItem.Item != containedItem || !ShouldApplyEffects(activeContainedItem)) { continue; }
                 activeContainedItem.StatusEffect.Apply(ActionType.OnRemoved, deltaTime: 1, item, targets);
             }
-
             containedItem.OnInsertedEffectsApplied = false;
-
             activeContainedItems.RemoveAll(i => i.Item == containedItem);
             containedItems.RemoveAll(i => i.Item == containedItem);
             item.SetContainedItemPositions();
+            containedItem.ResetStatusEffectOverrides();
             //deactivate if the inventory is empty
             IsActive = hasSignalConnections || activeContainedItems.Count > 0 || Inventory.AllItems.Any(static it => it.body != null);
             CharacterHUD.RecreateHudTextsIfFocused(item, containedItem);
@@ -584,7 +605,6 @@ namespace Barotrauma.Items.Components
         public override void FlipX(bool relativeToSub)
         {
             base.FlipX(relativeToSub);
-            if (HideItems) { return; }
             if (item.body == null) { return; }
             foreach (Item containedItem in Inventory.AllItems)
             {
@@ -597,11 +617,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (!string.IsNullOrEmpty(SpawnWithId) && !alwaysContainedItemsSpawned)
-            {
-                SpawnAlwaysContainedItems();
-                alwaysContainedItemsSpawned = true;
-            }
+            TrySpawnAlwaysContainedItems();
 
             if (hasSignalConnections)
             {
@@ -727,6 +743,10 @@ namespace Barotrauma.Items.Components
             {
                 targets.AddRange(contained.AllPropertyObjects);
             }
+            if (effect.HasTargetType(StatusEffect.TargetType.Hull) && item.CurrentHull != null)
+            {
+                targets.Add(item.CurrentHull);
+            }
             if (effect.HasTargetType(StatusEffect.TargetType.Character) && item.ParentInventory?.Owner is Character character)
             {
                 targets.Add(character);
@@ -841,6 +861,8 @@ namespace Barotrauma.Items.Components
             if (user != null && !user.CanAccessInventory(Inventory)) { return false; }
             //genetic materials use special logic for combining, don't allow doing it by placing them inside each other here
             if (this.Item.GetComponent<GeneticMaterial>() != null) { return false; }
+            //planting only works in placed planters (see Planter.TryPlantItem), don't allow bypassing it by combining a seed with a held/dropped planter
+            if (this.Item.GetComponent<Planter>() is { HasBeenPlaced: false }) { return false; }
 
             if (Inventory.TryPutItem(item, user))
             {            
@@ -1159,7 +1181,7 @@ namespace Barotrauma.Items.Components
             hasSignalConnections = item.Connections?.Any(c => c.Name is "contained_conditions" or "contained_conditions_percentage" or "contained_items") ?? false;
             if (item.Submarine == null || !item.Submarine.Loading)
             {
-                SpawnAlwaysContainedItems();
+                TrySpawnAlwaysContainedItems();
             }
         }
 
@@ -1182,7 +1204,12 @@ namespace Barotrauma.Items.Components
                     foreach (ushort id in itemIds[i])
                     {
                         if (Entity.FindEntityByID(id) is not Item item) { continue; }
-                        Inventory.TryPutItem(item, i, false, false, null, createNetworkEvent: false, ignoreCondition: true);
+                        Inventory.TryPutItem(item, i, 
+                            allowSwapping: false, 
+                            allowCombine: false, 
+                            user: null, 
+                            createNetworkEvent: false, 
+                            ignoreCondition: true);
                     }
                 }
                 initializingLoadedItems = false;
@@ -1201,39 +1228,63 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                SpawnAlwaysContainedItems();
+                TrySpawnAlwaysContainedItems();
             }
 
             SetContainedItemPositions();
         }
 
-        private void SpawnAlwaysContainedItems()
+        private void TrySpawnAlwaysContainedItems()
         {
+            if (string.IsNullOrEmpty(SpawnWithId) || AlwaysContainedItemsSpawned)
+            {
+                return;
+            }
+
+#if CLIENT
+            // Nothing is spawned in the sub editor, so we shouldn't flag the contents as spawned either.
+            // If SpawnWithIdOnce is set, the flag gets saved into the sub file, so it would be exhausted already in
+            // the sub editor and leave the container permanently empty in-game.
+            if (Screen.Selected == GameMain.SubEditorScreen) { return; }
+#endif
+
             if (SpawnWithId.Length > 0 && (item.Condition > 0.0f || SpawnWithIdWhenBroken))
             {
+                bool spawnDirectly = (Entity.Spawner == null || Entity.Spawner.Removed) && GameMain.NetworkMember == null;
+                if (!spawnDirectly && Entity.Spawner is not { Removed: false })
+                {
+                    // In MP, subs are loaded before the round's EntitySpawner is created (the current one is null or the previous round's removed one),
+                    // so anything queued now would be lost (e.g. the free ammo box of a newly purchased turret's loader).
+                    // Don't flag the items as spawned yet, keep the container active to retry in Update once there's a spawner.
+                    IsActive = true;
+                    return;
+                }
+
                 string[] splitIds = SpawnWithId.Split(',');
                 foreach (string id in splitIds)
                 {
                     ItemPrefab prefab = ItemPrefab.Prefabs.Find(m => m.Identifier == id);
-                    if (prefab != null && Inventory != null && Inventory.CanProbablyBePut(prefab))
+                    if (prefab == null)
                     {
-                        bool isEditor = false;
-#if CLIENT
-                        isEditor = Screen.Selected == GameMain.SubEditorScreen;
-#endif
-                        if (!isEditor && (Entity.Spawner == null || Entity.Spawner.Removed) && GameMain.NetworkMember == null)
+                        DebugConsole.ThrowError($"Could not find the item \"{id}\" the container \"{item.Prefab.Identifier}\" is configured to spawn with!");
+                        continue;
+                    }
+                    if (Inventory != null && Inventory.CanProbablyBePut(prefab))
+                    {
+                        if (spawnDirectly)
                         {
                             var spawnedItem = new Item(prefab, Vector2.Zero, null);
-                            Inventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots, createNetworkEvent: false); 
-                            alwaysContainedItemsSpawned = true;
+                            Inventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots, createNetworkEvent: false);
                         }
                         else
                         {
                             IsActive = true;
-                            Entity.Spawner?.AddItemToSpawnQueue(prefab, Inventory, spawnIfInventoryFull: false, onSpawned: (Item item) => { alwaysContainedItemsSpawned = true; });
+                            Entity.Spawner.AddItemToSpawnQueue(prefab, Inventory, spawnIfInventoryFull: false);
                         }
                     }
                 }
+
+                AlwaysContainedItemsSpawned = true;
             }
         }
 
@@ -1280,6 +1331,14 @@ namespace Barotrauma.Items.Components
                 }
             }
             ExtraStackSize = componentElement.GetAttributeInt(nameof(ExtraStackSize), 0);
+            if (SpawnWithIdOnce)
+            {
+                AlwaysContainedItemsSpawned = componentElement.GetAttributeBool(nameof(AlwaysContainedItemsSpawned), false);
+#if CLIENT
+                // Nothing can have actually spawned in the sub editor
+                if (Screen.Selected == GameMain.SubEditorScreen) { AlwaysContainedItemsSpawned = false; }
+#endif
+            }
         }
 
         public override XElement Save(XElement parentElement)
@@ -1293,6 +1352,10 @@ namespace Barotrauma.Items.Components
             }
             componentElement.Add(new XAttribute("contained", string.Join(',', itemIdStrings)));
             componentElement.Add(new XAttribute(nameof(ExtraStackSize), ExtraStackSize));
+            if (SpawnWithIdOnce && AlwaysContainedItemsSpawned)
+            {
+                componentElement.Add(new XAttribute(nameof(AlwaysContainedItemsSpawned), true));
+            }
             return componentElement;
         }
     }

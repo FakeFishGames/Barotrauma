@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma.Particles
 {
-    class Particle
+    public class Particle
     {
         private ParticlePrefab prefab;
         
@@ -73,6 +73,11 @@ namespace Barotrauma.Particles
 
         public float VelocityChangeMultiplier;
 
+        /// <summary>
+        /// If set, the particle follows this entity.
+        /// </summary>
+        public Entity ParentEntity;
+
         public ParticleDrawOrder DrawOrder { get; private set; }
 
         public ParticlePrefab.DrawTargetType DrawTarget
@@ -96,7 +101,16 @@ namespace Barotrauma.Particles
             get { return size; }
             set { size = value; }
         }
-        
+
+        /// <summary>
+        /// Sets both <see cref="lifeTime"/> and <see cref="totalLifeTime"/> to the same value. 
+        /// </summary>
+        public void SetLifeTime(float newLifeTime)
+        {
+            lifeTime = newLifeTime;
+            totalLifeTime = lifeTime;
+        }
+
         public Hull CurrentHull
         {
             get { return currentHull; }
@@ -152,15 +166,14 @@ namespace Barotrauma.Particles
             position = prevPosition = drawPosition = spawnPosition;
             velocity = MathUtils.IsValid(speed) ? speed : Vector2.Zero;
 
-            rotation = spawnRotation + Rand.Range(prefab.StartRotationMinRad, prefab.StartRotationMaxRad);    
-            prevRotation = spawnRotation;
+            rotation = spawnRotation + Rand.Range(prefab.StartRotationMinRad, prefab.StartRotationMaxRad);
+            prevRotation = drawRotation = rotation;
 
             angularVelocity = Rand.Range(prefab.AngularVelocityMinRad, prefab.AngularVelocityMaxRad);
           
             if (prefab.LifeTimeMin <= 0.0f)
             {
-                totalLifeTime = prefab.LifeTime * lifeTimeMultiplier;
-                lifeTime = prefab.LifeTime * lifeTimeMultiplier;
+                SetLifeTime(prefab.LifeTime * lifeTimeMultiplier);
             }
             else
             {
@@ -184,6 +197,8 @@ namespace Barotrauma.Particles
 
             OnChangeHull = null;
             OnCollision = null;
+
+            ParentEntity = null;
 
             subEmitters.Clear();
             hasSubEmitters = false;
@@ -227,9 +242,17 @@ namespace Barotrauma.Particles
             prevPosition = position;
             prevRotation = rotation;
 
-            //over 3 times faster than position += velocity * deltatime
-            position.X += velocity.X * deltaTime;
-            position.Y += velocity.Y * deltaTime;
+            if (ParentEntity == null)
+            {
+                //over 3 times faster than position += velocity * deltatime
+                position.X += velocity.X * deltaTime;
+                position.Y += velocity.Y * deltaTime;
+            }
+            else
+            {
+                if (ParentEntity.Removed) { return UpdateResult.Delete; }
+                position = ParentEntity.WorldPosition;                
+            }
 
             if (prefab.RotateToDirection)
             {
@@ -608,6 +631,18 @@ namespace Barotrauma.Particles
                     drawPos + Vector2.UnitY * colliderRadius.Y, 
                     Color.Gray);
             }*/
+        }
+
+        /// <summary>
+        /// Can be used to clear references to other objects when the particle is no longer needed (but still exists in the pool).
+        /// </summary>
+        public void Reset()
+        {
+            currentHull = null;
+            ParentEntity = null;
+            OnChangeHull = null;
+            OnCollision = null;
+            hullGaps?.Clear();
         }
     }
 }

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Barotrauma
 {
-    class AIChatMessage
+    public class AIChatMessage
     {
         public readonly string Message;
 

@@ -4,7 +4,7 @@ namespace Barotrauma
 {
     #warning TODO: this is almost a GenericPrefabFile. Must refactor further.
     [RequiredByCorePackage]
-    sealed class OrdersFile : ContentFile
+    public sealed class OrdersFile : ContentFile
     {
         public OrdersFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

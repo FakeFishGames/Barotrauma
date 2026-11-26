@@ -178,7 +178,7 @@ namespace Barotrauma
             Prefabs.Remove(this);
             try
             {
-                if (ContentPackage is { Files: { Length: 1 } }
+                if (ContentPackage.AllFiles.Count() == 1
                     && ContentPackageManager.LocalPackages.Contains(ContentPackage))
                 {
                     Directory.Delete(ContentPackage.Dir, recursive: true, catchUnauthorizedAccessExceptions: false);

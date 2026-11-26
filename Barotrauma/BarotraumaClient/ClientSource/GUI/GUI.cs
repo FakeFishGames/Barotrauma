@@ -48,7 +48,7 @@ namespace Barotrauma
         WaitingBackground = 6, // Cursor + Hourglass
     }
 
-    static class GUI
+    public static class GUI
     {
         // Controls where a line is drawn for given coords.
         public enum OutlinePosition
@@ -100,6 +100,7 @@ namespace Barotrauma
         public static float xScale => UIWidth / ReferenceResolution.X * GameSettings.CurrentConfig.Graphics.HUDScale;
         public static float yScale => GameMain.GraphicsHeight / ReferenceResolution.Y * GameSettings.CurrentConfig.Graphics.HUDScale;
         public static int IntScale(float f) => (int)(f * Scale);
+        public static Point PointScale(Vector2 v) => (v * Scale).ToPoint();
         public static int IntScaleFloor(float f) => (int)Math.Floor(f * Scale);
         public static int IntScaleCeiling(float f) => (int)Math.Ceiling(f * Scale);
         public static float AdjustForTextScale(float f) => f * GameSettings.CurrentConfig.Graphics.TextScale;
@@ -213,8 +214,9 @@ namespace Barotrauma
                     var settingsMenuInner = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.8f), SettingsMenuContainer.RectTransform, Anchor.Center, scaleBasis: ScaleBasis.Smallest) { MinSize = new Point(640, 480) });
                     SettingsMenu.Create(settingsMenuInner.RectTransform);
                 }
-                else
+                else if (SettingsMenu.Instance != null)
                 {
+                    SettingsMenuContainer = null;
                     SettingsMenu.Instance?.Close();
                 }
                 settingsMenuOpen = value;
@@ -383,15 +385,20 @@ namespace Barotrauma
                             DrawString(spriteBatch, new Vector2(10, y),
                                 $"Bodies: {GameMain.World.BodyList.Count} ({GameMain.World.BodyList.Count(b => b != null && b.Awake && b.Enabled)} awake, {GameMain.World.BodyList.Count(b => b != null && b.Awake && b.BodyType == BodyType.Dynamic && b.Enabled)} dynamic)",
                                 Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                            y += yStep;
+                            DrawString(spriteBatch, new Vector2(10, y),
+                                $"Characters: {Character.CharacterList.Count(c => c.Enabled && !c.AnimController.SimplePhysicsEnabled)} active, {Character.CharacterList.Count(c => c.Enabled && c.AnimController.SimplePhysicsEnabled)} on simple physics, {Character.CharacterList.Count(c => !c.Enabled)} disabled",
+                                Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                            y += yStep;
+                            DrawString(spriteBatch, new Vector2(10, y),
+                                "Particle count: " + GameMain.ParticleManager.ParticleCount + "/" + GameMain.ParticleManager.MaxParticles,
+                                Color.Lerp(GUIStyle.Green, GUIStyle.Red, (GameMain.ParticleManager.ParticleCount / (float)GameMain.ParticleManager.MaxParticles)), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                         }
                         catch (InvalidOperationException)
                         {
-                            DebugConsole.AddWarning("Exception while rendering debug info. Physics bodies may have been created or removed while rendering.");
+                            //a "collection was modified" exception can be thrown when BodyList or CharacterList are modified while when rendering the debug info
+                            //quite common when debugdraw is enabled during loading screens, and seems safe to ignore
                         }
-                        y += yStep;
-                        DrawString(spriteBatch, new Vector2(10, y),
-                            "Particle count: " + GameMain.ParticleManager.ParticleCount + "/" + GameMain.ParticleManager.MaxParticles,
-                            Color.Lerp(GUIStyle.Green, GUIStyle.Red, (GameMain.ParticleManager.ParticleCount / (float)GameMain.ParticleManager.MaxParticles)), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
 
                     }
                 }
@@ -633,6 +640,11 @@ namespace Barotrauma
                     }
                 }
 
+                if (GameMain.GCHelperOverlay)
+                {
+                    GCHelper.TryDrawActive(spriteBatch);
+                }
+
                 GameMain.GameSession?.EventManager?.DrawPinnedEvent(spriteBatch);
 
                 if (HUDLayoutSettings.DebugDraw) { HUDLayoutSettings.Draw(spriteBatch); }
@@ -804,14 +816,24 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// The keyboard subscriber at the previous <see cref="ClearUpdateList"/> call.
+        /// </summary>
+        private static IKeyboardSubscriber subscriberAtLastClear;
+
         public static void ClearUpdateList()
         {
             lock (mutex)
             {
-                if (KeyboardDispatcher.Subscriber is GUIComponent && !updateList.Contains(KeyboardDispatcher.Subscriber as GUIComponent))
+                //only deselect if the subscriber was already selected when the previous update list was built:
+                //a component selected after that (e.g. in a prompt created during GUI.Update, or queued behind another message box) hasn't had a chance to be on it yet
+                if (KeyboardDispatcher.Subscriber is GUIComponent subscriber &&
+                    subscriber == subscriberAtLastClear &&
+                    !updateList.Contains(subscriber))
                 {
                     KeyboardDispatcher.Subscriber = null;
                 }
+                subscriberAtLastClear = KeyboardDispatcher.Subscriber;
                 updateList.Clear();
                 updateListSet.Clear();
             }
@@ -940,6 +962,11 @@ namespace Barotrauma
 
         public static GUIComponent MouseOn { get; private set; }
 
+        /// <summary>
+        /// Is the mouse on the specified UI component or any of its children?
+        /// </summary>
+        /// <param name="target"></param>
+        /// <returns></returns>
         public static bool IsMouseOn(GUIComponent target)
         {
             lock (mutex)
@@ -970,8 +997,14 @@ namespace Barotrauma
                 int inventoryIndex = -1;
 
                 Inventory.RefreshMouseOnInventory();
-                if (Inventory.IsMouseOnInventory)
+                if (Inventory.IsMouseOnSubInventoryHoverArea)
                 {
+                    //the subinventories are drawn over all other UI elements
+                    inventoryIndex = updateList.Count - 1;
+                }
+                else if (Inventory.IsMouseOnInventory)
+                {
+                    //the normal inventory is drawn at the same depth as the character hud
                     inventoryIndex = updateList.IndexOf(CharacterHUD.HUDFrame);
                 }
 
@@ -2247,6 +2280,7 @@ namespace Barotrauma
         {
             GUITextBox textBox = new(rectT, createClearButton: true)
             {
+                OverflowClip = true,
                 OnEnterPressed = (tb, _) =>
                 {
                     tb.Deselect();
@@ -2273,7 +2307,7 @@ namespace Barotrauma
         public static GUIMessageBox AskForConfirmation(LocalizedString header, LocalizedString body, Action onConfirm, Action onDeny = null, Vector2? relativeSize = null, Point? minSize = null)
         {
             LocalizedString[] buttons = { TextManager.Get("Ok"), TextManager.Get("Cancel") };
-            GUIMessageBox msgBox = new GUIMessageBox(header, body, buttons, relativeSize: relativeSize ?? new Vector2(0.2f, 0.175f), minSize: minSize ?? new Point(300, 175));
+            GUIMessageBox msgBox = new GUIMessageBox(header, body, buttons, relativeSize: relativeSize, minSize: minSize ?? new Point(300, 175));
 
             // Cancel button
             msgBox.Buttons[1].OnClicked = delegate
@@ -2633,7 +2667,7 @@ namespace Barotrauma
                             GameMain.GameSession.LoadPreviousSave();
                         });
 
-                        if (IsFriendlyOutpostLevel() && !spMode.CrewDead)
+                        if (IsFriendlyOutpostLevel() && !spMode.CrewDead && !GameMain.GameSession.DisallowSaving)
                         {
                             CreateButton("PauseMenuSaveQuit", buttonContainer, verificationTextTag: "PauseMenuSaveAndReturnToMainMenuVerification", action: () =>
                             {
@@ -2663,7 +2697,7 @@ namespace Barotrauma
 
                         if (GameMain.Client.HasPermission(ClientPermissions.ManageRound))
                         {
-                            bool canSave = GameMain.GameSession.GameMode is CampaignMode && IsFriendlyOutpostLevel();
+                            bool canSave = GameMain.GameSession.GameMode is CampaignMode && IsFriendlyOutpostLevel() && !GameMain.GameSession.DisallowSaving;
                             if (canSave)
                             {
                                 CreateButton("PauseMenuSaveQuit", buttonContainer, verificationTextTag: "PauseMenuSaveAndReturnToServerLobbyVerification", action: () =>

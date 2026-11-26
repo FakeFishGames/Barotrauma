@@ -2,9 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Barotrauma.Extensions;
 using Lidgren.Network;
 using Barotrauma.Steam;
@@ -76,25 +74,14 @@ namespace Barotrauma.Networking
 
             netClient.Start();
 
-            TaskPool.Add(
-                $"{nameof(LidgrenClientPeer)}.GetAuthTicket",
-                AuthenticationTicket.Create(ServerEndpoint),
-                t =>
-                {
-                    if (!t.TryGetResult(out Option<AuthenticationTicket> authenticationTicket))
-                    {
-                        Close(PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationFailed));
-                        return;
-                    }
-                    authTicket = authenticationTicket;
+            authTicket = AuthenticationTicket.Create(ServerEndpoint);
 
-                    var netConnection = netClient.Connect(lidgrenEndpointValue.NetEndpoint);
-        
-                    ServerConnection = new LidgrenConnection(netConnection)
-                    {
-                        Status = NetworkConnectionStatus.Connected
-                    };
-                });
+            var netConnection = netClient.Connect(lidgrenEndpointValue.NetEndpoint);
+
+            ServerConnection = new LidgrenConnection(netConnection)
+            {
+                Status = NetworkConnectionStatus.Connected
+            };
 
             isActive = true;
         }
@@ -241,6 +228,7 @@ namespace Barotrauma.Networking
 #endif
 
             byte[] bufAux = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);
+            GameMain.Client?.NetStats?.RegisterSentPacket(msg, bufAux.Length);
 
             var headers = new PeerPacketHeaders
             {
@@ -278,16 +266,13 @@ namespace Barotrauma.Networking
             return netClient.SendMessage(msg.ToLidgren(netClient), deliveryMethod.ToLidgren());
         }
 
-        protected override async Task<Option<AccountId>> GetAccountId()
+        protected override Option<AccountId> GetAccountId()
         {
-            if (!EosInterface.Core.IsInitialized) { return SteamManager.GetSteamId().Select(id => (AccountId)id); }
-
-            var selfPuids = EosInterface.IdQueries.GetLoggedInPuids();
-            if (selfPuids.None()) { return Option.None; }
-            var accountIdsResult = await EosInterface.IdQueries.GetSelfExternalAccountIds(selfPuids.First());
-            return accountIdsResult.TryUnwrapSuccess(out var accountIds) && accountIds.Length > 0
-                ? Option.Some(accountIds[0])
-                : Option.None;
+            if (SteamManager.IsInitialized)
+            {
+                return SteamManager.GetSteamId().Select(static id => (AccountId)id);
+            }
+            return Option.None;
         }
 
 #if DEBUG

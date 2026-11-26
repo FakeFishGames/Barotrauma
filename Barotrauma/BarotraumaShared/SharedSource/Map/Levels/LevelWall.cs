@@ -11,7 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    partial class LevelWall : IDisposable
+    public partial class LevelWall : IDisposable
     {
         public List<VoronoiCell> Cells { get; private set; }
 

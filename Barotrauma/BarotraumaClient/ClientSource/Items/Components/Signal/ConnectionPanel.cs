@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
+    public partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
         public static bool DebugWiringMode;
         public static double DebugWiringEnabledUntil;

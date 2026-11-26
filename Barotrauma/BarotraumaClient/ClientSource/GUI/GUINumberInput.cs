@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class GUINumberInput : GUIComponent
+    public class GUINumberInput : GUIComponent
     {
         public delegate void OnValueEnteredHandler(GUINumberInput numberInput);
         public OnValueEnteredHandler OnValueEntered;
@@ -260,6 +260,7 @@ namespace Barotrauma
 
             TextBox = new GUITextBox(new RectTransform(new Vector2(1.0f - _relativeButtonAreaWidth, 1.0f), LayoutGroup.RectTransform), textAlignment: textAlignment, style: "GUITextBoxNoIcon")
             {
+                OverflowClip = true,
                 ClampText = false
             };
             TextBox.CaretColor = TextBox.TextColor;

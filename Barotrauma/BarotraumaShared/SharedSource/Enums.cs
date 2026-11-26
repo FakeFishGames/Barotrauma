@@ -38,6 +38,7 @@ namespace Barotrauma
         OnUse = 2,
         /// <summary>
         /// Executes when an item is held and the aim key is held. Only valid for items.
+        /// There are also a handful of special usages on certain ItemComponents: executes when charging a Turret, when throwing a Throwable, and when DockingPort undocks.
         /// </summary>
         OnSecondaryUse = 3,
         /// <summary>
@@ -81,12 +82,12 @@ namespace Barotrauma
         /// </summary>
         NotInWater = 13,
         /// <summary>
-        /// Executes when the entity hits something hard enough. For items, the threshold is determined by <see cref="ItemPrefab.ImpactTolerance"/>,
+        /// Executes when the entity hits something hard enough. For items, the threshold is determined by <see cref="Item.ImpactTolerance"/>,
         /// for characters by <see cref="Ragdoll.ImpactTolerance"/>. Valid for items and characters.
         /// </summary>
         OnImpact = 14,
         /// <summary>
-        /// Executes continuously when the character is eating another character. Only valid for characters.
+        /// Executes continuously when the character is eating another character or item, and is also called for items while they are being consumed by a character.
         /// </summary>
         OnEating = 15,
         /// <summary>
@@ -95,7 +96,7 @@ namespace Barotrauma
         /// </summary>
         OnDamaged = 16,
         /// <summary>
-        /// Executes when the limb gets severed. Only valid for limbs.
+        /// Executes when the limb (or a prosthetic) gets severed. Only valid for limbs, prosthetics and gene splicers.
         /// </summary>
         OnSevered = 17,
         /// <summary>
@@ -139,9 +140,26 @@ namespace Barotrauma
         /// </summary>
         OnDeconstructed = 27,
         /// <summary>
+        /// Meant for status effect overrides that have not yet inherited the type from the target status effect.
+        /// </summary>
+        Undefined = 28,
+        /// <summary>
         /// Executes when the character dies. Only valid for characters.
         /// </summary>
-        OnDeath = OnBroken
+        OnDeath = OnBroken,
+        /// <summary>
+        /// Executes when an item is applied via the health interface (<see cref="Item.ApplyTreatment"/>).
+        /// Unlike <see cref="OnSuccess"/> and <see cref="OnUse"/>, this does not fire when the item is swung as a melee weapon.
+        /// </summary>
+        OnTreatment = 30,
+        /// <summary>
+        /// Executes when a prosthetic is equipped via the health interface. Prosthetic items would probably use this together with <see cref="OnSevered"/>, which this partly mirrors.
+        /// </summary>
+        OnEquippedAsProsthetic = 29,
+        /// <summary>
+        /// Executes continuously while the character is latched onto something (a submarine, a level wall or a character) using <see cref="LatchOntoAI"/>. Only valid for characters.
+        /// </summary>
+        OnLatched = 31,
     }
 
     public enum AbilityEffectType
@@ -189,7 +207,11 @@ namespace Barotrauma
         AfterSubmarineAttacked,
         OnApplyTreatment,
         OnStatusEffectIdentifier,
-        OnRepairedOutsideLeak
+        OnRepairedOutsideLeak,
+        /// <summary>
+        /// Triggers when the players visit a location in person for the first time (unlike <see cref="OnLocationDiscovered"/>, which can trigger before that, e.g. when a mission reveals the location).
+        /// </summary>
+        OnLocationVisited
     }
 
     /// <summary>
@@ -626,10 +648,15 @@ namespace Barotrauma
         /// <summary>
         /// Multiplier bonus to ranged attacks coming from a natural weapon (limb).
         /// </summary>
-        NaturalRangedAttackMultiplier
+        NaturalRangedAttackMultiplier,
+
+        /// <summary>
+        /// Modifies how much the character's arm "wobbles" when aiming. A value between 0-1. Affects the hand the item is worn on.
+        /// </summary>
+        AimWobble
     }
 
-    internal enum ItemTalentStats
+    public enum ItemTalentStats
     {
         None,
         DetoriationSpeed,

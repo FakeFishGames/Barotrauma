@@ -12,7 +12,7 @@ using Directory = System.IO.Directory;
 
 namespace Barotrauma
 {
-    internal class EventEditorScreen : EditorScreen
+    public class EventEditorScreen : EditorScreen
     {
         private GUIFrame GuiFrame = null!;
 
@@ -1087,7 +1087,7 @@ namespace Barotrauma
                 return false;
             }
 
-            GameSession gameSession = new GameSession(subInfo, Option.None, CampaignDataPath.Empty, GameModePreset.TestMode, CampaignSettings.Empty, null);
+            GameSession gameSession = new GameSession(subInfo, CampaignDataPath.Empty, GameModePreset.TestMode, CampaignSettings.Empty, null);
             TestGameMode gameMode = ((TestGameMode?)gameSession.GameMode) ?? throw new InvalidCastException();
 
             gameMode.SpawnOutpost = true;

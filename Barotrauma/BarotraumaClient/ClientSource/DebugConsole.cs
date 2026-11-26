@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -27,6 +28,7 @@ namespace Barotrauma
             /// <summary>
             /// Executed when a client uses the command. If not set, the command is relayed to the server as-is.
             /// </summary>
+            [AllowNull, MaybeNull]
             public Action<string[]> OnClientExecute;
 
             public bool RelayToServer = true;
@@ -47,8 +49,15 @@ namespace Barotrauma
                 }
                 else
                 {
-                    OnExecute(args);
+                    OnExecute?.Invoke(args);
                 }
+            }
+
+            public void Dispose()
+            {
+                OnExecute = null;
+                GetValidArgs = null;
+                OnClientExecute = null;
             }
         }
 
@@ -252,9 +261,6 @@ namespace Barotrauma
                 case "unbindkey":
                 case "wikiimage_character":
                 case "wikiimage_sub":
-                case "eosStat":
-                case "eosUnlink":
-                case "eosLoginEpicViaSteam":
                     return true;
                 default:
                     return client.HasConsoleCommandPermission(command);
@@ -300,35 +306,23 @@ namespace Barotrauma
 
             try
             {
-                if (msg.IsError)
+                var textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform), style: null, color: null)
                 {
-                    var textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform), style: "InnerFrame", color: Color.White)
+                    CanBeFocused = true,
+                    OnSecondaryClicked = (component, data) =>
                     {
-                        CanBeFocused = true,
-                        OnSecondaryClicked = (component, data) =>
-                        {
-                            GUIContextMenu.CreateContextMenu(new ContextMenuOption("editor.copytoclipboard", true, () => { Clipboard.SetText(msg.Text); }));
-                            return true;
-                        }
-                    };
-                    var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 5, 0), textContainer.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(2, 2) },
-                        RichString.Rich(msg.Text), textAlignment: Alignment.TopLeft, font: GUIStyle.SmallFont, wrap: true)
-                    {
-                        CanBeFocused = false,
-                        TextColor = msg.Color
-                    };
-                    textContainer.RectTransform.NonScaledSize = new Point(textContainer.RectTransform.NonScaledSize.X, textBlock.RectTransform.NonScaledSize.Y + 5);
-                    textBlock.SetTextPos();
-                }
-                else
+                        GUIContextMenu.CreateContextMenu(new ContextMenuOption("editor.copytoclipboard", true, () => { Clipboard.SetText(msg.Text); }));
+                        return true;
+                    }
+                };
+                var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 5, 0), textContainer.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(2, 2) },
+                    RichString.Rich(msg.Text), textAlignment: Alignment.TopLeft, font: GUIStyle.SmallFont, wrap: true)
                 {
-                    var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
-                        RichString.Rich(msg.Text), font: GUIStyle.SmallFont, wrap: true)
-                    {
-                        CanBeFocused = false,
-                        TextColor = msg.Color
-                    };
-                }
+                    CanBeFocused = false,
+                    TextColor = msg.Color
+                };
+                textContainer.RectTransform.NonScaledSize = new Point(textContainer.RectTransform.NonScaledSize.X, textBlock.RectTransform.NonScaledSize.Y + 5);
+                textBlock.SetTextPos();
                 
                 listBox.UpdateScrollBarSize();
                 listBox.BarScroll = 1.0f;
@@ -398,81 +392,6 @@ namespace Barotrauma
         private static void InitProjectSpecific()
         {
             InitShowSoldItems();
-            
-            commands.Add(new Command("eosStat", "Query and display all logged in EOS users. Normally this is at most two users, but in a developer environment it could be more.", args =>
-            {
-                if (!EosInterface.Core.IsInitialized)
-                {
-                    NewMessage("EOS not initialized");
-                    return;
-                }
-
-                var loggedInUsers = EosInterface.IdQueries.GetLoggedInPuids();
-                if (!loggedInUsers.Any())
-                {
-                    NewMessage("EOS user not logged in");
-                    return;
-                }
-
-                NewMessage("Logged in EOS users:");
-                foreach (var puid in loggedInUsers)
-                {
-                    TaskPool.Add(
-                        $"eosStat -> {puid}",
-                        EosInterface.IdQueries.GetSelfExternalAccountIds(puid),
-                        t =>
-                        {
-                            if (!t.TryGetResult(out Result<ImmutableArray<AccountId>, EosInterface.IdQueries.GetSelfExternalIdError> result)) { return; }
-                            NewMessage($" - {puid}");
-
-                            if (result.TryUnwrapSuccess(out var ids))
-                            {
-                                foreach (var id in ids)
-                                {
-                                    NewMessage($"   - {id}");
-                                    if (id is EpicAccountId eaid)
-                                    {
-                                        async Task gameOwnershipTokenTest()
-                                        {
-                                            var tokenOption = await EosInterface.Ownership.GetGameOwnershipToken(eaid);
-                                            var verified = await tokenOption.Bind(t => t.Verify());
-                                            NewMessage($"Ownership token verify result: {verified}");
-                                        }
-                                        _ = gameOwnershipTokenTest(); // Fire and forget!
-                                        EosInterface.Login.TestEosSessionTimeoutRecovery(puid);
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                NewMessage($"   - Failed to get external IDs linked to {puid}: {result}");
-                            }
-                        });
-                }
-            }));
-            AssignRelayToServer("eosStat", false);
-
-            commands.Add(new Command("eosUnlink", "Unlink the primary logged in external account ID from its corresponding EOS Product User ID and close the game. This is meant to be used to test the EOS consent flow.", args =>
-            {
-                var userId = EosInterface.IdQueries.GetLoggedInPuids().FirstOrDefault();
-                NewMessage($"Unlinking external account from PUID {userId}");
-                GameSettings.SetCurrentConfig(GameSettings.CurrentConfig with { CrossplayChoice = Eos.EosSteamPrimaryLogin.CrossplayChoice.Unknown });
-                GameSettings.SaveCurrentConfig();
-                TaskPool.Add("unlinkTask", EosInterface.Login.UnlinkExternalAccount(userId), _ =>
-                {
-                    GameMain.Instance.Exit();
-                });
-            }));
-            AssignRelayToServer("eosUnlink", false);
-
-            commands.Add(new Command("eosLoginEpicViaSteam", "Log into an Epic account via a link to the currently logged in Steam account",
-                args =>
-                {
-                    TaskPool.Add("eosLoginEpicViaSteam",
-                        Eos.EosEpicSecondaryLogin.LoginToLinkedEpicAccount(),
-                        TaskPool.IgnoredCallback);
-                }));
-            AssignRelayToServer("eosLoginEpicViaSteam", false);
 
             commands.Add(new Command("resetgameanalyticsconsent", "Reset whether you've given your consent for the game to send statistics to GameAnalytics. After executing the command, the game should ask for your consent again on relaunch.", args =>
             {
@@ -549,14 +468,22 @@ namespace Barotrauma
                 GameMain.GameScreen.Select();
             }));
 
-            commands.Add(new Command("editsubs|subeditor", "editsubs/subeditor: Switch to the Submarine Editor to create or edit submarines.", (string[] args) =>
+            commands.Add(new Command("editsubs|subeditor", "editsubs/subeditor [file path/ingame]: Switch to the Submarine Editor to create or edit submarines.", (string[] args) =>
             {
+                bool useInGameSub = false;
                 if (args.Length > 0)
                 {
-                    var subInfo = new SubmarineInfo(string.Join(" ", args));
-                    Submarine.MainSub = Submarine.Load(subInfo, true);
+                    if (args[0] == "ingame")
+                    {
+                        useInGameSub = true;
+                    }
+                    else
+                    {
+                        var subInfo = new SubmarineInfo(string.Join(" ", args));
+                        Submarine.MainSub = Submarine.Load(subInfo, true);
+                    }
                 }
-                GameMain.SubEditorScreen.Select(enableAutoSave: Screen.Selected != GameMain.GameScreen);
+                GameMain.SubEditorScreen.Select(enableAutoSave: Screen.Selected != GameMain.GameScreen, useBackupSubmarineInfo: !useInGameSub);
                 Entity.Spawner?.Remove();
                 Entity.Spawner = null;
             }, isCheat: true));
@@ -753,6 +680,10 @@ namespace Barotrauma
                         NewMessage($"Reloading content file: {pathArgument}", Color.Yellow);
                         contentFile.UnloadFile();
                         contentFile.LoadFile();
+                        if (contentFile is PluginInfoFile pf)
+                        {
+                            pf.FinalizeLoad();
+                        }
                     }
                     else
                     {
@@ -945,6 +876,10 @@ namespace Barotrauma
             AssignRelayToServer("savebinds", false);
             AssignRelayToServer("spreadsheetexport", false);
 #if DEBUG
+            AssignRelayToServer("startgchelper", true);
+            AssignRelayToServer("gcprint", true);
+            AssignRelayToServer("gchelper", false);
+            AssignRelayToServer("gccollect", false);
             AssignRelayToServer("listspamfilters", false);
             AssignRelayToServer("showitemxml", false);
             AssignRelayToServer("crash", false);
@@ -1391,7 +1326,7 @@ namespace Barotrauma
                 }
             }, isCheat: true));
 
-            commands.Add(new Command("cleansub", "", (string[] args) =>
+            commands.Add(new Command("clearentities", "", (string[] args) =>
             {
                 for (int i = MapEntity.MapEntityList.Count - 1; i >= 0; i--)
                 {
@@ -1433,6 +1368,59 @@ namespace Barotrauma
                 msgBox.Buttons[0].OnClicked = msgBox.Close;
             }));
 
+            commands.Add(new Command("listicons", "List all supported font icons.", args =>
+            {
+                if (GUIStyle.IconFont.Prefabs.ActivePrefab is not { } iconFont)
+                {
+                    ThrowError("No icon font loaded.");
+                    return;
+                }
+
+                StringBuilder sb = new("List of icons:\n");
+                StringBuilder popupSb = new();
+                foreach (var (identifier, value) in iconFont.IconFontCharacterMap)
+                {
+                    sb.AppendLine($"{(char)value} - \'{identifier}\'");
+                    // test rich text parsing as a bonus
+                    popupSb.AppendLine($"‖color:gui.green‖‖icon:{identifier}‖‖end‖ - \'{identifier}\'");
+                }
+                NewMessage(sb.ToString().TrimEnd('\n'));
+
+                GUIMessageBox msgBox = new GUIMessageBox("Test", string.Empty,
+                                                         buttons: [TextManager.Get("close")],
+                                                         relativeSize: new Vector2(0.33f, 0.5f));
+
+                GUILayoutGroup layout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.8f), msgBox.Content.RectTransform));
+
+                GUIDropDown fontDropDown = new GUIDropDown(new RectTransform(new Vector2(1f, 0.1f), layout.RectTransform));
+
+                foreach (var (fontIdentifier, guiFont) in GUIStyle.Fonts)
+                {
+                    fontDropDown.AddItem(fontIdentifier.Value, userData: guiFont);
+                }
+                fontDropDown.Select(0);
+
+                RichString richString = RichString.Rich(popupSb.ToString().TrimEnd('\n'));
+
+                GUIListBox list = new GUIListBox(new RectTransform(new Vector2(1f, 0.9f), layout.RectTransform));
+                new GUITextBlock(new RectTransform(new Vector2(1f, 0f), list.Content.RectTransform), richString, font: (GUIFont)fontDropDown.SelectedData) { CanBeFocused = false };
+
+                list.RecalculateChildren();
+                fontDropDown.OnSelected = (selected, o) =>
+                {
+                    list.Content.ClearChildren();
+                    new GUITextBlock(new RectTransform(new Vector2(1f, 0f), list.Content.RectTransform), richString, font: (GUIFont)o) { CanBeFocused = false };
+                    return true;
+                };
+
+                msgBox.Buttons[0].OnClicked = (button, o) =>
+                {
+                    msgBox.Close();
+                    return true;
+                };
+            }));
+            AssignRelayToServer("listicons", false);
+
             AssignOnExecute("debugdraw", (string[] args) =>
             {
                 if (args.None() || !bool.TryParse(args[0], out bool state))
@@ -1453,6 +1441,8 @@ namespace Barotrauma
                 GameMain.LightManager.DebugLos = state;
                 NewMessage("Los debug draw mode " + (GameMain.LightManager.DebugLos ? "enabled" : "disabled"), Color.Yellow);
             });
+            AssignRelayToServer("debugdrawlos", false);
+
             AssignOnExecute("debugwiring", (string[] args) =>
             {
                 if (args.None() || !bool.TryParse(args[0], out bool state))
@@ -1462,7 +1452,7 @@ namespace Barotrauma
                 ConnectionPanel.DebugWiringMode = state;
                 NewMessage("Wiring debug mode " + (ConnectionPanel.DebugWiringMode ? "enabled" : "disabled"), Color.Yellow);
             });
-            AssignRelayToServer("debugdraw", false);
+            AssignRelayToServer("debugwiring", false);
 
             AssignOnExecute("devmode", (string[] args) =>
             {
@@ -1495,7 +1485,7 @@ namespace Barotrauma
                 TextManager.DebugDraw = state;
                 NewMessage("Localization debug draw mode " + (TextManager.DebugDraw ? "enabled" : "disabled"), Color.Yellow);
             });
-            AssignRelayToServer("debugdraw", false);
+            AssignRelayToServer("debugdrawlocalization", false);
 
             AssignOnExecute("togglevoicechatfilters", (string[] args) =>
             {
@@ -1520,6 +1510,18 @@ namespace Barotrauma
                 GameMain.ShowPerf = !GameMain.ShowPerf;
                 NewMessage("Performance statistics " + (GameMain.ShowPerf ? "enabled" : "disabled"), Color.Yellow);
             }));
+            commands.Add(new Command("togglescreenshake", "togglescreenshake: Toggle the \"screen shake effect\" caused by explosions, submarine collisions etc.", (string[] args) =>
+            {
+                Camera.DisableCameraShake = !Camera.DisableCameraShake;
+                NewMessage("Screen shake " + (Camera.DisableCameraShake ? "disabled" : "enabled" ), Color.Yellow);
+            }));
+#if DEBUG
+            commands.Add(new Command("togglesimplecharacterphysics", "togglesimplecharacterphysics: When enabled, all characters are forced to stay in the \"simple physics\" mode in which their ragdoll is disabled and only the main collider is active. Normally characters only go to the simple physics mode when far away from players.", (string[] args) =>
+            {
+                Ragdoll.ForceSimplePhysics = !Ragdoll.ForceSimplePhysics;
+                NewMessage(Ragdoll.ForceSimplePhysics ? "Forced simple physics on characters." : "Simple physics are no longer forced on characters.", Color.Yellow);
+            }));
+#endif
 
             AssignOnClientExecute("netstats", (string[] args) =>
             {
@@ -1632,6 +1634,7 @@ namespace Barotrauma
 
             AssignRelayToServer("water|editwater", false);
             AssignRelayToServer("fire|editfire", false);
+            AssignRelayToServer("editsubs", false);
 #if DEBUG
             AssignRelayToServer("debugvoip", true);
 #endif
@@ -2014,13 +2017,19 @@ namespace Barotrauma
 
             }, isCheat: false));
 
-            commands.Add(new Command("setentityproperties", "setentityproperties [property name] [value]: Sets the value of some property on all selected items/structures in the sub editor.", (string[] args) =>
+            commands.Add(new Command("setentityproperties", "setentityproperties [property name] [value]: In the sub editor, sets the value of some property on all selected items/structures. In-game, sets the value on the item selected by the controlled character.", (string[] args) =>
             {
-                if (args.Length != 2 || Screen.Selected != GameMain.SubEditorScreen) { return; }
-                foreach (MapEntity me in MapEntity.SelectedList)
+                if (args.Length != 2) { return; }
+
+                IEnumerable<MapEntity> entities = 
+                    Screen.Selected == GameMain.SubEditorScreen ? 
+                    MapEntity.SelectedList :
+                    new List<MapEntity> { Character.Controlled?.SelectedItem };
+
+                foreach (MapEntity me in entities)
                 {
                     bool propertyFound = false;
-                    if (!(me is ISerializableEntity serializableEntity)) { continue; }                    
+                    if (me is not ISerializableEntity serializableEntity) { continue; }                    
                     if (serializableEntity.SerializableProperties == null) { continue; }
 
                     if (serializableEntity.SerializableProperties.TryGetValue(args[0].ToIdentifier(), out SerializableProperty property))
@@ -2583,8 +2592,17 @@ namespace Barotrauma
             }));
 
 #if DEBUG
+            commands.Add(new Command("gchelper", "gchelper: Toggle garbage collection overlay.", (string[] args) =>
+            {
+                if (!GCHelper.IsActive)
+                {
+                    ThrowError("Unable to toggle the GCHelper overlay since GCHelper isn't running, use 'startgchelper' command to start it.");
+                }
 
-           commands.Add(new Command(
+                GameMain.GCHelperOverlay = !GameMain.GCHelperOverlay;
+            }));
+
+            commands.Add(new Command(
                 "listachievements",
                 "listachievements: Lists all achievement identifiers, names, descriptions, and their current Steam status (Locked/Unlocked).",
                 (string[] args) =>
@@ -3687,30 +3705,17 @@ namespace Barotrauma
                 "banaddress|banip",
                 (string[] args) =>
                 {
-                    if (GameMain.Client == null || args.Length == 0) return;
-                    ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"? (Enter c to cancel)", (reason) =>
-                    {
-                        if (reason == "c" || reason == "C") { return; }
-                        ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\") (Enter c to cancel)", (duration) =>
-                        {
-                            if (duration == "c" || duration == "C") { return; }
-                            TimeSpan? banDuration = null;
-                            if (!string.IsNullOrWhiteSpace(duration))
-                            {
-                                if (!TryParseTimeSpan(duration, out TimeSpan parsedBanDuration))
-                                {
-                                    ThrowError("\"" + duration + "\" is not a valid ban duration. Use the format \"[days] d [hours] h\", \"[days] d\" or \"[hours] h\".");
-                                    return;
-                                }
-                                banDuration = parsedBanDuration;
-                            }
+                    if (GameMain.Client == null || args.Length == 0) { return; }
 
-                            GameMain.Client?.SendConsoleCommand(
-                                "banaddress " +
-                                args[0] + " " +
-                                (banDuration.HasValue ? banDuration.Value.TotalSeconds.ToString() : "0") + " " +
-                                reason);
-                        });
+                    GetBanReasonAndDuration(clientName: args[0], args.Skip(1).ToArray(), (string reason, TimeSpan? banDuration) =>
+                    {
+                        //the server expects the duration in seconds
+                        long banDurationSeconds = banDuration.HasValue ? (long)banDuration.Value.TotalSeconds : 0;
+                        GameMain.Client?.SendConsoleCommand(
+                            "banaddress " +
+                            args[0] + " " +
+                            banDurationSeconds.ToString(CultureInfo.InvariantCulture) + " " +
+                            reason);
                     });
                 }
             );
@@ -3796,7 +3801,7 @@ namespace Barotrauma
                     ThrowError($"Could not find the location type \"{args[0]}\".");
                     return;
                 }
-                GameMain.GameSession.Campaign.Map.CurrentLocation.ChangeType(GameMain.GameSession.Campaign, locationType);
+                GameMain.GameSession.Campaign.Map.CurrentLocation.ChangeType(GameMain.GameSession.Campaign, locationType, createNetworkEvent: true);
             },
             () =>
             {
@@ -4224,6 +4229,14 @@ namespace Barotrauma
                     NewMessage("Mirrored: " + Level.Loaded.Mirrored);
                     NewMessage("Level size: " + Level.Loaded.Size.X + "x" + Level.Loaded.Size.Y);
                     NewMessage("Minimum main path width: " + (Level.Loaded.LevelData?.MinMainPathWidth?.ToString() ?? "unknown"));
+                    if (Level.Loaded.StartOutpost is { } startOutpost)
+                    {
+                        NewMessage("Start outpost generation parameters: " + startOutpost.Info.OutpostGenerationParams.Identifier);
+                    }
+                    if (Level.Loaded.EndOutpost is { } endOutpost)
+                    {
+                        NewMessage("End outpost generation parameters: " + endOutpost.Info.OutpostGenerationParams.Identifier);
+                    }
                 }
             });
 

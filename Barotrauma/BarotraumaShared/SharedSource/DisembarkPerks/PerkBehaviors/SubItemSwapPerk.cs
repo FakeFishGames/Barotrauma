@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.PerkBehaviors
 {
-    internal class SubItemSwapPerk : PerkBase
+    public class SubItemSwapPerk : PerkBase
     {
         [Serialize("", IsPropertySaveable.Yes)]
         public Identifier TargetItem { get; set; }
@@ -52,7 +52,8 @@ namespace Barotrauma.PerkBehaviors
             {
                 if (item.Prefab.Identifier == TargetItem)
                 {
-                    item.ReplaceWithLinkedItems(itemToInstall);
+                    // Spawn with ammo like newly purchased turrets do
+                    item.ReplaceWithLinkedItems(itemToInstall, spawnContainedItems: true);
                     return;
                 }
             }

@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class CrewManager
+    public partial class CrewManager
     {
         partial void CreateRandomConversation()
         {
@@ -41,11 +41,7 @@ namespace Barotrauma
                         if (info.Character is { IsDead: true }) { continue; }
                     }
                 }
-
-                XElement characterElement = info.Save(element);
-                if (info.InventoryData != null) { characterElement.Add(info.InventoryData); }
-                if (info.HealthData != null) { characterElement.Add(info.HealthData); }
-                if (info.OrderData != null) { characterElement.Add(info.OrderData); }
+                info.Save(element, includeInventoryData: true, includeHealthData: true, includeOrderData: true);
             }
             parentElement?.Add(element);
             return element;

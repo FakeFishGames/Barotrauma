@@ -45,20 +45,61 @@ namespace Barotrauma
 
     public enum AIBehaviorAfterAttack
     {
+        /// <summary>
+        /// The character retreats until the <see cref="Attack.CoolDown"/> has passed.
+        /// </summary>
         FallBack,
+        /// <summary>
+        /// The character retreats until the <see cref="Attack.CoolDown"/> has passed, unless it can attack using another attack (The cooldown between different attacks is controlled with <see cref="Attack.SecondaryCoolDown"/>).
+        /// </summary>
         FallBackUntilCanAttack,
+        /// <summary>
+        /// The character pursues the target if it can attack using another attack (The cooldown between different attacks is controlled with <see cref="Attack.SecondaryCoolDown"/>), otherwise it falls back until the <see cref="Attack.CoolDown"/> has passed.
+        /// </summary>
         PursueIfCanAttack,
+        /// <summary>
+        /// The character pursues the target until the <see cref="Attack.CoolDown"/> has passed. 
+        /// </summary>
         Pursue,
+        /// <summary>
+        /// The character starts eating the target. Does not fully switch to the eating state, just eats it until the <see cref="Attack.CoolDown"/> has passed.
+        /// </summary>
         Eat,
+        /// <summary>
+        /// Keeps moving towards the direction of the attack (passing through the target) until the <see cref="Attack.CoolDown"/> has passed. Yet it still steers away from obstacles such as level and submarine walls.
+        /// </summary>
         FollowThrough,
+        /// <summary>
+        /// Keeps moving towards the direction of the attack (passing through the target) until the <see cref="Attack.CoolDown"/> has passed, without trying to steer away from obstacles such as level and submarine walls.
+        /// </summary>
         FollowThroughWithoutObstacleAvoidance,
+        /// <summary>
+        /// Keeps moving towards the direction of the attack (passing through the target) until the <see cref="Attack.CoolDown"/> has passed, unless it can attack using another attack (The cooldown between different attacks is controlled with <see cref="Attack.SecondaryCoolDown"/>).
+        /// </summary>
         FollowThroughUntilCanAttack,
+        /// <summary>
+        /// Keeps idling until the <see cref="Attack.CoolDown"/> has passed, unless it can attack using another attack (The cooldown between different attacks is controlled with <see cref="Attack.SecondaryCoolDown"/>).
+        /// </summary>
         IdleUntilCanAttack,
+        /// <summary>
+        /// The character retreats backwards until the <see cref="Attack.CoolDown"/> has passed.
+        /// </summary>
         Reverse,
-        ReverseUntilCanAttack
+        /// <summary>
+        /// The character retreats backwards until the <see cref="Attack.CoolDown"/> has passed, unless it can attack using another attack (The cooldown between different attacks is controlled with <see cref="Attack.SecondaryCoolDown"/>).
+        /// </summary>
+        ReverseUntilCanAttack,
+        /// <summary>
+        /// The character waits until the <see cref="Attack.CoolDown"/> has passed.
+        /// </summary>
+        Wait,
+        /// <summary>
+        /// The character waits until the <see cref="Attack.CoolDown"/> has passed, unless it can attack using another attack (The cooldown between different attacks is controlled with <see cref="Attack.SecondaryCoolDown"/>).
+        /// </summary>
+        WaitUntilCanAttack
     }
 
-    struct AttackResult
+    public struct AttackResult
     {
         public float Damage
         {
@@ -71,7 +112,21 @@ namespace Barotrauma
 
         public readonly List<DamageModifier> AppliedDamageModifiers;
 
-        public AttackResult(List<Affliction> afflictions, Limb hitLimb, List<DamageModifier> appliedDamageModifiers = null)
+        /// <summary>
+        /// Total damage + the karma penalty of the afflictions (poisons etc) applied by the attack.
+        /// Can be used as a measure of how harmful the attack was - only using the damage means
+        /// that e.g. poisons that don't do any immediate, direct damage are not taken into account.
+        /// </summary>
+        public float TotalDamageWithKarmaPenalty { get; private set; }
+
+        /// <summary>
+        /// Flat "virtual" damage that's not tied to any of the afflictions applied by the attack,
+        /// e.g. when an affliction caused by someone reaches <see cref="AfflictionPrefab.FlatKarmaChangeThreshold"/>.
+        /// Included in <see cref="TotalDamageWithKarmaPenalty"/>.
+        /// </summary>
+        public float FlatKarmaPenalty { get; private set; }
+
+        public AttackResult(List<Affliction> afflictions, Limb hitLimb, List<DamageModifier> appliedDamageModifiers = null, float flatKarmaPenalty = 0.0f)
         {
             HitLimb = hitLimb;
             Afflictions = new List<Affliction>();
@@ -82,6 +137,8 @@ namespace Barotrauma
             }
             AppliedDamageModifiers = appliedDamageModifiers;
             Damage = Afflictions.Sum(a => a.GetVitalityDecrease(null));
+            FlatKarmaPenalty = flatKarmaPenalty;
+            CalculateTotalDamageWithKarmaPenalty();
         }
 
         public AttackResult(float damage, List<DamageModifier> appliedDamageModifiers = null)
@@ -90,6 +147,33 @@ namespace Barotrauma
             HitLimb = null;
             Afflictions = null;
             AppliedDamageModifiers = appliedDamageModifiers;
+            FlatKarmaPenalty = 0.0f;
+            CalculateTotalDamageWithKarmaPenalty();
+        }
+
+        /// <summary>
+        /// Creates an attack result that doesn't do any actual damage, only a "virtual" karma penalty
+        /// (e.g. when an affliction caused by someone reaches <see cref="AfflictionPrefab.FlatKarmaChangeThreshold"/>).
+        /// </summary>
+        /// <param name="karmaPenalty">Positive value = more harmful (same sign convention as <see cref="TotalDamageWithKarmaPenalty"/>)</param>
+        public static AttackResult FromKarmaPenalty(float karmaPenalty)
+        {
+            return new AttackResult(new List<Affliction>(), hitLimb: null, flatKarmaPenalty: karmaPenalty);
+        }
+
+        /// <summary>
+        /// Calculates the total damage of an attack: the real vitality damage and the "virtual" damage from karma penalties of afflictions (poisons etc).
+        /// </summary>
+        private void CalculateTotalDamageWithKarmaPenalty()
+        {
+            TotalDamageWithKarmaPenalty = Damage + FlatKarmaPenalty;
+            if (Afflictions != null)
+            {
+                foreach (Affliction affliction in Afflictions)
+                {
+                    TotalDamageWithKarmaPenalty -= affliction.Prefab.KarmaChangeOnApplied * affliction.Strength;
+                }
+            }
         }
     }
 
@@ -98,7 +182,7 @@ namespace Barotrauma
     /// They can be defined in the weapon components of the items or the limb definitions of the characters.
     /// The limb attacks can also be used by the player, when they control a monster or have some appendage, like a husk stinger.
     /// </summary>
-    partial class Attack : ISerializableEntity
+    public partial class Attack : ISerializableEntity
     {
         [Serialize(AttackContext.Any, IsPropertySaveable.Yes, description: "The attack will be used only in this context."), Editable]
         public AttackContext Context { get; private set; }
@@ -150,8 +234,11 @@ namespace Barotrauma
             set => _damageRange = value;
         }
 
-        [Serialize(0.0f, IsPropertySaveable.Yes, description: "Used by enemy AI to determine the minimum range required for the attack to hit."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "The absolute minimum distance to the target for the attack to be available for AI. Only valid for ranged attacks. Useful for preventing the attack to be used too close to the target."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
         public float MinRange { get; private set; }
+        
+        [Serialize(100.0f, IsPropertySaveable.Yes, description: "The preferred minimum distance to the target. Only valid for ranged attacks. Useful for prioritizing other attacks when too close to the target, without entirely disallowing it."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
+        public float MinPreferredRange { get; private set; }
 
         [Serialize(0.25f, IsPropertySaveable.Yes, description: "An approximation of the attack duration. Effectively defines the time window in which the hit can be registered. If set to too low value, it's possible that the attack won't hit the target in time."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2)]
         public float Duration { get; private set; }
@@ -247,8 +334,26 @@ namespace Barotrauma
         [Serialize(0f, IsPropertySaveable.Yes, description: "How much the attack limb is rotated towards the target. Default 0 = no rotation. Only affects ranged attacks."), Editable]
         public float AimRotationTorque { get; set; }
 
-        [Serialize(-1, IsPropertySaveable.Yes, description: "Reference to the limb we apply the aim rotation to. By default same as the attack limb. Only affects ranged attacks."), Editable]
-        public int RotationLimbIndex { get; set; }
+        [Serialize("", IsPropertySaveable.Yes, description: "The indices of the limbs that are rotated when aiming a ranged attack. By default same as the attack limb. Only affects ranged attacks."), Editable]
+        public string AimWithLimbs
+        {
+            get
+            {
+                return string.Join(", ", AimWithLimbIndices);
+            }
+            set
+            {
+                AimWithLimbIndices.Clear();
+                if (string.IsNullOrEmpty(value)) { return; }
+                foreach (string limbIndexStr in value.Split(','))
+                {
+                    if (int.TryParse(limbIndexStr.Trim(), out int limbIndex))
+                    {
+                        AimWithLimbIndices.Add(limbIndex);
+                    }
+                }
+            }
+        }
 
         [Serialize(0f, IsPropertySaveable.Yes, description:"How much the held weapon is swayed back and forth while aiming. Only affects monsters using ranged weapons (items). Default 0 means the weapon is not swayed at all."), Editable]
         public float SwayAmount { get; set; }
@@ -324,13 +429,11 @@ namespace Barotrauma
         [Serialize(0.0f, IsPropertySaveable.Yes, description: "How likely the attack causes target limbs to be severed."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float SeverLimbsProbability { get; set; }
 
-        // TODO: disabled because not synced
-        //[Serialize(0.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
-        //public float StickChance { get; set; }
-        public float StickChance => 0f;
-
-        [Serialize(0.0f, IsPropertySaveable.Yes, description: "Used by enemy AI to determine the priority when selecting attacks. When random attacks are disabled on the character it is multiplied with distance to determine the which attack to use. Only attacks that are currently valid are taken into consideration when making the decision."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "Used by enemy AI to determine the priority when selecting attacks. When random attacks are disabled on the character it is multiplied with distance to determine the which attack to use. Only attacks that are currently valid are taken into consideration when making the decision."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
         public float Priority { get; private set; }
+        
+        [Serialize(false, IsPropertySaveable.Yes, description: "When enabled, the priority calculation ignores the distance to the target."), Editable]
+        public bool PriorityIgnoresDistance { get; set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Triggers the 'blink' animation on the attacking limbs when the attack executes. Used e.g. by abyss monsters to make their jaws close when attacking."), Editable]
         public bool Blink { get; private set; }
@@ -348,9 +451,16 @@ namespace Barotrauma
             private set;
         } = new Dictionary<Identifier, SerializableProperty>();
 
-        //the indices of the limbs Force is applied on
-        //(if none, force is applied only to the limb the attack is attached to)
+        /// <summary>
+        ///The indices of the limbs Force is applied on
+        ///(if none, force is applied only to the limb the attack is attached to)
+        /// </summary>
         public readonly List<int> ForceOnLimbIndices = new List<int>();
+
+        /// <summary>
+        ///The indices of the limbs that are rotated when aiming a ranged attack. Only the first limb is required to point towards the target.
+        /// </summary>
+        public readonly List<int> AimWithLimbIndices = new List<int>();
 
         public readonly Dictionary<Affliction, XElement> Afflictions = new Dictionary<Affliction, XElement>();
 
@@ -446,6 +556,19 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Define damage as afflictions instead of using the damage attribute (e.g. <Affliction identifier=\"internaldamage\" strength=\"10\" />).",
                     contentPackage: element.ContentPackage);
+            }
+
+            //backwards compatibility: previously only one limb index could be defined for aiming
+            int rotationLimbIndex = element.GetAttributeInt("RotationLimbIndex", -1);
+            if (rotationLimbIndex > -1)
+            {
+                if (AimWithLimbIndices.Any())
+                {
+                    DebugConsole.AddWarning(
+                        $"Potential error in {parentDebugName}: both {nameof(AimWithLimbIndices)} and RotationLimbIndex set. " +
+                        $"The latter is only supported for backwards compatibility, {nameof(AimWithLimbIndices)} should be used instead.");
+                }
+                AimWithLimbIndices.Add(rotationLimbIndex);
             }
 
             //if level wall damage is not defined, default to the structure damage
@@ -675,8 +798,15 @@ namespace Barotrauma
 
             Vector2 impulseDirection = GetImpulseDirection(targetLimb, worldPosition, SourceItem);
             var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, impulseDirection, playSound, targetLimb, penetration);
-            var conditionalEffectType = attackResult.Damage > 0.0f ? ActionType.OnSuccess : ActionType.OnFailure;
+            ActionType conditionalEffectType = attackResult.Damage > 0.0f ? ActionType.OnSuccess : ActionType.OnFailure;
 
+            ApplyStatusEffects(conditionalEffectType, attacker, targetLimb, worldPosition, deltaTime, playSound, sourceBody, sourceLimb);
+
+            return attackResult;
+        }
+
+        public void ApplyStatusEffects(ActionType conditionalEffectType, Character attacker, Limb targetLimb, Vector2 worldPosition, float deltaTime, bool playSound = true, PhysicsBody sourceBody = null, Limb sourceLimb = null)
+        {
             foreach (StatusEffect effect in statusEffects)
             {
                 effect.sourceBody = sourceBody;
@@ -710,7 +840,7 @@ namespace Barotrauma
                     effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
                     targets.Clear();
-                    effect.AddNearbyTargets(worldPosition, targets);                
+                    effect.AddNearbyTargets(worldPosition, targets);
                     effect.Apply(conditionalEffectType, deltaTime, targetLimb.character, targets);
                     effect.Apply(ActionType.OnUse, deltaTime, targetLimb.character, targets);
                 }
@@ -722,8 +852,6 @@ namespace Barotrauma
                     effect.Apply(ActionType.OnUse, deltaTime, attacker, targets);
                 }
             }
-
-            return attackResult;
         }
 
         private Vector2 GetImpulseDirection(ISpatialEntity target, Vector2 sourceWorldPosition, Item sourceItem)

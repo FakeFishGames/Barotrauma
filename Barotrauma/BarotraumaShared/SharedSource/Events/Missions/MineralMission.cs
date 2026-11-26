@@ -37,6 +37,12 @@ namespace Barotrauma
         /// </summary>
         private readonly float resourceHandoverAmount;
 
+        /// <summary>
+        /// If enabled, the mission is considered completed as soon as enough resources have been collected,
+        /// regardless of what happens to them afterwards (e.g. deconstructed or stored outside the player sub).
+        /// </summary>
+        private readonly bool completeOnCollection;
+
         public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
@@ -55,6 +61,8 @@ namespace Barotrauma
 
         public override LocalizedString SuccessMessage => ModifyMessage(base.SuccessMessage);
         public override LocalizedString FailureMessage => ModifyMessage(base.FailureMessage);
+        public override LocalizedString NeutralResultMessage => ModifyMessage(base.NeutralResultMessage);
+
         public override LocalizedString Description => ModifyMessage(description);
         public override LocalizedString Name => ModifyMessage(base.Name, false);
 
@@ -68,6 +76,7 @@ namespace Barotrauma
 
             float handoverAmount = prefab.ConfigElement.GetAttributeFloat("ResourceHandoverAmount", 0.0f);
             resourceHandoverAmount = Math.Clamp(handoverAmount, 0.0f, 1.0f);
+            completeOnCollection = prefab.ConfigElement.GetAttributeBool("CompleteOnCollection", false);
 
             var configElement = prefab.ConfigElement.GetChildElement("Items");
             foreach (var c in configElement.GetChildElements("Item"))
@@ -177,6 +186,8 @@ namespace Barotrauma
 
         protected override bool DetermineCompleted(CampaignMode.TransitionType transitionType)
         {
+            // State is set to 1 when enough resources have been collected
+            if (completeOnCollection && State > 0) { return true; }
             return EnoughHaveBeenCollected();
         }
 

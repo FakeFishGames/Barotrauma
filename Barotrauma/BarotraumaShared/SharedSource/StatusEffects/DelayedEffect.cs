@@ -59,7 +59,7 @@ namespace Barotrauma
 
         public override void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target, Vector2? worldPosition = null)
         {
-            if (this.type != type || !HasRequiredItems(entity)) { return; }
+            if (Type != type || !HasRequiredItems(entity)) { return; }
             if (!Stackable)
             {
                 foreach (var existingEffect in DelayList)
@@ -112,7 +112,7 @@ namespace Barotrauma
 
         public override void Apply(ActionType type, float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
-            if (this.type != type) { return; }
+            if (Type != type) { return; }
             if (Disabled) { return; }
             if (ShouldWaitForInterval(entity, deltaTime)) { return; }
             if (!HasRequiredItems(entity)) { return; }

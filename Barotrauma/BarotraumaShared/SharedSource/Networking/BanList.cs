@@ -6,7 +6,7 @@ using System.Linq;
 namespace Barotrauma.Networking
 {
     #warning TODO: turn this into INetSerializableStruct
-    partial class BannedPlayer
+    public partial class BannedPlayer
     {
         public readonly string Name;
         public readonly Either<Address, AccountId> AddressOrAccountId;
@@ -26,7 +26,7 @@ namespace Barotrauma.Networking
         }
     }
 
-    partial class BanList
+    public partial class BanList
     {
         private readonly List<BannedPlayer> bannedPlayers;
 

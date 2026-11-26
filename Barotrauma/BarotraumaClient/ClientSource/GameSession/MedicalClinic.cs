@@ -9,7 +9,7 @@ using Barotrauma.Networking;
 
 namespace Barotrauma
 {
-    internal sealed partial class MedicalClinic
+    public sealed partial class MedicalClinic
     {
         private MedicalClinicUI? ui => campaign?.CampaignUI?.MedicalClinic;
 
@@ -91,10 +91,20 @@ namespace Barotrauma
                         ImmutableArray<NetAffliction> afflictions = GetAllAfflictions(character.CharacterHealth);
                         ui?.UpdateAfflictions(new NetCrewMember(character.Info, afflictions));
                     }
-                    ui?.UpdateCrewPanel();
                 }
                 charactersWithAfflictionChanges.Clear();
                 processAfflictionChangesTimer = ProcessAfflictionChangesInterval;
+
+                // If a pending crewmember has died since we last checked, refresh the whole UI
+                if (RemoveInvalidPendingHeals())
+                {
+                    OnUpdate?.Invoke();
+                }
+                else
+                {
+                    // Otherwise, refresh just the crew panel every tick so it gets up to date faster
+                    ui?.UpdateCrewPanel();
+                }
             }
 
             DateTimeOffset now = DateTimeOffset.Now;

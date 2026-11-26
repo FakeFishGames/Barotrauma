@@ -120,8 +120,11 @@ namespace Barotrauma.Networking
                 if (radioNoiseChannel == null || !radioNoiseChannel.IsPlaying)
                 {
                     radioNoiseChannel = SoundPlayer.PlaySound("radiostatic");
-                    radioNoiseChannel.Category = SoundManager.SoundCategoryVoip;
-                    radioNoiseChannel.Looping = true;
+                    if (radioNoiseChannel != null)
+                    {
+                        radioNoiseChannel.Category = SoundManager.SoundCategoryVoip;
+                        radioNoiseChannel.Looping = true;
+                    }
                 }
                 radioNoiseChannel.Near = VoipSound.Near;
                 radioNoiseChannel.Far = VoipSound.Far;
@@ -157,7 +160,7 @@ namespace Barotrauma.Networking
             SetPermissions(permissions, permittedCommands);
         }
 
-        public void SetPermissions(ClientPermissions permissions, IEnumerable<DebugConsole.Command> permittedConsoleCommands)
+        internal void SetPermissions(ClientPermissions permissions, IEnumerable<DebugConsole.Command> permittedConsoleCommands)
         {
             if (GameMain.Client == null)
             {

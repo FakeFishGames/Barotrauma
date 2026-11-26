@@ -60,7 +60,9 @@ namespace Barotrauma
                         {
                             var name = element.GetAttributeString("name", "");
                             if (name.IsNullOrEmpty()) { continue; }
-                            var pkg = ContentPackageManager.LocalPackages.FirstOrDefault(p => p.NameMatches(name));
+                            var pkg = ContentPackageManager.LocalPackages
+                                .Concat(ContentPackageManager.DlcPackages)
+                                .FirstOrDefault(p => p.NameMatches(name));
                             if (pkg != null) { addPkg(pkg); }
                         }
                         break;
@@ -206,6 +208,9 @@ namespace Barotrauma.Steam
                     var toDisable = allChildren.Where(c => !toEnable.Contains(c)).ToArray();
                     toEnable.ForEach(c => c.RectTransform.Parent = enabledRegularModsList.Content.RectTransform);
                     toDisable.ForEach(c => c.RectTransform.Parent = disabledRegularModsList.Content.RectTransform);
+
+                    // Refresh so the enable/disable state updates
+                    SettingsMenu.Instance?.RefreshDlcTab();
                     
                     enabledCoreDropdown.SelectItem(preset.CorePackage);
                 }

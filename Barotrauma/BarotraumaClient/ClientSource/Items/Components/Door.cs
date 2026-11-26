@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Door : Pickable, IDrawableComponent, IServerSerializable
+    public partial class Door : Pickable, IDrawableComponent, IServerSerializable
     {
         private ConvexHull convexHull;
         private ConvexHull convexHull2;
@@ -74,7 +74,7 @@ namespace Barotrauma.Items.Components
 
         private void UpdateConvexHulls()
         {
-            if (item.Removed) { return; }
+            if (item.Removed || item.IsDisabled) { return; }
             if (doorSprite == null) { return; }
 
             doorRect = new Rectangle(

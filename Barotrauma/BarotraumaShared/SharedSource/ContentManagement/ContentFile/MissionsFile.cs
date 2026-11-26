@@ -7,7 +7,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
     [RequiredByCorePackage]
-    sealed class MissionsFile : GenericPrefabFile<MissionPrefab>
+    public sealed class MissionsFile : GenericPrefabFile<MissionPrefab>
     {
         /*private readonly static ImmutableHashSet<Type> missionTypes;
         static MissionsFile()

@@ -12,7 +12,7 @@ using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
-    partial class LevelTrigger
+    public partial class LevelTrigger
     {
         [Flags]
         public enum TriggererType
@@ -218,7 +218,7 @@ namespace Barotrauma
                 PhysicsBody.FarseerBody.OnCollision += PhysicsBody_OnCollision;
                 PhysicsBody.FarseerBody.OnSeparation += PhysicsBody_OnSeparation;
                 PhysicsBody.FarseerBody.SetIsSensor(element.GetAttributeBool("sensor", true));
-                PhysicsBody.FarseerBody.BodyType = BodyType.Static;
+                PhysicsBody.BodyType = BodyType.Static;
 
                 ColliderRadius = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(PhysicsBody.Radius, PhysicsBody.Width / 2.0f), PhysicsBody.Height / 2.0f));
 
@@ -502,7 +502,11 @@ namespace Barotrauma
         {
             if (fixture.Body == null || fixture.Body.UserData == null) { return null; }
             if (fixture.Body.UserData is Entity entity) { return entity; }
-            if (fixture.Body.UserData is Limb limb) { return limb.character; }
+            if (fixture.Body.UserData is Limb limb) 
+            {
+                if (limb.IsSevered) { return null; }
+                return limb.character; 
+            }
             if (fixture.Body.UserData is SubmarineBody subBody) { return subBody.Submarine; }
             return null;
         }
@@ -700,19 +704,19 @@ namespace Barotrauma
         {
             foreach (StatusEffect effect in statusEffects)
             {
-                if (effect.type == ActionType.OnBroken) { return; }
+                if (effect.Type == ActionType.OnBroken) { return; }
                 Vector2? position = null;
                 if (effect.HasTargetType(StatusEffect.TargetType.This))
                 {
                     position = worldPosition;
                     if (targetItem != null)
                     {
-                        effect.Apply(effect.type, deltaTime, triggerer, targetItem.AllPropertyObjects, position);
+                        effect.Apply(effect.Type, deltaTime, triggerer, targetItem.AllPropertyObjects, position);
                     }
                 }
                 if (triggerer is Character character)
                 {
-                    effect.Apply(effect.type, deltaTime, triggerer, character, position);
+                    effect.Apply(effect.Type, deltaTime, triggerer, character, position);
                     if (effect.HasTargetType(StatusEffect.TargetType.Contained) && character.Inventory != null)
                     {
                         foreach (Item item in character.Inventory.AllItemsMod)
@@ -720,24 +724,24 @@ namespace Barotrauma
                             if (item.ContainedItems == null) { continue; }
                             foreach (Item containedItem in item.ContainedItems)
                             {
-                                effect.Apply(effect.type, deltaTime, triggerer, containedItem.AllPropertyObjects, position);
+                                effect.Apply(effect.Type, deltaTime, triggerer, containedItem.AllPropertyObjects, position);
                             }
                         }
                     }
                 }
                 else if (triggerer is Item item)
                 {
-                    effect.Apply(effect.type, deltaTime, triggerer, item.AllPropertyObjects, position);
+                    effect.Apply(effect.Type, deltaTime, triggerer, item.AllPropertyObjects, position);
                 }
                 else if (triggerer is Submarine sub)
                 {
-                    effect.Apply(effect.type, deltaTime, sub, Array.Empty<ISerializableEntity>(), position);
+                    effect.Apply(effect.Type, deltaTime, sub, Array.Empty<ISerializableEntity>(), position);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) || effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
                     targets.Clear();
                     effect.AddNearbyTargets(worldPosition, targets);
-                    effect.Apply(effect.type, deltaTime, triggerer, targets);
+                    effect.Apply(effect.Type, deltaTime, triggerer, targets);
                 }
             }
         }

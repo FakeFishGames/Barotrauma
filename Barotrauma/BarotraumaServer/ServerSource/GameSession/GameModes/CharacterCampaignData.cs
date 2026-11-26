@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class CharacterCampaignData
+    public partial class CharacterCampaignData
     {
 #if DEBUG
         /// <summary>
@@ -43,7 +43,7 @@ namespace Barotrauma
             if (character?.Inventory != null)
             {
                 itemData = new XElement("inventory");
-                Character.SaveInventory(character.Inventory, itemData);
+                Character.SaveInventory(character.Inventory, itemData, dropItemsStolenFromOutpost: true);
             }
             OrderData = new XElement("orders");
             if (CharacterInfo != null)
@@ -66,7 +66,7 @@ namespace Barotrauma
             if (character.Inventory != null)
             {
                 itemData = new XElement("inventory");
-                Character.SaveInventory(character.Inventory, itemData);
+                Character.SaveInventory(character.Inventory, itemData, dropItemsStolenFromOutpost: true);
             }
             OrderData = new XElement("orders");
             CharacterInfo.SaveOrderData(character.Info, OrderData);

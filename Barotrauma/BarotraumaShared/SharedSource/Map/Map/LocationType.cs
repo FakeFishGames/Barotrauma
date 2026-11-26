@@ -10,10 +10,12 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class LocationType : PrefabWithUintIdentifier
+    public class LocationType : PrefabWithUintIdentifier
     {
         public static readonly PrefabCollection<LocationType> Prefabs = new PrefabCollection<LocationType>();
-        
+
+        public readonly ContentXElement ConfigElement;
+
         private readonly ImmutableArray<string> rawNames;
         private readonly ImmutableArray<Sprite> portraits;
 
@@ -35,11 +37,31 @@ namespace Barotrauma
         public readonly CharacterTeamType OutpostTeam;
 
         /// <summary>
-        /// Is this location type considered valid for e.g. events and missions that are should be available in "any outpost"
+        /// Should automatic docking always be refused when approaching the outpost in this location?
         /// </summary>
-        public bool IsAnyOutpost;
+        public readonly bool AlwaysRefuseAutoDocking;
+
+        /// <summary>
+        /// Should automatic docking be refused when entering this type of outpost for the first time?
+        /// </summary>
+        public readonly bool RefuseAutoDockingOnFirstVisit;
+
+        /// <summary>
+        /// Custom text displayed when auto docking is refused in this location.
+        /// </summary>
+        public readonly string AutoDockingRefuseText;
+
+        /// <summary>
+        /// Is this location type considered valid for e.g. events and missions that should be available in "any outpost"?
+        /// </summary>
+        public bool IsValidForAnyOutpostEventOrMission;
 
         public readonly List<LocationTypeChange> CanChangeTo = new List<LocationTypeChange>();
+
+        /// <summary>
+        /// If set, the type of the location can never be changed (e.g. by missions, events, or a player claiming the outpost)
+        /// </summary>
+        public bool DisallowLocationTypeChanges;
 
         public readonly ImmutableArray<Identifier> MissionIdentifiers;
         public readonly ImmutableArray<Identifier> MissionTags;
@@ -219,6 +241,10 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Does this location type by default have any hireable characters? Note that the faction the location belongs to might offer some hires on top of this.
+        /// Use <see cref="Location.HasHireableCharacters"/> unless you want to specifically exclude the faction-specific hires.
+        /// </summary>
         public bool HasHireableCharacters
         {
             get { return hireableJobs.Any(); }
@@ -229,6 +255,17 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        /// <summary>
+        /// How many world steps it takes until killed characters are replaced with new ones?
+        /// </summary>
+        public int ReplaceKilledCharactersAfter;
+
+        /// <summary>
+        /// What percentage of the default population must be alive before killed characters stop 
+        /// being replaced and the outpost starts a countdown to being abandoned?
+        /// </summary>
+        public float InsufficientPopulationThreshold;
 
         public Identifier ReplaceInRadiation { get; }
 
@@ -247,6 +284,11 @@ namespace Barotrauma
         public Sprite Sprite { get; private set; }
         public Sprite RadiationSprite { get; }
 
+        /// <summary>
+        /// If enabled, an indicator (icon and an arrow pointing towards the location) will be shown on the map when the location is off-screen. Defaults to false.
+        /// </summary>
+        public bool ShowOffScreenIndicator { get; private set; }
+
         private readonly Identifier forceOutpostGenerationParamsIdentifier;
 
         /// <summary>
@@ -261,20 +303,38 @@ namespace Barotrauma
         
         /// <summary>
         /// Used as criteria for validating if a given event set is suitable for this locationType.
-        /// For example, if set to "city", events that appear in "city" type locations can also appear here.
+        /// For example, if set to "city", events that appear in "city" type locations can also appear here (in addition to events configured to be suitable specifically for this location type).
         /// </summary>
         public Identifier EventLocationType { get; private set; }
+
+        /// <summary>
+        /// Can be used to make the submarine tiers available from the given location type also available from this location type.
+        /// For example, if set to "city", submarine tiers that can be purchased from the "city" type locations can also be purchased from here.
+        /// </summary>
+        public Identifier SubmarineTierLocationType { get; private set; }
 
         /// <summary>
         /// If set, outpost modules configured to be suitable for the specified location type can also be used in this type of location.
         /// </summary>
         public Identifier UseOutpostModulesOfLocationType { get; set; }
 
+        /// <summary>
+        /// Should submarines that can be sold by any faction (= submarines without any <see cref="SubmarineInfo.SoldByFaction"/> restrictions) be sellable at this location type?
+        /// </summary>
+        public bool SellSubmarinesSoldByAnyFaction { get; private set; }
+
         public Color SpriteColor
         {
             get;
             private set;
         }
+
+        /// <summary>
+        /// Identifiers of the stores that a location of this type is forced to have.
+        /// Can be used to allow stores that are normally not available in this location type, in case there's e.g. ways for events to spawn some special merchants in the location,
+        /// without that merchant being present in the outpost generation parameters.
+        /// </summary>
+        public ImmutableArray<Identifier> ForcedStoreIdentifiers;
 
         public float StoreMaxReputationModifier { get; } = 0.1f;
         public float StoreMinReputationModifier { get; } = 1.0f;
@@ -288,18 +348,42 @@ namespace Barotrauma
         /// In percentages
         /// </summary>
         public int StorePriceModifierRange { get; } = 5;
+
+        /// <summary>
+        /// Default number of daily specials in stores. Defaults to 1. Can be overridden by the Store definition.
+        /// </summary>
         public int DailySpecialsCount { get; } = 1;
+
+        /// <summary>
+        /// Default number of requested goods in stores. Defaults to 1. Can be overridden by the Store definition.
+        /// </summary>
         public int RequestedGoodsCount { get; } = 1;
+
+        public float ShipyardPriceMultiplier { get; } = 1.0f;
+
+        /// <summary>
+        /// When unlocking a mission, the destination is chosen semi-randomly, preferring paths with less missions, and paths that lead further on the map.
+        /// This can be used to increase/decrease the preference of choosing a path leading to this location type. Used as a multiplier for the weights of the paths (e.g. 10 would mean the path is x10 more likely to be selected).
+        /// </summary>
+        public float MissionDestinationPreferability { get; } = 1;
+
+        /// <summary>
+        /// When unlocking a mission, the destination is chosen semi-randomly, preferring paths with less missions, and paths that lead further on the map.
+        /// This can be used to ensure at least one mission is unlocked on the path leading to this location type, even if it requires backtracking.
+        /// </summary>
+        public bool TryToGuaranteeAsMissionDestination { get; }
 
         public readonly bool ShowSonarMarker;
 
         public override string ToString()
         {
-            return $"LocationType (" + Identifier + ")";
+            return $"{nameof(LocationType)} ({Identifier})";
         }
 
         public LocationType(ContentXElement element, LocationTypesFile file) : base(file, element.GetAttributeIdentifier("identifier", element.Name.LocalName))
         {
+            ConfigElement = element;
+
             Name = TextManager.Get("LocationName." + Identifier, "unknown");
             Description = TextManager.Get("LocationDescription." + Identifier, "");
             
@@ -339,6 +423,8 @@ namespace Barotrauma
             ForceAsStartOutpost = element.GetAttributeBool(nameof(ForceAsStartOutpost), false);
             AllowInRandomLevels = element.GetAttributeBool(nameof(AllowInRandomLevels), true);
 
+            ShowOffScreenIndicator = element.GetAttributeBool(nameof(ShowOffScreenIndicator), false);
+
             Faction = element.GetAttributeIdentifier(nameof(Faction), Identifier.Empty);
             SecondaryFaction = element.GetAttributeIdentifier(nameof(SecondaryFaction), Identifier.Empty);
 
@@ -352,15 +438,34 @@ namespace Barotrauma
             ReplaceInRadiation = element.GetAttributeIdentifier(nameof(ReplaceInRadiation), Identifier.Empty);
             DescriptionInRadiation = element.GetAttributeIdentifier(nameof(DescriptionInRadiation), "locationdescription.abandonedirradiated");
 
+            ReplaceKilledCharactersAfter = element.GetAttributeInt(nameof(ReplaceKilledCharactersAfter), 5);
+            InsufficientPopulationThreshold = element.GetAttributeFloat(nameof(InsufficientPopulationThreshold), 0.25f);
+
             forceOutpostGenerationParamsIdentifier = element.GetAttributeIdentifier("forceoutpostgenerationparams", Identifier.Empty);
             BackgroundMusicLocationType = element.GetAttributeIdentifier(nameof(BackgroundMusicLocationType), Identifier.Empty);
 
             IgnoreGenericEvents = element.GetAttributeBool(nameof(IgnoreGenericEvents), false);
             
             EventLocationType = element.GetAttributeIdentifier(nameof(EventLocationType), Identifier.Empty);
+            SubmarineTierLocationType = element.GetAttributeIdentifier(nameof(SubmarineTierLocationType), Identifier.Empty);
             UseOutpostModulesOfLocationType = element.GetAttributeIdentifier(nameof(UseOutpostModulesOfLocationType), Identifier.Empty);
+            SellSubmarinesSoldByAnyFaction = element.GetAttributeBool(nameof(SellSubmarinesSoldByAnyFaction), true);
 
-            IsAnyOutpost = element.GetAttributeBool(nameof(IsAnyOutpost), def: HasOutpost);
+            MissionDestinationPreferability = element.GetAttributeFloat(nameof(MissionDestinationPreferability), 1.0f);
+            TryToGuaranteeAsMissionDestination = element.GetAttributeBool(nameof(TryToGuaranteeAsMissionDestination), false);
+
+            DisallowLocationTypeChanges = element.GetAttributeBool(nameof(DisallowLocationTypeChanges), false);
+
+            IsValidForAnyOutpostEventOrMission = element.GetAttributeBool(nameof(IsValidForAnyOutpostEventOrMission), def:
+                // For backwards compatibility:
+                element.GetAttributeBool("IsAnyOutpost", def:
+                    HasOutpost));
+
+            AlwaysRefuseAutoDocking = element.GetAttributeBool(nameof(AlwaysRefuseAutoDocking), def: false);
+            RefuseAutoDockingOnFirstVisit = element.GetAttributeBool(nameof(RefuseAutoDockingOnFirstVisit), def: false);
+            AutoDockingRefuseText = element.GetAttributeString(nameof(AutoDockingRefuseText), def: "");
+
+            ForcedStoreIdentifiers = element.GetAttributeIdentifierArray("forcedstoreidentifiers", Array.Empty<Identifier>()).ToImmutableArray();
 
             string teamStr = element.GetAttributeString("outpostteam", "FriendlyNPC");
             Enum.TryParse(teamStr, out OutpostTeam);
@@ -481,7 +586,7 @@ namespace Barotrauma
                         RadiationSprite = new Sprite(subElement, lazyLoad: true);
                         break;
                     case "changeto":
-                        CanChangeTo.Add(new LocationTypeChange(Identifier, subElement, requireChangeMessages: true));
+                        CanChangeTo.Add(new LocationTypeChange(Identifier, subElement, requireChangeMessages: true, parentDebugName: ToString()));
                         break;
                     case "portrait":
                         var portrait = new Sprite(subElement, lazyLoad: true);
@@ -490,7 +595,7 @@ namespace Barotrauma
 #if CLIENT
                             if (!File.Exists(portrait.FilePath))
                             {
-                                DebugConsole.ThrowError($"Error in location type \"{Identifier}\": cannot find the location portrait \"{portrait.FilePath}\".");
+                                DebugConsole.AddSafeError($"Error in location type \"{Identifier}\": cannot find the location portrait \"{portrait.FilePath}\".");
                             }
                             else
                             {
@@ -514,6 +619,7 @@ namespace Barotrauma
                         StorePriceModifierRange = subElement.GetAttributeInt("pricemodifierrange", StorePriceModifierRange);
                         DailySpecialsCount = subElement.GetAttributeInt("dailyspecialscount", DailySpecialsCount);
                         RequestedGoodsCount = subElement.GetAttributeInt("requestedgoodscount", RequestedGoodsCount);
+                        ShipyardPriceMultiplier = subElement.GetAttributeFloat(nameof(ShipyardPriceMultiplier), ShipyardPriceMultiplier);
                         break;
                     case "areasettings":
                         ParseAreaSettings(subElement);
@@ -604,7 +710,11 @@ namespace Barotrauma
 
         public JobPrefab GetRandomHireable()
         {
-            Identifier selectedJobId = hireableJobs.GetRandomByWeight(j => j.Commonness, Rand.RandSync.ServerAndClient).Identifier;
+            //hires are generated by the server and sent to clients, and the server may generate them at any point
+            //(e.g. during level generation), which would make the synced RNG go out of sync
+
+            //there is also no need for this to be deterministic, the hireables aren't saved: the server regenerates them when needed and sends them to the clients.
+            Identifier selectedJobId = hireableJobs.GetRandomByWeight(j => j.Commonness, Rand.RandSync.Unsynced).Identifier;
             if (JobPrefab.Prefabs.TryGet(selectedJobId, out JobPrefab job))
             {
                 return job;

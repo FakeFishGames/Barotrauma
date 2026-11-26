@@ -45,9 +45,9 @@ namespace Barotrauma.SpriteDeformations
 
                     Vector2 centerDiff = new Vector2(normalizedX - 0.5f, normalizedY - 0.5f);
                     float centerDist = centerDiff.Length() * 2.0f;
-                    if (centerDist == 0.0f) continue;
+                    if (centerDist == 0.0f) { continue; }
 
-                    deformation[x, y] = (centerDiff / centerDist) * Math.Min(1.0f, centerDist);
+                    deformation[x, y] = (centerDiff / centerDist) / MathHelper.Clamp(centerDist, 0.1f, 1.0f);
                 }
             }
 

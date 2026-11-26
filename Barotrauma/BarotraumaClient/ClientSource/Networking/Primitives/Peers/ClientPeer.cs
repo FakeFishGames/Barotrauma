@@ -81,7 +81,7 @@ namespace Barotrauma.Networking
             public IReadMessage Message;
         }
 
-        protected abstract Task<Option<AccountId>> GetAccountId();
+        protected abstract Option<AccountId> GetAccountId();
 
         protected void OnInitializationComplete()
         {
@@ -105,7 +105,6 @@ namespace Barotrauma.Networking
                 {
                     if (initializationStep != ConnectionInitialization.AuthInfoAndVersion) { return; }
 
-                    TaskPool.Add($"{GetType().Name}.{nameof(GetAccountId)}", GetAccountId(), t =>
                     {
                         if (!IsActive)
                         {
@@ -113,11 +112,6 @@ namespace Barotrauma.Networking
                             return;
                         }
 
-                        if (!t.TryGetResult(out Option<AccountId> accountId))
-                        {
-                            Close(PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationFailed));
-                        }
-                        
                         var headers = new PeerPacketHeaders
                         {
                             DeliveryMethod = DeliveryMethod.Reliable,
@@ -129,14 +123,14 @@ namespace Barotrauma.Networking
                         {
                             Name = GameMain.Client?.Name ?? "Unknown",
                             OwnerKey = ownerKey,
-                            AccountId = accountId,
+                            AccountId = GetAccountId(),
                             AuthTicket = authTicket,
                             GameVersion = GameMain.Version.ToString(),
                             Language = GameSettings.CurrentConfig.Language.Value
                         };
 
                         SendMsgInternal(headers, body);
-                    });
+                    }
                     break;
                 }
                 case ConnectionInitialization.ContentPackageOrder:
@@ -204,6 +198,7 @@ namespace Barotrauma.Networking
                     var passwordHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), passwordMsgBox.Content.RectTransform), childAnchor: Anchor.TopCenter);
                     var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1f), passwordHolder.RectTransform) { MinSize = new Point(0, 20) })
                     {
+                        OverflowClip = true,
                         Censor = true
                     };
 

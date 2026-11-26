@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    class Key
+    public class Key
     {
         private bool hit, hitQueue;
         private bool held, heldQueue;

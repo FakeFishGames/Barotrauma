@@ -70,10 +70,14 @@ namespace Barotrauma.Items.Components
                         }
                         break;
                     case "particleemitter":
-                        particleEmitters.Add(new ParticleEmitter(subElement));
+                        var emitter = new ParticleEmitter(subElement);
+                        particleEmitters.Add(emitter);
+                        TryAddParticleEmitterByID(emitter);
                         break;
                     case "particleemittercharge":
-                        particleEmitterCharges.Add(new ParticleEmitter(subElement));
+                        var chargeEmitter = new ParticleEmitter(subElement);
+                        particleEmitterCharges.Add(chargeEmitter);
+                        TryAddParticleEmitterByID(chargeEmitter);
                         break;
                     case "chargesound":
                         chargeSound = RoundSound.Load(subElement);
@@ -117,9 +121,9 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateProjSpecific(float deltaTime)
         {
-            float chargeRatio = currentChargeTime / MaxChargeTime;
+            float chargeRatio = CurrentChargeTime / MaxChargeTime;
 
-            switch (currentChargingState)
+            switch (CurrentChargingState)
             {
                 case ChargingState.WindingUp:
                 case ChargingState.WindingDown:

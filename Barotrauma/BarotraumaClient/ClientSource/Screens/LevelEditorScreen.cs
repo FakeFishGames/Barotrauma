@@ -17,7 +17,7 @@ using Barotrauma.IO;
 
 namespace Barotrauma
 {
-    class LevelEditorScreen : EditorScreen
+    public class LevelEditorScreen : EditorScreen
     {
         public override Camera Cam { get; }
 
@@ -73,6 +73,7 @@ namespace Barotrauma
             UpdateOutpostParamsList();
             UpdateLevelObjectsList();
             UpdateBackgroundCreatureList();
+            RefreshSubmarineSelectionDropdowns();
         }
         
         private void CreateUI()
@@ -242,33 +243,16 @@ namespace Barotrauma
             var subDropDownContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.02f), paddedRightPanel.RectTransform), isHorizontal: true);
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), subDropDownContainer.RectTransform), TextManager.Get("submarine"));
             selectedSubDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1.0f), subDropDownContainer.RectTransform));
-            foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
-            {
-                if (sub.Type != SubmarineType.Player) { continue; }
-                selectedSubDropDown.AddItem(sub.DisplayName, userData: sub);
-            }
             subDropDownContainer.RectTransform.MinSize = new Point(0, selectedSubDropDown.RectTransform.MinSize.Y);
 
             var beaconStationDropDownContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.02f), paddedRightPanel.RectTransform), isHorizontal: true);
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), beaconStationDropDownContainer.RectTransform), TextManager.Get("submarinetype.beaconstation"));
             selectedBeaconStationDropdown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1.0f), beaconStationDropDownContainer.RectTransform));
-            selectedBeaconStationDropdown.AddItem(TextManager.Get("Any"), userData: null);
-            foreach (SubmarineInfo beaconStation in SubmarineInfo.SavedSubmarines)
-            {
-                if (beaconStation.Type != SubmarineType.BeaconStation) { continue; }
-                selectedBeaconStationDropdown.AddItem(beaconStation.DisplayName, userData: beaconStation);
-            }
             beaconStationDropDownContainer.RectTransform.MinSize = new Point(0, selectedBeaconStationDropdown.RectTransform.MinSize.Y);
 
             var wreckDropDownContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.02f), paddedRightPanel.RectTransform), isHorizontal: true);
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), wreckDropDownContainer.RectTransform), TextManager.Get("submarinetype.wreck"));
             selectedWreckDropdown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1.0f), wreckDropDownContainer.RectTransform));
-            selectedWreckDropdown.AddItem(TextManager.Get("Any"), userData: null);
-            foreach (SubmarineInfo wreck in SubmarineInfo.SavedSubmarines)
-            {
-                if (wreck.Type != SubmarineType.Wreck) { continue; }
-                selectedWreckDropdown.AddItem(wreck.DisplayName, userData: wreck);
-            }
             wreckDropDownContainer.RectTransform.MinSize = new Point(0, selectedWreckDropdown.RectTransform.MinSize.Y);
             
             var forceDifficultyContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.02f), paddedRightPanel.RectTransform), isHorizontal: true);
@@ -369,7 +353,8 @@ namespace Barotrauma
                     subInfo ??= SubmarineInfo.SavedSubmarines.GetRandomUnsynced(s =>
                         s.IsPlayer && !s.HasTag(SubmarineTag.Shuttle) &&
                         !nonPlayerFiles.Any(f => f.Path == s.FilePath));
-                    GameSession gameSession = new GameSession(subInfo, Option.None, CampaignDataPath.Empty, GameModePreset.TestMode, CampaignSettings.Empty, null);
+                    GameSession gameSession = new GameSession(subInfo, CampaignDataPath.Empty, GameModePreset.TestMode, CampaignSettings.Empty, null);
+                    Level.Loaded.LevelData.ForceOutpostGenerationParams = selectedOutpostGenerationParams;
                     gameSession.StartRound(Level.Loaded.LevelData, mirrorLevel.Selected);
                     (gameSession.GameMode as TestGameMode).OnRoundEnd = () =>
                     {
@@ -467,6 +452,7 @@ namespace Barotrauma
             { RelativeOffset = new Vector2(leftPanel.RectTransform.RelativeSize.X * 2, 0.0f) }, style: "GUIFrameTop");
 
             prevResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            RefreshSubmarineSelectionDropdowns();
         }
         
         public LevelEditorScreen()
@@ -478,6 +464,26 @@ namespace Barotrauma
             };
 
             RefreshUI(forceCreate: true);
+        }
+
+        private void RefreshSubmarineSelectionDropdowns()
+        {
+            RefreshDropDown(SubmarineType.Player, selectedSubDropDown);
+            RefreshDropDown(SubmarineType.BeaconStation, selectedBeaconStationDropdown);
+            RefreshDropDown(SubmarineType.Wreck, selectedWreckDropdown);
+            void RefreshDropDown(SubmarineType subType, GUIDropDown dropdown)
+            {
+                object prevSelected = dropdown.SelectedData;
+
+                dropdown.ListBox.Content.ClearChildren();
+                dropdown.AddItem(TextManager.Get("Any"), userData: null);
+                foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
+                {
+                    if (sub.Type != subType) { continue; }
+                    dropdown.AddItem(sub.DisplayName, userData: sub);
+                }
+                dropdown.SelectItem(prevSelected);                
+            }
         }
 
         public void TestLevelGenerationForErrors(int amountOfLevelsToGenerate)
@@ -508,7 +514,7 @@ namespace Barotrauma
                     DebugConsole.NewMessage($"Generating level {(i + 1)}/{amountOfLevelsToGenerate}: ");
                     DebugConsole.NewMessage("  Seed: " + currentLevelData.Seed);
                     DebugConsole.NewMessage("  Outpost parameters: " + (currentLevelData.ForceOutpostGenerationParams?.Name ?? "None"));
-                    DebugConsole.NewMessage("  Level generation params: " + selectedParams.Identifier);
+                    DebugConsole.NewMessage("  Level generation params: " + (selectedParams?.Identifier.Value ?? "none"));
                     DebugConsole.NewMessage("  Mirrored: " + mirrorLevel.Selected);
                     DebugConsole.NewMessage("  Adjacent locations: " + (dummyLocations[0]?.Type.Identifier ?? "none".ToIdentifier()) + ", " + (dummyLocations[1]?.Type.Identifier ?? "none".ToIdentifier()));
 

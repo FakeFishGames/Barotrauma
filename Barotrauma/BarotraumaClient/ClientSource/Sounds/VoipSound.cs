@@ -6,7 +6,7 @@ using System;
 
 namespace Barotrauma.Sounds
 {
-    class VoipSound : Sound
+    public class VoipSound : Sound
     {
         public override double? DurationSeconds => null;
 

@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    class MultiplayerPreferences
+    public class MultiplayerPreferences
     {
         public readonly struct JobPreference
         {

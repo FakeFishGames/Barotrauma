@@ -6,7 +6,7 @@
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma</Product>
-    <Version>1.13.5.0</Version>
+    <Version>1.15.33.2</Version>
     <Copyright>Copyright © FakeFish 2018-2024</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>Barotrauma</AssemblyName>
@@ -14,7 +14,11 @@
     <Configurations>Debug;Release;Unstable</Configurations>
     <InvariantGlobalization>true</InvariantGlobalization>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
     <WarningsAsErrors>;NU1605;CS0114;CS0108;CS8597;CS8600;CS8601;CS8602;CS8603;CS8604;CS8605;CS8606;CS8607;CS8608;CS8609;CS8610;CS8611;CS8612;CS8613;CS8614;CS8615;CS8616;CS8617;CS8618;CS8619;CS8620;CS8621;CS8622;CS8624;CS8625;CS8626;CS8629;CS8631;CS8632;CS8633;CS8634;CS8638;CS8643;CS8644;CS8645;CS8653;CS8654;CS8655;CS8667;CS8669;CS8670;CS8714;CS8717;CS8765</WarningsAsErrors>
+    <NoWarn>$(NoWarn);1591;1573</NoWarn> <!-- Don't warn about missing documentation on public members -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -63,7 +67,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(Configuration)'!='Debug'">
-    <Content Include="..\BarotraumaShared\**\*" CopyToOutputDirectory="PreserveNewest" Exclude="..\BarotraumaShared\Data\Saves\*.save;..\BarotraumaShared\ModLists\*.xml;..\BarotraumaShared\LocalMods\[DebugOnlyTest]*\**" />
+    <Content Include="..\BarotraumaShared\**\*" CopyToOutputDirectory="PreserveNewest" Exclude="..\BarotraumaShared\Data\Saves\*.save;..\BarotraumaShared\Data\Saves\Multiplayer\*.save;..\BarotraumaShared\ModLists\*.xml;..\BarotraumaShared\LocalMods\[DebugOnlyTest]*\**" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
     <Content Include="..\BarotraumaShared\**\*" CopyToOutputDirectory="PreserveNewest" />
@@ -113,7 +117,6 @@
     <ProjectReference Include="..\..\Libraries\Concentus\CSharp\Concentus\Concentus.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
     <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Win64.csproj" AdditionalProperties="Configuration=Release" />
     <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
-    <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
     <ProjectReference Include="..\..\Libraries\Lidgren.Network\Lidgren.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
     <ProjectReference Include="..\..\Libraries\MonoGame.Framework\Src\MonoGame.Framework\MonoGame.Framework.Windows.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
     <ProjectReference Include="..\..\Libraries\SharpFont\Source\SharpFont\SharpFont.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
@@ -122,7 +125,6 @@
     <ProjectReference Include="..\..\Libraries\Concentus\CSharp\Concentus\Concentus.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
     <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Win64.csproj" AdditionalProperties="Configuration=Debug" />
     <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
-    <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
     <ProjectReference Include="..\..\Libraries\Lidgren.Network\Lidgren.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
     <ProjectReference Include="..\..\Libraries\MonoGame.Framework\Src\MonoGame.Framework\MonoGame.Framework.Windows.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
     <ProjectReference Include="..\..\Libraries\SharpFont\Source\SharpFont\SharpFont.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
@@ -136,6 +138,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="HarmonyX" Version="2.16.0" />
+    <PackageReference Include="ICSharpCode.Decompiler" Version="9.1.0.7988" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
     <PackageReference Include="NVorbis" Version="0.8.6" />
     <PackageReference Include="RestSharp" Version="106.13.0" />
   </ItemGroup>
@@ -169,7 +174,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\BarotraumaLibs\BarotraumaCore\BarotraumaCore.csproj" />
-    <ProjectReference Include="..\..\Libraries\BarotraumaLibs\EosInterface\EosInterface.csproj" />
   </ItemGroup>
 
   <!-- Sourced from https://stackoverflow.com/a/45248069 -->
@@ -240,7 +244,6 @@
     <ManualDeployRuntime>win-x64</ManualDeployRuntime>
     <ProjectFileNamePlatformSuffix>Win64</ProjectFileNamePlatformSuffix>
   </PropertyGroup>
-  <Import Project="../BarotraumaShared/DeployEosPrivate.props" />
   <Import Project="../BarotraumaShared/DeployGameAnalytics.props" />
-
+  <Import Project="../BarotraumaShared/BuildDLC.props" />
 </Project>

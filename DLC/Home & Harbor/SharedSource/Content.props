@@ -1,0 +1,25 @@
+﻿<Project>
+  <ItemGroup>
+    <Content Include="..\SharedSource\filelist.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>..\..\filelist.xml</TargetPath>
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Content>
+    <Content Include="..\SharedSource\changelog.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>..\..\changelog.txt</TargetPath>
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Content>
+    <Content Include="..\SharedSource\Content\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>..\..\Content\%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Content>
+  </ItemGroup>
+  <!-- Possibly broken on Visual Studio, disable for now
+  <UsingTask TaskName="SignAssembly" AssemblyFile="$(MSBuildThisFileDirectory)..\Task\BaroTasks.dll" />
+  <Target Name="SignAssembly" AfterTargets="Build">
+    <SignAssembly Assembly="$(OutputPath)$(AssemblyName).dll" PrivateKey="$(MSBuildThisFileDirectory)..\Deploy\DeployAll\PrivateKey.dat" />
+  </Target>
+  -->
+</Project>

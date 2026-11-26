@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class ConversationAction : EventAction
+    public partial class ConversationAction : EventAction
     {
         public int SelectedOption
         {
@@ -14,6 +14,10 @@ namespace Barotrauma
             set { selectedOption = value; }
         }
 
+        /// <summary>
+        /// Is the dialog of this action currently open (i.e. are we waiting for the target clients to respond)?
+        /// </summary>
+        public bool DialogOpened => dialogOpened;
 
         private static readonly Dictionary<Client, ConversationAction> lastActiveAction = new Dictionary<Client, ConversationAction>();
 
@@ -178,6 +182,7 @@ namespace Barotrauma
                 outmsg.WriteUInt16(speaker?.ID ?? Entity.NullEntityID);
                 outmsg.WriteString(string.Empty);
                 outmsg.WriteBoolean(false);
+                outmsg.WriteBoolean(false);
                 outmsg.WriteByte((byte)0);
                 outmsg.WriteByte((byte)0);
             }
@@ -186,6 +191,7 @@ namespace Barotrauma
                 outmsg.WriteUInt16(speaker?.ID ?? Entity.NullEntityID);
                 outmsg.WriteString(GetDisplayText()?.Value ?? string.Empty);
                 outmsg.WriteBoolean(FadeToBlack);
+                outmsg.WriteBoolean(DisableCloseButton);
                 outmsg.WriteByte((byte)Options.Count);
                 for (int i = 0; i < Options.Count; i++)
                 {
@@ -209,6 +215,7 @@ namespace Barotrauma
             outmsg.WriteByte((byte)EventManager.NetworkEventType.CONVERSATION_SELECTED_OPTION);
             outmsg.WriteUInt16(Identifier);
             outmsg.WriteByte((byte)(selectedOption + 1));
+            outmsg.WriteBoolean(GetEndingOptions().Contains(selectedOption));
             GameMain.Server?.ServerPeer?.Send(outmsg, client.Connection, DeliveryMethod.Reliable);
         }
     }

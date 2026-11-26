@@ -177,15 +177,19 @@ namespace Barotrauma
                 }
                 else
                 {
+                    var highestLimb = FindHighestLimb();
                     Collider.SetTransformIgnoreContacts(new Vector2(
                         Collider.SimPosition.X,
-                        Math.Max(lowestLimb.SimPosition.Y + (Collider.Radius + Collider.Height / 2), Collider.SimPosition.Y)),
+                        MathHelper.Clamp(lowestLimb.SimPosition.Y + (Collider.Radius + Collider.Height / 2), Collider.SimPosition.Y, highestLimb.SimPosition.Y)),
                         0.0f);
                 }
                 Collider.Enabled = true;
             }
 
-            ResetPullJoints();
+            if (Anim != Animation.UsingItem)
+            {
+                ResetPullJoints();
+            }
 
             if (strongestImpact > 0.0f)
             {
@@ -224,7 +228,10 @@ namespace Barotrauma
                         Collider.FarseerBody.FixedRotation = true;
                     }
                 }
-                UpdateWalkAnim(deltaTime);
+                if (!IsClimbing)
+                {
+                    UpdateWalkAnim(deltaTime);
+                }
             }
             if (character.SelectedCharacter != null)
             {
@@ -239,7 +246,14 @@ namespace Barotrauma
             //don't flip when simply physics is enabled
             if (SimplePhysicsEnabled)
             {
-                ResetState();
+                //keep limbs glued to the main collider in simple physics mode so any distance checks relating to limbs (e.g. motion sensors) still work as expected
+                foreach (var limb in Limbs)
+                {
+                    if (!limb.Removed && !limb.IsSevered)
+                    {
+                        limb.body.SetTransformIgnoreContacts(Collider.SimPosition, limb.Rotation);
+                    }
+                }
                 return;
             }
             
@@ -356,7 +370,7 @@ namespace Barotrauma
                 Vector2 attackSimPosition = character.Submarine == null ? ConvertUnits.ToSimUnits(target.WorldPosition) : target.SimPosition;
                 Vector2 limbDiff = attackSimPosition - mouthPos;
                 float extent = Math.Max(mouthLimb.body.GetMaxExtent(), 1);
-                bool tooFar = character.InWater ? limbDiff.LengthSquared() > extent * extent : limbDiff.X > extent;
+                bool tooFar = character.InWater ? limbDiff.LengthSquared() > extent * extent : Math.Abs(limbDiff.X) > extent;
                 if (tooFar)
                 {
                     character.DeselectCharacter();
@@ -407,7 +421,7 @@ namespace Barotrauma
                 {
                     jaw.body.ApplyTorque(-(float)Math.Sin(eatTimer * 150) * jaw.Mass * 25);
                 }
-                character.ApplyStatusEffects(ActionType.OnEating, deltaTime);
+                character.ApplyStatusEffects(ActionType.OnEating, deltaTime, targetLimb: mouthLimb, useTarget: target);
                 
                 if (target.IsDead)
                 {
@@ -440,7 +454,8 @@ namespace Barotrauma
                             }
                             character.DeselectCharacter();
                         }
-                        else //sever a random joint
+                        //don't let clients sever joints, server lets them know if that happens
+                        else if (GameMain.NetworkMember is not { IsClient: true }) //sever a random joint
                         {
                             target.AnimController.SeverLimbJoint(nonSeveredJoints.GetRandomUnsynced());
                         }
@@ -931,12 +946,12 @@ namespace Barotrauma
             {
                 if (!connectedToBaseLimb.Contains(limb)) { continue; }
 #if CLIENT
-                if (limb.LightSource != null)
+                foreach (Limb.LimbLight light in limb.LimbLights)
                 {
-                    limb.LightSource.Color = Color.Lerp(limb.InitialLightSourceColor, Color.TransparentBlack, deathAnimTimer / deathAnimDuration);
-                    if (limb.InitialLightSpriteAlpha.HasValue)
+                    light.LightSource.Color = Color.Lerp(light.InitialColor, Color.TransparentBlack, deathAnimTimer / deathAnimDuration);
+                    if (light.InitialAlpha.HasValue)
                     {
-                        limb.LightSource.OverrideLightSpriteAlpha = MathHelper.Lerp(limb.InitialLightSpriteAlpha.Value, 0.0f, deathAnimTimer / deathAnimDuration);
+                        light.LightSource.OverrideLightSpriteAlpha = MathHelper.Lerp(light.InitialAlpha.Value, 0.0f, deathAnimTimer / deathAnimDuration);
                     }
                 }
 #endif
@@ -979,9 +994,9 @@ namespace Barotrauma
             {
                 if (l.IsSevered) { continue; }
                 if (!l.DoesFlip) { continue; }
-                if (RagdollParams.IsSpritesheetOrientationHorizontal)
+                if (RagdollParams.IsSpritesheetOrientationHorizontal && CurrentAnimationParams is FishSwimParams)
                 {
-                    //horizontally aligned limbs need to be flipped 180 degrees
+                    //horizontally aligned limbs need to be flipped 180 degrees when mirroring
                     l.body.SetTransformIgnoreContacts(l.SimPosition, l.body.Rotation + MathHelper.Pi * Dir);
 				}
                 //no need to do anything when flipping vertically oriented limbs
@@ -1000,7 +1015,7 @@ namespace Barotrauma
                 float rotation = l.body.Rotation;
                 if (l.DoesMirror)
                 {
-                    if (RagdollParams.IsSpritesheetOrientationHorizontal)
+                    if (RagdollParams.IsSpritesheetOrientationHorizontal && CurrentAnimationParams is FishSwimParams)
                     {
                         //horizontally oriented sprites can be mirrored by rotating 180 deg and inverting the angle
                         rotation = -(l.body.Rotation + MathHelper.Pi);

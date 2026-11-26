@@ -48,16 +48,17 @@ namespace Barotrauma
 
         private struct SubmarineDisplayContent
         {
-            public GUIFrame background;
-            public GUIImage submarineImage;
-            public SubmarineInfo displayedSubmarine;
-            public GUITextBlock submarineName;
-            public GUITextBlock submarineClass;
-            public GUITextBlock submarineTier;
-            public GUITextBlock submarineFee;
-            public GUIButton selectSubmarineButton;
-            public GUITextBlock middleTextBlock;
-            public GUIButton previewButton;
+            public GUIFrame Background;
+            public GUIImage SubmarineImage;
+            public SubmarineInfo DisplayedSubmarine;
+            public GUITextBlock SubmarineName;
+            public GUITextBlock SubmarineClass;
+            public GUITextBlock SubmarineTier;
+            public GUITextBlock SubmarineFee;
+            public GUIButton SelectSubmarineButton;
+            public GUITextBlock MiddleTextBlock;
+            public GUIButton PreviewButton;
+            public GUITextBlock InsufficientRepWarning;
         }
 
         private bool TransferItemsOnSwitch
@@ -120,6 +121,8 @@ namespace Barotrauma
         {
             createdForResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
+            GuiFrame?.Parent?.RemoveChild(GuiFrame);
+
             GUILayoutGroup content;
             GuiFrame = new GUIFrame(new RectTransform(new Vector2(0.75f, 0.7f), parent, Anchor.TopCenter, Pivot.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.02f) });
             selectionIndicatorThickness = HUDLayoutSettings.Padding / 2;
@@ -130,7 +133,11 @@ namespace Barotrauma
             };
 
             content = new GUILayoutGroup(new RectTransform(new Point(background.Rect.Width - HUDLayoutSettings.Padding * 4, background.Rect.Height - HUDLayoutSettings.Padding * 4), background.RectTransform, Anchor.Center)) { AbsoluteSpacing = (int)(HUDLayoutSettings.Padding * 1.5f) };
-            GUITextBlock header = new GUITextBlock(new RectTransform(new Vector2(1f, 0.0f), content.RectTransform), transferService ? TextManager.Get("switchsubmarineheader") : TextManager.GetWithVariable("outpostshipyard", "[location]", GameMain.GameSession.Map.CurrentLocation.DisplayName), font: GUIStyle.LargeFont);
+            GUITextBlock header = new GUITextBlock(new RectTransform(new Vector2(1f, 0.0f), content.RectTransform), 
+                string.Empty, font: GUIStyle.LargeFont)
+            {
+                TextGetter = () => { return transferService ? TextManager.Get("switchsubmarineheader") : TextManager.GetWithVariable("outpostshipyard", "[location]", GameMain.GameSession.Map.CurrentLocation.DisplayName); }
+            };
             header.CalculateHeightFromText(0, true);
             playerBalanceElement = CampaignUI.AddBalanceElement(header, new Vector2(1.0f, 1.5f));
 
@@ -207,22 +214,30 @@ namespace Barotrauma
             {
                 SubmarineDisplayContent submarineDisplayElement = new SubmarineDisplayContent
                 {
-                    background = new GUIFrame(new RectTransform(new Vector2(1f / submarinesPerPage, 1f), submarineHorizontalGroup.RectTransform), style: null, new Color(8, 13, 19))
+                    Background = new GUIFrame(new RectTransform(new Vector2(1f / submarinesPerPage, 1f), submarineHorizontalGroup.RectTransform), style: null, new Color(8, 13, 19))
                 };
-                submarineDisplayElement.submarineImage = new GUIImage(new RectTransform(new Vector2(0.8f, 1f), submarineDisplayElement.background.RectTransform, Anchor.Center), null, true);
-                submarineDisplayElement.middleTextBlock = new GUITextBlock(new RectTransform(new Vector2(0.8f, 1f), submarineDisplayElement.background.RectTransform, Anchor.Center), string.Empty, textAlignment: Alignment.Center);
-                submarineDisplayElement.submarineName = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding) }, string.Empty, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont);
-                submarineDisplayElement.submarineFee = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding) }, string.Empty, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont);
-                submarineDisplayElement.selectSubmarineButton = new GUIButton(new RectTransform(Vector2.One, submarineDisplayElement.background.RectTransform), style: null);
-                submarineDisplayElement.previewButton = new GUIButton(new RectTransform(Vector2.One * 0.12f, submarineDisplayElement.background.RectTransform, anchor: Anchor.BottomRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point((int)(0.03f * background.Rect.Height)) }, style: "ExpandButton")
+                submarineDisplayElement.SubmarineImage = new GUIImage(new RectTransform(new Vector2(0.8f, 1f), submarineDisplayElement.Background.RectTransform, Anchor.Center), null, true);
+
+                submarineDisplayElement.InsufficientRepWarning = new GUITextBlock(new RectTransform(new Vector2(0.8f), submarineDisplayElement.Background.RectTransform, Anchor.Center),
+                    string.Empty, wrap: true,
+                    textAlignment: Alignment.Center, textColor: GUIStyle.Orange)
                 {
+                    Visible = false
+                };                
+                submarineDisplayElement.MiddleTextBlock = new GUITextBlock(new RectTransform(new Vector2(0.8f, 1f), submarineDisplayElement.Background.RectTransform, Anchor.Center), string.Empty, textAlignment: Alignment.Center);
+                submarineDisplayElement.SubmarineName = new GUITextBlock(new RectTransform(new Vector2(0.95f, 0.1f), submarineDisplayElement.Background.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding) }, string.Empty, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont);
+                submarineDisplayElement.SubmarineFee = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.Background.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding) }, string.Empty, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont);
+                submarineDisplayElement.SelectSubmarineButton = new GUIButton(new RectTransform(Vector2.One, submarineDisplayElement.Background.RectTransform), style: null);
+                submarineDisplayElement.PreviewButton = new GUIButton(new RectTransform(Vector2.One * 0.12f, submarineDisplayElement.Background.RectTransform, anchor: Anchor.BottomRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point((int)(0.03f * background.Rect.Height)) }, style: "ExpandButton")
+                {
+                    ToolTip = TextManager.Get("previewsubmarine"),
                     Color = Color.White,
                     HoverColor = Color.White,
                     PressedColor = Color.White
                 };
-                submarineDisplayElement.submarineClass = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding + (int)GUIStyle.Font.MeasureString(submarineDisplayElement.submarineName.Text).Y) }, string.Empty, textAlignment: Alignment.Left);
-                submarineDisplayElement.submarineTier = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding + (int)GUIStyle.Font.MeasureString(submarineDisplayElement.submarineName.Text).Y) }, string.Empty, textAlignment: Alignment.Right);
-
+                submarineDisplayElement.SubmarineClass = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.Background.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(HUDLayoutSettings.Padding, HUDLayoutSettings.Padding + (int)GUIStyle.Font.MeasureString(submarineDisplayElement.SubmarineName.Text).Y) }, string.Empty, textAlignment: Alignment.Left);
+                submarineDisplayElement.SubmarineTier = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.1f), submarineDisplayElement.Background.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(HUDLayoutSettings.Padding, HUDLayoutSettings.Padding + (int)GUIStyle.Font.MeasureString(submarineDisplayElement.SubmarineName.Text).Y) }, string.Empty, textAlignment: Alignment.Right);
+                
                 submarineDisplays[i] = submarineDisplayElement;
             }
 
@@ -342,88 +357,106 @@ namespace Barotrauma
             for (int i = 0; i < submarineDisplays.Length; i++)
             {
                 SubmarineInfo subToDisplay = GetSubToDisplay(submarineIndex);
+                SubmarineDisplayContent display = submarineDisplays[i];
                 if (subToDisplay == null)
                 {
-                    submarineDisplays[i].submarineImage.Sprite = null;
-                    submarineDisplays[i].submarineName.Text = string.Empty;
-                    submarineDisplays[i].submarineFee.Text = string.Empty;
-                    submarineDisplays[i].submarineClass.Text = string.Empty;
-                    submarineDisplays[i].submarineTier.Text = string.Empty;
-                    submarineDisplays[i].selectSubmarineButton.Enabled = false;
-                    submarineDisplays[i].selectSubmarineButton.OnClicked = null;
-                    submarineDisplays[i].displayedSubmarine = null;
-                    submarineDisplays[i].middleTextBlock.AutoDraw = false;
-                    submarineDisplays[i].previewButton.Visible = false;
+                    display.SubmarineImage.Sprite = null;
+                    display.SubmarineName.Text = string.Empty;
+                    display.SubmarineFee.Text = string.Empty;
+                    display.SubmarineClass.Text = string.Empty;
+                    display.SubmarineTier.Text = string.Empty;
+                    display.SelectSubmarineButton.Enabled = false;
+                    display.SelectSubmarineButton.OnClicked = null;
+                    display.DisplayedSubmarine = null;
+                    display.MiddleTextBlock.AutoDraw = false;
+                    display.PreviewButton.Visible = false;
+                    display.InsufficientRepWarning.Visible = false;
                 }
                 else
                 {
-                    submarineDisplays[i].displayedSubmarine = subToDisplay;
+                    display.DisplayedSubmarine = subToDisplay;
                     Sprite previewImage = GetPreviewImage(subToDisplay);
 
                     if (previewImage != null)
                     {
-                        submarineDisplays[i].submarineImage.Sprite = previewImage;
-                        submarineDisplays[i].middleTextBlock.AutoDraw = false;
+                        display.SubmarineImage.Sprite = previewImage;
+                        display.MiddleTextBlock.AutoDraw = false;
                     }
                     else
                     {
-                        submarineDisplays[i].submarineImage.Sprite = null;
-                        submarineDisplays[i].middleTextBlock.Text = missingPreviewText;
-                        submarineDisplays[i].middleTextBlock.AutoDraw = true;
+                        display.SubmarineImage.Sprite = null;
+                        display.MiddleTextBlock.Text = missingPreviewText;
+                        display.MiddleTextBlock.AutoDraw = true;
                     }
 
-                    submarineDisplays[i].selectSubmarineButton.Enabled = true;
+                    display.SelectSubmarineButton.Enabled = true;
 
                     int index = i;
-                    submarineDisplays[i].selectSubmarineButton.OnClicked = (button, userData) =>
+                    display.SelectSubmarineButton.OnClicked = (button, userData) =>
                     {
-                        SelectSubmarine(subToDisplay, submarineDisplays[index].background.Rect);
+                        SelectSubmarine(subToDisplay, submarineDisplays[index].Background.Rect);
                         return true;
                     };
 
-                    submarineDisplays[i].submarineName.Text = subToDisplay.DisplayName;                    
+                    display.SubmarineName.Text = ToolBox.LimitString(subToDisplay.DisplayName, display.SubmarineName.Font, (int)(display.SubmarineName.Rect.Width - display.SubmarineName.Padding.X - display.SubmarineName.Padding.Z));
                     
-                    submarineDisplays[i].submarineClass.Text = TextManager.GetWithVariable("submarineclass.classsuffixformat", "[type]", TextManager.Get($"submarineclass.{subToDisplay.SubmarineClass}"));
-                    submarineDisplays[i].submarineClass.ToolTip = TextManager.Get("submarineclass.description") + "\n\n" + TextManager.Get($"submarineclass.{subToDisplay.SubmarineClass}.description"); 
+                    display.SubmarineClass.Text = TextManager.GetWithVariable("submarineclass.classsuffixformat", "[type]", TextManager.Get($"submarineclass.{subToDisplay.SubmarineClass}"));
+                    display.SubmarineClass.ToolTip = TextManager.Get("submarineclass.description") + "\n\n" + TextManager.Get($"submarineclass.{subToDisplay.SubmarineClass}.description"); 
 
-                    submarineDisplays[i].submarineTier.Text = TextManager.Get($"submarinetier.{subToDisplay.Tier}");
-                    submarineDisplays[i].submarineTier.ToolTip = TextManager.Get("submarinetier.description");
+                    display.SubmarineTier.Text = TextManager.Get($"submarinetier.{subToDisplay.Tier}");
+                    display.SubmarineTier.ToolTip = TextManager.Get("submarinetier.description");
 
                     if (!GameMain.GameSession.IsSubmarineOwned(subToDisplay))
                     {
                         LocalizedString amountString = TextManager.FormatCurrency(subToDisplay.GetPrice());
-                        submarineDisplays[i].submarineFee.Text = TextManager.GetWithVariable("price", "[amount]", amountString);
+                        display.SubmarineFee.Text = TextManager.GetWithVariable("price", "[amount]", amountString);
+
+                        bool sufficientRepToBuy = subToDisplay.SufficientReputationToBuyFrom(GameMain.GameSession.Campaign?.CurrentLocation);
+
+                        //not enough rep to buy
+                        foreach (var textBlock in display.Background.GetAllChildren<GUITextBlock>())
+                        {
+                            textBlock.TextColor = sufficientRepToBuy ? GUIStyle.TextColorNormal : GUIStyle.TextColorDim;
+                        }
+                        display.SubmarineImage.Color = sufficientRepToBuy ? Color.White : Color.Gray ;
+                        display.InsufficientRepWarning.Visible = !sufficientRepToBuy;
+                        display.InsufficientRepWarning.TextColor = GUIStyle.Orange;
+                        display.InsufficientRepWarning.Text = 
+                            TextManager.GetWithVariables("reputationrequirementforsubpurchase",
+                                ("[value]", subToDisplay.MinReputationToBuy.ToString()),
+                                ("[faction]", GameMain.GameSession.Campaign?.CurrentLocation?.Faction?.Prefab.Name ?? "null"));
                     }
                     else
                     {
                         if (subToDisplay.Name != CurrentOrPendingSubmarine().Name)
                         {
-                            submarineDisplays[i].submarineFee.Text = string.Empty;                            
+                            display.SubmarineFee.Text = string.Empty;                            
                         }
                         else
                         {
-                            submarineDisplays[i].submarineFee.Text = selectedSubText;
+                            display.SubmarineFee.Text = selectedSubText;
                         }
+                        display.InsufficientRepWarning.Visible = false;
                     }
 
                     if (transferService && subToDisplay.Name == CurrentOrPendingSubmarine().Name && updateSubs)
                     {                        
                         if (selectedSubmarine == null)
                         {
-                            CoroutineManager.StartCoroutine(SelectOwnSubmarineWithDelay(subToDisplay, submarineDisplays[i]));
+                            CoroutineManager.StartCoroutine(SelectOwnSubmarineWithDelay(subToDisplay, display));
                         }
                         else
                         {
-                            SelectSubmarine(subToDisplay, submarineDisplays[i].background.Rect);
+                            SelectSubmarine(subToDisplay, display.Background.Rect);
                         }
                     }
                     else if (!transferService && selectedSubmarine == null || !transferService && GameMain.GameSession.IsSubmarineOwned(selectedSubmarine) || subToDisplay == selectedSubmarine)
                     {
-                        SelectSubmarine(subToDisplay, submarineDisplays[i].background.Rect);
+                        SelectSubmarine(subToDisplay, display.Background.Rect);
                     }
 
-                    submarineDisplays[i].previewButton.Visible = true;
-                    submarineDisplays[i].previewButton.OnClicked = (btn, obj) =>
+                    display.PreviewButton.Visible = true;
+                    display.PreviewButton.OnClicked = (btn, obj) =>
                     {
                         SubmarinePreview.Create(subToDisplay);
                         return false;
@@ -477,6 +510,11 @@ namespace Barotrauma
             UpdatePaging();
             ContentRefreshRequired = false;
 
+            if (!subsToShow.Contains(selectedSubmarine) && specsFrame != null)
+            {
+                SelectSubmarine(null, Rectangle.Empty);
+            }
+
             static int ComparePrice(SubmarineInfo x, SubmarineInfo y)
             {
                 return x.Price.CompareTo(y.Price) * 100 + x.Name.CompareTo(y.Name);
@@ -514,7 +552,7 @@ namespace Barotrauma
         private IEnumerable<CoroutineStatus> SelectOwnSubmarineWithDelay(SubmarineInfo info, SubmarineDisplayContent display)
         {
             yield return new WaitForSeconds(0.05f);
-            SelectSubmarine(info, display.background.Rect);
+            SelectSubmarine(info, display.Background.Rect);
         }
 
         // Selection based on key input
@@ -525,9 +563,9 @@ namespace Barotrauma
 
             for (int i = 0; i < submarineDisplays.Length; i++)
             {
-                if (submarineDisplays[i].displayedSubmarine == nextSub)
+                if (submarineDisplays[i].DisplayedSubmarine == nextSub)
                 {
-                    SelectSubmarine(nextSub, submarineDisplays[i].background.Rect);
+                    SelectSubmarine(nextSub, submarineDisplays[i].Background.Rect);
                     return;
                 }
             }
@@ -536,9 +574,9 @@ namespace Barotrauma
 
             for (int i = 0; i < submarineDisplays.Length; i++)
             {
-                if (submarineDisplays[i].displayedSubmarine == nextSub)
+                if (submarineDisplays[i].DisplayedSubmarine == nextSub)
                 {
-                    SelectSubmarine(nextSub, submarineDisplays[i].background.Rect);
+                    SelectSubmarine(nextSub, submarineDisplays[i].Background.Rect);
                     return;
                 }
             }
@@ -713,6 +751,7 @@ namespace Barotrauma
             {
                 msgBox.Close();
                 var extraConfirmationBox = new GUIMessageBox(header, textBody, new LocalizedString[2] { TextManager.Get("ok"), TextManager.Get("cancel") });
+                extraConfirmationBox.UserData = "verificationprompt"; // Handles esc automatically
                 extraConfirmationBox.Buttons[0].OnClicked = (b, o) => Confirm();
                 extraConfirmationBox.Buttons[1].OnClicked = (b, o) =>
                 {
@@ -756,6 +795,15 @@ namespace Barotrauma
                 new GUIMessageBox(TextManager.Get("purchasesubmarineheader"), TextManager.GetWithVariables("notenoughmoneyforpurchasetext",
                     ("[currencyname]", currencyName),
                     ("[submarinename]", selectedSubmarine.DisplayName)));
+                return;
+            }
+
+            if (!selectedSubmarine.SufficientReputationToBuyFrom(GameMain.GameSession.Campaign?.CurrentLocation))
+            {
+                new GUIMessageBox(TextManager.Get("purchasesubmarineheader"), 
+                    TextManager.Get("notenoughreputationforsubpurchase") +'\n'+ TextManager.GetWithVariables("reputationrequirementforsubpurchase",
+                        ("[value]", selectedSubmarine.MinReputationToBuy.ToString()),
+                        ("[faction]", GameMain.GameSession.Campaign?.CurrentLocation?.Faction?.Prefab.Name ?? "null")));
                 return;
             }
 

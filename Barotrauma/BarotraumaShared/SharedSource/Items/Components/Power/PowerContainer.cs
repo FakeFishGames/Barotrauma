@@ -5,7 +5,7 @@ using System.Globalization;
 
 namespace Barotrauma.Items.Components
 {
-    partial class PowerContainer : Powered, IDrawableComponent, IServerSerializable, IClientSerializable
+    public partial class PowerContainer : Powered, IDrawableComponent, IServerSerializable, IClientSerializable
     {
         //[power/min]        
         private float capacity;
@@ -81,16 +81,7 @@ namespace Barotrauma.Items.Components
             set 
             {
                 if (!MathUtils.IsValid(value)) return;
-                charge = MathHelper.Clamp(value, 0.0f, adjustedCapacity); 
-
-                //send a network event if the charge has changed by more than 5%
-                if (Math.Abs(charge - lastSentCharge) / adjustedCapacity > 0.05f)
-                {
-#if SERVER
-                    if (GameMain.Server != null && item.FullyInitialized) { item.CreateServerEvent(this); }
-#endif
-                    lastSentCharge = charge;
-                }
+                charge = MathHelper.Clamp(value, 0.0f, adjustedCapacity);
             }
         }
 
@@ -147,6 +138,11 @@ namespace Barotrauma.Items.Components
 
         public bool HasBeenTuned { get; private set; }
 
+        /// <summary>
+        /// Batteries deteriorate when charging/discharging
+        /// </summary>
+        public override bool ShouldCauseDeterioration => Math.Abs(CurrPowerConsumption) > 0.1f || Math.Abs(CurrPowerOutput) > 0.1f;
+
         public PowerContainer(Item item, ContentXElement element)
             : base(item, element)
         {
@@ -164,9 +160,17 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            //send a network event if the charge has changed by more than 5%
+            if (Math.Abs(charge - lastSentCharge) / adjustedCapacity > 0.05f)
+            {
+#if SERVER
+                if (GameMain.Server != null && item.FullyInitialized) { item.CreateServerEvent(this); }
+#endif
+                lastSentCharge = charge;
+            }
+
             if (item.Connections == null) 
             {
-                IsActive = false;
                 return; 
             }
 

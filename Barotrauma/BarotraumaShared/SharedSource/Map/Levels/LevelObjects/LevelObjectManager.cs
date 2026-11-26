@@ -12,7 +12,7 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    partial class LevelObjectManager : Entity, IServerSerializable
+    public partial class LevelObjectManager : Entity, IServerSerializable
     {
         const int GridSize = 2000;
 

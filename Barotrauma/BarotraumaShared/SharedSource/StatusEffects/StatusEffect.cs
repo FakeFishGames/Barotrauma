@@ -2,6 +2,7 @@
 using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
+using Barotrauma.Plugins;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -9,12 +10,13 @@ using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class DurationListElement
+    public class DurationListElement
     {
         public readonly StatusEffect Parent;
         public readonly Entity Entity;
@@ -69,8 +71,18 @@ namespace Barotrauma
     ///     with the specified name, the attribute does nothing.
     /// </Field>
     /// </doc>
-    partial class StatusEffect
+    public partial class StatusEffect
     {
+        /// <summary>
+        /// Optional identifier, which can be used for overriding specific status effects. E.g. an ammo box can override some status effects defined for the turret.
+        /// </summary>
+        public readonly Identifier Identifier;
+        /// <summary>
+        /// Is the status effect defined as an override of another status effect?
+        /// Overriding status effects should be defined for items that can be contained, and they override a specific status effect of the parent (or an item linked to the parent).
+        /// </summary>
+        public readonly bool IsOverride;
+        
         private static readonly ImmutableHashSet<Identifier> FieldNames;
         static StatusEffect()
         {
@@ -113,7 +125,7 @@ namespace Barotrauma
             /// </summary>
             Hull = 128,
             /// <summary>
-            /// The entity the item/attack is being used on. In the context of characters, one of the character's limbs (specify which one using <see cref="targetLimbs"/>).
+            /// The entity the item/attack is being used on. In the context of characters, the first match of the character's limbs (specify which one using <see cref="targetLimbs"/>).
             /// </summary>
             Limb = 256,
             /// <summary>
@@ -127,7 +139,19 @@ namespace Barotrauma
             /// <summary>
             /// All entities (items, structures) this item is linked to. Only valid on items.
             /// </summary>
-            LinkedEntities = 2048
+            LinkedEntities = 2048,
+            /// <summary>
+            /// The first component of an item linked to this item matching the <see cref="StatusEffect.TargetItemComponent"/> definition. Only valid on items.
+            /// </summary>
+            LinkedItemComponent = 4096,
+            /// <summary>
+            /// The first component of an item linked to this item's parent (container) that matches the <see cref="TargetItemComponent"/> definition. For example, a Turret component in a coilgun linked to the loader this item is inside. Only valid on items when they are inside a container.
+            /// </summary>
+            ParentLinkedItemComponent = 8192,
+            /// <summary>
+            /// Meant for status effect overrides that have not yet inherited the targets the target status effect they are targeting at.
+            /// </summary>
+            Undefined = 16384
         }
 
         /// <summary>
@@ -202,7 +226,7 @@ namespace Barotrauma
             /// </summary>
             public readonly bool SpawnIfInventoryFull;
             /// <summary>
-            /// Should the item spawn even if this item isn't in an inventory? Only valid if the SpawnPosition is set to <see cref="SameInventory"/>. Defaults to false.
+            /// Should the item spawn even if this item isn't in an inventory? Only valid if the SpawnPosition is set to <see cref="SpawnPositionType.SameInventory"/>. Defaults to false.
             /// </summary>
             public readonly bool SpawnIfNotInInventory;
             /// <summary>
@@ -246,6 +270,10 @@ namespace Barotrauma
             /// Condition of the item when it spawns (1.0 = max).
             /// </summary>
             public readonly float Condition;
+            /// <summary>
+            /// If enabled, the item will inherit the condition of the item spawning it.
+            /// </summary>
+            public readonly bool InheritCondition;
 
             public bool InheritEventTags { get; private set; }
 
@@ -284,6 +312,7 @@ namespace Barotrauma
                 Impulse = element.GetAttributeFloat("impulse", element.GetAttributeFloat("launchimpulse", element.GetAttributeFloat("speed", 0.0f)));
 
                 Condition = MathHelper.Clamp(element.GetAttributeFloat("condition", 1.0f), 0.0f, 1.0f);
+                InheritCondition = element.GetAttributeBool(nameof(InheritCondition), false);
 
                 RotationRad = MathHelper.ToRadians(element.GetAttributeFloat("rotation", 0.0f));
 
@@ -474,6 +503,9 @@ namespace Barotrauma
             [Serialize(false, IsPropertySaveable.No, description: "Should the character team be inherited from the entity that owns the status effect?")]
             public bool InheritTeam { get; private set; }
 
+            [Serialize("", IsPropertySaveable.Yes, description: "Forces the spawned character to be friendly towards the specified group. Note: normal team-friendliness logic still applies.")]
+            public Identifier ForceFriendlyWithGroup { get; private set; }
+
             public CharacterSpawnInfo(ContentXElement element, string parentDebugName)
             {
                 SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
@@ -556,11 +588,10 @@ namespace Barotrauma
             }
         }
 
-
         /// <summary>
         /// What should this status effect be applied on?
         /// </summary>
-        private readonly TargetType targetTypes;
+        public TargetType TargetTypes { get; private set; }
 
         /// <summary>
         /// Index of the slot the target must be in. Only valid when targeting a Contained item.
@@ -635,6 +666,13 @@ namespace Barotrauma
         /// </summary>
         public readonly float Interval;
 
+        /// <summary>
+        /// Only relevant if <see cref="Interval"/> is set. 
+        /// If true, the initial interval timer is randomized, meaning it will take 0-Interval seconds for the effect to execute for the first time.
+        /// </summary>
+        public readonly bool RandomizeInitialInterval;
+
+
 #if CLIENT
         /// <summary>
         /// Should the sound(s) configured in the effect be played if the required items aren't found?
@@ -648,15 +686,45 @@ namespace Barotrauma
 
         private readonly int useItemCount;
 
-        private readonly bool removeItem, dropContainedItems, dropItem, removeCharacter, breakLimb, hideLimb;
+        /// <summary>
+        /// When an item component is defined, the status effect targets the <see cref="ItemComponent.Use"/> method of that specific item component, instead of calling the method for the entire item and all its components, as is the default.
+        /// </summary>
+        private readonly Identifier useItemComponent;
+
+        /// <summary>
+        /// When an item component is defined, the status effect of type "OnUse" requires a specific type of item component to have been used before this effect can be launched.
+        /// </summary>
+        private readonly Identifier useDependedItemComponent;
+
+        /// <summary>
+        /// When enabled, the <Use /> elements will consider the owner of the inventory this item is in as the user of the status effect.
+        /// </summary>
+        private bool getUserFromParentInventory;
+
+        private readonly bool removeItem, dropContainedItems, dropItem, removeCharacter, severLimb, hideLimb;
+
         private readonly float hideLimbTimer;
+
+        /// <summary>
+        /// Makes <see cref="TargetType.Contained"/> also target all items within their subcontainers recursively.
+        /// </summary>
+        public readonly bool TargetContainedRecursively;
 
         /// <summary>
         /// Identifier of a container the character's items should be moved into when the character is removed. Only valid if the effect removes the character.
         /// </summary>
         private readonly Identifier containerForItemsOnCharacterRemoval;
 
-        public readonly ActionType type = ActionType.OnActive;
+        private ActionType _type = ActionType.OnActive;
+        public ActionType Type
+        {
+            get
+            {
+                Debug.Assert(_type != ActionType.Undefined);
+                return _type;
+            }
+            set => _type = value;
+        }
 
         private readonly List<Explosion> explosions;
         public IEnumerable<Explosion> Explosions
@@ -665,7 +733,6 @@ namespace Barotrauma
         }
 
         private readonly List<ItemSpawnInfo> spawnItems;
-
 
         /// <summary>
         /// If set, the character targeted by this effect will send the corresponding localized text that has the specified identifier in the chat.
@@ -677,9 +744,20 @@ namespace Barotrauma
         private readonly bool forceSayInRadio;
 
         /// <summary>
+        /// If set to true, the character targeted by this effect's "forcesay" command will be able to say the line even if they can't normally speak.
+        /// </summary>
+        private readonly bool forceSayEvenIfCantSpeak;
+
+        /// <summary>
         /// If enabled, one of the items this effect is configured to spawn is selected randomly, as opposed to spawning all of them.
         /// </summary>
         private readonly bool spawnItemRandomly;
+
+        /// <summary>
+        /// If enabled, one of the characters this effect is configured to spawn is selected randomly, as opposed to spawning all of them.
+        /// </summary>
+        private readonly bool spawnCharacterRandomly;
+        
         private readonly List<CharacterSpawnInfo> spawnCharacters;
 
         /// <summary>
@@ -736,9 +814,24 @@ namespace Barotrauma
         public readonly LimbType[] targetLimbs;
 
         /// <summary>
-        /// The probability of severing a limb damaged by this status effect. Only valid when targeting characters or limbs.
+        /// The probability of severing a limb damaged by this status effect. If the effect targets multiple limbs, each limb is severed with this probability until <see cref="SeverLimbsCount"/> is reached.
+        /// The effect must either apply afflictions on a limb or use a SeverLimb child element for this property to work. Only valid when targeting characters or limbs.
         /// </summary>
         public readonly float SeverLimbsProbability;
+
+        /// <summary>
+        /// How many limbs the status effect can sever when it executes. Relevant for status effects that can target multiple limbs at the same time. If negative, there's no limit.
+        /// If a SeverLimb element is used on an effect that targets a character without specifying <see cref="targetLimbs"/>, it attempts to sever any of the character's limbs in a random order.
+        /// </summary>
+        public readonly int SeverLimbsCount;
+
+        /// <summary>
+        /// Can this effect decapitate a living character? Applies to both ways this effect can sever limbs:
+        /// the damage it deals to the limbs, and any explicit SeverLimb/BreakLimb element.
+        /// Set with the "allowbeheading" attribute, can be set on both the effect itself or on SeverLimb/BreakLimb.
+        /// Defaults to true.
+        /// </summary>
+        private readonly bool allowBeheading;
 
         private readonly Vector2 randomCondition;
 
@@ -754,8 +847,13 @@ namespace Barotrauma
         public readonly bool OnlyOutside;
 
         /// <summary>
+        /// If enabled, this effect will only affect targets in the same hull. Only works in conjunction with Range.
+        /// </summary>
+        public readonly bool OnlySameHull;
+
+        /// <summary>
         /// If enabled, the effect only executes when the entity receives damage from a player character 
-        /// (a character controlled by a human player). Only valid for characters, and effects of the type <see cref="OnDamaged"/>.
+        /// (a character controlled by a human player). Only valid for characters, and effects of the type <see cref="ActionType.OnDamaged"/>.
         /// </summary>
         public readonly bool OnlyWhenDamagedByPlayer;
 
@@ -767,13 +865,18 @@ namespace Barotrauma
         /// <summary>
         /// Identifier(s), tag(s) or species name(s) of the entity the effect can target. Null if there's no identifiers.
         /// </summary>
-        public readonly ImmutableHashSet<Identifier> TargetIdentifiers;
+        public ImmutableHashSet<Identifier> TargetIdentifiers { get; private set; }
 
         /// <summary>
         /// If set to the name of one of the target's ItemComponents, the effect is only applied on that component.
         /// Only works on items.
         /// </summary>
-        public readonly string TargetItemComponent;
+        public Identifier TargetItemComponent { get; private set; }
+
+        /// <summary>
+        /// If set, the effect will only modify particle emitters of the target, defined with this id.
+        /// </summary>
+        public Identifier TargetParticleEmitter { get; private set; }
         /// <summary>
         /// Which type of afflictions the target must receive for the StatusEffect to be applied. Only valid when the type of the effect is OnDamaged.
         /// </summary>
@@ -817,6 +920,8 @@ namespace Barotrauma
         private HashSet<(Character targetCharacter, AnimLoadInfo anim)> failedAnimations;
         public readonly record struct AnimLoadInfo(AnimationType Type, Either<string, ContentPath> File, float Priority, ImmutableArray<Identifier> ExpectedSpeciesNames);
         private readonly List<AnimLoadInfo> animationsToTrigger;
+
+        private readonly List<IStatusEffectAction> statusEffectActions = [];
 
         /// <summary>
         /// How long the effect runs (in seconds). Note that if <see cref="Stackable"/> is true, 
@@ -871,9 +976,50 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Disabled effects will no longer be executed. Used to make <see cref="oneShot">oneshot</> effects only execute once.
+        /// Tags to add to the targeted item(s) without removing existing tags in that item.
+        /// </summary>
+        private readonly List<Identifier> addTags = [];
+
+        /// <summary>
+        /// Tags to remove from the targeted item(s) without affecting other tags in that item.
+        /// Note that prefab tags cannot be removed.
+        /// </summary>
+        private readonly List<Identifier> removeTags = [];
+
+        /// <summary>
+        /// Disabled effects will no longer be executed. Used to make <see cref="oneShot"/> effects only execute once.
+        /// Also used to disable status effect overrides before the override has been applied.
         /// </summary>
         public bool Disabled { get; private set; }
+        
+        private bool isOverrideInitialized;
+        public void InitializeOverride(StatusEffect targetStatusEffect)
+        {
+            if (isOverrideInitialized) { return; }
+            if (!IsOverride)
+            {
+                DebugConsole.ThrowError($"A status effect tried to override another effect, but has not been configured as an override.");
+                return;
+            }
+            Type = targetStatusEffect.Type;
+            TargetTypes = targetStatusEffect.TargetTypes;
+            TargetItemComponent = targetStatusEffect.TargetItemComponent;
+            TargetIdentifiers = targetStatusEffect.TargetIdentifiers;
+            TargetParticleEmitter = targetStatusEffect.TargetParticleEmitter;
+            Disabled = false;
+            isOverrideInitialized = true;
+        }
+        
+        public void ResetOverride()
+        {
+            if (!IsOverride)
+            {
+                DebugConsole.ThrowError($"Trying to reset an override effect, which is not configured as an override!");
+                return;
+            }
+            isOverrideInitialized = false;
+            Disabled = true;
+        }
 
         public static StatusEffect Load(ContentXElement element, string parentDebugName)
         {
@@ -887,13 +1033,18 @@ namespace Barotrauma
 
         protected StatusEffect(ContentXElement element, string parentDebugName)
         {
+            Identifier = element.GetAttributeIdentifier(nameof(Identifier), Identifier.Empty);
+            IsOverride = element.NameAsIdentifier() == "statuseffectoverride";
             statusEffectTags = new HashSet<Identifier>(element.GetAttributeIdentifierArray("statuseffecttags", element.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>())));
             OnlyInside = element.GetAttributeBool("onlyinside", false);
             OnlyOutside = element.GetAttributeBool("onlyoutside", false);
+            OnlySameHull = element.GetAttributeBool("onlysharedhull", false);
             OnlyWhenDamagedByPlayer = element.GetAttributeBool("onlyplayertriggered", element.GetAttributeBool("onlywhendamagedbyplayer", false));
             AllowWhenBroken = element.GetAttributeBool("allowwhenbroken", false);
 
             Interval = element.GetAttributeFloat("interval", 0.0f);
+            RandomizeInitialInterval = element.GetAttributeBool(nameof(RandomizeInitialInterval), false);
+            TargetContainedRecursively = element.GetAttributeBool(nameof(TargetContainedRecursively), false);
             Duration = element.GetAttributeFloat("duration", 0.0f);
             disableDeltaTime = element.GetAttributeBool("disabledeltatime", false);
             setValue = element.GetAttributeBool("setvalue", false);
@@ -902,7 +1053,8 @@ namespace Barotrauma
             lifeTime = lifeTimer = element.GetAttributeFloat("lifetime", 0.0f);
             CheckConditionalAlways = element.GetAttributeBool("checkconditionalalways", false);
 
-            TargetItemComponent = element.GetAttributeString("targetitemcomponent", string.Empty);
+            TargetItemComponent = element.GetAttributeIdentifier(nameof(TargetItemComponent), Identifier.Empty);
+            TargetParticleEmitter = element.GetAttributeIdentifier(nameof(TargetParticleEmitter), Identifier.Empty);
             TargetSlot = element.GetAttributeInt("targetslot", -1);
 
             Range = element.GetAttributeFloat("range", 0.0f);
@@ -922,39 +1074,55 @@ namespace Barotrauma
 
             CanGiveMedicalSkill = element.GetAttributeBool(nameof(CanGiveMedicalSkill), true);
 
-            SeverLimbsProbability = MathHelper.Clamp(element.GetAttributeFloat(0.0f, "severlimbs", "severlimbsprobability"), 0.0f, 1.0f);
             randomCondition = element.GetAttributeVector2("randomcondition", Vector2.Zero);
-
-            string[] targetTypesStr =
-                element.GetAttributeStringArray("target", null) ??
-                element.GetAttributeStringArray("targettype", Array.Empty<string>());
-            foreach (string s in targetTypesStr)
+            
+            if (IsOverride)
             {
-                if (!Enum.TryParse(s, true, out TargetType targetType))
+                // Overrides inherit targets and the type from the overridden effect.
+                TargetTypes = TargetType.Undefined;
+                Type = ActionType.Undefined;
+                // Override effects start disabled so that they can't be applied before the override has been applied.
+                Disabled = true;
+            }
+            else
+            {
+                string[] targetTypesStr =
+                    element.GetAttributeStringArray("target", null) ??
+                    element.GetAttributeStringArray("targettype", Array.Empty<string>());
+                foreach (string s in targetTypesStr)
                 {
-                    DebugConsole.ThrowError($"Invalid target type \"{s}\" in StatusEffect ({parentDebugName})", contentPackage: element.ContentPackage);
+                    if (!Enum.TryParse(s, true, out TargetType targetType))
+                    {
+                        DebugConsole.ThrowError($"Invalid target type \"{s}\" in StatusEffect ({parentDebugName})", contentPackage: element.ContentPackage);
+                    }
+                    else
+                    {
+                        TargetTypes |= targetType;
+                    }
                 }
-                else
+                if (TargetTypes == 0)
                 {
-                    targetTypes |= targetType;
+                    string errorMessage = $"Potential error in StatusEffect ({parentDebugName}). Target not defined, the effect might not work correctly. Use target=\"This\" if you want the effect to target the entity it's defined in. Setting \"This\" as the target.";
+                    DebugConsole.AddSafeError(errorMessage);
+                }
+            
+                if (TargetTypes.HasAnyFlag(TargetType.LinkedItemComponent | TargetType.ParentLinkedItemComponent) && TargetItemComponent.IsEmpty)
+                {
+                    DebugConsole.AddSafeError($"StatusEffect ({parentDebugName}) has target type LinkedItemComponent, but {TargetItemComponent} is not defined.");   
+                }
+            
+                var targetIdentifiers = element.GetAttributeIdentifierArray(Array.Empty<Identifier>(), "targetnames", "targets", "targetidentifiers", "targettags");
+                if (targetIdentifiers.Any())
+                {
+                    TargetIdentifiers = targetIdentifiers.ToImmutableHashSet();
                 }
             }
-            if (targetTypes == 0)
-            {
-                string errorMessage = $"Potential error in StatusEffect ({parentDebugName}). Target not defined, the effect might not work correctly. Use target=\"This\" if you want the effect to target the entity it's defined in. Setting \"This\" as the target.";
-                DebugConsole.AddSafeError(errorMessage);
-            }
-
-            var targetIdentifiers = element.GetAttributeIdentifierArray(Array.Empty<Identifier>(), "targetnames", "targets", "targetidentifiers", "targettags");
-            if (targetIdentifiers.Any())
-            {
-                TargetIdentifiers = targetIdentifiers.ToImmutableHashSet();
-            }
-
+            
             triggeredEventTargetTag = element.GetAttributeIdentifier("eventtargettag", triggeredEventTargetTag);
             triggeredEventEntityTag = element.GetAttributeIdentifier("evententitytag", triggeredEventEntityTag);
             triggeredEventUserTag = element.GetAttributeIdentifier("eventusertag", triggeredEventUserTag);
             spawnItemRandomly = element.GetAttributeBool("spawnitemrandomly", false);
+            spawnCharacterRandomly = element.GetAttributeBool("spawncharacterrandomly", false);
             multiplyAfflictionsByMaxVitality = element.GetAttributeBool(nameof(multiplyAfflictionsByMaxVitality), false);
 #if CLIENT
             playSoundOnRequiredItemFailure = element.GetAttributeBool("playsoundonrequireditemfailure", false);
@@ -972,7 +1140,11 @@ namespace Barotrauma
                 switch (attribute.Name.ToString().ToLowerInvariant())
                 {
                     case "type":
-                        if (!Enum.TryParse(attribute.Value, true, out type))
+                        if (IsOverride)
+                        {
+                            DebugConsole.AddWarning($"\"({parentDebugName})\" Status effect overrides inherit the type from the status effect they override. The type cannot be defined explicitly.", contentPackage: element.ContentPackage);
+                        }
+                        else if (!Enum.TryParse(attribute.Value, true, out _type))
                         {
                             DebugConsole.ThrowError($"Invalid action type \"{attribute.Value}\" in StatusEffect ({parentDebugName})", contentPackage: element.ContentPackage);
                         }
@@ -984,6 +1156,7 @@ namespace Barotrauma
                     case "targetidentifiers":
                     case "targettags":
                     case "severlimbs":
+                    case "allowbeheading":
                     case "targetlimb":
                     case "delay":
                     case "interval":
@@ -1010,8 +1183,11 @@ namespace Barotrauma
                         DebugConsole.ThrowError($"Error in StatusEffect ({parentDebugName}): sounds should be defined as child elements of the StatusEffect, not as attributes.", contentPackage: element.ContentPackage);
                         break;
                     case "range":
-                        if (!HasTargetType(TargetType.NearbyCharacters) && !HasTargetType(TargetType.NearbyItems))
+                        if (IsOverride || (!HasTargetType(TargetType.NearbyCharacters) && !HasTargetType(TargetType.NearbyItems)))
                         {
+                            // Status effect overrides inherit the type from the target effect, which means it's not yet defined at this point. Therefore, let's just add the property attribute.
+                            // If this causes issues, we'd have to handle it later. This would be the case if the targets had a range property that we'd now unintentionally modify.
+                            // It could happen on some items with a range property, but I wouldn't address this unless it's an actual issue.
                             propertyAttributes.Add(attribute);
                         }
                         break;
@@ -1021,7 +1197,7 @@ namespace Barotrauma
                             //a workaround to "tags" possibly meaning either an item's tags or this status effect's tags:
                             //if the status effect doesn't have a duration, assume tags mean an item's tags, not this status effect's tags
                             propertyAttributes.Add(attribute);
-                            if (targetTypes.HasFlag(TargetType.UseTarget))
+                            if (!IsOverride && HasTargetType(TargetType.UseTarget))
                             {
                                 DebugConsole.AddWarning(
                                     $"Potential error in StatusEffect ({parentDebugName}). " +
@@ -1072,6 +1248,9 @@ namespace Barotrauma
             }
             PropertyEffects = propertyEffects.ToImmutableArray();
 
+            // null if there is no SeverLimb/BreakLimb element or they don't define the attribute
+            bool? severLimbAllowBeheading = null;
+
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -1086,6 +1265,9 @@ namespace Barotrauma
                     case "use":
                     case "useitem":
                         useItemCount++;
+                        useItemComponent = subElement.GetAttributeIdentifier("itemcomponent", Identifier.Empty);
+                        useDependedItemComponent = subElement.GetAttributeIdentifier("dependeditemcomponent", Identifier.Empty);
+                        getUserFromParentInventory = subElement.GetAttributeBool("getUserFromParentInventory", false);
                         break;
                     case "remove":
                     case "removeitem":
@@ -1102,7 +1284,13 @@ namespace Barotrauma
                         containerForItemsOnCharacterRemoval = subElement.GetAttributeIdentifier("moveitemstocontainer", Identifier.Empty);
                         break;
                     case "breaklimb":
-                        breakLimb = true;
+                    case "severlimb":
+                        severLimb = true;
+                        if (subElement.GetAttribute("allowbeheading") != null)
+                        {
+                            severLimbAllowBeheading = subElement.GetAttributeBool("allowbeheading", true);
+                        }
+                        SeverLimbsCount = subElement.GetAttributeInt("count", -1);
                         break;
                     case "hidelimb":
                         hideLimb = true;
@@ -1196,6 +1384,20 @@ namespace Barotrauma
                             spawnItems.Add(newSpawnItem);
                         }
                         break;
+                    case "addtag":
+                        Identifier addTag = subElement.GetAttributeIdentifier("tag", Identifier.Empty);
+                        if (!addTag.IsEmpty) 
+                        {
+                            addTags.Add(addTag);
+                        }
+                        break;
+                    case "removetag":
+                        Identifier removeTag = subElement.GetAttributeIdentifier("tag", Identifier.Empty);
+                        if (!removeTag.IsEmpty)
+                        {
+                            removeTags.Add(removeTag);
+                        }
+                        break;
                     case "triggerevent":
                         triggeredEvents ??= new List<EventPrefab>();
                         Identifier identifier = subElement.GetAttributeIdentifier("identifier", Identifier.Empty);
@@ -1276,6 +1478,7 @@ namespace Barotrauma
                     case "forcesay":
                         forceSayIdentifier = subElement.GetAttributeIdentifier("message", Identifier.Empty);
                         forceSayInRadio = subElement.GetAttributeBool("sayinradio", false);
+                        forceSayEvenIfCantSpeak = subElement.GetAttributeBool("evenifcantspeak", false);
                         break;
 #if CLIENT
                     case "steamtimelineevent":
@@ -1297,8 +1500,34 @@ namespace Barotrauma
                         }
                         break;
 #endif
+                    default:
+                        IStatusEffectActionFactory actionFactory = PluginData.LoadedPluginData
+                            .SelectMany(static pluginData => pluginData.StatusEffectActions)
+                            .FirstOrDefault(s => s.SupportsElement(subElement));
+
+                        if (actionFactory != null)
+                        {
+                            IStatusEffectAction action = actionFactory.Create(this, subElement);
+                            statusEffectActions.Add(action);
+                        }
+                        break;
                 }
             }
+
+            //if there's a SeverLimb element, default to a probability of 1, otherwise 0
+            float defaultSeverLimbsProbability = severLimb ? 1.0f : 0.0f;
+            SeverLimbsProbability = MathHelper.Clamp(element.GetAttributeFloat(defaultSeverLimbsProbability, "severlimbs", "severlimbsprobability"), 0.0f, 1.0f);
+
+            // allowbeheading can be set on both the StatusEffect or on the SeverLimb/BreakLimb child element (conflicting values will yell)
+            bool? effectAllowBeheading = element.GetAttribute("allowbeheading") == null ? null : element.GetAttributeBool("allowbeheading", true);
+            if (severLimbAllowBeheading.HasValue && effectAllowBeheading.HasValue && severLimbAllowBeheading != effectAllowBeheading)
+            {
+                DebugConsole.ThrowError(
+                    $"Error in StatusEffect ({parentDebugName}): 'allowbeheading' is set to {effectAllowBeheading.Value} on the effect, but to {severLimbAllowBeheading.Value} on the SeverLimb/BreakLimb element. They should have the same value.",
+                    contentPackage: element.ContentPackage);
+            }
+            allowBeheading = severLimbAllowBeheading ?? effectAllowBeheading ?? true;
+
             InitProjSpecific(element, parentDebugName);
         }
 
@@ -1306,7 +1535,8 @@ namespace Barotrauma
 
         public bool HasTargetType(TargetType targetType)
         {
-            return (targetTypes & targetType) != 0;
+            Debug.Assert(TargetTypes != TargetType.Undefined);
+            return (TargetTypes & targetType) != 0;
         }
 
         public bool ReducesItemCondition()
@@ -1351,11 +1581,20 @@ namespace Barotrauma
             return false;
         }
 
+        /// <summary>
+        /// Does the item match the conditionals that require some specific item tags? NOTE: returns true if there are no such conditionals.
+        /// </summary>
+        /// <param name="itemPrefab"></param>
+        /// <returns></returns>
         public bool MatchesTagConditionals(ItemPrefab itemPrefab)
         {
-            if (itemPrefab == null || !HasConditions)
+            if (itemPrefab == null)
             {
                 return false;
+            }
+            else if (!HasConditions)
+            {
+                return true;
             }
             else
             {
@@ -1394,11 +1633,18 @@ namespace Barotrauma
         public void AddNearbyTargets(Vector2 worldPosition, List<ISerializableEntity> targets)
         {
             if (Range <= 0.0f) { return; }
+
+            Hull thisHull = null;
+            if (OnlySameHull)
+            {
+                thisHull = Hull.FindHull(worldPosition);
+            }
+            
             if (HasTargetType(TargetType.NearbyCharacters))
             {
                 foreach (Character c in Character.CharacterList)
                 {
-                    if (c.Enabled && !c.Removed && CheckDistance(c) && IsValidTarget(c))
+                    if (c.Enabled && !c.Removed && CheckDistance(c) && IsValidTarget(c) && (!OnlySameHull || c.CurrentHull == thisHull))
                     {
                         targets.Add(c);
                     }
@@ -1416,7 +1662,7 @@ namespace Barotrauma
                         //make sure we didn't already add this item due to it having some other Powered component
                         if (targets.Contains(powered)) { continue; }
                         Item item = powered.Item;
-                        if (!item.Removed && CheckDistance(item) && IsValidTarget(item))
+                        if (!item.Removed && CheckDistance(item) && IsValidTarget(item) && (!OnlySameHull || item.CurrentHull == thisHull))
                         {
                             targets.AddRange(item.AllPropertyObjects);
                         }
@@ -1426,7 +1672,7 @@ namespace Barotrauma
                 {
                     foreach (Item item in Item.ItemList)
                     {
-                        if (!item.Removed && CheckDistance(item) && IsValidTarget(item))
+                        if (!item.Removed && CheckDistance(item) && IsValidTarget(item) && (!OnlySameHull || item.CurrentHull == thisHull))
                         {
                             targets.AddRange(item.AllPropertyObjects);
                         }
@@ -1585,7 +1831,14 @@ namespace Barotrauma
         {
             if (OnlyInside && itemComponent.Item.CurrentHull == null) { return false; }
             if (OnlyOutside && itemComponent.Item.CurrentHull != null) { return false; }
-            if (!TargetItemComponent.IsNullOrEmpty() && !itemComponent.Name.Equals(TargetItemComponent, StringComparison.OrdinalIgnoreCase)) { return false; }
+            if (!TargetItemComponent.IsEmpty)
+            {
+                // If the component has an instance identifier, match against that. Otherwise, fall back to the component type name.
+                bool isMatchingComponent = !itemComponent.Identifier.IsEmpty
+                    ? TargetItemComponent == itemComponent.Identifier
+                    : TargetItemComponent == itemComponent.Name;
+                if (!isMatchingComponent) { return false; }
+            }
             if (TargetIdentifiers == null) { return true; }
             if (TargetIdentifiers.Contains("itemcomponent")) { return true; }
             if (itemComponent.Item.HasTag(TargetIdentifiers)) { return true; }
@@ -1628,7 +1881,9 @@ namespace Barotrauma
 
         public bool ShouldWaitForInterval(Entity entity, float deltaTime)
         {
-            if (Interval > 0.0f && entity != null && intervalTimers != null)
+            if (entity == null || Interval <= 0.0f) { return false; }
+
+            if (intervalTimers != null)
             {
                 if (intervalTimers.ContainsKey(entity))
                 {
@@ -1642,13 +1897,21 @@ namespace Barotrauma
                     intervalTimers.Remove(toRemove);
                 }
             }
+            else if (RandomizeInitialInterval)
+            {
+                intervalTimers ??= new Dictionary<Entity, float>();
+                //use the ID of the entity as a seed to make the results deterministic between the server & clients
+                MTRandom rand = new MTRandom(entity.ID);
+                intervalTimers[entity] = (float)(rand.NextDouble() * Interval);
+                return true;
+            }
             return false;
         }
 
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target, Vector2? worldPosition = null)
         {
             if (Disabled) { return; }
-            if (this.type != type || !HasRequiredItems(entity)) { return; }
+            if (Type != type || !HasRequiredItems(entity)) { return; }
 
             if (!IsValidTarget(target)) { return; }
 
@@ -1667,7 +1930,14 @@ namespace Barotrauma
             }
 
             currentTargets.Clear();
-            currentTargets.Add(target);
+            if (target is Item item)
+            {
+                currentTargets.AddRange(item.AllPropertyObjects);
+            }
+            else
+            {
+                currentTargets.Add(target);
+            }
             if (!HasRequiredConditions(currentTargets)) { return; }
             Apply(deltaTime, entity, currentTargets, worldPosition);
         }
@@ -1676,7 +1946,7 @@ namespace Barotrauma
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
             if (Disabled) { return; }
-            if (this.type != type) { return; }
+            if (Type != type) { return; }
             if (ShouldWaitForInterval(entity, deltaTime)) { return; }
 
             currentTargets.Clear();
@@ -1686,7 +1956,19 @@ namespace Barotrauma
                 currentTargets.Add(target);
             }
 
-            if (TargetIdentifiers != null && currentTargets.Count == 0) { return; }
+            if (currentTargets.Count == 0) 
+            {
+                //effect is configured to target something with a specific identifier,
+                //if that wasn't found, let's not execute
+                if (TargetIdentifiers != null) { return; }
+                //configured to only execute outside/inside,
+                //if no target that matches the condition is found, don't execute
+               if (OnlyInside || OnlyOutside) { return; }
+
+                //it could make sense to always return if there's no targets,
+                //but there seem to be some effects where it's expected/ok - 
+                //e.g. OnBroken effects where the now-broken item is no longer a valid target but we still want something to happen
+            }
 
             bool hasRequiredItems = HasRequiredItems(entity);
             if (!hasRequiredItems || !HasRequiredConditions(currentTargets))
@@ -1728,6 +2010,23 @@ namespace Barotrauma
             return hull;
         }
 
+        /// <summary>
+        /// Returns the first non-removed limb of the character matching <see cref="targetLimbs"/>, or null if there's none.
+        /// </summary>
+        protected Limb GetFirstTargetLimb(Character character)
+        {
+            if (targetLimbs == null || character == null || character.Removed) { return null; }
+            foreach (var targetLimbType in targetLimbs)
+            {
+                Limb limb = character.AnimController.GetLimb(targetLimbType);
+                if (limb != null && !limb.Removed)
+                {
+                    return limb;
+                }
+            }
+            return null;
+        }
+
         protected Vector2 GetPosition(Entity entity, IReadOnlyList<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
             Vector2 position = worldPosition ?? (entity == null || entity.Removed ? Vector2.Zero : entity.WorldPosition);
@@ -1766,6 +2065,11 @@ namespace Barotrauma
                             position = targetLimb.WorldPosition;
                             break;
                         }
+                        else if (targets[i] is Character targetCharacter && GetFirstTargetLimb(targetCharacter) is Limb limb)
+                        {
+                            position = limb.WorldPosition;
+                            break;
+                        }
                     }
                 }
             }
@@ -1798,6 +2102,11 @@ namespace Barotrauma
             }
             if (ShouldWaitForInterval(entity, deltaTime)) { return; }
 
+            foreach (IStatusEffectAction statusEffectAction in statusEffectActions)
+            {
+                statusEffectAction.Apply(new StatusEffectParams(deltaTime, entity, targets, worldPosition));
+            }
+
             Item parentItem = entity as Item;
             PhysicsBody parentItemBody = parentItem?.body;
             Hull hull = GetHull(entity);
@@ -1826,7 +2135,33 @@ namespace Barotrauma
                     for (int j = 0; j < useItemCount; j++)
                     {
                         if (item.Removed) { continue; }
-                        item.Use(deltaTime, user: null, useTargetLimb, useTargetCharacter);
+                        Character user = getUserFromParentInventory ? item.ParentInventory?.Owner as Character : null;
+                        if (useItemComponent.IsEmpty && useDependedItemComponent.IsEmpty)
+                        {
+                            item.Use(deltaTime, user, useTargetLimb, useTargetCharacter);   
+                        }
+                        else
+                        {
+                            bool dependedItemComponentUsed = useDependedItemComponent.IsEmpty;
+                            if (!dependedItemComponentUsed)
+                            {
+                                // If the item component depends on another item component to be used, handle that dependency first
+                                foreach (var itemComponent in item.Components)
+                                {
+                                    if (itemComponent.Name != useDependedItemComponent) { continue; }
+                                    dependedItemComponentUsed = itemComponent.WasUsed;
+                                    break;
+                                }   
+                            }
+                            if (dependedItemComponentUsed)
+                            {
+                                foreach (var itemComponent in item.Components)
+                                {
+                                    if (itemComponent.Name != useItemComponent) { continue; }
+                                    item.UseItemComponent(itemComponent, deltaTime, user, useTargetLimb, useTargetCharacter);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1879,28 +2214,61 @@ namespace Barotrauma
                     if (targetCharacter != null) { RemoveCharacter(targetCharacter); }
                 }
             }
-            if (breakLimb || hideLimb)
+            if (severLimb || hideLimb)
             {
+                int severedLimbCount = 0;
                 for (int i = 0; i < targets.Count; i++)
                 {
                     var target = targets[i];
                     Limb targetLimb = target as Limb;
-                    if (targetLimb == null && target is Character character)
+                    if (targetLimb == null && targetLimbs != null && target is Character { Removed: false } targetCharacter)
                     {
-                        foreach (Limb limb in character.AnimController.Limbs)
+                        foreach (var targetLimbType in targetLimbs)
                         {
-                            if (limb.body == sourceBody)
+                            if (targetCharacter.AnimController.GetLimb(targetLimbType) is Limb limb)
                             {
                                 targetLimb = limb;
                                 break;
                             }
                         }
                     }
+                    //effect targets a character rather than limbs: handle this separately
+                    else if (targetLimb == null && targetLimbs == null && severLimb && target is Character { Removed: false } characterToSever)
+                    {
+                        foreach (Limb limb in characterToSever.AnimController.Limbs.Randomize(Rand.RandSync.Unsynced))
+                        {
+                            if (SeverLimbsCount > -1 && severedLimbCount >= SeverLimbsCount) { break; }
+                            // Checked inside the loop because severing a limb also marks the limbs further from the main limb as severed
+                            if (limb.Removed || limb.IsSevered || limb.Hidden) { continue; }
+                            bool wasSevered = characterToSever.TrySeverLimbJoints(limb,
+                                severLimbsProbability: SeverLimbsProbability,
+                                damage: -1,
+                                allowBeheading: allowBeheading,
+                                causedByDamage: false,
+                                attacker: user);
+                            if (wasSevered)
+                            {
+                                severedLimbCount++;
+                            }
+                        }
+                        if (SeverLimbsCount > -1 && severedLimbCount >= SeverLimbsCount) { break; }
+                        continue;
+                    }
                     if (targetLimb != null)
                     {
-                        if (breakLimb)
+                        if (severLimb)
                         {
-                            targetLimb.character.TrySeverLimbJoints(targetLimb, severLimbsProbability: 1, damage: -1, allowBeheading: true, ignoreSeveranceProbabilityModifier: true, attacker: user);
+                            bool wasSevered = targetLimb.character.TrySeverLimbJoints(targetLimb,
+                                severLimbsProbability: SeverLimbsProbability,
+                                damage: -1,
+                                allowBeheading: allowBeheading,
+                                causedByDamage: false,
+                                attacker: user);
+                            if (wasSevered)
+                            {
+                                severedLimbCount++;
+                                if (SeverLimbsCount > -1 && severedLimbCount >= SeverLimbsCount) { break; }
+                            }
                         }
                         if (hideLimb)
                         {
@@ -1920,10 +2288,11 @@ namespace Barotrauma
                 {
                     var target = targets[i];
                     if (target?.SerializableProperties == null) { continue; }
+                    Item targetItem = target as Item;
                     if (target is Entity targetEntity)
                     {
                         if (targetEntity.Removed) { continue; }
-                        if (targetEntity is Item targetItem && randomCondition != Vector2.Zero)
+                        if (targetItem != null && randomCondition != Vector2.Zero)
                         {
                             float newCondition = Rand.Range(randomCondition.X, randomCondition.Y);
                             targetItem.Condition = GetModifiedValue(targetItem.Condition, newCondition, deltaTime);
@@ -1934,9 +2303,31 @@ namespace Barotrauma
                         if (limb.Removed) { continue; }
                         position = limb.WorldPosition + Offset;
                     }
-                    foreach (var (propertyName, value) in PropertyEffects)
+                    foreach ((Identifier propertyName, object value) in PropertyEffects)
                     {
                         if (!target.SerializableProperties.TryGetValue(propertyName, out SerializableProperty property)) { continue; }
+                        if (!TargetItemComponent.IsEmpty && targetItem != null)
+                        {
+                            // Don't apply properties to the item that exist on the targeted component(s) —
+                            // the intent is to modify the component, not the item-level counterpart of the same property.
+                            // For example, we don't want to modify Item.Color while targeting LineDrawer.Color.
+                            // Both items and their components are (and need to be for all the existing status effects to trigger) accepted as valid targets in IsValidTarget.
+                            // Therefore, we'll handle it here.
+                            bool isPropertyFoundOnTargetedComponents = false;
+                            for (int j = 0; j < targets.Count; j++)
+                            {
+                                ISerializableEntity t = targets[j];
+                                if (t is ItemComponent ic &&
+                                    ic.Item == targetItem &&
+                                    ic.SerializableProperties != null &&
+                                    ic.SerializableProperties.ContainsKey(propertyName))
+                                {
+                                    isPropertyFoundOnTargetedComponents = true;
+                                    break;
+                                }
+                            }
+                            if (isPropertyFoundOnTargetedComponents) { continue; }
+                        }
                         ApplyToProperty(target, property, value, deltaTime);
                     }
                 }
@@ -1970,7 +2361,7 @@ namespace Barotrauma
                         {
                             if (!IsValidTargetLimb(limb)) { continue; }
                             AttackResult result = limb.character.DamageLimb(position, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: Vector2.Zero, attacker: affliction.Source, penetration: newAffliction.Penetration, allowStacking: !setValue);
-                            limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: true, attacker: affliction.Source);
+                            limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: allowBeheading, attacker: affliction.Source);
                             RegisterTreatmentResults(user, entity as Item, limb, affliction, result);
                             //only apply non-limb-specific afflictions to the first limb
                             if (!affliction.Prefab.LimbSpecific) { break; }
@@ -1981,7 +2372,7 @@ namespace Barotrauma
                         if (!IsValidTargetLimb(limb)) { continue; }
                         newAffliction = GetMultipliedAffliction(affliction, entity, limb.character, deltaTime, multiplyAfflictionsByMaxVitality);
                         AttackResult result = limb.character.DamageLimb(position, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: Vector2.Zero, attacker: affliction.Source, penetration: newAffliction.Penetration, allowStacking: !setValue);
-                        limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: true, attacker: affliction.Source);
+                        limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: allowBeheading, attacker: affliction.Source);
                         RegisterTreatmentResults(user, entity as Item, limb, affliction, result);
                     }
                 }
@@ -2002,7 +2393,7 @@ namespace Barotrauma
                     if (targetCharacter != null && !targetCharacter.Removed)
                     {
                         ActionType? actionType = null;
-                        if (entity is Item item && item.UseInHealthInterface) { actionType = type; }
+                        if (entity is Item item && item.UseInHealthInterface) { actionType = Type; }
                         float reduceAmount = amount * GetAfflictionMultiplier(entity, targetCharacter, deltaTime);
                         float prevVitality = targetCharacter.Vitality;
                         if (targetLimb != null)
@@ -2077,13 +2468,18 @@ namespace Barotrauma
 
                 TryTriggerAnimation(target, entity);
 
+                if (target is Item targetItem)
+                {
+                    addTags.ForEach(targetItem.AddTag);
+                    removeTags.ForEach(targetItem.RemoveTag);
+                }
+
                 if (!forceSayIdentifier.IsEmpty)
                 {
                     LocalizedString messageToSay = TextManager.Get(forceSayIdentifier).Fallback(forceSayIdentifier.Value);
-
-                    if (!messageToSay.IsNullOrEmpty() && target is Character targetCharacter)
+                    if (!messageToSay.IsNullOrEmpty() && target is ISpeakable speakable)
                     {
-                        targetCharacter.ForceSay(messageToSay, forceSayInRadio);
+                        speakable.ForceSay(messageToSay, forceSayInRadio, ignoreSpeechImpediments: forceSayEvenIfCantSpeak);
                     }
                 }
 
@@ -2224,7 +2620,23 @@ namespace Barotrauma
             {
                 if (spawnCharacters != null)
                 {
-                    foreach (CharacterSpawnInfo characterSpawnInfo in spawnCharacters)
+                    if (spawnCharacterRandomly)
+                    {
+                        CharacterSpawnInfo characterSpawnInfo = spawnCharacters.GetRandomUnsynced();
+                        if (characterSpawnInfo != null)
+                        {
+                            processCharacterSpawn(characterSpawnInfo);
+                        }
+                    }
+                    else
+                    {
+                        foreach (CharacterSpawnInfo characterSpawnInfo in spawnCharacters)
+                        {
+                            processCharacterSpawn(characterSpawnInfo);
+                        }
+                    }
+
+                    void processCharacterSpawn(CharacterSpawnInfo characterSpawnInfo)
                     {
                         var characters = new List<Character>();
 
@@ -2235,9 +2647,9 @@ namespace Barotrauma
                             inheritedTeam = entity switch
                             {
                                 Character c => c.TeamID,
-                                Item it => 
-                                    (it.GetRootInventoryOwner() as Character ?? it.PreviousParentInventory?.Owner as Character) is { } owner ? 
-                                        owner.TeamID : 
+                                Item it =>
+                                    (it.GetRootInventoryOwner() as Character ?? it.PreviousParentInventory?.Owner as Character) is { } owner ?
+                                        owner.TeamID :
                                         GetTeamFromSubmarine(it),
                                 MapEntity e => GetTeamFromSubmarine(e),
                                 _ => null
@@ -2258,6 +2670,11 @@ namespace Barotrauma
                             Entity.Spawner.AddCharacterToSpawnQueue(characterSpawnInfo.SpeciesName, position + Rand.Vector(characterSpawnInfo.Spread, Rand.RandSync.Unsynced) + characterSpawnInfo.Offset,
                                 onSpawn: newCharacter =>
                                 {
+                                    if (!characterSpawnInfo.ForceFriendlyWithGroup.IsEmpty)
+                                    {
+                                        newCharacter.ForceFriendlyWithGroup = characterSpawnInfo.ForceFriendlyWithGroup;
+                                    }
+
                                     if (inheritedTeam.HasValue)
                                     {
                                         newCharacter.SetOriginalTeamAndChangeTeam(inheritedTeam.Value, processImmediately: true);
@@ -2273,7 +2690,7 @@ namespace Barotrauma
                                     if (newCharacter.AIController is EnemyAIController enemyAi &&
                                         enemyAi.PetBehavior != null &&
                                         entity is Item item &&
-                                        item.ParentInventory is CharacterInventory inv)
+                                        item.PreviousParentInventory is CharacterInventory inv)
                                     {
                                         enemyAi.PetBehavior.Owner = inv.Owner as Character;
                                     }
@@ -2479,8 +2896,7 @@ namespace Barotrauma
                     if (character.Info?.Job is { } job) { item.AddTag($"job:{job.Name}"); }
 
                     if (item.GetComponent<ItemContainer>() is not ItemContainer itemContainer) { return; }
-                    List<Item> inventoryItems = new List<Item>(character.Inventory.AllItemsMod);
-                    foreach (Item inventoryItem in inventoryItems)
+                    foreach (Item inventoryItem in character.Inventory.AllItemsMod)
                     {
                         if (!itemContainer.Inventory.TryPutItem(inventoryItem, user: null, createNetworkEvent: true))
                         {
@@ -2622,7 +3038,7 @@ namespace Barotrauma
                                 List<Body> ignoredBodies = null;
                                 if (!projectile.DamageUser)
                                 {
-                                    ignoredBodies = user?.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList();
+                                    ignoredBodies = user?.AnimController.GetAllPhysicsBodies().ToList();
                                 }
                                 float damageMultiplier = 1f;
                                 if (entity is Character character && sourceEntity is Limb { attack: Attack attack })
@@ -2672,7 +3088,7 @@ namespace Barotrauma
                                 return;
                             }
                         }
-                        if (inventory != null && (inventory.CanProbablyBePut(chosenItemSpawnInfo.ItemPrefab) || chosenItemSpawnInfo.SpawnIfInventoryFull))
+                        if (inventory != null)
                         {
                             Entity.Spawner.AddItemToSpawnQueue(chosenItemSpawnInfo.ItemPrefab, inventory, spawnIfInventoryFull: chosenItemSpawnInfo.SpawnIfInventoryFull, onSpawned: item =>
                             {
@@ -2744,6 +3160,18 @@ namespace Barotrauma
             }
             void OnItemSpawned(Item newItem, ItemSpawnInfo itemSpawnInfo)
             {
+                if (user != null)
+                {
+                    // Set the user for the spawned item's status effects in case they come from, for example, a projectile fired from a player
+                    foreach (ItemComponent ic in newItem.Components)
+                    {
+                        foreach (var statusEffect in ic.GetAllStatusEffects())
+                        {
+                            statusEffect.SetUser(user);
+                        }
+                    }
+                }
+
                 if (itemSpawnInfo.Equip && newItem.ParentInventory is CharacterInventory characterInventory && characterInventory.Owner is Character character)
                 {
                     //if the item is both pickable and wearable, try to wear it instead of picking it up
@@ -2754,8 +3182,14 @@ namespace Barotrauma
                     allowedSlots.Remove(InvSlotType.Any);
                     character.Inventory.TryPutItem(newItem, null, allowedSlots);
                 }
-
-                newItem.Condition = newItem.MaxCondition * itemSpawnInfo.Condition;
+                if (itemSpawnInfo.InheritCondition && entity is Item parentItem)
+                {
+                    newItem.Condition = parentItem.Condition * itemSpawnInfo.Condition;
+                }
+                else
+                {
+                    newItem.Condition = newItem.MaxCondition * itemSpawnInfo.Condition;
+                }
                 if (itemSpawnInfo.InheritEventTags)
                 {
                     foreach (var activeEvent in GameMain.GameSession.EventManager.ActiveEvents)
@@ -2893,7 +3327,7 @@ namespace Barotrauma
                         if (targetCharacter != null && !targetCharacter.Removed)
                         {
                             ActionType? actionType = null;
-                            if (element.Entity is Item item && item.UseInHealthInterface) { actionType = element.Parent.type; }
+                            if (element.Entity is Item item && item.UseInHealthInterface) { actionType = element.Parent.Type; }
                             float reduceAmount = amount * element.Parent.GetAfflictionMultiplier(element.Entity, targetCharacter, deltaTime);
                             float prevVitality = targetCharacter.Vitality;
                             if (targetLimb != null)
@@ -3015,13 +3449,13 @@ namespace Barotrauma
                     result.Afflictions.FirstOrDefault(a => a.Prefab == limbAffliction.Prefab) is Affliction resultAffliction &&
                     (!affliction.Prefab.LimbSpecific || limb.character.CharacterHealth.GetAfflictionLimb(affliction) == limb))
                 {
-                    if (type == ActionType.OnUse || type == ActionType.OnSuccess)
+                    if (Type == ActionType.OnUse || Type == ActionType.OnSuccess)
                     {
                         limbAffliction.AppliedAsSuccessfulTreatmentTime = Timing.TotalTime;
                         if (CanGiveMedicalSkill) { limb.character.TryAdjustHealerSkill(user, affliction: resultAffliction); }
                        
                     }
-                    else if (type == ActionType.OnFailure)
+                    else if (Type == ActionType.OnFailure)
                     {
                         limbAffliction.AppliedAsFailedTreatmentTime = Timing.TotalTime;
                         if (CanGiveMedicalSkill) { limb.character.TryAdjustHealerSkill(user, affliction: resultAffliction); }                       
@@ -3037,6 +3471,14 @@ namespace Barotrauma
             CoroutineManager.StopCoroutines("statuseffect");
             DelayedEffect.DelayList.Clear();
             DurationList.Clear();
+#if CLIENT
+            foreach (StatusEffect statusEffect in ActiveLoopingSounds)
+            {
+                statusEffect.soundChannel?.FadeOutAndDispose();
+                statusEffect.soundChannel = null;
+            }
+            ActiveLoopingSounds.Clear();
+#endif
         }
 
         public void AddTag(Identifier tag)

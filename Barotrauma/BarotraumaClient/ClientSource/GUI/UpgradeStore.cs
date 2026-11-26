@@ -18,7 +18,7 @@ using PlayerBalanceElement = Barotrauma.CampaignUI.PlayerBalanceElement;
 
 namespace Barotrauma
 {
-    internal sealed class UpgradeStore
+    public sealed class UpgradeStore
     {
         public readonly struct CategoryData
         {
@@ -67,7 +67,7 @@ namespace Barotrauma
         private bool highlightWalls;
 
         private UpgradeCategory? currentUpgradeCategory;
-        private GUIButton? activeItemSwapSlideDown;
+        private Item? activeItemSwapSlideDown;
 
         private readonly Dictionary<Item, GUIComponent> itemPreviews = new Dictionary<Item, GUIComponent>();
 
@@ -90,7 +90,8 @@ namespace Barotrauma
         private enum UpgradeTab
         {
             Upgrade,
-            Repairs
+            Repairs,
+            Customize
         }
 
         private enum UpgradeStoreUserData
@@ -131,7 +132,7 @@ namespace Barotrauma
         public void RequestRefresh(bool refreshUpgrades = false)
         {
             needsRefresh = true;
-            if (refreshUpgrades) { SelectTab(UpgradeTab.Upgrade); }           
+            if (refreshUpgrades) { SelectTab(selectedUpgradeTab); }
         }
 
         private void RefreshAll()
@@ -144,21 +145,57 @@ namespace Barotrauma
                     break;
                 case UpgradeTab.Upgrade:
                     RefreshUpgradeList();
-                    foreach (var itemPreview in itemPreviews)
-                    {
-                        if (!(itemPreview.Value is GUIImage image) || itemPreview.Key == null) { continue; }
-                        if (itemPreview.Key.PendingItemSwap == null)
-                        {
-                            image.Sprite = itemPreview.Key.Prefab.UpgradePreviewSprite;
-                        }
-                        else if (itemPreview.Key.PendingItemSwap.UpgradePreviewSprite != null)
-                        {
-                            image.Sprite = itemPreview.Key.PendingItemSwap.UpgradePreviewSprite;
-                        }
-                    }
+                    RefreshItemPreviews();
+                    break;
+                case UpgradeTab.Customize:
+                    RefreshCustomizeList();
+                    RefreshItemPreviews();
                     break;
             }
             needsRefresh = false;
+            return;
+
+            void RefreshItemPreviews()
+            {
+                foreach (var itemPreview in itemPreviews)
+                {
+                    if (itemPreview.Value is not GUIImage image || itemPreview.Key == null) { continue; }
+                    if (itemPreview.Key.PendingItemSwap == null)
+                    {
+                        image.Sprite = itemPreview.Key.Prefab.UpgradePreviewSprite;
+                    }
+                    else if (itemPreview.Key.PendingItemSwap.UpgradePreviewSprite != null)
+                    {
+                        image.Sprite = itemPreview.Key.PendingItemSwap.UpgradePreviewSprite;
+                    }
+                }
+            }
+        }
+
+        private void RefreshCustomizeList()
+        {
+            if (selectedUpgradeCategoryLayout != null && activeItemSwapSlideDown != null)
+            {
+                selectedUpgradeCategoryLayout.ClearChildren();
+                SelectCustomizeItem(activeItemSwapSlideDown);
+            }
+
+            if (currentStoreLayout is { } list)
+            {
+                foreach (var component in list.Content.Children)
+                {
+                    if (component.UserData is Item item)
+                    {
+                        if (component.FindChild("itemname", recursive: true) is not GUITextBlock text)
+                        {
+                            DebugConsole.ThrowError($"Error in {nameof(RefreshCustomizeList)}: \"itemname\" not found.");
+                            continue;
+                        }
+
+                        SetSwapItemName(item, text);
+                    }
+                }
+            }
         }
 
         private void RefreshUpgradeList()
@@ -177,7 +214,7 @@ namespace Barotrauma
                 if (customizeTabOpen && selectedUpgradeCategoryLayout != null && Submarine.MainSub != null && currentUpgradeCategory != null)
                 {
                     CreateSwappableItemList(listBox, currentUpgradeCategory, Submarine.MainSub);
-                    if (activeItemSwapSlideDown?.UserData is Item prevOpenedItem)
+                    if (activeItemSwapSlideDown is Item prevOpenedItem)
                     {
                         var currentButton = listBox.FindChild(c => c.UserData as Item == prevOpenedItem, recursive: true) as GUIButton;
                         currentButton?.OnClicked(currentButton, prevOpenedItem);
@@ -204,11 +241,6 @@ namespace Barotrauma
                 {
                     // ReSharper disable once PossibleMultipleEnumeration
                     UpdateCategoryIndicators(indicators, component, data.Prefabs, data.Category, campaign, drawnSubmarine, applicableCategories);
-                }
-                var customizeButton = component.FindChild("customizebutton", true);
-                if (customizeButton != null)
-                {
-                    customizeButton.Visible = HasSwappableItems(data.Category, subItems);
                 }
             }
 
@@ -300,10 +332,11 @@ namespace Barotrauma
                     var header = new GUITextBlock(rectT(1.0f - submarineIcon.RectTransform.RelativeSize.X, 1, locationLayout), TextManager.Get("UpgradeUI.Title"), font: GUIStyle.LargeFont);
                     header.RectTransform.MaxSize = new Point((int)(header.TextSize.X + header.Padding.X + header.Padding.Z), int.MaxValue);
                     new GUITextBlock(rectT(1.0f, 1, locationLayout), TextManager.Get("UpgradeUI.AllSubmarinesInfo"), font: GUIStyle.SmallFont, wrap: true);                
-            
-                categoryButtonLayout = new GUILayoutGroup(rectT(0.4f, 0.3f, leftLayout), isHorizontal: true) { Stretch = true };
-                    GUIButton upgradeButton = new GUIButton(rectT(0.5f, 1f, categoryButtonLayout), TextManager.Get("UICategory.Upgrades"), style: "GUITabButton") { UserData = UpgradeTab.Upgrade, Selected = selectedUpgradeTab == UpgradeTab.Upgrade };
-                    GUIButton repairButton = new GUIButton(rectT(0.5f, 1f, categoryButtonLayout), TextManager.Get("UICategory.Maintenance"), style: "GUITabButton") { UserData = UpgradeTab.Repairs, Selected = selectedUpgradeTab == UpgradeTab.Repairs };
+
+                categoryButtonLayout = new GUILayoutGroup(rectT(0.75f, 0.3f, leftLayout), isHorizontal: true) { Stretch = true };
+                    GUIButton upgradeButton = new GUIButton(rectT(0.33f, 1f, categoryButtonLayout), TextManager.Get("UICategory.Upgrades"), style: "GUITabButton") { UserData = UpgradeTab.Upgrade, Selected = selectedUpgradeTab == UpgradeTab.Upgrade };
+                    GUIButton customizeButton = new GUIButton(rectT(0.33f, 1f, categoryButtonLayout), TextManager.Get("UICategory.Customize"), style: "GUITabButton") { UserData = UpgradeTab.Customize, Selected = selectedUpgradeTab == UpgradeTab.Customize };
+                    GUIButton repairButton = new GUIButton(rectT(0.33f, 1f, categoryButtonLayout), TextManager.Get("UICategory.Maintenance"), style: "GUITabButton") { UserData = UpgradeTab.Repairs, Selected = selectedUpgradeTab == UpgradeTab.Repairs };
 
             /*                                         RIGHT HEADER LAYOUT
              * |---------------------------------------------------------------------------------------------------|
@@ -326,24 +359,23 @@ namespace Barotrauma
             }
             new GUIFrame(rectT(0.5f, 0.1f, rightLayout, Anchor.BottomRight), style: "HorizontalLine") { IgnoreLayoutGroups = true };
 
-            repairButton.OnClicked = upgradeButton.OnClicked = (button, o) =>
+            repairButton.OnClicked = upgradeButton.OnClicked = customizeButton.OnClicked = (button, o) =>
             {
-                if (o is UpgradeTab upgradeTab)
+                if (o is not UpgradeTab upgradeTab) { return false;  }
+
+                if (upgradeTab != selectedUpgradeTab || currentStoreLayout == null || currentStoreLayout.Parent != storeLayout)
                 {
-                    if (upgradeTab != selectedUpgradeTab || currentStoreLayout == null || currentStoreLayout.Parent != storeLayout)
-                    {
-                        selectedUpgradeTab = upgradeTab;
-                        SelectTab(selectedUpgradeTab);
-                        storeLayout?.Recalculate();
-                    }
-
-                    repairButton.Selected = (UpgradeTab) repairButton.UserData == selectedUpgradeTab;
-                    upgradeButton.Selected = (UpgradeTab) upgradeButton.UserData == selectedUpgradeTab;
-
-                    return true;
+                    selectedUpgradeTab = upgradeTab;
+                    SelectTab(selectedUpgradeTab);
+                    storeLayout?.Recalculate();
                 }
 
-                return false;
+                foreach (GUIButton btn in (Span<GUIButton>)[repairButton, upgradeButton, customizeButton])
+                {
+                    btn.Selected = (UpgradeTab) btn.UserData == selectedUpgradeTab;
+                }
+
+                return true;
             };
 
             // submarine preview
@@ -382,8 +414,8 @@ namespace Barotrauma
 
         private void DrawItemSwapPreview(SpriteBatch spriteBatch, GUICustomComponent component)
         {
-            var selectedItem = customizeTabOpen ? 
-                activeItemSwapSlideDown?.UserData as Item ?? HoveredEntity as Item : 
+            var selectedItem = customizeTabOpen ?
+                activeItemSwapSlideDown ?? HoveredEntity as Item : 
                 HoveredEntity as Item;
             if (selectedItem?.Prefab.SwappableItem == null) { return; }
 
@@ -433,6 +465,189 @@ namespace Barotrauma
                     CreateRepairsTab();
                     break;
                 }
+                case UpgradeTab.Customize:
+                {
+                    CreateCustomizeTab();
+                    break;
+                }
+            }
+        }
+
+        private void CreateCustomizeTab()
+        {
+            if (Campaign == null || storeLayout == null || mainStoreLayout is null) { return; }
+
+            currentStoreLayout = CreateSwappableList(rectT(1.0f, 1.5f, storeLayout));
+
+            selectedUpgradeCategoryLayout = new GUIFrame(rectT(0.3f  * GUI.AspectRatioAdjustment, 1, mainStoreLayout), style: null) { CanBeFocused = false };
+
+            RefreshCustomizeList();
+
+            currentStoreLayout.OnSelected += (component, userData) =>
+            {
+                if (!component.Enabled)
+                {
+                    selectedUpgradeCategoryLayout?.ClearChildren();
+                    foreach (GUIComponent itemFrame in itemPreviews.Values)
+                    {
+                        itemFrame.OutlineColor = itemFrame.Color = previewWhite;
+                        itemFrame.Children.ForEach(c => c.Color = itemFrame.Color);
+                    }
+                    return true;
+                }
+
+                if (userData is Item item)
+                {
+                    SelectCustomizeItem(item);
+                }
+
+                return true;
+            };
+        }
+
+        private void SelectCustomizeItem(Item item)
+        {
+            if (selectedUpgradeCategoryLayout == null) { return; }
+            activeItemSwapSlideDown = item;
+
+            selectedUpgradeCategoryLayout.ClearChildren();
+            GUIFrame frame = new GUIFrame(rectT(1.0f, 0.4f, selectedUpgradeCategoryLayout))
+            {
+                UserData = item.Prefab
+            };
+            GUIFrame paddedFrame = new GUIFrame(rectT(0.93f, 0.9f, frame, Anchor.Center), style: null);
+
+            GUIListBox prefabList = new GUIListBox(rectT(1f, 1f, paddedFrame, Anchor.BottomLeft))
+            {
+                UserData = "prefablist",
+                AutoHideScrollBar = false,
+                ScrollBarVisible = true,
+            };
+
+            foreach (var (itemPreview, itemFrame) in itemPreviews)
+            {
+                itemFrame.OutlineColor = itemFrame.Color = itemPreview == item  ? GUIStyle.Orange : previewWhite;
+                itemFrame.Children.ForEach(c => c.Color = itemFrame.Color);
+            }
+
+            CreateSwappableItemSlideDown(prefabList, item);
+        }
+
+        public static GUIListBox CreateSwappableList(RectTransform rectTransform)
+        {
+            var upgradeCategoryList = new GUIListBox(rectTransform, style: null)
+            {
+                AutoHideScrollBar = false,
+                ScrollBarVisible = false,
+                HideChildrenOutsideFrame = false,
+                SmoothScroll = true,
+                FadeElements = true,
+                PadBottom = true,
+                SelectTop = true,
+                ClampScrollToElements = true,
+                Spacing = 8,
+                PlaySoundOnSelect = true
+            };
+
+            List<UpgradeCategory> categories = [];
+
+            foreach (UpgradeCategory category in UpgradeCategory.Categories.OrderBy(static c => c.Name))
+            {
+                if (HasSwappableItems(category) && category.ShowInCustomizeTab)
+                {
+                    categories.Add(category);
+                }
+            }
+
+            if (categories.None())
+            {
+                DebugConsole.ThrowError($"Error when creating {nameof(UpgradeStore)}: there are no categories to show in the Customize tab. "+
+                    $"A category must have some items in it and {nameof(UpgradeCategory.ShowInCustomizeTab)} enabled for it to show in the customize tab.");
+            }
+
+            foreach (var category in categories)
+            {
+                var entitiesOnSub = GetSubItems().Where(i => (Submarine.MainSub?.IsEntityFoundOnThisSub(i, true) ?? false) && i is { IsHidden: false, AllowSwapping: true } && i.Prefab.SwappableItem != null && category.ItemTags.Any(i.HasTag)).ToList();
+
+                foreach (Item item in entitiesOnSub)
+                {
+                    string tag = $"weaponslotformat.{item.Prefab?.SwappableItem?.SwapIdentifier.Value ?? "None"}";
+                    (string, LocalizedString)[] variables = [("[number]", (entitiesOnSub.IndexOf(item) + 1).ToString()), ("[category]", category.Name)];
+                    LocalizedString slotText = TextManager.GetWithVariables(tag, variables)
+                                                          .Fallback(TextManager.GetWithVariables("weaponslotformat", variables));
+
+                    var frameChild = new GUIFrame(rectT(1, 0.15f, upgradeCategoryList.Content), style: "UpgradeUIFrame")
+                    {
+                        UserData = item,
+                        SelectedColor = new Color(101, 135, 121, 150),
+                        GlowOnSelect = true
+                    };
+
+                    frameChild.DefaultColor = frameChild.Color;
+                    frameChild.Color = Color.Transparent;
+
+                    var weaponSwitchBg = new GUIButton(new RectTransform(new Vector2(0.65f), frameChild.RectTransform, Anchor.TopRight, scaleBasis: ScaleBasis.Smallest)
+                    { RelativeOffset = new Vector2(0.04f, 0.0f) }, style: "WeaponSwitchTab")
+                    {
+                        CanBeSelected = false,
+                        UserData = "customizebutton"
+                    };
+                    weaponSwitchBg.DefaultColor = weaponSwitchBg.Frame.DefaultColor = weaponSwitchBg.Color;
+                    var weaponSwitchImg = new GUIImage(new RectTransform(new Vector2(0.7f), weaponSwitchBg.RectTransform, Anchor.Center), "WeaponSwitchIcon", scaleToFit: true)
+                    {
+                        CanBeFocused = false
+                    };
+                    weaponSwitchImg.DefaultColor = weaponSwitchImg.Color;
+
+                    GUIFrame contentLayout = new GUIFrame(rectT(0.9f, 0.85f, frameChild, Anchor.Center));
+                    GUILayoutGroup textLayout = new GUILayoutGroup(rectT(1, 1, contentLayout), childAnchor: Anchor.TopCenter);
+                    var itemCategoryLabel = new GUITextBlock(rectT(1, 0.5f, textLayout), slotText, font: GUIStyle.SubHeadingFont);
+                    var itemNameLabel = new GUITextBlock(rectT(1, 0.5f, textLayout), item.Name)
+                    {
+                        DefaultColor = GUIStyle.Green,
+                        UserData = "itemname"
+                    };
+
+                    SetSwapItemName(item, itemNameLabel);
+
+                    itemCategoryLabel.DefaultColor = itemCategoryLabel.TextColor;
+
+                    itemCategoryLabel.Text = ToolBox.LimitString(slotText, itemCategoryLabel.Font, weaponSwitchBg.Rect.X - itemCategoryLabel.Rect.X);
+                    if (!string.Equals(itemCategoryLabel.Text.SanitizedValue, slotText.Value, StringComparison.OrdinalIgnoreCase))
+                    {
+                        itemCategoryLabel.ToolTip = slotText;
+                    }
+                }
+            }
+
+            return upgradeCategoryList;
+        }
+
+        private static void SetSwapItemName(Item item, GUITextBlock itemNameLabel)
+        {
+            if (item.PendingItemSwap is { } pending)
+            {
+                if (pending.Tags.Contains(Tags.Hardpoint))
+                {
+                    itemNameLabel.Text = TextManager.Get("weaponslotempty");
+                    itemNameLabel.DefaultColor = GUIStyle.Orange;
+                    return;
+                }
+
+                itemNameLabel.Text = pending.Name;
+                itemNameLabel.DefaultColor = GUIStyle.Orange;
+                return;
+            }
+
+            if (item.HasTag(Tags.Hardpoint))
+            {
+                itemNameLabel.Text = TextManager.Get("weaponslotempty");
+                itemNameLabel.DefaultColor = GUIStyle.TextColorDim;
+            }
+            else
+            {
+                itemNameLabel.Text = item.Name;
+                itemNameLabel.DefaultColor = GUIStyle.Green;
             }
         }
 
@@ -636,11 +851,10 @@ namespace Barotrauma
             
             void UpdateHover(float deltaTime, GUICustomComponent component)
             {
-                onHover?.Invoke(GUI.MouseOn != null && frameChild.IsParentOf(GUI.MouseOn) || GUI.MouseOn == frameChild);
+                onHover?.Invoke(GUI.MouseOn != null && GUI.IsMouseOn(frameChild));
             }
         }
 
-        //TODO: put this somewhere else
         public static GUIListBox CreateUpgradeCategoryList(RectTransform rectTransform)
         {
             var upgradeCategoryList = new GUIListBox(rectTransform, style: null)
@@ -675,7 +889,8 @@ namespace Barotrauma
                         }
                     }
                 }
-                if (!upgrades.ContainsKey(category) && HasSwappableItems(category))
+
+                if (!upgrades.ContainsKey(category) && !category.ShowInCustomizeTab)
                 {
                     upgrades.Add(category, new List<UpgradePrefab>());                    
                 }
@@ -686,6 +901,7 @@ namespace Barotrauma
                 var frameChild = new GUIFrame(rectT(1, 0.15f, upgradeCategoryList.Content), style: "UpgradeUIFrame")
                 {
                     UserData = new CategoryData(category, prefabs),
+                    SelectedColor = new Color(101, 135, 121, 150),
                     GlowOnSelect = true
                 };
 
@@ -761,9 +977,6 @@ namespace Barotrauma
                     TrySelectCategory(prefabs, categoryData.Category, sub);
                 }
 
-                var customizeCategoryButton = selectedUpgradeCategoryLayout?.FindChild("customizebutton", recursive: true) as GUIButton;
-                customizeCategoryButton?.OnClicked(customizeCategoryButton, customizeCategoryButton.UserData);
-                
                 return true;
             };
         }
@@ -771,7 +984,7 @@ namespace Barotrauma
         // This was supposed to have some logic for fancy animations to slide the previous tab out but maybe another time
         private void TrySelectCategory(List<UpgradePrefab> prefabs, UpgradeCategory category, Submarine submarine) => SelectUpgradeCategory(prefabs, category, submarine);
 
-        private bool customizeTabOpen;
+        private bool customizeTabOpen => selectedUpgradeTab is UpgradeTab.Customize;
 
         private static bool HasSwappableItems(UpgradeCategory category, List<Item>? subItems = null)
         {
@@ -783,22 +996,18 @@ namespace Barotrauma
         private static bool HasSwappableItems(UpgradeCategory category, Item item)
         {
             if (Submarine.MainSub == null) { return false; }
-            return 
-                item.Prefab.SwappableItem != null &&
-                !item.IsHidden && item.AllowSwapping &&
-                (item.Prefab.SwappableItem.CanBeBought || ItemPrefab.Prefabs.Any(ip => ip.SwappableItem?.ReplacementOnUninstall == item.Prefab.Identifier)) &&
-                Submarine.MainSub.IsEntityFoundOnThisSub(item, true) && category.ItemTags.Any(t => item.HasTag(t));
+            return item.IsSwappable &&
+                (item.Prefab.SwappableItem.IsAvailableForSwapping() || ItemPrefab.Prefabs.Any(ip => ip.SwappableItem?.ReplacementOnUninstall == item.Prefab.Identifier)) &&
+                Submarine.MainSub.IsEntityFoundOnThisSub(item, true) && category.ItemTags.Any(item.HasTag);
         }
+
         private static List<Item> GetSubItems() => Submarine.MainSub?.GetItems(true) ?? new List<Item>();
 
         private void SelectUpgradeCategory(List<UpgradePrefab> prefabs, UpgradeCategory category, Submarine submarine)
         {
             if (selectedUpgradeCategoryLayout == null) { return; }
 
-            bool hasSwappableItems = HasSwappableItems(category);
             bool hasUpgradeModules = prefabs.Count > 0;
-
-            customizeTabOpen = !hasUpgradeModules && hasSwappableItems;
 
             GUIComponent[] categoryFrames = GetFrames(category);
             foreach (GUIComponent itemFrame in itemPreviews.Values)
@@ -813,67 +1022,15 @@ namespace Barotrauma
             GUIFrame frame = new GUIFrame(rectT(1.0f, 0.4f, selectedUpgradeCategoryLayout));
             GUIFrame paddedFrame = new GUIFrame(rectT(0.93f, 0.9f, frame, Anchor.Center), style: null);
 
-            float listHeight = hasSwappableItems && hasUpgradeModules ? 0.9f : 1.0f;
-
-            GUIListBox prefabList = new GUIListBox(rectT(1.0f, listHeight, paddedFrame, Anchor.BottomLeft))
+            GUIListBox prefabList = new GUIListBox(rectT(1.0f, 1.0f, paddedFrame, Anchor.BottomLeft))
             {
                 UserData = "prefablist",
                 AutoHideScrollBar = false,
                 ScrollBarVisible = true
             };
 
-            //both swappable items and upgrade modules -> create 2 tabs
-            if (hasSwappableItems && hasUpgradeModules)
-            {
-                GUILayoutGroup buttonLayout = new GUILayoutGroup(rectT(1.0f, 0.1f, paddedFrame, anchor: Anchor.TopLeft), isHorizontal: true);
-
-                GUIButton customizeButton = new GUIButton(rectT(0.5f, 1f, buttonLayout), text: TextManager.Get("uicategory.customize"), style: "GUITabButton")
-                {
-                    UserData = "customizebutton"
-                };
-                new GUIImage(new RectTransform(new Vector2(1.0f, 0.75f), customizeButton.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.Smallest) { RelativeOffset = new Vector2(0.015f, 0.0f) }, "WeaponSwitchIcon", scaleToFit: true);
-                customizeButton.TextBlock.RectTransform.RelativeSize = new Vector2(0.7f, 1.0f);
-
-                GUIButton upgradeButton = new GUIButton(rectT(0.5f, 1f, buttonLayout), text: TextManager.Get("uicategory.upgrades"), style: "GUITabButton")
-                {
-                    Selected = true
-                };
-
-                GUITextBlock.AutoScaleAndNormalize(upgradeButton.TextBlock, customizeButton.TextBlock);
-
-                upgradeButton.OnClicked = delegate
-                {
-                    customizeTabOpen = false;
-                    customizeButton.Selected = false;
-                    upgradeButton.Selected = true;
-                    CreateUpgradePrefabList(prefabList, category, prefabs, submarine);
-                    GUIComponent[] categoryFrames = GetFrames(category);
-                    foreach (GUIComponent itemFrame in itemPreviews.Values)
-                    {
-                        itemFrame.OutlineColor = itemFrame.Color = categoryFrames.Contains(itemFrame) ? GUIStyle.Orange : previewWhite;
-                        itemFrame.Children.ForEach(c => c.Color = itemFrame.Color);
-                    }
-                    return true;
-                };
-
-                customizeButton.OnClicked = delegate
-                {
-                    customizeTabOpen = true;
-                    customizeButton.Selected = true;
-                    upgradeButton.Selected = false;
-                    CreateSwappableItemList(prefabList, category, submarine);
-                    return true;
-                };
-            }
             //only either upgrade modules or swappable items -> just create the list
-            else if (hasUpgradeModules)
-            {
-                CreateUpgradePrefabList(prefabList, category, prefabs, submarine);
-            }
-            else if (hasSwappableItems)
-            {
-                CreateSwappableItemList(prefabList, category, submarine);
-            }
+            CreateUpgradePrefabList(prefabList, category, prefabs, submarine);
         }
 
         private void CreateUpgradePrefabList(GUIListBox parent, UpgradeCategory category, List<UpgradePrefab> prefabs, Submarine submarine)
@@ -900,19 +1057,15 @@ namespace Barotrauma
 
             foreach (Item item in entitiesOnSub)
             {
-                CreateSwappableItemSlideDown(parent, item, entitiesOnSub, submarine);
+                CreateSwappableItemSlideDown(parent, item);
             }
         }
 
-        private void CreateSwappableItemSlideDown(GUIListBox parent, Item item, List<Item> swappableEntities, Submarine submarine)
+        private void CreateSwappableItemSlideDown(GUIListBox parent, Item item)
         {
-            if (Campaign == null || submarine == null) { return; }
+            if (Campaign == null) { return; }
 
-            IEnumerable<ItemPrefab> availableReplacements = MapEntityPrefab.List.Where(p =>
-                p is ItemPrefab itemPrefab &&
-                itemPrefab.SwappableItem != null &&
-                itemPrefab.SwappableItem.CanBeBought &&
-                itemPrefab.SwappableItem.SwapIdentifier.Equals(item.Prefab.SwappableItem.SwapIdentifier, StringComparison.OrdinalIgnoreCase)).Cast<ItemPrefab>();
+            IEnumerable<ItemPrefab> availableReplacements = ItemPrefab.Prefabs.Where(itemPrefab => item.CanBeSwappedTo(itemPrefab));
 
             var linkedItems = UpgradeManager.GetLinkedItemsToSwap(item) ?? new List<Item>() { item };
             //create the swap entry only for one of the items (the one with the smallest ID)
@@ -942,79 +1095,45 @@ namespace Barotrauma
                 nameWithQuantity = name;
             }
 
-            bool isOpen = false;
-            GUIButton toggleButton = new GUIButton(rectT(1f, 0.1f, parent.Content), text: string.Empty, style: "SlideDown")
+            const bool isOpen = true;
+
+            List<GUIFrame> frames = [];
+            bool canUninstall = HasPermission && (item.PendingItemSwap != null || !(currentOrPending.SwappableItem?.ReplacementOnUninstall.IsEmpty ?? true));
+
+            bool isUninstallPending = item.Prefab.SwappableItem != null && item.PendingItemSwap?.Identifier == item.Prefab.SwappableItem.ReplacementOnUninstall;
+            if (isUninstallPending) { canUninstall = false; }
+
+            frames.Add(CreateUpgradeEntry(rectT(1f, 0.35f, parent.Content), currentOrPending.UpgradePreviewSprite, currentOrPending.ContentPackage,
+                                          item.PendingItemSwap != null ? TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", name) : TextManager.GetWithVariable("upgrades.installeditem", "[itemname]", nameWithQuantity),
+                                          currentOrPending.Description,
+                                          0, item.Prefab, addBuyButton: canUninstall, addProgressBar: false, buttonStyle: "WeaponUninstallButton").Frame);
+
+            if (canUninstall && frames.Last().FindChild(c => c is GUIButton, recursive: true) is GUIButton refundButton)
             {
-                UserData = item
-            };
-            GUILayoutGroup buttonLayout = new GUILayoutGroup(rectT(1f, 1f, toggleButton.Frame), isHorizontal: true);
-
-            LocalizedString slotText = "";
-            if (linkedItems.Count > 1)
-            {
-                slotText = TextManager.GetWithVariable("weaponslot", "[number]", string.Join(", ", linkedItems.Select(it => (swappableEntities.IndexOf(it) + 1).ToString())));
-            }
-            else
-            {
-                slotText = TextManager.GetWithVariable("weaponslot", "[number]", (swappableEntities.IndexOf(item) + 1).ToString());
-            }
-
-            new GUITextBlock(rectT(0.3f, 1f, buttonLayout), text: slotText, font: GUIStyle.SubHeadingFont);
-            GUILayoutGroup group = new GUILayoutGroup(rectT(0.7f, 1f, buttonLayout), isHorizontal: true) { Stretch = true };
-
-            var title = item.PendingItemSwap != null ? TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", name) : nameWithQuantity;
-            GUITextBlock text = new GUITextBlock(rectT(0.7f, 1f, group), text: RichString.Rich(title), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Right)
-            {
-                TextColor = GUIStyle.Orange
-            };
-            GUIImage arrowImage = new GUIImage(rectT(0.5f, 1f, group, scaleBasis: ScaleBasis.BothHeight), style: "SlideDownArrow", scaleToFit: true);
-
-            group.Recalculate();
-            if (text.TextSize.X > text.Rect.Width)
-            {
-                text.ToolTip = text.Text;
-                text.Text = ToolBox.LimitString(text.Text, text.Font, text.Rect.Width);
-            }
-
-            List<GUIFrame> frames = new List<GUIFrame>();
-            if (currentOrPending != null)
-            {
-                bool canUninstall = HasPermission && (item.PendingItemSwap != null || !(currentOrPending.SwappableItem?.ReplacementOnUninstall.IsEmpty ?? true));
-
-                bool isUninstallPending = item.Prefab.SwappableItem != null && item.PendingItemSwap?.Identifier == item.Prefab.SwappableItem.ReplacementOnUninstall;
-                if (isUninstallPending) { canUninstall = false; }
-
-                frames.Add(CreateUpgradeEntry(rectT(1f, 0.35f, parent.Content), currentOrPending.UpgradePreviewSprite,
-                                item.PendingItemSwap != null ? TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", name) : TextManager.GetWithVariable("upgrades.installeditem", "[itemname]", nameWithQuantity),
-                                currentOrPending.Description,
-                                0, null, addBuyButton: canUninstall, addProgressBar: false, buttonStyle: "WeaponUninstallButton").Frame);
-
-                if (canUninstall && frames.Last().FindChild(c => c is GUIButton, recursive: true) is GUIButton refundButton)
+                refundButton.Enabled = true;
+                refundButton.OnClicked += (button, o) =>
                 {
-                    refundButton.Enabled = true;
-                    refundButton.OnClicked += (button, o) =>
+                    string textTag = item.PendingItemSwap != null ? "upgrades.cancelitemswappromptbody" : "upgrades.itemuninstallpromptbody";
+                    if (isUninstallPending) { textTag = "upgrades.cancelitemuninstallpromptbody"; }
+                    LocalizedString promptBody = TextManager.GetWithVariable(textTag, "[itemtouninstall]", isUninstallPending ? item.Name : currentOrPending.Name);
+                    currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("upgrades.refundprompttitle"), promptBody, () =>
                     {
-                        string textTag = item.PendingItemSwap != null ? "upgrades.cancelitemswappromptbody" : "upgrades.itemuninstallpromptbody";
-                        if (isUninstallPending) { textTag = "upgrades.cancelitemuninstallpromptbody"; }
-                        LocalizedString promptBody = TextManager.GetWithVariable(textTag, "[itemtouninstall]", isUninstallPending ? item.Name : currentOrPending.Name);
-                        currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("upgrades.refundprompttitle"), promptBody, () =>
+                        if (GameMain.NetworkMember != null)
                         {
-                            if (GameMain.NetworkMember != null)
-                            {
-                                WaitForServerUpdate = true;
-                            }
-                            Campaign?.UpgradeManager.CancelItemSwap(item);
-                            GameMain.Client?.SendCampaignState();
-                            return true;
-                        });
+                            WaitForServerUpdate = true;
+                        }
+                        UpgradeManager.DebugLog($"Cancelling item swap on \"{item.Prefab.Name}\"");
+                        Campaign?.UpgradeManager.CancelItemSwap(item);
+                        GameMain.Client?.SendCampaignState();
                         return true;
-                    };
-                }
-
-                var dividerContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), parent.Content.RectTransform), style: null);
-                new GUIFrame(new RectTransform(new Vector2(0.8f, 0.5f), dividerContainer.RectTransform, Anchor.Center), style: "HorizontalLine");
-                frames.Add(dividerContainer);
+                    });
+                    return true;
+                };
             }
+
+            var dividerContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), parent.Content.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(0.8f, 0.5f), dividerContainer.RectTransform, Anchor.Center), style: "HorizontalLine");
+            frames.Add(dividerContainer);
 
             foreach (ItemPrefab replacement in availableReplacements)
             {
@@ -1024,7 +1143,8 @@ namespace Barotrauma
 
                 int price = isPurchased || replacement == item.Prefab ? 0 : replacement.SwappableItem.GetPrice(Campaign.Map?.CurrentLocation) * linkedItems.Count();
 
-                frames.Add(CreateUpgradeEntry(rectT(1f, 0.35f, parent.Content), replacement.UpgradePreviewSprite, replacement.Name, replacement.Description,
+                frames.Add(CreateUpgradeEntry(rectT(1f, 0.35f, parent.Content), replacement.UpgradePreviewSprite, replacement.ContentPackage,
+                    replacement.Name, replacement.Description,
                     price, replacement,
                     addBuyButton: true,
                     addProgressBar: false,
@@ -1040,20 +1160,14 @@ namespace Barotrauma
                         LocalizedString promptBody = TextManager.GetWithVariables(isPurchased ? "upgrades.itemswappromptbody" : "upgrades.purchaseitemswappromptbody",
                             ("[itemtoinstall]", replacement.Name),
                             ("[amount]", (replacement.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation) * linkedItems.Count()).ToString()));
-                        currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("Upgrades.PurchasePromptTitle"), promptBody, () =>
+                        currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get(price > 0 ? "Upgrades.PurchasePromptTitle" : "confirm"), promptBody, () =>
                         {
                             if (GameMain.NetworkMember != null)
                             {
                                 WaitForServerUpdate = true;
                             }
-                            if (item.Prefab == replacement && item.PendingItemSwap != null)
-                            {
-                                Campaign?.UpgradeManager.CancelItemSwap(item);
-                            }
-                            else
-                            {
-                                Campaign?.UpgradeManager.PurchaseItemSwap(item, replacement);
-                            }
+                            UpgradeManager.DebugLog($"Swapping \"{item.Prefab.Name}\" with \"{replacement.Name}\"");
+                            Campaign?.UpgradeManager.PurchaseItemSwap(item, replacement, isNetworkMessage: true);
                             GameMain.Client?.SendCampaignState();
                             return true;
                         });
@@ -1066,57 +1180,6 @@ namespace Barotrauma
                     buyButton.Enabled = false;
                 }
             }
-
-            foreach (GUIFrame frame in frames)
-            {
-                frame.Visible = false;
-            }
-
-            toggleButton.OnClicked = delegate
-            {
-                if (Campaign == null) { return false; }
-                isOpen = !isOpen;
-                toggleButton.Selected = !toggleButton.Selected;
-                foreach (GUIFrame frame in frames)
-                {
-                    frame.Visible = toggleButton.Selected;
-                }
-                if (toggleButton.Selected)
-                {
-                    var linkedItems = UpgradeManager.GetLinkedItemsToSwap(item);
-                    foreach (var itemPreview in itemPreviews)
-                    {
-                        itemPreview.Value.OutlineColor = itemPreview.Value.Color = linkedItems.Contains(itemPreview.Key) ? GUIStyle.Orange : previewWhite;
-                    }
-                    foreach (GUIComponent otherComponent in toggleButton.Parent.Children)
-                    {
-                        if (otherComponent == toggleButton || frames.Contains(otherComponent)) { continue; }
-                        if (otherComponent is GUIButton otherButton)
-                        {
-                            var otherArrowImage = otherComponent.FindChild(c => c is GUIImage, recursive: true);
-                            otherArrowImage.SpriteEffects = SpriteEffects.None;
-                            otherButton.Selected = false;
-                        }
-                        else
-                        {
-                            otherComponent.Visible = false;
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (var itemPreview in itemPreviews)
-                    {
-                        if (currentStoreLayout?.SelectedData is CategoryData categoryData && !categoryData.Category.ItemTags.Any(t => itemPreview.Key.HasTag(t))) { continue; }
-                        itemPreview.Value.OutlineColor = itemPreview.Value.Color = GUIStyle.Orange;
-                    }
-                }
-                activeItemSwapSlideDown = toggleButton.Selected ? toggleButton : null;
-                arrowImage.SpriteEffects = toggleButton.Selected ? SpriteEffects.FlipVertically : SpriteEffects.None;
-                parent.RecalculateChildren();
-                parent.UpdateScrollBarSize();
-                return true;
-            };
         }
 
         public readonly record struct BuyButtonFrame(GUILayoutGroup Layout, GUIListBox MaterialCostList, GUIButton BuyButton, GUITextBlock PriceText);
@@ -1132,10 +1195,10 @@ namespace Barotrauma
         public static UpgradeFrame CreateUpgradeFrame(UpgradePrefab prefab, UpgradeCategory category, CampaignMode campaign, RectTransform rectTransform, bool addBuyButton = true)
         {
             int price = prefab.Price.GetBuyPrice(prefab, campaign.UpgradeManager.GetUpgradeLevel(prefab, category), campaign.Map?.CurrentLocation, characterList);
-            return CreateUpgradeEntry(rectTransform, prefab.Sprite, prefab.Name, prefab.Description, price, new CategoryData(category, prefab), addBuyButton, upgradePrefab: prefab, currentLevel: campaign.UpgradeManager.GetUpgradeLevel(prefab, category));
+            return CreateUpgradeEntry(rectTransform, prefab.Sprite, prefab.ContentPackage, prefab.Name, prefab.Description, price, new CategoryData(category, prefab), addBuyButton, upgradePrefab: prefab, currentLevel: campaign.UpgradeManager.GetUpgradeLevel(prefab, category));
         }
 
-        public static UpgradeFrame CreateUpgradeEntry(RectTransform parent, Sprite sprite, LocalizedString title, LocalizedString body, int price, object? userData, bool addBuyButton = true, bool addProgressBar = true, string buttonStyle = "UpgradeBuyButton", UpgradePrefab? upgradePrefab = null, int currentLevel = 0)
+        public static UpgradeFrame CreateUpgradeEntry(RectTransform parent, Sprite sprite, ContentPackage? contentPackage, LocalizedString title, LocalizedString body, int price, object? userData, bool addBuyButton = true, bool addProgressBar = true, string buttonStyle = "UpgradeBuyButton", UpgradePrefab? upgradePrefab = null, int currentLevel = 0)
         {
             float progressBarHeight = 0.25f;
 
@@ -1164,6 +1227,9 @@ namespace Barotrauma
                                 var description = new GUITextBlock(rectT(1, 1, descriptionLayout), body, font: GUIStyle.SmallFont, wrap: true, textAlignment: Alignment.TopLeft) { Padding = Vector4.Zero };
                                 GUILayoutGroup? progressLayout = null;
                     GUILayoutGroup? buyButtonLayout = null;
+
+            name.TextColor =
+                contentPackage == ContentPackageManager.VanillaCorePackage || contentPackage == null ? GUIStyle.TextColorNormal : contentPackage.GetAccentColor();
 
             Option<BuyButtonFrame> buyButtonOption = Option<BuyButtonFrame>.None();
             Option<ProgressBarFrame> progressBarOption = Option<ProgressBarFrame>.None();
@@ -1328,15 +1394,20 @@ namespace Barotrauma
             const int maxUpgrades = 4;
 
             Item? item = entity as Item;
-            itemName.Text = item?.Prefab.Name ?? TextManager.Get("upgradecategory.walls");
+            //item names are colorized individually, because the current and pending item may come from different content packages
+            LocalizedString itemNameText = item != null ? GetColorizedItemName(item.Prefab) : TextManager.Get("upgradecategory.walls");
             if (slotIndex > -1)
             {
-                itemName.Text = TextManager.GetWithVariables("weaponslotwithname", ("[number]", slotIndex.ToString()), ("[weaponname]", itemName.Text));
+                itemNameText = TextManager.GetWithVariables("weaponslotwithname", ("[number]", slotIndex.ToString()), ("[weaponname]", itemNameText));
             }
             if (item?.PendingItemSwap != null)
             {
-                itemName.Text = RichString.Rich(itemName.Text + "\n" + TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", item.PendingItemSwap.Name));
+                itemNameText += "\n" + TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", GetColorizedItemName(item.PendingItemSwap));
             }
+            itemName.Text = RichString.Rich(itemNameText);
+            itemName.TextColor =
+                item != null || entity.Prefab.ContentPackage == ContentPackageManager.VanillaCorePackage ? GUIStyle.TextColorNormal : entity.ContentPackage.GetAccentColor();
+            ItemInfoFrame.RectTransform.MinSize = new Point(Math.Max((int)itemName.TextSize.X + GUI.IntScale(30), 250), 150);
             upgradeList.Content.ClearChildren();
             for (var i = 0; i < upgrades.Count && i < maxUpgrades; i++)
             {
@@ -1386,6 +1457,11 @@ namespace Barotrauma
             layout.Recalculate();
 
             static LocalizedString CreateListEntry(LocalizedString name, int level) => TextManager.GetWithVariables("upgradeuitooltip.upgradelistelement", ("[upgradename]", name), ("[level]", $"{level}"));
+
+            static LocalizedString GetColorizedItemName(ItemPrefab prefab) =>
+                prefab.ContentPackage == ContentPackageManager.VanillaCorePackage ?
+                    prefab.Name :
+                    $"‖color:{ContentPackage.GetAccentColor(prefab.ContentPackage).ToStringHex()}‖{prefab.Name}‖end‖";
         }
 
         public static IEnumerable<UpgradeCategory> GetApplicableCategories(Submarine drawnSubmarine)
@@ -1455,22 +1531,13 @@ namespace Barotrauma
                 {
                     if (HoveredEntity != item) { CreateItemTooltip(item); }
                     HoveredEntity = item;
-                    if (PlayerInput.PrimaryMouseButtonClicked() && selectedUpgradeTab == UpgradeTab.Upgrade && currentStoreLayout != null)
+                    if (PlayerInput.PrimaryMouseButtonClicked() && selectedUpgradeTab is UpgradeTab.Upgrade or UpgradeTab.Customize && currentStoreLayout != null)
                     {
                         if (customizeTabOpen)
                         {
                             if (selectedUpgradeCategoryLayout != null)
                             {
-                                var linkedItems = HoveredEntity is Item hoveredItem ? UpgradeManager.GetLinkedItemsToSwap(hoveredItem) : new List<Item>();
-                                if (selectedUpgradeCategoryLayout.FindChild(c => c.UserData is Item item && (item == HoveredEntity || linkedItems.Contains(item)), recursive: true) is GUIButton itemElement)
-                                {
-                                    if (!itemElement.Selected) { itemElement.OnClicked(itemElement, itemElement.UserData); }
-                                    (itemElement.Parent?.Parent?.Parent as GUIListBox)?.ScrollToElement(itemElement);
-                                }
-                                else
-                                {
-                                    ScrollToCategory(data => data.Category.CanBeApplied(item, null));
-                                }
+                                ScrollToCustomizeElement(item);
                             }
                         }
                         else
@@ -1739,75 +1806,76 @@ namespace Barotrauma
                 }
                 else
                 {
-                    CreateMaterialCosts(itemList, prefab, currentLevel + 1);
+                    CreateMaterialCostsElement(itemList, prefab.ResourceCosts, currentLevel + 1);
                 }
             }
+        }
 
-            static void CreateMaterialCosts(GUIListBox list, UpgradePrefab upgradePrefab, int targetLevel)
+        public static void CreateMaterialCostsElement(GUIListBox list, IEnumerable<UpgradeResourceCost> resourceCosts, int? targetLevel = null, bool clearList = true)
+        {
+            if (clearList) { list.Content.ClearChildren(); }
+            var allItems = CargoManager.FindAllItemsOnPlayerAndAllowedSubs(Character.Controlled);
+
+            var resources = UpgradeResourceCost.GetApplicableResources(resourceCosts, targetLevel);
+
+            foreach (ApplicableResourceCollection collection in resources)
             {
-                list.Content.ClearChildren();
-                var allItems = CargoManager.FindAllItemsOnPlayerAndSub(Character.Controlled);
+                list.Visible = true;
 
-                var resources = upgradePrefab.GetApplicableResources(targetLevel);
+                int length = collection.MatchingItems.Length;
 
-                foreach (ApplicableResourceCollection collection in resources)
+                if (length is 0) { continue; }
+
+                ItemPrefab defaultItemPrefab = collection.MatchingItems.First();
+
+                GUILayoutGroup wrapperLayout = new GUILayoutGroup(rectT(0.25f, 1f, list.Content));
+
+                GUIFrame itemFrame = new GUIFrame(rectT(1f, 1f, wrapperLayout), style: null)
                 {
-                    list.Visible = true;
+                    ToolTip = defaultItemPrefab.Name
+                };
 
-                    int length = collection.MatchingItems.Length;
+                bool hasItems = collection.Cost.Amount <= allItems.Count(collection.Cost.MatchesItem);
 
-                    if (length is 0) { continue; }
+                Sprite? icon = defaultItemPrefab.InventoryIcon ?? defaultItemPrefab.Sprite;
+                Color iconColor = defaultItemPrefab.InventoryIcon is null ? defaultItemPrefab.SpriteColor : defaultItemPrefab.InventoryIconColor;
 
-                    ItemPrefab defaultItemPrefab = collection.MatchingItems.First();
+                GUIImage itemIcon = new GUIImage(new RectTransform(Vector2.One, itemFrame.RectTransform, scaleBasis: ScaleBasis.Smallest, anchor: Anchor.Center), sprite: icon, scaleToFit: true)
+                {
+                    Color = hasItems ? iconColor : iconColor * 0.9f,
+                    CanBeFocused = false
+                };
 
-                    GUILayoutGroup wrapperLayout = new GUILayoutGroup(rectT(0.25f, 1f, list.Content));
+                // item count text
+                new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.5f), itemIcon.RectTransform, anchor: Anchor.BottomRight), $"{collection.Count}", font: GUIStyle.Font, textAlignment: Alignment.BottomRight)
+                {
+                    Shadow = true,
+                    CanBeFocused = false,
+                    Padding = Vector4.Zero,
+                    TextColor = hasItems ? GUIStyle.TextColorBright : GUIStyle.Red,
+                    UserData = "itemcounttext"
+                };
 
-                    GUIFrame itemFrame = new GUIFrame(rectT(1f, 1f, wrapperLayout), style: null)
-                    {
-                        ToolTip = defaultItemPrefab.Name
-                    };
+                if (length is 1) { continue; }
 
-                    bool hasItems = collection.Cost.Amount <= allItems.Count(collection.Cost.MatchesItem);
+                // we have more than 1 item, show a "slideshow" of the items
 
-                    Sprite icon = defaultItemPrefab.InventoryIcon ?? defaultItemPrefab.Sprite;
-                    Color iconColor = defaultItemPrefab.InventoryIcon is null ? defaultItemPrefab.SpriteColor : defaultItemPrefab.InventoryIconColor;
+                float index = 0f;
+                GUICustomComponent customComponent = new GUICustomComponent(rectT(1f, 1f, itemFrame), null, (deltaTime, component) =>
+                {
+                    index += deltaTime / 3f;
+                    if (index > length) { index = 0; }
 
-                    GUIImage itemIcon = new GUIImage(new RectTransform(Vector2.One, itemFrame.RectTransform, scaleBasis: ScaleBasis.Smallest, anchor: Anchor.Center), sprite: icon, scaleToFit: true)
-                    {
-                        Color = hasItems ? iconColor : iconColor * 0.9f,
-                        CanBeFocused = false
-                    };
-
-                    // item count text
-                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.5f), itemIcon.RectTransform, anchor: Anchor.BottomRight), $"{collection.Count}", font: GUIStyle.Font, textAlignment: Alignment.BottomRight)
-                    {
-                        Shadow = true,
-                        CanBeFocused = false,
-                        Padding = Vector4.Zero,
-                        TextColor = hasItems ? Color.White : GUIStyle.Red,
-                    };
-
-                    if (length is 1) { continue; }
-
-                    // we have more than 1 item, show a "slideshow" of the items
-
-                    float index = 0f;
-                    GUICustomComponent customComponent = new GUICustomComponent(rectT(1f, 1f, itemFrame), null, (deltaTime, component) =>
-                    {
-                        index += deltaTime / 3f;
-                        if (index > length) { index = 0; }
-
-                        ItemPrefab currentPrefab = collection.MatchingItems[(int)MathF.Floor(index)];
-                        Sprite icon = currentPrefab.InventoryIcon ?? currentPrefab.Sprite;
-                        Color iconColor = currentPrefab.InventoryIcon is null ? currentPrefab.SpriteColor : currentPrefab.InventoryIconColor;
-                        itemIcon.Sprite = icon;
-                        itemIcon.Color = hasItems ? iconColor : iconColor * 0.9f;
-                        itemFrame.ToolTip = currentPrefab.Name;
-                    })
-                    {
-                        CanBeFocused = false
-                    };
-                }
+                    ItemPrefab currentPrefab = collection.MatchingItems[(int)MathF.Floor(index)];
+                    Sprite? icon = currentPrefab.InventoryIcon ?? currentPrefab.Sprite;
+                    Color iconColor = currentPrefab.InventoryIcon is null ? currentPrefab.SpriteColor : currentPrefab.InventoryIconColor;
+                    itemIcon.Sprite = icon;
+                    itemIcon.Color = hasItems ? iconColor : iconColor * 0.9f;
+                    itemFrame.ToolTip = currentPrefab.Name;
+                })
+                {
+                    CanBeFocused = false
+                };
             }
         }
 
@@ -1863,12 +1931,6 @@ namespace Barotrauma
                     GUIComponentStyle dimStyle = styles["upgradeindicatordim".ToIdentifier()];
                     GUIComponentStyle offStyle = styles["upgradeindicatoroff".ToIdentifier()];
 
-                    if (maxLevel == 0)
-                    {
-                        SetOff();
-                        continue;
-                    }
-
                     if (campaign.UpgradeManager.GetUpgradeLevel(prefab, category) >= maxLevel)
                     {
                         // we check this to avoid flickering from re-applying the same style
@@ -1917,6 +1979,20 @@ namespace Barotrauma
             if (mostAppropriateChild != null)
             {
                 currentStoreLayout.ScrollToElement(mostAppropriateChild, playSelectSound);
+            }
+        }
+
+        private void ScrollToCustomizeElement(Item item)
+        {
+            if (currentStoreLayout == null) { return; }
+
+            foreach (GUIComponent child in currentStoreLayout.Content.Children)
+            {
+                if (child.UserData is Item it && it == item)
+                {
+                    currentStoreLayout.ScrollToElement(child);
+                    break;
+                }
             }
         }
 

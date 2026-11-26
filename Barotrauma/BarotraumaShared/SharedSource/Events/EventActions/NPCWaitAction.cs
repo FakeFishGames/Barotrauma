@@ -18,12 +18,11 @@ namespace Barotrauma
         [Serialize(true, IsPropertySaveable.Yes, description: "The event actions reset when a GoTo action makes the event jump to a different point. Should the NPC stop waiting when the event resets?")]
         public bool AbandonOnReset { get; set; }
 
-        [Serialize(AIObjectiveManager.MaxObjectivePriority, IsPropertySaveable.Yes, description: "AI priority for the action. Uses 100 by default, which is the absolute maximum for any objectives, " +
-                                                                                                 "meaning nothing can be prioritized over it, including the emergency objectives, such as find safety and combat." +
+        [Serialize(AIObjectiveManager.EmergencyObjectivePriority, IsPropertySaveable.Yes, description: "AI priority for the action. Uses 90 by default, which is the priority of the emergency objectives, " +
+                                                                                                 "meaning the character can still react to emergencies, such as find safety and combat, while waiting." +
+                                                                                                 "Setting the priority to 100 (the absolute maximum for any objectives) would mean nothing can be prioritized over it, including the emergency objectives." +
                                                                                                  "Setting the priority to 70 would function like a regular order, but with the highest priority." +
-                                                                                                 "A priority of 60 would make the objective work like a lowest priority order." +
-                                                                                                 "So, if we'll want the character to wait, but still be able to find safety, defend themselves when attacked, or flee from dangers," +
-                                                                                                 "it's better to use e.g. 70 instead of 100.")]
+                                                                                                 "A priority of 60 would make the objective work like a lowest priority order.")]
         public float Priority
         {
             get => _priority;
@@ -77,7 +76,7 @@ namespace Barotrauma
             return isFinished;
         }
 
-        public override void Reset()
+        public override void Reset(bool shouldEndConversations = true)
         {
             if (affectedNpcs != null && AbandonOnReset)
             {

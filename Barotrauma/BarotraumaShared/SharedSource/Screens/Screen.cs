@@ -1,6 +1,6 @@
 ﻿namespace Barotrauma
 {
-    abstract partial class Screen
+    public abstract partial class Screen
     {
         public static Screen Selected { get; private set; }
 
@@ -34,6 +34,8 @@
                 if (this == GameMain.MainMenuScreen || this == GameMain.NetLobbyScreen)
                 {
                     GUI.DisableSavingIndicatorDelayed();
+                    // Re-enable HUD in case something disabled the HUD mid-round and the round was quit before it got re-enabled
+                    GUI.DisableHUD = false;
                 }
                 GameMain.ResetIMEWorkaround();
 #endif

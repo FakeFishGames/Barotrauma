@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    struct ContextMenuOption
+    public struct ContextMenuOption
     {
         public LocalizedString Label;
         public Action OnSelected;
@@ -39,7 +39,7 @@ namespace Barotrauma
         }
     }
 
-    internal class GUIContextMenu : GUIComponent
+    public class GUIContextMenu : GUIComponent
     {
         public static GUIContextMenu? CurrentContextMenu;
 
@@ -119,7 +119,7 @@ namespace Barotrauma
 
             foreach (var (option, size) in optionsAndSizes)
             {
-                GUITextBlock optionElement = new GUITextBlock(new RectTransform(size.ToPoint(), optionList.Content.RectTransform), option.Label, font: font)
+                GUITextBlock optionElement = new GUITextBlock(new RectTransform(size.ToPoint(), optionList.Content.RectTransform) { MaxSize = new Point(int.MaxValue, (int)size.Y) }, option.Label, font: font)
                 {
                     UserData = option,
                     Enabled = option.IsEnabled

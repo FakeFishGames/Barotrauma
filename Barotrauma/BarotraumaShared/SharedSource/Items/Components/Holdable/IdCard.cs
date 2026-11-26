@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 
 namespace Barotrauma.Items.Components
 {
-    partial class IdCard : Pickable
+    public partial class IdCard : Pickable
     {
         [Serialize(CharacterTeamType.None, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public CharacterTeamType TeamID
@@ -14,6 +14,18 @@ namespace Barotrauma.Items.Components
 
         [Serialize(0, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public int SubmarineSpecificID
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// If true, a non-zero <see cref="SubmarineSpecificID"/> prevents the card from working in other subs (the default behavior).
+        /// If false, the SubmarineSpecificID grants access to the specific sub (see <see cref="Submarine.RequireSubmarineSpecificIdCards"/>),
+        /// and the card otherwise works like a normal id card.
+        /// </summary>
+        [Serialize(true, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public bool RestrictToSpecificSubmarine
         {
             get;
             set;

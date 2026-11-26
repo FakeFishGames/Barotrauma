@@ -1,0 +1,17 @@
+﻿<Project>
+    <!--
+    Build DLC projects after the main project has been built.
+    This is required because the DLC projects are a dependency of the main project
+    so we cannot add them as a project reference without creating a circular dependency.
+
+    An environment variable BarotraumaDLCBuild is used when building the DLC projects to prevent infinite recursion.
+    -->
+    <Target Name="BuildDLC" AfterTargets="CoreBuild" Condition="'$(BarotraumaDLCBuild)' != '1'">
+        <PropertyGroup>
+          <BaroProjectPlatform>$(ProjectName.Replace('Windows', '').Replace('Mac', '').Replace('Linux', ''))</BaroProjectPlatform>
+          <DLCProjectPath>../../DLC/Home &amp; Harbor/$(BaroProjectPlatform)Source/DLC$(ProjectName).csproj</DLCProjectPath>
+        </PropertyGroup>
+        <Message Text="Building DLC$(ProjectName) on $(BaroProjectPlatform)" Importance="high"/>
+        <Exec Command="dotnet build &quot;$(DLCProjectPath)&quot; -c $(Configuration) -p:BarotraumaDLCBuild=1 -p:Platform=$(Platform) --no-self-contained --nologo" ContinueOnError="true"/>
+    </Target>
+</Project>

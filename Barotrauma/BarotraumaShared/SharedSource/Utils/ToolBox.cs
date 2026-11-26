@@ -1,11 +1,12 @@
 ﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using Barotrauma.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -27,9 +28,9 @@ namespace Barotrauma
         }
     }
 
-    internal readonly record struct SquareLine(Vector2[] Points, SquareLine.LineType Type)
+    public readonly record struct SquareLine(Vector2[] Points, SquareLine.LineType Type)
     {
-        internal enum LineType
+        public enum LineType
         {
             /// <summary>
             /// Normal 4 point line
@@ -52,7 +53,7 @@ namespace Barotrauma
         }
     }
 
-    static partial class ToolBox
+    public static partial class ToolBox
     {
         /// <summary>
         /// Returns the Barotrauma.dll assembly.
@@ -77,6 +78,8 @@ namespace Barotrauma
 
         private static readonly Dictionary<string, string> cachedFileNames = new Dictionary<string, string>();
 
+        private static readonly object mutex = new object();
+
         public static string CorrectFilenameCase(string filename, out bool corrected, string directory = "")
         {
             char[] delimiters = { '/', '\\' };
@@ -91,10 +94,14 @@ namespace Barotrauma
                 return originalFilename;
             }
 #endif
-            if (cachedFileNames.TryGetValue(originalFilename, out string existingName))
+
+            lock (mutex)
             {
-                // Already processed and cached.
-                return existingName;
+                if (cachedFileNames.TryGetValue(originalFilename, out string existingName))
+                {
+                    // Already processed and cached.
+                    return existingName;
+                }
             }
             
             string startPath = directory ?? "";
@@ -152,8 +159,10 @@ namespace Barotrauma
                 }
                 if (i < subDirs.Length - 1) { filename += "/"; }
             }
-
-            cachedFileNames.Add(originalFilename, filename);
+            lock (mutex)
+            {
+                cachedFileNames.TryAdd(originalFilename, filename);
+            }
             return filename;
         }
 
@@ -936,6 +945,124 @@ namespace Barotrauma
             }
 
             return builder.ToImmutable();
+        }
+
+        /// <summary>
+        /// Stable Topological Sorting (Kahn's algorithm)
+        /// </summary>
+        /// <remarks>Adapted from https://gist.github.com/Sup3rc4l1fr4g1l1571c3xp14l1d0c10u5/3341dba6a53d7171fe3397d13d00ee3f</remarks>
+        public static bool TryTopologicalSort<T>(IEnumerable<T> nodes, IEnumerable<(T, T)> edges, [NotNullWhen(true)] out List<T> result)
+        {
+            var nodeList = nodes.ToList();
+            var remainingEdges = new HashSet<(T, T)>(edges);
+            var sortedNodes = new List<T>();
+
+            // Use an ordered list of nodes with no incoming edges
+            var availableNodes = nodeList
+                .Where(n => remainingEdges.All(e => !e.Item2.Equals(n)))
+                .ToList();
+
+            while (availableNodes.Any())
+            {
+                // Take the first node in original order
+                var currentNode = availableNodes.First();
+                availableNodes.RemoveAt(0);
+
+                sortedNodes.Add(currentNode);
+
+                foreach (var e in remainingEdges.Where(e => e.Item1.Equals(currentNode)).ToList())
+                {
+                    var m = e.Item2;
+                    remainingEdges.Remove(e);
+
+                    if (remainingEdges.All(me => !me.Item2.Equals(m)) && !sortedNodes.Contains(m))
+                    {
+                        // Maintain relative order by inserting based on original nodeList
+                        if (!availableNodes.Contains(m))
+                        {
+                            var insertIndex = nodeList.IndexOf(m);
+                            int pos = availableNodes.FindIndex(x => nodeList.IndexOf(x) > insertIndex);
+                            if (pos >= 0)
+                            {
+                                availableNodes.Insert(pos, m);
+                            }
+                            else
+                            {
+                                availableNodes.Add(m);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // If edges remain, there's a cycle
+            if (remainingEdges.Any())
+            {
+                result = null;
+                return false;
+            }
+
+            result = sortedNodes;
+            return true;
+        }
+
+        public static void RestartApplication()
+        {
+            if (Environment.ProcessPath == null)
+            {
+                // Should never happen in practice?
+                GameMain.Instance.Exit();
+                return;
+            }
+
+            string exe = Environment.ProcessPath;
+            string args = Environment.CommandLine;
+
+            // Start ourselves again
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = exe,
+                Arguments = args,
+                UseShellExecute = false
+            });
+
+            GameMain.Instance.Exit();
+        }
+
+        /// <summary>
+        /// Returns the cumulative percentage after repeatedly applying
+        /// <paramref name="percentagePerStep"/> every step.
+        ///
+        /// For example, with 0.25f:
+        /// Step 1 = 25%
+        /// Step 2 = 43.75%
+        /// Step 3 = 57.8125%
+        /// </summary>
+        public static float CompoundPercentage(float percentagePerStep, float steps)
+        {
+            return 1f - MathF.Pow(1f - percentagePerStep, steps);
+        }
+
+        public static string FormatCompactNumber(long value)
+        {
+            string[] suffixes = { "", "K", "M", "B", "T" };
+
+            double number = value;
+            int suffix = 0;
+
+            while (number >= 1000 && suffix < suffixes.Length - 1)
+            {
+                number /= 1000;
+                suffix++;
+            }
+
+            // Show one decimal for values under 10 (e.g. 1.5K)
+            if (number < 10 && suffix > 0)
+            {
+                return $"{number:0.#}{suffixes[suffix]}";
+            }
+
+            return $"{Math.Floor(number):0}{suffixes[suffix]}";
         }
     }
 }

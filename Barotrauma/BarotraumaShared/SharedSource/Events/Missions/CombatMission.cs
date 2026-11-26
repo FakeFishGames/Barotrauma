@@ -59,6 +59,11 @@ namespace Barotrauma
             winCondition != WinCondition.LastManStanding || PointsPerKill != 0;
 
         /// <summary>
+        /// Should the second team's sub be flipped horizontally?
+        /// </summary>
+        public bool FlipSecondSub;
+
+        /// <summary>
         /// Scores of both teams. What the scoring represents depends on how the mission is configured (kills, time in control of a beacon station?)
         /// </summary>
         public readonly int[] Scores = new int[2];
@@ -102,6 +107,8 @@ namespace Barotrauma
             PointsPerKill = prefab.ConfigElement.GetAttributeInt(nameof(PointsPerKill), 0);
 
             TargetSubmarineType = prefab.ConfigElement.GetAttributeEnum(nameof(TargetSubmarineType), TagAction.SubType.Any);
+
+            FlipSecondSub = prefab.ConfigElement.GetAttributeBool(nameof(FlipSecondSub), true);
 
             string sonarTag = prefab.ConfigElement.GetAttributeString(nameof(targetSubmarineSonarLabel), string.Empty);
             if (!sonarTag.IsNullOrEmpty())
@@ -174,7 +181,7 @@ namespace Barotrauma
                 return;
             }
             
-            subs = new Submarine[] { Submarine.MainSubs[0], Submarine.MainSubs[1] };
+            subs = new [] { Submarine.MainSub, Submarine.AnotherMainSub };
 
             if (Prefab.LoadSubmarines)
             {
@@ -186,7 +193,10 @@ namespace Barotrauma
                 subs[1].TeamID = CharacterTeamType.Team2;
                 subs[1].GetConnectedSubs().ForEach(s => s.TeamID = CharacterTeamType.Team2);
                 GameSession.PlaceSubAtInitialPosition(subs[1], level, placeAtStart: false);
-                subs[1].FlipX();
+                if (FlipSecondSub)
+                {
+                    subs[1].FlipX();
+                }
             }
 #if SERVER
             crews = new List<Character>[] { new List<Character>(), new List<Character>() };

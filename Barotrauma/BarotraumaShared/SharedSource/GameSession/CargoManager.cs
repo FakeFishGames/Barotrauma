@@ -16,7 +16,7 @@ using Barotrauma.Networking;
 
 namespace Barotrauma
 {
-    class PurchasedItem
+    public class PurchasedItem
     {
         public ItemPrefab ItemPrefab => ItemPrefab.Prefabs[ItemPrefabIdentifier];
         public Identifier ItemPrefabIdentifier { get; }
@@ -62,7 +62,7 @@ namespace Barotrauma
         }
     }
 
-    class SoldItem
+    public class SoldItem
     {
         public ItemPrefab ItemPrefab { get; }
         public ushort ID { get; private set; }
@@ -96,7 +96,7 @@ namespace Barotrauma
         }
     }
 
-    partial class CargoManager
+    public partial class CargoManager
     {
         private class SoldEntity
         {
@@ -445,25 +445,33 @@ namespace Barotrauma
                 }
             }
 #endif
-            return FindAllSellableItems().Where(it => IsItemSellable(it, confirmedSoldEntities)).ToList();
+            return FindAllSellableItems(Submarine.MainSub).Where(it => IsItemSellable(it, confirmedSoldEntities)).ToList();
         }
 
-        public static IReadOnlyCollection<Item> FindAllItemsOnPlayerAndSub(Character character)
+        public static IEnumerable<Item> FindAllItemsOnPlayerAndAllowedSubs(Character character)
         {
             List<Item> allItems = new();
             if (character?.Inventory is { } inv)
             {
                allItems.AddRange(inv.FindAllItems(recursive: true));
             }
-            allItems.AddRange(FindAllSellableItems());
-            return allItems;
+            allItems.AddRange(FindAllSellableItems(Submarine.MainSub));
+            foreach (var sub in Submarine.Loaded)
+            {
+                if (sub == Submarine.MainSub) { continue; }
+                if (sub.AllowSellingItems)
+                {
+                    allItems.AddRange(FindAllSellableItems(sub));
+                }
+            }
+            return allItems.Distinct();
         }
 
-        public static IEnumerable<Item> FindAllSellableItems()
+        public static IEnumerable<Item> FindAllSellableItems(Submarine sub)
         {
-            if (Submarine.MainSub is null) { return Enumerable.Empty<Item>(); }
+            if (sub is null) { return Enumerable.Empty<Item>(); }
 
-            return Submarine.MainSub.GetItems(true).FindAll(static item =>
+            return sub.GetItems(alsoFromConnectedSubs: true).FindAll(static item =>
             {
                 if (item.GetRootInventoryOwner() is Character) { return false; }
                 if (!item.Components.All(static c => c is not Holdable { Attachable: true, Attached: true })) { return false; }
@@ -499,8 +507,9 @@ namespace Barotrauma
         private bool IsItemSellable(Item item, IEnumerable<SoldEntity> confirmedItems)
         {
             if (item.Removed) { return false; }
-            if (!item.Prefab.CanBeSold) { return false; }
-            if (item.SpawnedInCurrentOutpost) { return false; }
+            if (!item.Prefab.CanBeSold || item.DisallowSelling) { return false; }
+            if (item.SpawnedInNonPlayerOutpostOrSubmarine && !item.AllowSellingIfSpawnedInCurrentOutpost &&
+                !Level.IsLoadedTeam1Outpost) { return false; } // In the player's own outpost, the outpost's items are the player's to sell
             if (!item.Prefab.AllowSellingWhenBroken && item.ConditionPercentage < 90.0f) { return false; }
             if (confirmedItems != null && confirmedItems.Any(ci => ci.Item == item)) { return false; }
             if (UndeterminedSoldEntities.TryGetValue(item.Prefab, out int count))
@@ -532,7 +541,7 @@ namespace Barotrauma
                 var containedItems = item.ContainedItems;
                 if (containedItems.None()) { return true; }
                 // Allow selling the item if contained items are unsellable and set to be removed on deconstruct
-                if (itemContainer.RemoveContainedItemsOnDeconstruct && containedItems.All(it => !it.Prefab.CanBeSold)) { return true; }
+                if (itemContainer.RemoveContainedItemsOnDeconstruct && containedItems.All(it => !it.Prefab.CanBeSold || it.DisallowSelling)) { return true; }
                 if (confirmedItems != null)
                 {
                     // Otherwise there must be no contained items or the contained items must be confirmed as sold
@@ -557,9 +566,11 @@ namespace Barotrauma
                 .Select(it => it.GetComponent<ItemContainer>())
                 .Where(c => c != null);
 
-        public static ItemContainer GetOrCreateCargoContainerFor(ItemPrefab item, ISpatialEntity cargoRoomOrSpawnPoint, ref List<ItemContainer> availableContainers)
+        public static ItemContainer GetOrCreateCargoContainerFor(ItemPrefab item, ISpatialEntity cargoRoomOrSpawnPoint, ref List<ItemContainer> availableContainers, 
+            out bool wasNewContainerSpawned)
         {
             ItemContainer itemContainer = null;
+                wasNewContainerSpawned = false;
             if (!string.IsNullOrEmpty(item.CargoContainerIdentifier))
             {
                 itemContainer = availableContainers.Find(ac =>
@@ -579,21 +590,43 @@ namespace Barotrauma
                         return null;
                     }
 
-                    Vector2 containerPosition = cargoRoomOrSpawnPoint is Hull cargoRoom ?  GetCargoPos(cargoRoom, containerPrefab) : cargoRoomOrSpawnPoint.Position;
+                    Hull cargoRoom = cargoRoomOrSpawnPoint as Hull;
+                    Vector2 containerPosition = cargoRoom != null ? GetCargoPos(cargoRoom, containerPrefab) : cargoRoomOrSpawnPoint.Position;
                     Item containerItem = new Item(containerPrefab, containerPosition, cargoRoomOrSpawnPoint.Submarine);
+
+                    wasNewContainerSpawned = true;
                     itemContainer = containerItem.GetComponent<ItemContainer>();
                     if (itemContainer == null)
                     {
                         DebugConsole.AddWarning($"CargoManager: No ItemContainer component found in {containerItem.Prefab.Identifier}!");
+                        wasNewContainerSpawned = false;
                         return null;
                     }
                     if (!itemContainer.CanBeContained(item))
                     {
                         // Can't contain the item in the crate -> let's not create it.
                         containerItem.Remove();
+                        wasNewContainerSpawned = false;
                         return null;
                     }
                     availableContainers.Add(itemContainer);
+
+                    //check if we can put the container (e.g. crate) in a cargo container (e.g. crate shelf) in the cargo room
+                    if (cargoRoom != null)
+                    {
+                        foreach (var potentialCargoContainer in Item.ItemList)
+                        {
+                            if (potentialCargoContainer.CurrentHull != cargoRoom) { continue; }
+                            if (!potentialCargoContainer.HasTag(Tags.CargoContainer)) { continue; }
+                            if (potentialCargoContainer.HasTag(Tags.DisallowCargo)) { continue; }
+                            if (potentialCargoContainer.NonInteractable || potentialCargoContainer.IsHidden) { continue; }
+                            if (potentialCargoContainer.GetComponent<ItemContainer>() is { } cargoContainer && cargoContainer.Inventory.TryPutItem(containerItem, user: null))
+                            {
+                                break;
+                            }
+                        }
+                    }
+
 #if SERVER
                     if (GameMain.Server != null)
                     {
@@ -605,22 +638,27 @@ namespace Barotrauma
             return itemContainer;
         }
 
-        public static void DeliverItemsToSub(IEnumerable<PurchasedItem> itemsToSpawn, Submarine sub, CargoManager cargoManager, bool showNotification = true)
+        public static ImmutableArray<Item> DeliverItemsToSub(IEnumerable<PurchasedItem> itemsToSpawn, Submarine sub, CargoManager cargoManager, bool showNotification = true, bool showCargoIcon = true)
         {
-            if (!itemsToSpawn.Any()) { return; }
+            if (!itemsToSpawn.Any()) { return ImmutableArray<Item>.Empty; }
 
             WayPoint wp = WayPoint.GetRandom(SpawnType.Cargo, null, sub);
             if (wp == null)
             {
-                DebugConsole.ThrowError("The submarine must have a waypoint marked as Cargo for bought items to be placed correctly!");
-                return;
+                DebugConsole.AddWarning($"The submarine {sub.Info.Name} must have a spawnpoint marked as Cargo for bought items ({itemsToSpawn.First().ItemPrefab.Name}) to be placed correctly! Using a human spawnpoint instead...");
+                wp = WayPoint.GetRandom(SpawnType.Human, null, sub);
+                if (wp == null)
+                {
+                    DebugConsole.ThrowError($"The submarine {sub.Info.Name} does not have spawnpoints for either Cargo or Human. Failed to spawn ({itemsToSpawn.First().ItemPrefab.Name}).");
+                    return ImmutableArray<Item>.Empty;
+                }
             }
 
             Hull cargoRoom = Hull.FindHull(wp.WorldPosition);
             if (cargoRoom == null)
             {
                 DebugConsole.ThrowError("A waypoint marked as Cargo must be placed inside a room!");
-                return;
+                return ImmutableArray<Item>.Empty;
             }
 
             if (sub == Submarine.MainSub && itemsToSpawn.Any(it => !it.Delivered && it.Quantity > 0) && showNotification)
@@ -648,8 +686,15 @@ namespace Barotrauma
                 }
 #endif
             }
-            var connectedSubs = sub.GetConnectedSubs().Where(s => s.Info.Type == SubmarineType.Player);
-            List<ItemContainer> availableContainers = FindReusableCargoContainers(connectedSubs, FindCargoRooms(connectedSubs)).ToList();
+
+            var connectedSubs = sub.GetConnectedSubs().Where(s => s.Info.Type == sub.Info.Type);
+            var cargoRooms = FindCargoRooms(connectedSubs).ToHashSet();
+            //add the room of the waypoint we chose as a potential cargo room in case the sub/outpost doesn't have any actual cargo rooms 
+            //otherwise we'd fail to find crates we've already spawned, and end up spawning each cargo item in a separate crate
+            cargoRooms.Add(cargoRoom);
+            List<ItemContainer> availableContainers = FindReusableCargoContainers(connectedSubs, cargoRooms).ToList();
+
+            var builder = ImmutableArray.CreateBuilder<Item>();
             foreach (PurchasedItem pi in itemsToSpawn)
             {
                 pi.Delivered = true;
@@ -657,15 +702,26 @@ namespace Barotrauma
                 for (int i = 0; i < pi.Quantity; i++)
                 {
                     var item = new Item(pi.ItemPrefab, position, wp.Submarine);
-                    var itemContainer = GetOrCreateCargoContainerFor(pi.ItemPrefab, cargoRoom, ref availableContainers);
+                    var itemContainer = GetOrCreateCargoContainerFor(pi.ItemPrefab, cargoRoom, ref availableContainers, out bool wasNewContainerSpawned);
                     itemContainer?.Inventory.TryPutItem(item, user: null);
+                    if (wasNewContainerSpawned)
+                    {
+                        builder.Add(itemContainer.Item);
+                    }
                     ItemSpawned(pi, item, cargoManager);
 #if SERVER
                     Entity.Spawner?.CreateNetworkEvent(new EntitySpawner.SpawnEntity(item));
 #endif
-                    (itemContainer?.Item ?? item).AssignCampaignInteractionType(CampaignMode.InteractionType.Cargo);
+                    if (showCargoIcon)
+                    {
+                        (itemContainer?.Item ?? item).AssignCampaignInteractionType(CampaignMode.InteractionType.Cargo);
+                    }
+
+                    builder.Add(item);
                 }
             }
+
+            return builder.ToImmutable();
         }
 
         public static void DeliverItemsToCharacter(IEnumerable<PurchasedItem> itemsToSpawn, Character character, CargoManager cargoManager)
@@ -685,7 +741,13 @@ namespace Barotrauma
                     {
                         item.Drop(dropper: null);
                     }
-                    if (!character.Inventory.TryPutItem(item, user: null, item.AllowedSlots))
+
+                    List<InvSlotType> characterAllowedSlots = item.AllowedSlots.ToList();
+                    // Prevent the item from auto-equipping into a health interface slot,
+                    // avoiding cases like a cyber-limb instantly replacing an existing limb.
+                    characterAllowedSlots.RemoveAll(slot => CharacterInventory.HealthInterfaceSlots.HasFlag(slot));
+
+                    if (!character.Inventory.TryPutItem(item, user: null, characterAllowedSlots))
                     {
                         foreach (Item containedItem in character.Inventory.AllItemsMod)
                         {

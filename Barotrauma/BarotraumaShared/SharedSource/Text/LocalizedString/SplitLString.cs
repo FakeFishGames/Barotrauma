@@ -43,6 +43,7 @@ namespace Barotrauma
         private string cachedOriginal;
 
         public bool Loaded => originalString.Loaded;
+        public bool UsingDefaultLanguageAsFallback => originalString.UsingDefaultLanguageAsFallback;
 
         public LStringSplitter(LocalizedString input, params char[] separators)
         {
@@ -73,6 +74,8 @@ namespace Barotrauma
     
     public class SplitLString : LocalizedString
     {
+        public override bool UsingDefaultLanguageAsFallback => splitter.UsingDefaultLanguageAsFallback;
+
         private bool loaded = false;
         private readonly LStringSplitter splitter;
         private readonly int index;

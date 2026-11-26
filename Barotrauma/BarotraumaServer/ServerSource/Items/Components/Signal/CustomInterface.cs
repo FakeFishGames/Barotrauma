@@ -26,7 +26,14 @@ namespace Barotrauma.Items.Components
             }
 
             CustomInterfaceElement clickedButton = null;
-            if ((c.Character != null && DrawHudWhenEquipped && item.ParentInventory?.Owner == c.Character) || item.CanClientAccess(c))
+
+            bool allowInteraction = IsEnabled;
+            if (allowInteraction)
+            {
+                allowInteraction = (c.Character != null && DrawHudWhenEquipped && item.ParentInventory?.Owner == c.Character) || item.CanClientAccess(c);
+            }
+
+            if (allowInteraction)
             {
                 for (int i = 0; i < customInterfaceElementList.Count; i++)
                 {
@@ -54,7 +61,7 @@ namespace Barotrauma.Items.Components
                             if (elementStates[i])
                             {
                                 clickedButton = element;
-                                ButtonClicked(element);
+                                ButtonClicked(element, user: c.Character);
                             }
                             break;
                     }
@@ -62,7 +69,7 @@ namespace Barotrauma.Items.Components
             }
 
             //notify all clients of the new state
-            item.CreateServerEvent(this, new EventData(clickedButton));
+            item.CreateServerEvent(this, new EventData(clickedButton, user: c.Character));
 
             item.CreateServerEvent(this);
         }
@@ -84,7 +91,19 @@ namespace Barotrauma.Items.Components
                         msg.WriteBoolean(element.State);
                         break;
                     case CustomInterfaceElement.InputTypeOption.Button:
-                        msg.WriteBoolean(extraData is Item.ComponentStateEventData { ComponentData: EventData eventData } && eventData.BtnElement == customInterfaceElementList[i]);
+                        if (extraData is Item.ComponentStateEventData { ComponentData: EventData eventData } && eventData.BtnElement == customInterfaceElementList[i])
+                        {
+                            msg.WriteUInt16(eventData.User?.ID ?? Entity.NullEntityID);
+                            //button clicked
+                            msg.WriteBoolean(true);
+
+                        }
+                        else
+                        {
+                            //button not clicked
+                            msg.WriteUInt16(Entity.NullEntityID);
+                            msg.WriteBoolean(false);
+                        }
                         break;
                 }
             }

@@ -20,7 +20,7 @@ namespace Barotrauma.Items.Components
         Battery = 5
     }
 
-    readonly struct PowerRange
+    public readonly struct PowerRange
     {
         public readonly static PowerRange Zero = default;
 
@@ -56,7 +56,7 @@ namespace Barotrauma.Items.Components
         }
     }
 
-    partial class Powered : ItemComponent
+    public partial class Powered : ItemComponent
     {
         //TODO: test sparser update intervals?
         protected const float UpdateInterval = (float)Timing.Step;
@@ -198,6 +198,11 @@ namespace Barotrauma.Items.Components
         public virtual bool HasPower => Voltage >= MinVoltage;
 
         public bool PoweredByTinkering { get; set; }
+
+        /// <summary>
+        /// Deteriorate when powered. Specific types of Powered components can override this as needed.
+        /// </summary>
+        public override bool ShouldCauseDeterioration => HasPower;
 
         [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Can the item be damaged by electomagnetic pulses.")]
         public bool VulnerableToEMP
@@ -760,7 +765,7 @@ namespace Barotrauma.Items.Components
         }
     }
 
-    partial class GridInfo
+    public partial class GridInfo
     {
         public readonly int ID;
         public float Voltage = 0;
@@ -806,7 +811,7 @@ namespace Barotrauma.Items.Components
         }
     }
 
-    partial class PowerSourceGroup
+    public partial class PowerSourceGroup
     {
         public PowerRange MinMaxPower;
         public readonly List<Connection> Connections = new List<Connection>();

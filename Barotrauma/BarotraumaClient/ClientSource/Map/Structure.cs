@@ -163,6 +163,7 @@ namespace Barotrauma
 
         public override void UpdateEditing(Camera cam, float deltaTime)
         {
+            base.UpdateEditing(cam, deltaTime);
             if (editingHUD == null || editingHUD.UserData as Structure != this)
             {
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
@@ -397,6 +398,7 @@ namespace Barotrauma
 
             Color color = IsIncludedInSelection && editing ? GUIStyle.Blue : IsHighlighted ? GUIStyle.Orange * Math.Max(spriteColor.A / (float) byte.MaxValue, 0.1f) : spriteColor;
 
+            if (IsHidden) { color *= 0.5f; }
             if (IsSelected && editing)
             {
                 //color = Color.Lerp(color, Color.Gold, 0.5f);
@@ -579,7 +581,7 @@ namespace Barotrauma
                         rotate: rotation,
                         origin: decorativeSprite.Sprite.Origin,
                         scale: decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale,
-                        spriteEffect: Prefab.Sprite.effects ^ SpriteEffects,
+                        spriteEffect: Prefab.Sprite.effects ^ SpriteEffects ^ decorativeSprite.SpriteEffects,
                         depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - Prefab.Sprite.Depth), 0.999f));
                 }
             }
@@ -631,6 +633,10 @@ namespace Barotrauma
                         }
                     }
                 }
+            }
+            if (editing)
+            {
+                DrawLinks(spriteBatch);
             }
         }
 

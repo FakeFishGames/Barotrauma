@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace Barotrauma
 {
-    class GameModePreset
+    public class GameModePreset
     {
         public static List<GameModePreset> List = new List<GameModePreset>();
 

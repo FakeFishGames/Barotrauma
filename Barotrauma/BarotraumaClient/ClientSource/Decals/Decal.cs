@@ -18,7 +18,7 @@ namespace Barotrauma
             
             spriteBatch.Draw(Sprite.Texture, drawPos, clippedSourceRect, Color * GetAlpha(), 0, Vector2.Zero, Scale, SpriteEffects.None, depth);
 
-            if (GameMain.DebugDraw && affectedSections != null && affectedSections.Count > 0)
+            /*if (GameMain.DebugDraw && affectedSections != null && affectedSections.Count > 0)
             {
                 Vector2 drawOffset = hull.Submarine == null ? Vector2.Zero : hull.Submarine.DrawPosition;
                 Point sectionSize = affectedSections.First().Rect.Size;
@@ -29,7 +29,7 @@ namespace Barotrauma
                     // Draw colors
                     GUI.DrawRectangle(spriteBatch, new Vector2(drawPositionRect.X + section.Rect.X, -(drawPositionRect.Y + section.Rect.Y)), new Vector2(sectionSize.X, sectionSize.Y), Color.Red, false, 0.0f, (int)Math.Max(1.5f / Screen.Selected.Cam.Zoom, 1.0f));
                 }
-            }
+            }*/
         }
     }
 }

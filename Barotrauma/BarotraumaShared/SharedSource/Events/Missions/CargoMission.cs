@@ -93,6 +93,7 @@ namespace Barotrauma
                         if (mission == this) { isPriorMission = false; }
                         previouslySelectedMissions.Add(otherMission);
                         if (!isPriorMission) { continue; }
+                        if (!IsOnSameRoute(otherMission)) { continue; }
                         maxItemCount -= otherMission.itemsToSpawn.Count;
                     }
                 }
@@ -129,6 +130,7 @@ namespace Barotrauma
                         if (mission == this) { isPriorMission = false; }
                         previouslySelectedMissions.Add(otherMission);                    
                         if (!isPriorMission) { continue; }
+                        if (!IsOnSameRoute(otherMission)) { continue; }
                         foreach (var (element, container) in otherMission.itemsToSpawn)
                         {
                             for (int i = 0; i < containers.Count; i++)
@@ -211,6 +213,16 @@ namespace Barotrauma
             if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
         }
 
+        /// <summary>
+        /// Only cargo missions to the same destination can be active during the same round,
+        /// so missions on other routes don't take up cargo space from this one.
+        /// </summary>
+        private bool IsOnSameRoute(CargoMission otherMission)
+        {
+            if (Locations.Length < 2 || otherMission.Locations.Length < 2) { return true; }
+            return otherMission.Locations[1] == Locations[1];
+        }
+
         public override float GetBaseReward(Submarine sub)
         {
             // If we are not at the location of the mission, skip the calculation of the reward
@@ -290,7 +302,7 @@ namespace Barotrauma
 
             var item = new Item(itemPrefab, position.Value, cargoRoomSub)
             {
-                SpawnedInCurrentOutpost = true,
+                SpawnedInNonPlayerOutpostOrSubmarine = true,
                 AllowStealing = false
             };
             item.AddTag(Tags.CargoMissionItem);

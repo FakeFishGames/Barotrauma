@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
@@ -12,7 +13,7 @@ namespace Barotrauma
         Negative
     }
 
-    class Faction
+    public class Faction
     {
         public Reputation Reputation { get; }
         public FactionPrefab Prefab { get; }
@@ -22,6 +23,18 @@ namespace Barotrauma
             Prefab = prefab;
             Reputation = new Reputation(metadata, this, prefab.MinReputation, prefab.MaxReputation, prefab.InitialReputation);
         }
+        
+        public bool IsFactionHostile => Reputation.NormalizedValue < Reputation.HostileThreshold;
+
+        /// <summary>
+        /// Recovers the reputation towards <see cref="FactionPrefab.ReputationRecoveryThreshold"/> if it's below it.
+        /// </summary>
+        public void ProgressWorld()
+        {
+            if (Prefab.ReputationRecoveryPerWorldStep <= 0.0f) { return; }
+            if (Reputation.Value >= Prefab.ReputationRecoveryThreshold) { return; }
+            Reputation.SetReputation(Math.Min(Reputation.Value + Prefab.ReputationRecoveryPerWorldStep, Prefab.ReputationRecoveryThreshold));
+        }
 
         /// <summary>
         /// Get what kind of affiliation this faction has towards the player depending on who they chose to side with via talents
@@ -29,10 +42,10 @@ namespace Barotrauma
         /// <returns></returns>
         public static FactionAffiliation GetPlayerAffiliationStatus(Faction faction)
         {
-            if (GameMain.GameSession?.Campaign?.Factions is not { } factions) { return FactionAffiliation.Neutral; }
+            if (GameMain.GameSession?.Campaign is not { } campaign) { return FactionAffiliation.Neutral; }
 
             bool isHighest = true;
-            foreach (Faction otherFaction in factions)
+            foreach (Faction otherFaction in campaign.Factions)
             {
                 if (otherFaction == faction || otherFaction.Reputation.Value < faction.Reputation.Value) { continue; }
 
@@ -49,7 +62,7 @@ namespace Barotrauma
         }
     }
 
-    internal class FactionPrefab : Prefab
+    public class FactionPrefab : Prefab
     {
         public readonly static PrefabCollection<FactionPrefab> Prefabs = new PrefabCollection<FactionPrefab>();
 
@@ -76,33 +89,6 @@ namespace Barotrauma
 
         public ImmutableArray<HireableCharacter> HireableCharacters;
 
-        public class AutomaticMission
-        {
-            public readonly Identifier MissionTag;
-            public readonly LevelData.LevelType LevelType;
-            public readonly float MinReputation, MaxReputation;
-            public readonly float MinProbability, MaxProbability;
-            public readonly int MaxDistanceFromFactionOutpost;
-            public readonly bool DisallowBetweenOtherFactionOutposts;
-
-            public AutomaticMission(ContentXElement element, string parentDebugName)
-            {
-                MissionTag = element.GetAttributeIdentifier("missiontag", Identifier.Empty);
-                LevelType = element.GetAttributeEnum("leveltype", LevelData.LevelType.LocationConnection);
-                MinReputation = element.GetAttributeFloat("minreputation", 0.0f);
-                MaxReputation = element.GetAttributeFloat("maxreputation", 0.0f);
-                if (MinReputation > MaxReputation)
-                {
-                    DebugConsole.ThrowError($"Error in faction prefab \"{parentDebugName}\": MinReputation cannot be larger than MaxReputation.");
-                }
-                float probability = element.GetAttributeFloat("probability", 0.0f);
-                MinProbability = element.GetAttributeFloat("minprobability", probability);
-                MaxProbability = element.GetAttributeFloat("maxprobability", probability);
-                MaxDistanceFromFactionOutpost = element.GetAttributeInt(nameof(MaxDistanceFromFactionOutpost), int.MaxValue);
-                DisallowBetweenOtherFactionOutposts = element.GetAttributeBool(nameof(DisallowBetweenOtherFactionOutposts), false);
-            }
-        }
-
         public ImmutableArray<AutomaticMission> AutomaticMissions;
 
         public bool StartOutpost { get; }
@@ -125,6 +111,16 @@ namespace Barotrauma
         /// </summary>
         public int InitialReputation { get; }
 
+        /// <summary>
+        /// If the reputation is below this value, it slowly recovers towards it by <see cref="ReputationRecoveryPerWorldStep"/> each world step.
+        /// </summary>
+        public float ReputationRecoveryThreshold { get; }
+
+        /// <summary>
+        /// How much the reputation recovers per world step when below <see cref="ReputationRecoveryThreshold"/>. 0 = no recovery.
+        /// </summary>
+        public float ReputationRecoveryPerWorldStep { get; }
+
         public float ControlledOutpostPercentage { get; }
 
         public float SecondaryControlledOutpostPercentage { get; }
@@ -146,6 +142,8 @@ namespace Barotrauma
             MinReputation = element.GetAttributeInt("minreputation", -100);
             MaxReputation = element.GetAttributeInt("maxreputation", 100);
             InitialReputation = element.GetAttributeInt("initialreputation", 0);
+            ReputationRecoveryThreshold = element.GetAttributeFloat(nameof(ReputationRecoveryThreshold), 0.0f);
+            ReputationRecoveryPerWorldStep = element.GetAttributeFloat(nameof(ReputationRecoveryPerWorldStep), 0.0f);
             ControlledOutpostPercentage = element.GetAttributeFloat("controlledoutpostpercentage", 0);
             SecondaryControlledOutpostPercentage = element.GetAttributeFloat("secondarycontrolledoutpostpercentage", 0);
             Name = element.GetAttributeString("name", null) ?? TextManager.Get($"faction.{Identifier}").Fallback("Unnamed");

@@ -22,7 +22,7 @@ namespace Barotrauma
         }
     }
 
-    class SoundPrefab : Prefab
+    public class SoundPrefab : Prefab
     {
         private class PrefabCollectionHandler
         {

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma.Networking
 {
-    class VoipServer
+    internal class VoipServer
     {
         private readonly ServerPeer netServer;
         private readonly List<VoipQueue> queues;

@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System.Collections.Generic;
 using System.Linq;
 
@@ -24,7 +24,10 @@ namespace Barotrauma
         [Serialize(true, IsPropertySaveable.Yes, "When set to false, limb-specific afflictions are ignored when not checking a specific limb.")]
         public bool AllowLimbAfflictions { get; set; }
 
-        [Serialize(0.0f, IsPropertySaveable.Yes, "Minimum strength of the affliction.")]
+        [Serialize(0.0f, IsPropertySaveable.Yes, 
+            "Minimum strength of the affliction. "+
+            "If 0, the affliction must have a strength above 0 (= the affliction must exist). "+
+            "If larger than 0, the affliction must be equal to or larger than this.")]
         public float MinStrength { get; set; }
 
         public CheckAfflictionAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
@@ -37,10 +40,13 @@ namespace Barotrauma
             foreach (var target in targets)
             {
                 if (target.CharacterHealth == null) { continue; }
+                //no limb type specified, just calculate the strength of the affliction on the character as a whole
                 if (TargetLimb == LimbType.None)
                 {
-                    if (target.CharacterHealth.GetAfflictionStrengthByIdentifier(Identifier, AllowLimbAfflictions) >= MinStrength) { return true; }
+                    float currentStrength = target.CharacterHealth.GetAfflictionStrengthByIdentifier(Identifier, AllowLimbAfflictions);
+                    if (CheckAfflictionStrength(currentStrength)) { return true; }
                 }
+                //otherwise go through each affliction individually
                 IEnumerable<Affliction> afflictions = target.CharacterHealth.GetAllAfflictions().Where(affliction =>
                 {
                     if (affliction.Prefab.LimbSpecific)
@@ -52,10 +58,26 @@ namespace Barotrauma
                     {
                         if (!ParentEvent.GetTargets(SourceCharacter).Contains(affliction.Source)) { return false; }
                     }
-
-                    return affliction.Strength >= MinStrength;
+                    return CheckAfflictionStrength(affliction.Strength);
                 });
                 if (afflictions.Any(a => a.Identifier == Identifier)) { return true; }
+            }
+
+            return false;
+        }
+
+        private bool CheckAfflictionStrength(float strength)
+        {
+            if (MinStrength <= 0.0f)
+            {
+                //if MinStrength is zero, it's exclusive: the strength of the affliction must be above zero
+                //(makes no sense to check if the affliction is "equal to or larger than 0" - it always is)
+                if (strength > MinStrength) { return true; }
+            }
+            else
+            {
+                //otherwise the check is inclusive (equal to or larger).
+                if (strength >= MinStrength) { return true; }
             }
             return false;
         }

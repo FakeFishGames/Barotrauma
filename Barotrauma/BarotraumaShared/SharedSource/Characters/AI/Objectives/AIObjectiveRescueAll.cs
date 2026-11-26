@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveRescueAll : AIObjectiveLoop<Character>
+    public class AIObjectiveRescueAll : AIObjectiveLoop<Character>
     {
         public override Identifier Identifier { get; set; } = "rescue all".ToIdentifier();
         public override bool ForceRun => true;
@@ -14,6 +14,11 @@ namespace Barotrauma
         protected override bool AllowInAnySub => true;
 
         private readonly HashSet<Character> charactersWithMinorInjuries = new HashSet<Character>();
+
+        /// <summary>
+        /// Normally only medic's and bots with an explicit order attempt to treat injured characters, this can be used to make the bot treat them regardless.
+        /// </summary>
+        public bool OnlyTreatAutomaticallyIfMedicOrOrdered = true;
 
         private const float vitalityThreshold = 75;
         private const float vitalityThresholdForOrders = 90;
@@ -34,7 +39,7 @@ namespace Barotrauma
 
         protected override bool IsValidTarget(Character target)
         {
-            if (!IsValidTarget(target, character, out bool ignoredasMinorWounds))
+            if (!IsValidTarget(target, character, out bool ignoredasMinorWounds, OnlyTreatAutomaticallyIfMedicOrOrdered))
             {
                 if (ignoredasMinorWounds)
                 {
@@ -95,7 +100,8 @@ namespace Barotrauma
             foreach (Affliction affliction in GetTreatableAfflictions(character, ignoreTreatmentThreshold: true))
             {
                 float strength = character.CharacterHealth.GetPredictedStrength(affliction, predictFutureDuration: 10.0f);
-                vitality -= affliction.GetVitalityDecrease(character.CharacterHealth, strength) / character.MaxVitality * 100;
+                //take limb vitality multipliers into account (e.g. head damage reduces vitality more), otherwise the bots may consider a character healthier than they actually are
+                vitality -= character.CharacterHealth.GetVitalityDecreaseWithVitalityMultipliers(affliction, strength) / character.MaxVitality * 100;
                 if (affliction.Strength > affliction.Prefab.TreatmentThreshold)
                 {
                     //vitality loss is not required to treat this affliction -> evaluate the strength of the affliction too
@@ -133,7 +139,7 @@ namespace Barotrauma
         protected override void OnObjectiveCompleted(AIObjective objective, Character target)
             => HumanAIController.RemoveTargets<AIObjectiveRescueAll, Character>(character, target);
 
-        public static bool IsValidTarget(Character target, Character character, out bool ignoredAsMinorWounds)
+        public static bool IsValidTarget(Character target, Character character, out bool ignoredAsMinorWounds, bool onlyTreatAutomaticallyIfMedicOrOrdered = true)
         {
             ignoredAsMinorWounds = false;
             if (target == null || target.IsDead || target.Removed || target.InvisibleTimer > 0.0f) { return false; }
@@ -144,7 +150,7 @@ namespace Barotrauma
             float vitalityFactor;
             if (character.AIController is HumanAIController humanAI)
             {
-                if (!IsValidTargetForAI(target, humanAI)) { return false; }
+                if (!IsValidTargetForAI(target, humanAI, onlyTreatAutomaticallyIfMedicOrOrdered)) { return false; }
                 vitalityFactor = GetVitalityFactor(target);
                 isBelowTreatmentThreshold = vitalityFactor < GetVitalityThreshold(humanAI.ObjectiveManager, character, target);
             }
@@ -162,14 +168,15 @@ namespace Barotrauma
             return isValidTarget;
         }
 
-        private static bool IsValidTargetForAI(Character target, HumanAIController humanAI)
+        private static bool IsValidTargetForAI(Character target, HumanAIController humanAI, bool onlyTreatAutomaticallyIfMedicOrOrdered = true)
         {
             Character character = humanAI.Character;
             if (!humanAI.ObjectiveManager.HasOrder<AIObjectiveRescueAll>())
             {
-                if (!character.IsMedic && target != character)
+                if (onlyTreatAutomaticallyIfMedicOrOrdered && !character.IsMedic && target != character)
                 {
                     // Don't allow to treat others autonomously, unless we are a medic
+                    //(only applies to player team, e.g. outpost NPCs with the objective can treat others even if they're not medics)
                     return false;
                 }
                 // Ignore unsafe hulls, unless ordered
@@ -180,8 +187,8 @@ namespace Barotrauma
             }
             if (character.Submarine != null)
             {
-                // Don't allow going into another sub, unless it's connected and of the same team and type.
-                if (!character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, includingConnectedSubs: true)) { return false; }
+                // Don't allow going into another sub, unless it's connected and of the same team.
+                if (!character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, includingConnectedSubs: true, allowDifferentType: true)) { return false; }
             }
             else if (target.Submarine != null)
             {

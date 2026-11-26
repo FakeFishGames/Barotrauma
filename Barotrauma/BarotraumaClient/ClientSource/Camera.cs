@@ -6,9 +6,11 @@ using System;
 
 namespace Barotrauma
 {
-    class Camera
+    public class Camera
     {
         public static bool FollowSub = true;
+
+        public static bool DisableCameraShake;
 
         private float? defaultZoom;
         public float DefaultZoom
@@ -242,10 +244,10 @@ namespace Barotrauma
                 }
                 else
                 {
-                    GameMain.SoundManager.ListenerPosition = new Vector3(Character.Controlled.WorldPosition.X, Character.Controlled.WorldPosition.Y, -(100.0f / zoom));
+                    var viewTarget = Character.Controlled.ViewTarget ?? Character.Controlled;
+                    GameMain.SoundManager.ListenerPosition = new Vector3(viewTarget.WorldPosition.X, viewTarget.WorldPosition.Y, -(100.0f / zoom));
                 }
-            }
-            
+            }            
 
             if (!interpolate)
             {
@@ -377,7 +379,7 @@ namespace Barotrauma
             angularDamping = 0.05f;
             angularSpring = 0.2f;
 
-            if (Shake < 0.01f)
+            if (Shake < 0.01f || DisableCameraShake)
             {
                 ShakePosition = Vector2.Zero;
                 shakeTimer = 0.0f;

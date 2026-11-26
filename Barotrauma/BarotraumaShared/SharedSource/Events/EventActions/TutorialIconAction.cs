@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 
 namespace Barotrauma;
 
@@ -61,7 +61,7 @@ class TutorialIconAction : EventAction
         return isFinished;
     }
 
-    public override void Reset()
+    public override void Reset(bool shouldEndConversations = true)
     {
         isFinished = false;
     }

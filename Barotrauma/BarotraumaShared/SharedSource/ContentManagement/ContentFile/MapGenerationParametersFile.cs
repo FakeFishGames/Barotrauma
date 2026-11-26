@@ -2,7 +2,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    sealed class MapGenerationParametersFile : ContentFile
+    public sealed class MapGenerationParametersFile : ContentFile
     {
         public MapGenerationParametersFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

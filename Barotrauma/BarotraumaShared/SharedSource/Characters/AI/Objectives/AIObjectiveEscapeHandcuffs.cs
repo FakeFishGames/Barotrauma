@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveEscapeHandcuffs : AIObjective
+    public class AIObjectiveEscapeHandcuffs : AIObjective
     {
         // Used for prisoner escorts to allow them to escape their binds
         public override Identifier Identifier { get; set; } = "escape handcuffs".ToIdentifier();

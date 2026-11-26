@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Extensions;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -6,7 +7,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class PathNode
+    public class PathNode
     {
         public int state;
 
@@ -15,13 +16,12 @@ namespace Barotrauma
         public float F, G, H;
 
         public readonly List<PathNode> connections = new List<PathNode>();
-        public List<float> distances;
 
         public Vector2 TempPosition;
         public float TempDistance;
 
         public readonly WayPoint Waypoint;
-        public readonly Vector2 Position;
+        public Vector2 Position => Waypoint.SimPosition;
         public readonly int WayPointID;
 
         public override string ToString()
@@ -32,7 +32,6 @@ namespace Barotrauma
         public PathNode(WayPoint wayPoint)
         {
             Waypoint = wayPoint;
-            Position = wayPoint.SimPosition;
             WayPointID = Waypoint.ID;
         }
 
@@ -68,14 +67,6 @@ namespace Barotrauma
             {
                 nodeList.RemoveAll(n => n.connections.Count == 0);
             }
-            foreach (PathNode node in nodeList)
-            {
-                node.distances = new List<float>();
-                for (int i = 0; i < node.connections.Count; i++)
-                {
-                    node.distances.Add(Vector2.Distance(node.Position, node.connections[i].Position));
-                }
-            }
 
             return nodeList;            
         }
@@ -87,6 +78,12 @@ namespace Barotrauma
             blocked = false;
             if (Waypoint.Submarine != null) { return blocked.Value; }
             if (Waypoint.Tunnel?.Type != Level.TunnelType.Cave) { return blocked.Value; }
+            //if a waypoint that doesn't belong to a sub is inside a sub, it must be blocked by the sub
+            if (Hull.FindHull(Waypoint.WorldPosition) is { } hull && hull.Submarine != null)
+            {
+                blocked = true;
+                return true;
+            }
             foreach (var w in Level.Loaded.ExtraWalls)
             {
                 if (!w.IsPointInside(Waypoint.Position)) { continue; }
@@ -105,7 +102,7 @@ namespace Barotrauma
         }
     }
 
-    class PathFinder
+    public class PathFinder
     {
         public delegate float? GetNodePenaltyHandler(PathNode node, PathNode prevNode);
         public GetNodePenaltyHandler GetNodePenalty;
@@ -113,6 +110,7 @@ namespace Barotrauma
         public GetSingleNodePenaltyHandler GetSingleNodePenalty;
 
         private readonly List<PathNode> nodes;
+        private readonly List<PathNode> startNodeCandidates;
         private readonly bool isCharacter;
 
         public bool InsideSubmarine { get; set; }
@@ -120,13 +118,20 @@ namespace Barotrauma
 
         public PathFinder(List<WayPoint> wayPoints, bool isCharacter)
         {
-            var filtered = isCharacter ? wayPoints : wayPoints.FindAll(w => w.Submarine == null);          
+            var filtered = 
+                isCharacter ? 
+                    //characters should be able to use all waypoints
+                    wayPoints : 
+                    //non-characters (in practice, subs) can only use waypoints not belonging to a sub, or the waypoints outside static submarines
+                    wayPoints.FindAll(w => w.Submarine == null || (w.CurrentHull == null && w.Submarine.SubBody is { Body.BodyType: BodyType.Static }));    
+            
             nodes = PathNode.GenerateNodes(filtered, removeOrphans: true);
             foreach (WayPoint wp in wayPoints)
             {
                 wp.OnLinksChanged += WaypointLinksChanged;
             }
             sortedNodes = new List<PathNode>(nodes.Count);
+            startNodeCandidates = new List<PathNode>(nodes.Count);
             this.isCharacter = isCharacter;
         }
 
@@ -134,7 +139,7 @@ namespace Barotrauma
         {
             if (Submarine.Unloading) { return; }
 
-            var node = nodes.Find(n => n.Waypoint == wp);
+            PathNode node = nodes.Find(n => n.Waypoint == wp);
             if (node == null) { return; }
 
             for (int i = node.connections.Count - 1; i >= 0; i--)
@@ -143,39 +148,53 @@ namespace Barotrauma
                 if (wp.linkedTo.FirstOrDefault(l => l == node.connections[i].Waypoint) == null)
                 {
                     node.connections.RemoveAt(i);
-                    node.distances.RemoveAt(i);
                 }
             }
 
             for (int i = 0; i < wp.linkedTo.Count; i++)
             {
-                if (!(wp.linkedTo[i] is WayPoint connected)) { continue; }
+                if (wp.linkedTo[i] is not WayPoint connectedWaypoint) { continue; }
 
                 //already connected, continue
-                if (node.connections.Any(n => n.Waypoint == connected)) { continue; }
+                if (node.connections.Any(n => n.Waypoint == connectedWaypoint)) { continue; }
 
-                var matchingNode = nodes.Find(n => n.Waypoint == connected);
+                PathNode matchingNode = nodes.Find(n => n.Waypoint == connectedWaypoint);
                 if (matchingNode == null)
                 {
-#if DEBUG
-                    DebugConsole.ThrowError("Waypoint connections were changed, no matching path node found in PathFinder");
-#endif
-                    return;
+                    matchingNode = new PathNode(connectedWaypoint);
+                    matchingNode.connections.Add(node);
+                    nodes.Add(matchingNode);
+                    connectedWaypoint.OnLinksChanged += WaypointLinksChanged;
                 }
 
                 node.connections.Add(matchingNode);
-                node.distances.Add(Vector2.Distance(node.Position, matchingNode.Position));
+
+                System.Diagnostics.Debug.Assert(nodes.Count <= WayPoint.WayPointList.Count, "Something went wrong when generating nodes for PathFinder: more nodes than there are waypoints.");
+                System.Diagnostics.Debug.Assert(nodes.All(n => !n.Waypoint.Removed), "Something went wrong when generating nodes for PathFinder: nodes present after the corresponding waypoint has been removed.");
             }
         }
 
         private readonly List<PathNode> sortedNodes;
 
-        public SteeringPath FindPath(Vector2 start, Vector2 end, Submarine hostSub = null, string errorMsgStr = null, float minGapSize = 0, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisibility = true, float outsideNodePenalty = 0)
+        private readonly HashSet<PathNode> potentialNearbyStartNodes = [];
+
+        /// <param name="startHull">The hull the pathfinding starts from (e.g. the character's current hull). If given, the optimization that immediately chooses a nearby start node only accepts nodes in this hull.</param>
+        public SteeringPath FindPath(Vector2 start, Vector2 end, Submarine hostSub = null, string errorMsgStr = null, float minGapSize = 0,
+            Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null,
+            bool checkVisibility = true, float outsideNodePenalty = 0, Structure currentStairs = null, SteeringPath currentPath = null, Hull startHull = null)
         {
             foreach (PathNode node in nodes)
             {
                 node.ResetBlocked();
             }
+
+            //how high above the target waypoint needs to be for it to be considered so high it's hard to get to without ladders/stairs
+            float wayPointHeightToPrioritizeLaddersAndStairs = ConvertUnits.ToSimUnits(WayPoint.WayPointHeightFromFloor * 1.5f);
+            
+            // When considering for a swimmer (not autopilot) swimming outside, consider waypoints outside submarines like they were level waypoints
+            bool includeOutsideSubWaypoints = isCharacter && hostSub == null;
+            bool IsInsideSubmarine(PathNode node) => node.Waypoint.Submarine != null && (!includeOutsideSubWaypoints || node.Waypoint.CurrentHull != null);
+            bool IsInOtherSubmarine(PathNode node) => node.Waypoint.Submarine != hostSub && (!includeOutsideSubWaypoints || node.Waypoint.CurrentHull != null);
 
             // First calculate the temp positions for all nodes.
             foreach (PathNode node in nodes)
@@ -201,46 +220,82 @@ namespace Barotrauma
 
             //sort nodes roughly according to distance
             sortedNodes.Clear();
+            startNodeCandidates.Clear();
             PathNode startNode = null;
-            foreach (PathNode node in nodes)
+
+            startNodeCandidates.AddRange(nodes);
+            //if we have a current path, prioritize the nodes on it as the start node candidates (preferring nodes at the end of the path, closer to the target)
+            //this works both as an optimization (we can usually find the best start node faster), and prevents the bot from
+            //backtracking by choosing some other start node that happens to be closer to the bot than the next node on the path
+            if (currentPath != null && !currentPath.Unreachable &&
+                currentPath.CurrentIndex >= 0 && currentPath.CurrentIndex < currentPath.Nodes.Count)
             {
-                float xDiff = Math.Abs(start.X - node.TempPosition.X);
-                float yDiff = Math.Abs(start.Y - node.TempPosition.Y);
-                //higher cost for vertical movement when inside the sub
-                if (InsideSubmarine && !(node.Waypoint.Submarine?.Info?.IsRuin ?? false))
+                for (int i = 0; i < currentPath.Nodes.Count; i++)
                 {
-                    if (yDiff > 1.0f && node.Waypoint.Ladders == null && node.Waypoint.Stairs == null)
+                    var matchingNode = startNodeCandidates.FirstOrDefault(n => n.Waypoint == currentPath.Nodes[i]);
+                    if (matchingNode != null)
                     {
-                        yDiff += 10.0f;
-                    }
-                    //only apply the higher cost for vertical movement if it's more than a meter
-                    //(small differences can be caused by non-meaningful variance in the vertical position of the waypoint, we only care about actually going up/down e.g. ladders or stairs)
-                    if (Math.Abs(yDiff) > 1.0f)
-                    {
-                        yDiff *= 10.0f;
+                        startNodeCandidates.Remove(matchingNode);
+                        startNodeCandidates.Insert(0, matchingNode);
                     }
                 }
-                node.TempDistance = xDiff + yDiff;
+            }
 
-                //much higher cost to waypoints that are outside
-                if (node.Waypoint.CurrentHull == null && ApplyPenaltyToOutsideNodes) { node.TempDistance *= 10.0f; }
+            foreach (PathNode node in startNodeCandidates)
+            {
+                CalculateCostToReachStartNode(node);
 
                 //optimization: node extremely far, don't try to use it as a start node
                 if (node.TempDistance > (InsideSubmarine ? 100.0f : 800.0f))
                 {
                     continue;
                 }
-                //optimization: node close enough. If it's valid, choose it as the start node and skip the more exhaustive search for the closest one
-                if (node.TempDistance < FarseerPhysics.ConvertUnits.ToSimUnits(AIObjectiveGetItem.DefaultReach))
+                //optimization: node is very close. If it's valid, choose it or one of its connected nodes as the start node,
+                //and skip the more exhaustive search for the closest one
+                if (node.TempDistance < ConvertUnits.ToSimUnits(AIObjectiveGetItem.DefaultReach * 2))
                 {
-                    if (IsValidStartNode(node))
+                    bool nodeInsideSubmarine = IsInsideSubmarine(node);
+                    if (IsValidStartNode(node) &&
+                        //don't choose outside nodes when inside or vice versa unless that's the last resort
+                        InsideSubmarine == nodeInsideSubmarine &&
+                        //don't take the shortcut with nodes in other hulls (e.g. a hull directly above or below),
+                        //there may be a better node in the start hull, let the more exhaustive search find it
+
+                        //NOTE: we intentionally don't check hulls linked to startHull here, it's safer that we
+                        //only use this optimization on waypoints actually in the same hull, so we don't accidentally pick e.g. a waypoint higher up in some weird multi-hull room
+                        (startHull == null || startHull == node.Waypoint.CurrentHull))
                     {
-                        startNode = node;
+                        PathNode bestNode = node;
+                        AddCostToEndFromStartNode(node);
+                        potentialNearbyStartNodes.Clear();
+                        //collect the nodes within 2 steps from the close-by node
+                        foreach (var secondaryNode in node.connections)
+                        {
+                            potentialNearbyStartNodes.Add(secondaryNode);
+                            foreach (var tertiaryNode in secondaryNode.connections)
+                            {
+                                potentialNearbyStartNodes.Add(tertiaryNode);
+                            }
+                        }
+                        //go through the connected nodes too, in case one of them is even better
+                        // this prevents the bot from sometimes backtracking when they decide to choose a node behind them as the starting node,
+                        // even if there had been one in front of them that's closer to the target
+                        foreach (var connected in potentialNearbyStartNodes)
+                        {
+                            if (!IsValidStartNode(connected)) { continue; }
+                            CalculateCostToReachStartNode(connected);
+                            AddCostToEndFromStartNode(connected);
+                            if (connected.TempDistance < bestNode.TempDistance)
+                            {
+                                bestNode = connected;
+                            }
+                        }
+                        startNode = bestNode;
                         break;
                     }
                 }
-                //prefer nodes that are closer to the end position
-                node.TempDistance += (Math.Abs(end.X - node.TempPosition.X) + Math.Abs(end.Y - node.TempPosition.Y)) / 100.0f;
+
+                AddCostToEndFromStartNode(node);
 
                 int i = 0;
                 while (i < sortedNodes.Count && sortedNodes[i].TempDistance < node.TempDistance)
@@ -248,6 +303,41 @@ namespace Barotrauma
                     i++;
                 }
                 sortedNodes.Insert(i, node);
+            }
+
+            //calculates a rough approximation of the cost to reach the node, and stores it in node.TempDistance
+            void CalculateCostToReachStartNode(PathNode node)
+            {
+                float xDiff = Math.Abs(start.X - node.TempPosition.X);
+                float yDiff = Math.Abs(start.Y - node.TempPosition.Y);
+                //higher cost for vertical movement when inside the sub
+                if (InsideSubmarine && !(node.Waypoint.Submarine?.Info?.IsRuin ?? false))
+                {
+                    if (yDiff > wayPointHeightToPrioritizeLaddersAndStairs && node.Waypoint.Ladders == null && node.Waypoint.Stairs == null)
+                    {
+                        yDiff += 10.0f;
+                    }
+                    //only apply the higher cost for vertical movement if it's more than a meter
+                    //(small differences can be caused by non-meaningful variance in the vertical position of the waypoint, we only care about actually going up/down e.g. ladders or stairs)
+                    if (Math.Abs(yDiff) > wayPointHeightToPrioritizeLaddersAndStairs)
+                    {
+                        yDiff *= 10.0f;
+                    }
+                }
+                node.TempDistance = xDiff + yDiff;
+
+                //prefer starting from a node in this sub
+                if (IsInOtherSubmarine(node)) { node.TempDistance *= 10.0f; }
+
+                //much higher cost to waypoints that are outside
+                if (node.Waypoint.CurrentHull == null && ApplyPenaltyToOutsideNodes) { node.TempDistance *= 10.0f; }
+            }
+
+            //calculates a rough approximation of the cost to reach the end node from this specific start node, and adds it to node.TempDistance
+            void AddCostToEndFromStartNode(PathNode node)
+            {
+                //prefer nodes that are closer to the end position
+                node.TempDistance += (Math.Abs(end.X - node.TempPosition.X) + Math.Abs(end.Y - node.TempPosition.Y)) / 100.0f;
             }
 
             //find the most suitable start node, starting from the ones that are the closest
@@ -287,6 +377,8 @@ namespace Barotrauma
                     //avoid stopping at a doorway
                     if (node.Waypoint.ConnectedDoor != null) { node.TempDistance *= 10.0f; }
                 }
+                //prefer starting from a node in this sub
+                if (IsInOtherSubmarine(node)) { node.TempDistance *= 10.0f; }
                 //optimization: node extremely far (> 100m / 800 m) from the end position, don't try to use it as an end node
                 if (node.TempDistance > (InsideSubmarine ? 100.0f * 100.0f : 800.0f * 800.0f))
                 {
@@ -295,7 +387,10 @@ namespace Barotrauma
                 //optimization: node extremely close (< 1 m). If it's valid, choose it as the end node and skip the more exhaustive search for the closest one
                 if (node.TempDistance < 1.0f)
                 {
-                    if (IsValidEndNode(node))
+                    bool nodeInsideSubmarine = IsInsideSubmarine(node);
+                    if (IsValidEndNode(node) && 
+                        //don't choose outside nodes when inside or vice versa unless that's the last resort
+                        InsideSubmarine == nodeInsideSubmarine)
                     {
                         endNode = node;
                         break;
@@ -334,18 +429,23 @@ namespace Barotrauma
             }
             return FindPath(startNode, endNode, nodeFilter, errorMsgStr, minGapSize, outsideNodeCostPenalty);
 
-            bool IsValidStartNode(PathNode node) => IsValidNode(node, (isCharacter, start), startNodeFilter);
+            bool IsValidStartNode(PathNode node) => IsValidNode(node, (isCharacter, start), startNodeFilter, currentStairs);
 
-            bool IsValidEndNode(PathNode node) => IsValidNode(node, (isCharacter && checkVisibility, end), endNodeFilter);
+            bool IsValidEndNode(PathNode node) => IsValidNode(node, (isCharacter && checkVisibility, end), endNodeFilter,
+                //disregard current stairs - whatever stairs the bot is currently at shouldn't matter for the end node
+                currentStairs: null);
 
-            bool IsValidNode(PathNode node, (bool check, Vector2 start) visibilityCheck, Func<PathNode, bool> extraFilter)
+            bool IsValidNode(PathNode node, (bool check, Vector2 start) visibilityCheck, Func<PathNode, bool> extraFilter, Structure currentStairs)
             {
+                if (node.Waypoint.IsDisabled) { return false; }
                 if (nodeFilter != null && !nodeFilter(node)) { return false; }
                 if (extraFilter != null && !extraFilter(node)) { return false; }
                 if (GetSingleNodePenalty != null && GetSingleNodePenalty(node) == null) { return false; }
+                //don't choose a waypoint that doesn't have unobstructed links to any other waypoint
+                if (node.Waypoint.linkedTo.None(linked => linked is WayPoint wp && !node.Waypoint.ObstructedConnections.Contains(wp))) { return false; }
                 if (node.Waypoint.ConnectedGap != null)
                 {
-                    if (!CanFitThroughGap(node.Waypoint.ConnectedGap, minGapSize)) { return false; }
+                    if (!node.Waypoint.ConnectedGap.CanFitThrough(minGapSize)) { return false; }
                 }
                 if (visibilityCheck.check)
                 {
@@ -354,7 +454,26 @@ namespace Barotrauma
                     if (body != null)
                     {
                         if (body.UserData is Submarine) { return false; }
-                        if (body.UserData is Structure s && !s.IsPlatform) { return false; }
+                        if (body.UserData is Structure s) 
+                        {
+                            if (s.StairDirection != Direction.None)
+                            {
+                                if (currentStairs != null)
+                                {
+                                    //don't try to get through stairs if currently on stairs
+                                    return false;
+                                }
+                                else
+                                {
+                                    //when not on stairs, it's fine to ignore them - the character can and should be allowed to walk past stairs
+                                    return true;
+                                }
+                            }
+                            if (!s.IsPlatform)
+                            { 
+                                return false; 
+                            }                           
+                        }
                         if (body.UserData is Voronoi2.VoronoiCell) { return false; }
                         if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) { return false; }
                     }
@@ -392,7 +511,7 @@ namespace Barotrauma
                     if (filter != null && !filter(node)) { continue; }
                     if (node.Waypoint.ConnectedGap != null)
                     {
-                        if (!CanFitThroughGap(node.Waypoint.ConnectedGap, minGapSize)) { continue; }
+                        if (!node.Waypoint.ConnectedGap.CanFitThrough(minGapSize)) { continue; }
                     }
                     dist = node.F;
                     currNode = node;
@@ -411,7 +530,8 @@ namespace Barotrauma
                         //a node that hasn't been searched yet
                         case 0:
                         {
-                            nextNode.H = Vector2.Distance(nextNode.Position, end.Position);
+                            // Note: TempPosition rather than Position (which would be local to the sub if they have one)
+                            nextNode.H = Vector2.Distance(nextNode.TempPosition, end.TempPosition);
                             float cost = CalculateNodeCost();
                             if (cost < float.PositiveInfinity)
                             {
@@ -447,6 +567,9 @@ namespace Barotrauma
                     float CalculateNodeCost()
                     {
                         float penalty = 0f;
+
+                        if (currNode.Waypoint.ObstructedConnections.Contains(nextNode.Waypoint)) { return float.PositiveInfinity; }
+
                         if (GetNodePenalty != null)
                         {
                             float? nodePenalty = GetNodePenalty(currNode, nextNode);
@@ -463,7 +586,8 @@ namespace Barotrauma
                         {
                             penalty += outsideNodePenalty;
                         }
-                        return currNode.G + currNode.distances[i] + penalty;
+                        // Note: TempPosition rather than Position (which would be local to the sub if they have one)
+                        return currNode.G + Vector2.Distance(currNode.TempPosition, nextNode.TempPosition) + penalty;
                     }
                 }
             }
@@ -512,7 +636,5 @@ namespace Barotrauma
 
             return path;
         }
-
-        private bool CanFitThroughGap(Gap gap, float minWidth) => gap.IsHorizontal ? gap.RectHeight > minWidth : gap.RectWidth > minWidth;
     }
 }

@@ -1,16 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.Linq;
-using Barotrauma.Networking;
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
-using Barotrauma.Extensions;
+using System.Linq;
 
 namespace Barotrauma
 {
-    class TabMenu
+    public class TabMenu
     {
         public static bool PendingChanges = false;
 
@@ -489,7 +489,10 @@ namespace Barotrauma
         private void CreateCrewListFrame(GUIFrame crewFrame)
         {
             crew = GameMain.GameSession?.CrewManager?.GetCharacters() ?? new List<Character>() { TestScreen.dummyCharacter};
-            teamIDs = crew.Select(c => c.TeamID).Distinct().ToList();
+            teamIDs = 
+                GameMain.GameSession?.GameMode is PvPMode ?
+                    crew.Select(c => c.TeamID).Distinct().ToList() :
+                    new List<CharacterTeamType>() { CharacterTeamType.Team1 };
 
             // Show own team first when there's more than one team
             if (teamIDs.Count > 1 && GameMain.Client?.Character != null)
@@ -1066,7 +1069,7 @@ namespace Barotrauma
 
             if (client.Character != null && client.Character.IsDead)
             {
-                characterNameBlock.Strikethrough = new GUITextBlock.StrikethroughSettings(null, GUI.IntScale(1f), GUI.IntScale(5f));
+                characterNameBlock.Strikethrough = new Strikethrough(GUIStyle.Red, GUI.IntScale(1f), GUI.IntScale(5f));
             }
         }
 
@@ -1683,7 +1686,10 @@ namespace Barotrauma
             infoFrame.ClearChildren();
             GUIFrame missionFrame = new GUIFrame(new RectTransform(Vector2.One, infoFrame.RectTransform, Anchor.TopCenter), style: "GUIFrameListBox");
             int padding = (int)(0.0245f * missionFrame.Rect.Height);
-            GUIFrame missionFrameContent = new GUIFrame(new RectTransform(new Point(missionFrame.Rect.Width - padding * 2, missionFrame.Rect.Height - padding * 2), infoFrame.RectTransform, Anchor.Center), style: null);
+            GUILayoutGroup missionFrameContent = new GUILayoutGroup(new RectTransform(new Point(missionFrame.Rect.Width - padding * 2, missionFrame.Rect.Height - padding * 2), infoFrame.RectTransform, Anchor.Center))
+            {
+                AbsoluteSpacing = GUI.IntScale(10)
+            };
             Location location = GameMain.GameSession.StartLocation;
             if (Level.Loaded.Type == LevelData.LevelType.LocationConnection)
             {
@@ -1725,12 +1731,21 @@ namespace Barotrauma
                 TextManager.Get("LevelDifficulty"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft);
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), difficultyLabel.RectTransform), TextManager.GetWithVariable("percentageformat", "[value]", ((int)Level.Loaded.LevelData.Difficulty).ToString()), textAlignment: Alignment.CenterRight);
 
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), missionFrameContent.RectTransform) { AbsoluteOffset = new Point(0, locationInfoContainer.Rect.Height + padding) }, style: "HorizontalLine")
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), missionFrameContent.RectTransform), style: "HorizontalLine")
             {
                 CanBeFocused = false
             };
 
-            int locationInfoYOffset = locationInfoContainer.Rect.Height + padding * 2;
+            var worldStepContainer = CreateWorldStepCounter(missionFrameContent, relativeSize: new Vector2(1.0f, 0.0f));
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), missionFrameContent.RectTransform), style: "HorizontalLine")
+            {
+                CanBeFocused = false
+            };
+
+            int locationInfoYOffset = locationInfoContainer.Rect.Height + worldStepContainer.Rect.Height + padding * 3;
 
             GUIListBox missionList = new GUIListBox(new RectTransform(new Point(contentWidth, missionFrameContent.Rect.Height - locationInfoYOffset), missionFrameContent.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, locationInfoYOffset) });
             missionList.ContentBackground.Color = Color.Transparent;
@@ -1740,7 +1755,7 @@ namespace Barotrauma
             {
                 foreach (Mission mission in GameMain.GameSession.Missions)
                 {
-                    if (!mission.Prefab.ShowInMenus) { continue; }
+                    if (!mission.ShowInMenus) { continue; }
 
                     var textContent = new List<LocalizedString>()
                     {
@@ -1752,13 +1767,13 @@ namespace Barotrauma
 
                     RoundSummary.CreateMissionEntry(
                         missionList.Content, 
-                        mission.Name, 
+                        mission.NameWithContentPackage, 
                         textContent, 
                         mission.Difficulty ?? 0, 
                         mission.Prefab.Icon, mission.Prefab.IconColor,
                         mission.GetDifficultyToolTipText(),
                         out GUIImage missionIcon);
-                    if (missionIcon != null)
+                    if (missionIcon != null && mission.Prefab.ShowCompletionState)
                     {
                         UpdateMissionStateIcon();
                         mission.OnMissionStateChanged += (mission) => UpdateMissionStateIcon();
@@ -1785,6 +1800,61 @@ namespace Barotrauma
             RoundSummary.AddSeparators(missionList.Content);
         }
 
+        public static GUIComponent CreateWorldStepCounter(GUIComponent parent, Vector2 relativeSize, string frameStyle = null)
+        {
+            GUIFrame backgroundFrame = null;
+            if (frameStyle != null)
+            {
+                backgroundFrame = new GUIFrame(new RectTransform(relativeSize, parent.RectTransform), frameStyle);
+                parent = backgroundFrame;
+            }
+            var worldStepContainer = new GUILayoutGroup(new RectTransform(frameStyle == null ? relativeSize : new Vector2(0.95f, 0.9f), parent.RectTransform, Anchor.Center), isHorizontal: true)
+            {
+                Stretch = true
+            };
+
+            var worldStepLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), worldStepContainer.RectTransform),
+                TextManager.Get("timeonmission.label"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft)
+            {
+                ToolTip = TextManager.Get("timeonmission.tooltip")
+            };
+            worldStepLabel.RectTransform.MinSize = worldStepLabel.TextSize.ToPoint();
+
+            var worldStepCounter = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), worldStepContainer.RectTransform), string.Empty, textAlignment: Alignment.Center)
+            {
+                CanBeFocused = false,
+                TextGetter = () =>
+                {
+                    float elapsedWorldSteps = CampaignMode.GetElapsedWorldSteps(GameMain.GameSession?.RoundDuration ?? 0, CampaignMode.TransitionType.None);
+                    int elapsedWholeWorldSteps = (int)Math.Floor(elapsedWorldSteps);
+                    return TextManager.GetWithVariable(
+                        elapsedWholeWorldSteps == 1 ? "timeonmission.valuesingular" : "timeonmission.valueplural",
+                        "[worldsteps]", elapsedWholeWorldSteps.ToString());
+                }
+            };
+            var worldStepRemainingCounter = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), worldStepContainer.RectTransform), string.Empty, textAlignment: Alignment.CenterRight)
+            {
+                CanBeFocused = false,
+                TextGetter = () =>
+                {
+                    float currentWorldStep = CampaignMode.GetElapsedWorldSteps(GameMain.GameSession?.RoundDuration ?? 0, CampaignMode.TransitionType.None);
+                    int wholeWorldSteps = (int)Math.Floor(currentWorldStep);
+                    float totalRemainingMinutes =
+                        CampaignMode.WorldStepLengthMinutes -
+                            (currentWorldStep - wholeWorldSteps) * CampaignMode.WorldStepLengthMinutes;
+                    float totalRemainingSeconds = totalRemainingMinutes * 60.0f;
+                    return TextManager.GetWithVariable(
+                        "timeonmission.remainingvalue", "[remaining]", $"{(int)totalRemainingMinutes}:{((int)(totalRemainingSeconds % 60)).ToString("00")}");
+                }
+            };
+
+            worldStepContainer.InheritChildrenMinHeight();
+
+            GUITextBlock.AutoScaleAndNormalize(worldStepLabel, worldStepCounter, worldStepRemainingCounter);
+
+            return (backgroundFrame as GUIComponent) ?? (worldStepContainer as GUIComponent) ;
+        }
+
         private static void CreateSubmarineInfo(GUIFrame infoFrame, Submarine sub)
         {
             if (sub == null) { return; }
@@ -1794,6 +1864,7 @@ namespace Barotrauma
 
             var previewButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.43f), paddedFrame.RectTransform), style: null)
             {
+                ToolTip = TextManager.Get("previewsubmarine"),
                 OnClicked = (btn, obj) => { SubmarinePreview.Create(sub.Info); return false; },
             };
 
@@ -1891,10 +1962,13 @@ namespace Barotrauma
         {
             parent.Content.ClearChildren();
             List<GUITextBlock> skillNames = new List<GUITextBlock>();
-            foreach (Skill skill in info.Job.GetSkills().OrderByDescending(static s => s.Level))
+            foreach (Skill skill in info.Job.GetSkills(exceptOutpostSkills: true).OrderByDescending(static s => s.Level))
             {
                 GUILayoutGroup skillContainer = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.0f), parent.Content.RectTransform), isHorizontal: true) { CanBeFocused = true };
-                var skillName = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), skillContainer.RectTransform), TextManager.Get($"skillname.{skill.Identifier}").Fallback(skill.Identifier.Value));
+                var skillName = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), skillContainer.RectTransform), TextManager.Get($"skillname.{skill.Identifier}").Fallback(skill.Identifier.Value))
+                {
+                    ToolTip = skill.Description
+                };
                 skillNames.Add(skillName);
                 skillName.RectTransform.MinSize = new Point(0, skillName.Rect.Height);
                 skillContainer.RectTransform.MinSize = new Point(0, skillName.Rect.Height);

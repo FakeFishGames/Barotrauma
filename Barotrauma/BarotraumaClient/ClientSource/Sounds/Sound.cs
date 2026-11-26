@@ -4,7 +4,7 @@ using System;
 
 namespace Barotrauma.Sounds
 {
-    abstract class Sound : IDisposable
+    public abstract class Sound : IDisposable
     {
         protected bool disposed;
         public bool Disposed

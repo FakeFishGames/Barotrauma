@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class BallastFloraPrefab : Prefab
+    public class BallastFloraPrefab : Prefab
     {
         public string OriginalName { get; }
         public LocalizedString DisplayName { get; }

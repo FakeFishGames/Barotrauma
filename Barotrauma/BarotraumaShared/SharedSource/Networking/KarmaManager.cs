@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class KarmaManager : ISerializableEntity
+    public partial class KarmaManager : ISerializableEntity
     {
         public static readonly string ConfigFile = "Data" + Path.DirectorySeparatorChar + "karmasettings.xml";
 

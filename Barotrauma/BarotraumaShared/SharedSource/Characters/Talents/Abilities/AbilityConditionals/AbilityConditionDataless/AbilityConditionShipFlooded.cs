@@ -10,7 +10,7 @@
 
         protected override bool MatchesConditionSpecific()
         {
-            if (!character.IsInFriendlySub) { return false; }
+            if (!character.IsInSameTeamSub) { return false; }
             float waterVolume = 0.0f, totalVolume = 0.0f;
             foreach (Hull hull in Hull.HullList)
             {

@@ -8,7 +8,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
     [RequiredByCorePackage]
-    sealed class AfflictionsFile : ContentFile
+    public sealed class AfflictionsFile : ContentFile
     {
         private readonly static ImmutableHashSet<Type> afflictionTypes;
         static AfflictionsFile()

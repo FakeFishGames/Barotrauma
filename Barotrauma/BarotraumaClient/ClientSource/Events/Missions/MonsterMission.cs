@@ -18,13 +18,13 @@ namespace Barotrauma
                 {
                     throw new System.Exception($"Error in MonsterMission.ClientReadInitial: failed to create a monster (mission: {Prefab.Identifier}, index: {i})");
                 }
-                monsters.Add(monster);
+                allMonsters.Add(monster);
             }
-            if (monsters.Count != monsterCount)
+            if (allMonsters.Count != monsterCount)
             {
-                throw new System.Exception("Error in MonsterMission.ClientReadInitial: monster count does not match the server count (" + monsterCount + " != " + monsters.Count + "mission: " + Prefab.Identifier + ")");
+                throw new System.Exception("Error in MonsterMission.ClientReadInitial: monster count does not match the server count (" + monsterCount + " != " + allMonsters.Count + "mission: " + Prefab.Identifier + ")");
             }
-            InitializeMonsters(monsters);
+            InitializeMonsters(allMonsters);
         }
     }
 }

@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    static class HintManager
+    public static class HintManager
     {
         private const string HintManagerFile = "hintmanager.xml";
 
@@ -178,23 +178,35 @@ namespace Barotrauma
         {
             if (repairable.ForceDeteriorationTimer > 0.0f && !character.IsTraitor)
             {
-                CoroutineManager.Invoke(() => 
-                { 
-                    DisplayHint($"repairingsabotageditem".ToIdentifier()); 
+                CoroutineManager.Invoke(() =>
+                {
+                    if (!CanDisplayHints()) { return; }
+                    DisplayHint($"repairingsabotageditem".ToIdentifier());
                 }, delay: 5.0f);
             }
         }
 
         public static void OnItemMarkedForRelocation()
         {
-            DisplayHint($"onitemmarkedforrelocation".ToIdentifier());            
+            if (!CanDisplayHints()) { return; }
+            DisplayHint($"onitemmarkedforrelocation".ToIdentifier());
         }
 
         public static void OnItemMarkedForDeconstruction(Character character)
         {
+            if (!CanDisplayHints()) { return; }
             if (character == Character.Controlled)
             {
                 DisplayHint($"onitemmarkedfordeconstruction".ToIdentifier());
+            }
+        }
+
+        public static void OnLimbSevered(Character character)
+        {
+            if (!CanDisplayHints()) { return; }
+            if (character == Character.Controlled && !character.IsDead)
+            {
+                DisplayHint($"onlimbsevered".ToIdentifier());
             }
         }
 
@@ -408,6 +420,16 @@ namespace Barotrauma
             });
         }
 
+        public static void OnShowProstheticInterface()
+        {
+            if (!CanDisplayHints()) { return; }
+            DisplayHint("prostheticinterfaceopened".ToIdentifier(), onUpdate: () =>
+            {
+                if (CharacterHealth.OpenHealthWindow != null) { return; }
+                ActiveHintMessageBox.Close();
+            });
+        }
+
         public static void OnShowTabMenu()
         {
             IgnoreReminder("tabmenu");
@@ -428,6 +450,18 @@ namespace Barotrauma
                 (item.HasTag(Tags.GeneticDevice) && character.Inventory.FindItemByTag(Tags.GeneticDevice, recursive: true) != null))
             {
                 if (DisplayHint($"geneticmaterial.useinstructions".ToIdentifier())) { return; }
+            }
+        }
+
+        public static void OnEquippedItem(Character character, Item item)
+        {
+            if (!CanDisplayHints()) { return; }
+            if (character != Character.Controlled || item == null) { return; }
+
+            if (DisplayHint($"onequip.{item.Prefab.Identifier}".ToIdentifier())) { return; }
+            foreach (Identifier tag in item.GetTags())
+            {
+                if (DisplayHint($"onequip.{tag}".ToIdentifier())) { return; }
             }
         }
 
@@ -474,17 +508,38 @@ namespace Barotrauma
             DisplayHint("radiojammed".ToIdentifier());
         }
 
-        public static void OnReactorOutOfFuel(Reactor reactor)
+        public static void OnSubmarineHelpedAgainstAttacker(Faction submarineOwnerFaction)
+        {
+            if (!CanDisplayHints()) { return; }
+            DisplayHint("OnSubmarineHelpedAgainstAttacker".ToIdentifier(), 
+                variables: [("[faction]".ToIdentifier(), submarineOwnerFaction.Prefab.Name)]);
+        }
+
+        public static void OnReactorOutOfFuel(Item reactor, float availableFuel)
         {
             if (!CanDisplayHints()) { return; }
             if (reactor == null) { return; }
-            if (reactor.Item.Submarine?.Info?.Type != SubmarineType.Player || reactor.Item.Submarine.TeamID != Character.Controlled.TeamID) { return; }
+            if (reactor.Submarine?.Info?.Type != SubmarineType.Player || reactor.Submarine.TeamID != Character.Controlled.TeamID) { return; }
             if (!HasValidJob("engineer")) { return; }
             DisplayHint("onreactoroutoffuel".ToIdentifier(), onUpdate: () =>
             {
-                if (reactor?.Item != null && !reactor.Item.Removed && reactor.AvailableFuel < 1) { return; }
+                if (reactor != null && !reactor.Removed && availableFuel < 1) { return; }
                 ActiveHintMessageBox.Close();
             });
+        }
+
+        /// <summary>
+        /// Displays the vent infestation hint, once (the first time it's successfully displayed it's permanently ignored).
+        /// </summary>
+        public static void OnVentInfested()
+        {
+            Identifier hintIdentifier = "ventinfestation".ToIdentifier();
+            if (IsHintIgnored(hintIdentifier)) { return; }
+            if (!CanDisplayHints()) { return; }
+            if (DisplayHint(hintIdentifier))
+            {
+                IgnoreHint(hintIdentifier);
+            }
         }
 
         public static void OnAssignedAsTraitor()
@@ -725,6 +780,8 @@ namespace Barotrauma
         private static bool DisplayHint(Identifier hintIdentifier, bool extendTextTag = true, (Identifier Tag, LocalizedString Value)[] variables = null, Sprite icon = null, Color? iconColor = null, Action onDisplay = null, Action onUpdate = null)
         {
             if (hintIdentifier == Identifier.Empty) { return false; }
+            // Safety net, callers should normally check CanDisplayHints() first
+            if (GameSettings.CurrentConfig.DisableInGameHints) { return false; }
             if (!HintIdentifiers.Contains(hintIdentifier)) { return false; }
             if (IgnoredHints.Instance.Contains(hintIdentifier)) { return false; }
             if (HintsIgnoredThisRound.Contains(hintIdentifier)) { return false; }
@@ -789,6 +846,29 @@ namespace Barotrauma
             }
         }
 
+
+        /// <summary>
+        /// Can be used to ignore a specific kind of custom hint, that's not defined in <see cref="HintIdentifiers"/>.
+        /// This can also be used for any arbitrary hints, not just the normal "hint popups", for example to make some UI element flash until it's clicked for the first time.
+        /// </summary>
+        public static void IgnoreCustomHint(Identifier hintIdentifier, bool ignore = true)
+        {
+            if (hintIdentifier.IsEmpty) { return; }
+            if (ignore)
+            {
+                IgnoredHints.Instance.Add(hintIdentifier);
+            }
+            else
+            {
+                IgnoredHints.Instance.Remove(hintIdentifier);
+            }
+        }
+
+        public static bool IsHintIgnored(Identifier hintIdentifier)
+        {
+            return IgnoredHints.Instance.Contains(hintIdentifier);
+        }
+
         private static void IgnoreReminder(string reminderIdentifier)
         {
             HintsIgnoredThisRound.Add($"reminder.{reminderIdentifier}".ToIdentifier());
@@ -831,5 +911,8 @@ namespace Barotrauma
             }
             return true;
         }
+
+        public static void CleanUpStaticReferences()
+            => BallastHulls.Clear();
     }
 }

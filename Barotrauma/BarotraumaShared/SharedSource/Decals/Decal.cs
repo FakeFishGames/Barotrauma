@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    partial class Decal
+    public partial class Decal
     {
         public readonly DecalPrefab Prefab;
         private Vector2 position;
@@ -87,11 +87,16 @@ namespace Barotrauma
 
         private bool cleaned = false;
 
-        public Decal(DecalPrefab prefab, float scale, Vector2 worldPosition, Hull hull, int? spriteIndex = null)
+        public Decal(DecalPrefab prefab, float scale, Vector2 worldPosition, Hull hull, bool multiplyByPrefabScale, int? spriteIndex = null)
         {
             Prefab = prefab;
 
             this.hull = hull;
+
+            if (multiplyByPrefabScale)
+            {
+                scale *= Rand.Range(prefab.MinScale, prefab.MaxScale, Rand.RandSync.Unsynced);
+            }
 
             //transform to hull-relative coordinates so we don't have to worry about the hull moving
             NonClampedPosition = position = worldPosition - hull.WorldRect.Location.ToVector2();

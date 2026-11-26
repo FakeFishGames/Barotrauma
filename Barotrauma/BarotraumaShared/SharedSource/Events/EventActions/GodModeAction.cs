@@ -23,7 +23,7 @@
             return isFinished;
         }
 
-        public override void Reset()
+        public override void Reset(bool shouldEndConversations = true)
         {
             isFinished = false;
         }

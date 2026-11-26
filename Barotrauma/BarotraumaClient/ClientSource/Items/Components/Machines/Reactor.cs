@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Reactor : Powered, IServerSerializable, IClientSerializable
+    partial class Reactor : ReactorBase, IServerSerializable, IClientSerializable
     {
         public GUIButton AutoTempSwitch { get; private set; }
 
@@ -62,6 +62,9 @@ namespace Barotrauma.Items.Components
         private GUILayoutGroup paddedFrame;
 
         private readonly Dictionary<string, GUIButton> warningButtons = new Dictionary<string, GUIButton>();
+
+        protected override GUIScrollBar PowerGenerationRateScrollBar => FissionRateScrollBar;
+        protected override GUIScrollBar OutputControlRateScrollBar => TurbineOutputScrollBar;
 
         private static readonly string[] warningTexts = new string[]
         {
@@ -351,8 +354,8 @@ namespace Barotrauma.Items.Components
                 TextManager.Get("PowerLabel"), font: GUIStyle.SubHeadingFont, style: "IndicatorLightPower")
                 {
                     CanBeFocused = false,
-                    Selected = _powerOn
-                };
+                    Selected = PowerOn
+            };
             powerLight.TextBlock.Padding = new Vector4(5.0f, 0.0f, 0.0f, 0.0f);
             powerLight.TextBlock.AutoScaleHorizontal = true;
             powerLight.TextBlock.OverrideTextColor(GUIStyle.TextColorNormal);
@@ -550,7 +553,7 @@ namespace Barotrauma.Items.Components
             DrawGraph(loadGraph, spriteBatch, graphRect, Math.Max(10000.0f, maxLoad), xOffset, loadColor);
         }
 
-        private void UpdateGraph(float deltaTime)
+        protected override void UpdateGraphs(float deltaTime)
         {
             graphTimer += deltaTime * 1000.0f;
 
@@ -562,7 +565,7 @@ namespace Barotrauma.Items.Components
                 graphTimer = 0.0f;
             }
 
-            if (autoTemp)
+            if (AutoTemp)
             {
                 FissionRateScrollBar.BarScroll = FissionRate / 100.0f;
                 TurbineOutputScrollBar.BarScroll = TurbineOutput / 100.0f;
@@ -642,7 +645,7 @@ namespace Barotrauma.Items.Components
                 FissionRateScrollBar.BarScroll = FissionRate / 100.0f;
                 TurbineOutputScrollBar.BarScroll = TurbineOutput / 100.0f;
             }
-            else if (!autoTemp && Character.DisableControls && GUI.KeyboardDispatcher.Subscriber == null)
+            else if (!AutoTemp && Character.DisableControls && GUI.KeyboardDispatcher.Subscriber == null)
             {
                 Vector2 input = Vector2.Zero;
                 float rate = 50.0f; //percentage per second
@@ -902,9 +905,9 @@ namespace Barotrauma.Items.Components
             tempRangeIndicator?.Remove();
         }
 
-        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
+        public override void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
-            msg.WriteBoolean(autoTemp);
+            msg.WriteBoolean(AutoTemp);
             msg.WriteBoolean(PowerOn);
             msg.WriteRangedSingle(TargetFissionRate, 0.0f, 100.0f, 8);
             msg.WriteRangedSingle(TargetTurbineOutput, 0.0f, 100.0f, 8);
@@ -913,7 +916,7 @@ namespace Barotrauma.Items.Components
             correctionTimer = CorrectionDelay;
         }
 
-        public void ClientEventRead(IReadMessage msg, float sendingTime)
+        public override void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             if (correctionTimer > 0.0f)
             {
@@ -941,28 +944,28 @@ namespace Barotrauma.Items.Components
             IsActive = true;
         }
 
-        private void UpdateUIElementStates()
+        protected override void UpdateUIElementStates()
         {
             if (powerLight != null)
             {
-                powerLight.Selected = _powerOn;
+                powerLight.Selected = PowerOn;
             }
             if (AutoTempSwitch != null)
             {
-                AutoTempSwitch.Selected = autoTemp;
-                AutoTempSwitch.Enabled = _powerOn;
+                AutoTempSwitch.Selected = AutoTemp;
+                AutoTempSwitch.Enabled = PowerOn;
             }
             if (autoTempLight != null)
             {
-                autoTempLight.Selected = autoTemp && _powerOn;
+                autoTempLight.Selected = AutoTemp && PowerOn;
             }
             if (FissionRateScrollBar != null)
             {
-                FissionRateScrollBar.Enabled = _powerOn && !autoTemp;
+                FissionRateScrollBar.Enabled = PowerOn && !AutoTemp;
             }
             if (TurbineOutputScrollBar != null)
             {
-                TurbineOutputScrollBar.Enabled = _powerOn && !autoTemp;
+                TurbineOutputScrollBar.Enabled = PowerOn && !AutoTemp;
             }
         }
     }

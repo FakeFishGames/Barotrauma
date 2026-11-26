@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    partial class RespawnManager : Entity, IServerSerializable
+    public partial class RespawnManager : Entity, IServerSerializable
     {
         private float shuttleEmptyTimer;
 
@@ -429,7 +429,7 @@ namespace Barotrauma.Networking
 
             //the spawnpoints where the characters will spawn
             var selectedSpawnPoints =
-                isPvPMode && Level.Loaded != null && Level.Loaded.ShouldSpawnCrewInsideOutpost() ? 
+                Level.Loaded != null && Level.Loaded.ShouldSpawnCrewInsideOutpost(teamID, isInitialSpawn: false) ? 
                 WayPoint.SelectOutpostSpawnPoints(characterInfos, teamID) :
                 WayPoint.SelectCrewSpawnPoints(characterInfos, respawnSub);
 
@@ -582,27 +582,10 @@ namespace Barotrauma.Networking
                         teamSpecificState.RespawnItems.AddRange(AutoItemPlacer.RegenerateLoot(respawnShuttle, respawnContainer));
                     }
                 }
-                else if (character.InWater)
-                {
-                    if (divingSuitPrefab != null)
-                    {
-                        var divingSuit = new Item(divingSuitPrefab, character.Position, respawnSub);
-                        Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(divingSuit));
-                        character.Inventory.TryPutItem(divingSuit, user: null, allowedSlots: divingSuit.AllowedSlots);
-                        teamSpecificState.RespawnItems.Add(divingSuit);
-                        if (oxyPrefab != null && divingSuit.GetComponent<ItemContainer>() != null)
-                        {
-                            var oxyTank = new Item(oxyPrefab, character.Position, respawnSub);
-                            Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(oxyTank));
-                            divingSuit.Combine(oxyTank, user: null);
-                            teamSpecificState.RespawnItems.Add(oxyTank);
-                        }
-                    }
-                }
 
                 var characterData = campaign?.GetClientCharacterData(clients[i]);
                 // NOTE: This was where Reaper's tax got applied
-                if (characterData != null && Level.Loaded?.Type != LevelData.LevelType.Outpost && characterData.HasSpawned)
+                if (characterData != null && characterData.HasSpawned)
                 {
                     ReduceCharacterSkillsOnDeath(characterInfos[i], applyExtraSkillLoss: true);
                 }
@@ -619,6 +602,7 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
+                    characterData.ApplyHealthData(character);
                     if (characterData.HasItemData)
                     {
                         characterData.SpawnInventoryItems(character, character.Inventory);
@@ -627,9 +611,49 @@ namespace Barotrauma.Networking
                     {
                         character.GiveJobItems(isPvPMode, jobItemSpawnPoint);
                     }
-                    characterData.ApplyHealthData(character);
                     character.GiveIdCardTags(jobItemSpawnPoint);
                     characterData.HasSpawned = true;
+                }
+
+                //give the character a suit if they don't have one yet
+                if (character.InWater && !character.IsProtectedFromPressure && !HumanAIController.HasDivingSuit(character))
+                {
+                    if (HumanAIController.HasDivingSuit(character, out Item existingSuit, requireOxygenTank: false))
+                    {
+                        //the character has a suit but no oxygen, just give them an oxygen tank
+                        if (oxyPrefab != null)
+                        {
+                            var oxyTank = new Item(oxyPrefab, character.Position, respawnSub);
+                            Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(oxyTank));
+                            if (existingSuit == null || !existingSuit.Combine(oxyTank, user: null))
+                            {
+                                //couldn't put the tank in the suit (e.g. an empty tank already in it), put it in the inventory instead
+                                character.Inventory.TryPutItem(oxyTank, user: null, allowedSlots: CharacterInventory.AnySlot);
+                            }
+                            teamSpecificState.RespawnItems.Add(oxyTank);
+                        }
+                    }
+                    else if (divingSuitPrefab != null)
+                    {
+                        //the character is wearing a suit that isn't suitable for the depth, drop it to make room for the respawn suit
+                        //(otherwise the respawn suit couldn't be equipped and the character would get crushed)
+                        if (HumanAIController.HasDivingSuit(character, out Item inadequateSuit, requireOxygenTank: false, requireSuitablePressureProtection: false))
+                        {
+                            inadequateSuit?.Drop(character);
+                        }
+                        var divingSuit = new Item(divingSuitPrefab, character.Position, respawnSub);
+                        Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(divingSuit));
+                        var suitSlots = divingSuit.GetComponent<Wearable>()?.AllowedSlots ?? divingSuit.AllowedSlots;
+                        character.Inventory.TryPutItem(divingSuit, user: null, allowedSlots: suitSlots);
+                        teamSpecificState.RespawnItems.Add(divingSuit);
+                        if (oxyPrefab != null && divingSuit.GetComponent<ItemContainer>() != null)
+                        {
+                            var oxyTank = new Item(oxyPrefab, character.Position, respawnSub);
+                            Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(oxyTank));
+                            divingSuit.Combine(oxyTank, user: null);
+                            teamSpecificState.RespawnItems.Add(oxyTank);
+                        }
+                    }
                 }
 
                 //add the ID card tags they should've gotten when spawning in the shuttle

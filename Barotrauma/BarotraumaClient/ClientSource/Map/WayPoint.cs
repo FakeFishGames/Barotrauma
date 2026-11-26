@@ -42,7 +42,7 @@ namespace Barotrauma
             if (spawnType != SpawnType.Path) { clr = Color.Gray; }
             if (!IsTraversable)
             {
-                clr = Color.Black;
+                clr = Color.DarkGray * 0.5f;
             }
             if (IsHighlighted || IsHighlighted) { clr = Color.Lerp(clr, Color.White, 0.8f); }
 
@@ -51,9 +51,12 @@ namespace Barotrauma
             if (ConnectedGap is { Removed: true }) { ConnectedGap = null; }
 
             int iconSize = spawnType == SpawnType.Path ? WaypointSize : SpawnPointSize;
-            if (ConnectedDoor != null || Ladders != null || Stairs != null || SpawnType != SpawnType.Path)
+            if (!IsDisabled)
             {
-                iconSize = (int)(iconSize * 1.5f);
+                if (ConnectedDoor != null || Ladders != null || Stairs != null || SpawnType != SpawnType.Path)
+                {
+                    iconSize = (int)(iconSize * 1.5f);
+                }
             }
 
             if (IsSelected || IsHighlighted)
@@ -126,7 +129,7 @@ namespace Barotrauma
                     GUI.DrawLine(spriteBatch,
                         drawPos,
                         new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
-                        (IsTraversable ? GUIStyle.Green : Color.Gray) * 0.7f, width: 5, depth: 0.002f);
+                        (IsTraversable && !ObstructedConnections.Contains(e) ? GUIStyle.Green : Color.Gray) * 0.7f, width: 5, depth: 0.002f);
                 }
             }
             
@@ -143,6 +146,14 @@ namespace Barotrauma
                     drawPos,
                     new Vector2(Ladders.Item.DrawPosition.X, -Ladders.Item.DrawPosition.Y),
                     Color.White, width: 1);
+            }
+
+            foreach (Item item in BlockingItems)
+            {
+                GUI.DrawLine(spriteBatch,
+                    drawPos,
+                    new Vector2(item.DrawPosition.X, -item.DrawPosition.Y),
+                    Color.Red, width: 1);
             }
 
             var color = Color.WhiteSmoke;

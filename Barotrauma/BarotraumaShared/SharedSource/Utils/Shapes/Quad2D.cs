@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma;
 
-readonly record struct Quad2D(Vector2 A, Vector2 B, Vector2 C, Vector2 D)
+public readonly record struct Quad2D(Vector2 A, Vector2 B, Vector2 C, Vector2 D)
 {
     public Vector2 Centroid => (A + B + C + D) / 4;
 

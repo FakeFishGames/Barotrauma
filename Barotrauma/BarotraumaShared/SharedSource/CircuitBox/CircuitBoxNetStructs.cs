@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Collections.Immutable;
@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework;
 namespace Barotrauma
 {
     [Flags]
-    internal enum CircuitBoxResizeDirection
+    public enum CircuitBoxResizeDirection
     {
         None = 0,
         Down = 1,
@@ -48,7 +48,7 @@ namespace Barotrauma
     }
 
     [NetworkSerialize]
-    internal readonly record struct CircuitBoxConnectorIdentifier(Identifier SignalConnection, Option<ushort> TargetId) : INetSerializableStruct
+    public readonly record struct CircuitBoxConnectorIdentifier(Identifier SignalConnection, Option<ushort> TargetId) : INetSerializableStruct
     {
         public static CircuitBoxConnectorIdentifier FromConnection(CircuitBoxConnection connection) =>
             connection switch
@@ -64,6 +64,7 @@ namespace Barotrauma
 
         public Option<CircuitBoxConnection> FindConnection(CircuitBox circuitBox)
         {
+            //note that we don't need to remap these IDs: they're internal IDs of the circuit box, not entity IDs
             if (!TargetId.TryUnwrap(out var id))
             {
                 return circuitBox.FindInputOutputConnection(SignalConnection);
@@ -96,7 +97,9 @@ namespace Barotrauma
             Option<ushort> targetId = Option.None;
             if (!string.IsNullOrWhiteSpace(target))
             {
-                targetId = ushort.TryParse(target, out var value) ? Option.Some(value) : Option.None;
+                targetId = ushort.TryParse(target, out ushort value) ? 
+                    Option.Some(value) : 
+                    Option.None;
             }
 
             return new CircuitBoxConnectorIdentifier(name.ToIdentifier(), targetId);
@@ -122,7 +125,7 @@ namespace Barotrauma
     internal readonly record struct CircuitBoxAddComponentEvent(UInt32 PrefabIdentifier, Vector2 Position) : INetSerializableStruct;
 
     [NetworkSerialize]
-    internal readonly record struct CircuitBoxServerCreateComponentEvent(ushort BackingItemId, UInt32 UsedResource, ushort ComponentId, Vector2 Position) : INetSerializableStruct;
+    public readonly record struct CircuitBoxServerCreateComponentEvent(ushort BackingItemId, UInt32 UsedResource, ushort ComponentId, Vector2 Position) : INetSerializableStruct;
 
     [NetworkSerialize]
     internal readonly record struct CircuitBoxRemoveComponentEvent(ImmutableArray<ushort> TargetIDs) : INetSerializableStruct;
@@ -146,10 +149,10 @@ namespace Barotrauma
     internal readonly record struct CircuitBoxSelectWiresEvent(ImmutableArray<ushort> TargetIDs, bool Overwrite, ushort CharacterID) : INetSerializableStruct;
 
     [NetworkSerialize]
-    internal readonly record struct CircuitBoxClientAddWireEvent(Color Color, CircuitBoxConnectorIdentifier Start, CircuitBoxConnectorIdentifier End, UInt32 SelectedWirePrefabIdentifier) : INetSerializableStruct;
+    public readonly record struct CircuitBoxClientAddWireEvent(Color Color, CircuitBoxConnectorIdentifier Start, CircuitBoxConnectorIdentifier End, UInt32 SelectedWirePrefabIdentifier) : INetSerializableStruct;
 
     [NetworkSerialize]
-    internal readonly record struct CircuitBoxServerCreateWireEvent(CircuitBoxClientAddWireEvent Request, ushort WireId, Option<ushort> BackingItemId) : INetSerializableStruct;
+    public readonly record struct CircuitBoxServerCreateWireEvent(CircuitBoxClientAddWireEvent Request, ushort WireId, Option<ushort> BackingItemId) : INetSerializableStruct;
 
     [NetworkSerialize]
     internal readonly record struct CircuitBoxRemoveWireEvent(ImmutableArray<ushort> TargetIDs) : INetSerializableStruct;

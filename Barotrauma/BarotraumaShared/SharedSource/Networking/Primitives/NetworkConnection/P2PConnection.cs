@@ -9,7 +9,7 @@ abstract class P2PConnection<T> : P2PConnection where T : P2PEndpoint
     public new T Endpoint => (base.Endpoint as T)!;
 }
 
-abstract class P2PConnection : NetworkConnection<P2PEndpoint>
+public abstract class P2PConnection : NetworkConnection<P2PEndpoint>
 {
     protected P2PConnection(P2PEndpoint endpoint) : base(endpoint)
     {

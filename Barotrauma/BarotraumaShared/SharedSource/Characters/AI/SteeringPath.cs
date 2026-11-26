@@ -1,10 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Barotrauma
 {
-    class SteeringPath
+    public class SteeringPath
     {
         private List<WayPoint> nodes;
 
@@ -74,6 +75,13 @@ namespace Barotrauma
 
         public void AddNode(WayPoint node)
         {
+#if DEBUG
+            if (node.IsDisabled)
+            {
+                //a disabled node was somehow added to a SteeringPath! Something must be off here
+                Debugger.Break();
+            }
+#endif
             if (node == null) { return; }
             nodes.Add(node);
 
@@ -146,10 +154,10 @@ namespace Barotrauma
             currentIndex = nodeIndex;
         }
 
-        public WayPoint CheckProgress(Vector2 simPosition, float minSimDistance = 0.1f)
+        public WayPoint CheckProgress(Vector2 worldPosition, float minDistance = 0.1f)
         {
             if (nodes.Count == 0 || currentIndex > nodes.Count - 1) { return null; }
-            if (Vector2.Distance(simPosition, nodes[currentIndex].SimPosition) < minSimDistance) { currentIndex++; }
+            if (Vector2.DistanceSquared(worldPosition, nodes[currentIndex].WorldPosition) < minDistance * minDistance) { currentIndex++; }
 
             return CurrentNode;
         }

@@ -1,21 +1,15 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    public class CachedDistance
+    public class CachedDistance(Vector2 startWorldPos, Vector2 endWorldPos, float dist, string label, double recalculationTime)
     {
-        public readonly Vector2 StartWorldPos;
-        public readonly Vector2 EndWorldPos;
-        public readonly float Distance;
-        public double RecalculationTime;
+        public readonly Vector2 StartWorldPos = startWorldPos;
+        public readonly Vector2 EndWorldPos = endWorldPos;
+        public readonly float Distance = dist;
+        public double RecalculationTime = recalculationTime;
 
-        public CachedDistance(Vector2 startWorldPos, Vector2 endWorldPos, float dist, double recalculationTime)
-        {
-            StartWorldPos = startWorldPos;
-            EndWorldPos = endWorldPos;
-            Distance = dist;
-            RecalculationTime = recalculationTime;
-        }
+        public string Label = label;
 
         public bool ShouldUpdateDistance(Vector2 currentStartWorldPos, Vector2 currentEndWorldPos, float minDistanceToUpdate = 500.0f)
         {

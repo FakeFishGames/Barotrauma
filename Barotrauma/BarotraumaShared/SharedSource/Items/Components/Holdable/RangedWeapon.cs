@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class RangedWeapon : ItemComponent
+    public partial class RangedWeapon : ItemComponent
     {
         private float reload;
         public float ReloadTimer { get; private set; }
@@ -46,6 +46,13 @@ namespace Barotrauma.Items.Components
 
         [Serialize(false, IsPropertySaveable.No, description: "Tells the AI to hold the trigger down when it uses this weapon")]
         public bool HoldTrigger
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.0f, IsPropertySaveable.No, description: "Tells the AI to keep aiming for this duration after firing the weapon.")]
+        public float AIHoldAimTimer
         {
             get;
             set;
@@ -95,7 +102,7 @@ namespace Barotrauma.Items.Components
             get;
             private set;
         }
-        
+
         [Serialize(defaultValue: 1f, IsPropertySaveable.Yes, description: "Penalty multiplier to reload time when dual-wielding.")]
         public float DualWieldReloadTimePenaltyMultiplier
         {
@@ -113,13 +120,13 @@ namespace Barotrauma.Items.Components
         private readonly IReadOnlySet<Identifier> suitableProjectiles;
 
 
-        private enum ChargingState
+        public enum ChargingState
         {
             Inactive,
             WindingUp,
             WindingDown,
         }
-        private ChargingState currentChargingState;
+        public ChargingState CurrentChargingState { get; private set; }
 
         public Vector2 TransformedBarrelPos
         {
@@ -135,7 +142,8 @@ namespace Barotrauma.Items.Components
 
         public Projectile LastProjectile { get; private set; }
 
-        private float currentChargeTime;
+        public float CurrentChargeTime { get; private set; }
+
         private bool tryingToCharge;
 
         public RangedWeapon(Item item, ContentXElement element)
@@ -180,25 +188,25 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            float previousChargeTime = currentChargeTime;
+            float previousChargeTime = CurrentChargeTime;
 
             float chargeDeltaTime = tryingToCharge && ReloadTimer <= 0f ? deltaTime : -deltaTime;
-            currentChargeTime = Math.Clamp(currentChargeTime + chargeDeltaTime, 0f, MaxChargeTime);
+            CurrentChargeTime = Math.Clamp(CurrentChargeTime + chargeDeltaTime, 0f, MaxChargeTime);
 
             tryingToCharge = false;
 
-            if (currentChargeTime == 0f)
+            if (CurrentChargeTime == 0f)
             {
-                currentChargingState = ChargingState.Inactive;
+                CurrentChargingState = ChargingState.Inactive;
             }
-            else if (currentChargeTime < previousChargeTime)
+            else if (CurrentChargeTime < previousChargeTime)
             {
-                currentChargingState = ChargingState.WindingDown;
+                CurrentChargingState = ChargingState.WindingDown;
             }
             else
             {
                 // if we are charging up or at maxed charge, remain winding up
-                currentChargingState = ChargingState.WindingUp;
+                CurrentChargingState = ChargingState.WindingUp;
             }
 
             UpdateProjSpecific(deltaTime);
@@ -239,12 +247,13 @@ namespace Barotrauma.Items.Components
             tryingToCharge = true;
             if (character == null || character.Removed) { return false; }
             if ((item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) || ReloadTimer > 0.0f) { return false; }
-            if (currentChargeTime < MaxChargeTime) { return false; }
+            if (CurrentChargeTime < MaxChargeTime) { return false; }
 
             IsActive = true;
             float baseReloadTime = reload;
             float weaponSkill = character.GetSkillLevel(Tags.WeaponsSkill);
-            
+            float degreeOfSuccess = DegreeOfSuccess(character);
+
             bool applyReloadFailure = ReloadSkillRequirement > 0 && ReloadNoSkill > reload && weaponSkill < ReloadSkillRequirement;
             if (applyReloadFailure)
             {
@@ -261,7 +270,7 @@ namespace Barotrauma.Items.Components
             ReloadTimer = baseReloadTime / (1 + character?.GetStatValue(StatTypes.RangedAttackSpeed) ?? 0f);
             ReloadTimer /= 1f + item.GetQualityModifier(Quality.StatType.FiringRateMultiplier);
 
-            currentChargeTime = 0f;
+            CurrentChargeTime = 0f;
 
             var abilityRangedWeapon = new AbilityRangedWeapon(item);
             character.CheckTalents(AbilityEffectType.OnUseRangedWeapon, abilityRangedWeapon);
@@ -272,9 +281,7 @@ namespace Barotrauma.Items.Components
                 item.AiTarget.SightRange = item.AiTarget.MaxSightRange;
             }
 
-            float degreeOfFailure = 1.0f - DegreeOfSuccess(character);
-            degreeOfFailure *= degreeOfFailure;
-            if (degreeOfFailure > Rand.Range(0.0f, 1.0f))
+            if (Rand.Range(0.0f, 0.5f) >= degreeOfSuccess)
             {
                 ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
             }
@@ -304,14 +311,7 @@ namespace Barotrauma.Items.Components
                     ignoredBodies.Clear();
                     if (!projectile.DamageUser)
                     {
-                        foreach (Limb l in character.AnimController.Limbs)
-                        {
-                            if (l.IsSevered) { continue; }
-                            ignoredBodies.Add(l.body.FarseerBody);
-#if SERVER
-                            ignoredBodies.Add(l.LagCompensatedBody.FarseerBody);
-#endif
-                        }
+                        ignoredBodies.AddRange(character.AnimController.GetAllPhysicsBodies());
 
                         foreach (Item heldItem in character.HeldItems)
                         {
@@ -331,7 +331,9 @@ namespace Barotrauma.Items.Components
                         {
                             Item.body.ApplyLinearImpulse(new Vector2((float)Math.Cos(projectile.Item.body.Rotation), (float)Math.Sin(projectile.Item.body.Rotation)) * Item.body.Mass * -50.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                         }
-                        projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * degreeOfFailure * 20.0f * projectile.GetSpreadFromPool());
+                        float torqueFailure = MathHelper.Clamp(1.0f - degreeOfSuccess, 0.0f, 1.0f);
+                        torqueFailure *= torqueFailure;
+                        projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * torqueFailure * 20.0f * projectile.GetSpreadFromPool());
                     }
                     Item.RemoveContained(projectile.Item);
                 }

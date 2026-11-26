@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Rope : ItemComponent, IServerSerializable
+    public partial class Rope : ItemComponent, IServerSerializable
     {
         private ISpatialEntity source;
         private Item target;
@@ -75,7 +75,7 @@ namespace Barotrauma.Items.Components
             set;
         }
         
-        [Serialize(200.0f, IsPropertySaveable.No, description: "At which distance the user stops pulling the target?")]
+        [Serialize(200.0f, IsPropertySaveable.No, description: "At which distance the pull forces stop being applied?")]
         public float MinPullDistance
         {
             get;
@@ -155,7 +155,10 @@ namespace Barotrauma.Items.Components
                     else
                     {
 #if SERVER
-                        item.CreateServerEvent(this);
+                        if (!item.Removed)
+                        {
+                            item.CreateServerEvent(this);
+                        }
 #endif
                     }
                 }
@@ -333,7 +336,7 @@ namespace Barotrauma.Items.Components
                 {
                     targetMass = float.MaxValue;
                 }
-                // Currently can only apply pull forces to the source, when it's a character, not e.g. when the item would be auto-operated by an AI. Might have to change this.
+
                 if (user != null)
                 {
                     if (!snapped &&
@@ -350,79 +353,81 @@ namespace Barotrauma.Items.Components
                             user.AnimController.HangWithRope();
                         }
                     }
-                    if (Math.Abs(SourcePullForce) > 0.001f && targetMass > TargetMinMass)
+                }
+
+                if (Math.Abs(SourcePullForce) > 0.001f && targetMass > TargetMinMass && currentRopeLength > MinPullDistance)
+                {
+                    // This should be the main collider.
+                    var sourceBody = GetBodyToPull(source);
+                    if (sourceBody != null)
                     {
-                        // This should be the main collider.
-                        var sourceBody = GetBodyToPull(source);
-                        if (sourceBody != null)
+                        PhysicsBody targetBody = GetBodyToPull(target);
+                        if (sourceBody.UserData is Character && user != null)
                         {
-                            PhysicsBody targetBody = GetBodyToPull(target);
-                            if (sourceBody.UserData is Character)
+                            isReelingIn = user.InWater && user.IsRagdolled || !user.InWater && targetCharacter is { IsIncapacitated: false };
+                            if (isReelingIn)
                             {
-                                isReelingIn = user.InWater && user.IsRagdolled || !user.InWater && targetCharacter is { IsIncapacitated: false };
-                                if (isReelingIn)
+                                float pullForce = SourcePullForce;
+                                if (!user.InWater)
                                 {
-                                    float pullForce = SourcePullForce;
-                                    if (!user.InWater)
+                                    // Apply a tiny amount to the character holding the rope, so that the connection "feels" more real.
+                                    pullForce *= 0.1f;
+                                }
+                                float lengthFactor = MathUtils.InverseLerp(0, MaxLength / 2, currentRopeLength);
+                                float force = LerpForces ? MathHelper.Lerp(0, pullForce, lengthFactor) : pullForce;
+                                sourceBody.ApplyForce(forceDir * force);
+                                // Take the target velocity into account.
+                                if (targetBody != null)
+                                {
+                                    if (targetCharacter != null)
                                     {
-                                        // Apply a tiny amount to the character holding the rope, so that the connection "feels" more real.
-                                        pullForce *= 0.1f;
-                                    }
-                                    float lengthFactor = MathUtils.InverseLerp(0, MaxLength / 2, currentRopeLength);
-                                    float force = LerpForces ? MathHelper.Lerp(0, pullForce, lengthFactor) : pullForce;
-                                    sourceBody.ApplyForce(forceDir * force);
-                                    // Take the target velocity into account.
-                                    if (targetBody != null)
-                                    {
-                                        if (targetCharacter != null)
+                                        if (targetBody.LinearVelocity != Vector2.Zero && sourceBody.LinearVelocity != Vector2.Zero)
                                         {
-                                            if (targetBody.LinearVelocity != Vector2.Zero && sourceBody.LinearVelocity != Vector2.Zero)
+                                            Vector2 targetDir = Vector2.Normalize(targetBody.LinearVelocity);
+                                            float movementDot = Vector2.Dot(Vector2.Normalize(sourceBody.LinearVelocity), targetDir);
+                                            if (movementDot < 0)
                                             {
-                                                Vector2 targetDir = Vector2.Normalize(targetBody.LinearVelocity);
-                                                float movementDot = Vector2.Dot(Vector2.Normalize(sourceBody.LinearVelocity), targetDir);
-                                                if (movementDot < 0)
-                                                {
-                                                    // Pushing to a different dir -> add some counter force
-                                                    const float multiplier = 5;
-                                                    float inverseLengthFactor = MathHelper.Lerp(1, 0, lengthFactor);
-                                                    sourceBody.ApplyForce(targetBody.LinearVelocity * Math.Min(targetBody.Mass * multiplier, 250) * sourceBody.Mass * -movementDot * inverseLengthFactor);
-                                                }
-                                                float forceDot = Vector2.Dot(forceDir, targetDir);
-                                                if (forceDot > 0)
-                                                {
-                                                    // Pulling to the same dir -> add extra force
-                                                    float targetSpeed = targetBody.LinearVelocity.Length();
-                                                    const float multiplier = 25;
-                                                    sourceBody.ApplyForce(forceDir * targetSpeed * sourceBody.Mass * multiplier * forceDot * lengthFactor);
-                                                }
-                                                float colliderMainLimbDistance = Vector2.Distance(sourceBody.SimPosition, user.AnimController.MainLimb.SimPosition);
-                                                const float minDist = 1;
-                                                const float maxDist = 10;
-                                                if (colliderMainLimbDistance > minDist && sourceBody.UserData is not Submarine)
-                                                {
-                                                    // Move the ragdoll closer to the collider, if it's too far (the correction force in HumanAnimController is not enough -> the ragdoll would lag behind and get teleported).
-                                                    float correctionForce = MathHelper.Lerp(10.0f, NetConfig.MaxPhysicsBodyVelocity, MathUtils.InverseLerp(minDist, maxDist, colliderMainLimbDistance));
-                                                    Vector2 targetPos = sourceBody.SimPosition + new Vector2((float)Math.Sin(-sourceBody.Rotation), (float)Math.Cos(-sourceBody.Rotation)) * 0.4f;
-                                                    user.AnimController.MainLimb.MoveToPos(targetPos, correctionForce);
-                                                }
+                                                // Pushing to a different dir -> add some counter force
+                                                const float multiplier = 5;
+                                                float inverseLengthFactor = MathHelper.Lerp(1, 0, lengthFactor);
+                                                sourceBody.ApplyForce(targetBody.LinearVelocity * Math.Min(targetBody.Mass * multiplier, 250) * sourceBody.Mass * -movementDot * inverseLengthFactor);
+                                            }
+                                            float forceDot = Vector2.Dot(forceDir, targetDir);
+                                            if (forceDot > 0)
+                                            {
+                                                // Pulling to the same dir -> add extra force
+                                                float targetSpeed = targetBody.LinearVelocity.Length();
+                                                const float multiplier = 25;
+                                                sourceBody.ApplyForce(forceDir * targetSpeed * sourceBody.Mass * multiplier * forceDot * lengthFactor);
+                                            }
+                                            float colliderMainLimbDistance = Vector2.Distance(sourceBody.SimPosition, user.AnimController.MainLimb.SimPosition);
+                                            const float minDist = 1;
+                                            const float maxDist = 10;
+                                            if (colliderMainLimbDistance > minDist && sourceBody.UserData is not Submarine)
+                                            {
+                                                // Move the ragdoll closer to the collider, if it's too far (the correction force in HumanAnimController is not enough -> the ragdoll would lag behind and get teleported).
+                                                float correctionForce = MathHelper.Lerp(10.0f, NetConfig.MaxPhysicsBodyVelocity, MathUtils.InverseLerp(minDist, maxDist, colliderMainLimbDistance));
+                                                Vector2 targetPos = sourceBody.SimPosition + new Vector2((float)Math.Sin(-sourceBody.Rotation), (float)Math.Cos(-sourceBody.Rotation)) * 0.4f;
+                                                user.AnimController.MainLimb.MoveToPos(targetPos, correctionForce);
                                             }
                                         }
-                                        else
-                                        {
-                                            sourceBody.ApplyForce(targetBody.LinearVelocity * sourceBody.Mass);
-                                        }
+                                    }
+                                    else
+                                    {
+                                        sourceBody.ApplyForce(targetBody.LinearVelocity * sourceBody.Mass);
                                     }
                                 }
                             }
-                            else
-                            {
-                                float distance = Vector2.Distance(source.WorldPosition, target.WorldPosition);
-                                float force = LerpForces ? MathHelper.Lerp(0, SourcePullForce, MathUtils.InverseLerp(0, MaxLength / 2, distance)) : SourcePullForce;
-                                sourceBody.ApplyForce(forceDir * force);
-                            }
+                        }
+                        else
+                        {
+                            float distance = Vector2.Distance(source.WorldPosition, target.WorldPosition);
+                            float force = LerpForces ? MathHelper.Lerp(0, SourcePullForce, MathUtils.InverseLerp(0, MaxLength / 2, distance)) : SourcePullForce;
+                            sourceBody.ApplyForce(forceDir * force);
                         }
                     }
                 }
+                
 
                 if (Math.Abs(TargetPullForce) > 0.001f && user is not { IsRagdolled: true})
                 {

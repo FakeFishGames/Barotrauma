@@ -7,7 +7,7 @@ namespace Barotrauma
     /// <summary>
     /// Can be used to check arbitrary campaign metadata set using <see cref="SetDataAction"/>.
     /// </summary>
-    class CheckDataAction : BinaryOptionAction
+    public class CheckDataAction : BinaryOptionAction
     {
         [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the data to check.")]
         public Identifier Identifier { get; set; } = Identifier.Empty;

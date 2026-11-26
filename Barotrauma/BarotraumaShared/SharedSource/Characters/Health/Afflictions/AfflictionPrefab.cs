@@ -61,7 +61,7 @@ namespace Barotrauma
     /// <summary>
     /// AfflictionPrefabHusk is a special type of affliction that has added functionality for husk infection.
     /// </summary>
-    class AfflictionPrefabHusk : AfflictionPrefab
+    public class AfflictionPrefabHusk : AfflictionPrefab
     {
         // Use any of these to define which limb the appendage is attached to.
         // If multiple are defined, the order of preference is: id, name, type.
@@ -203,7 +203,7 @@ namespace Barotrauma
     /// </Afflictions>
     /// </code>
     /// </example>
-    class AfflictionPrefab : PrefabWithUintIdentifier
+    public class AfflictionPrefab : PrefabWithUintIdentifier
     {
         /// <summary>
         /// Effects are the primary way to add functionality to afflictions.
@@ -810,6 +810,20 @@ namespace Barotrauma
         public float KarmaChangeOnApplied;
 
         /// <summary>
+        /// When the strength of the affliction reaches this value, the character who caused the affliction (<see cref="Affliction.Source"/>) gets a one-time karma change defined by <see cref="FlatKarmaChange"/>.
+        /// If the change is negative (= a penalty), AI characters also react to it as if they were attacked by the source.
+        /// 0 = applied when any amount of the affliction is applied. Applied again if the strength drops below the threshold (or the affliction is removed) and then reaches it again.
+        /// Intended for afflictions that grow by themselves after being applied (e.g. husk infection), or that only become dangerous when stacked high enough (e.g. overdoses).
+        /// </summary>
+        public readonly float FlatKarmaChangeThreshold;
+
+        /// <summary>
+        /// How much karma changes when the strength of the affliction reaches <see cref="FlatKarmaChangeThreshold"/>. Negative = penalty, positive = reward.
+        /// Not per strength, but a flat amount (same sign convention as <see cref="KarmaChangeOnApplied"/>, i.e. -10 is roughly equivalent to 10 damage).
+        /// </summary>
+        public readonly float FlatKarmaChange;
+
+        /// <summary>
         /// Opacity of the burn effect (darker tint) on limbs affected by this affliction. 1 = full strength. 
         /// </summary>
         public readonly float BurnOverlayAlpha;
@@ -1002,6 +1016,27 @@ namespace Barotrauma
             BurnOverlayAlpha    = element.GetAttributeFloat(nameof(BurnOverlayAlpha), 0.0f);
 
             KarmaChangeOnApplied = element.GetAttributeFloat(nameof(KarmaChangeOnApplied), 0.0f);
+            FlatKarmaChangeThreshold = element.GetAttributeFloat(nameof(FlatKarmaChangeThreshold), 0.0f);
+            FlatKarmaChange = element.GetAttributeFloat(nameof(FlatKarmaChange), 0.0f);
+            bool hasFlatKarmaChange = !MathUtils.NearlyEqual(FlatKarmaChange, 0.0f);
+            if (FlatKarmaChangeThreshold < 0.0f)
+            {
+                DebugConsole.ThrowError(
+                    $"Error in affliction \"{Identifier}\": {nameof(FlatKarmaChangeThreshold)} is negative ({FlatKarmaChangeThreshold}). Use 0 to apply the karma change when any amount of the affliction is applied.",
+                    contentPackage: element.ContentPackage);
+            }
+            else if (FlatKarmaChangeThreshold > 0.0f && !hasFlatKarmaChange)
+            {
+                DebugConsole.ThrowError(
+                    $"Error in affliction \"{Identifier}\": {nameof(FlatKarmaChangeThreshold)} is defined but {nameof(FlatKarmaChange)} is not. Reaching the threshold won't do anything.",
+                    contentPackage: element.ContentPackage);
+            }
+            else if (FlatKarmaChangeThreshold > MaxStrength)
+            {
+                DebugConsole.ThrowError(
+                    $"Error in affliction \"{Identifier}\": {nameof(FlatKarmaChangeThreshold)} ({FlatKarmaChangeThreshold}) is higher than the max strength of the affliction ({MaxStrength}). The karma change will never be applied.",
+                    contentPackage: element.ContentPackage);
+            }
 
             CauseOfDeathDescription     = 
                 TextManager.Get($"AfflictionCauseOfDeath.{TranslationIdentifier}")
@@ -1181,7 +1216,7 @@ namespace Barotrauma
 
         public override string ToString()
         {
-            return $"AfflictionPrefab ({Name})";
+            return $"AfflictionPrefab ({(Name.IsNullOrEmpty() ? Identifier : Name)})";
         }
 
         public Affliction Instantiate(float strength, Character source = null)

@@ -8,7 +8,7 @@ namespace Barotrauma
     /// An objective that creates specific kinds of subobjectives for specific types of targets, and loops through those targets. 
     /// For example, a cleanup objective that loops through items that need to be cleaned up, or a "fix leaks" objective that loops through leaks that need welding.
     /// </summary>
-    abstract class AIObjectiveLoop<T> : AIObjective
+    public abstract class AIObjectiveLoop<T> : AIObjective
     {
         public HashSet<T> Targets { get; private set; } = new HashSet<T>();
         public Dictionary<T, AIObjective> Objectives { get; private set; } = new Dictionary<T, AIObjective>();
@@ -34,6 +34,12 @@ namespace Barotrauma
         /// </summary>
         public HashSet<T> ReportedTargets { get; private set; } = new HashSet<T>();
 
+        /// <summary>
+        /// Do the targets need to be reported (e.g. a report about a leak or a damaged device) for them to be considered targets?
+        /// </summary>
+        protected virtual bool RequireReports => true;
+
+
         public bool AddTarget(T target)
         {
             if (character.IsDead) { return false; }
@@ -50,15 +56,16 @@ namespace Barotrauma
         }
 
         public AIObjectiveLoop(Character character, AIObjectiveManager objectiveManager, float priorityModifier, Identifier option = default) 
-            : base(character, objectiveManager, priorityModifier, option) { }
+            : base(character, objectiveManager, priorityModifier, option) 
+        {
+            AbandonIfDisallowed = false;
+            AbandonWhenCannotCompleteSubObjectives = false;
+        }
 
         protected override void Act(float deltaTime) { }
         protected override bool CheckObjectiveState() => false;
         public override bool CanBeCompleted => true;
-        public override bool AbandonWhenCannotCompleteSubObjectives => false;
         public override bool AllowSubObjectiveSorting => true;
-        protected override bool AllowWhileHandcuffed => false;
-        protected override bool AbandonIfDisallowed => false;
 
         /// <summary>
         /// Makes the priority inversely proportional to the value returned by <see cref="GetTargetPriority"/>. 
@@ -196,9 +203,9 @@ namespace Barotrauma
                 // The bots always find targets when the objective is an order.
                 if (!objectiveManager.IsOrder(this))
                 {
-                    // Battery or pump states cannot currently be reported (not implemented) and therefore we must ignore them -> the bots always know if they require attention.
-                    bool ignore = this is AIObjectiveChargeBatteries || this is AIObjectivePumpWater || this is AIObjectiveFindThieves;
-                    if (!ignore && !ReportedTargets.Contains(target)) { continue; }
+                    // Some things such as battery or pump states cannot currently be reported and therefore we must ignore them
+                    //  -> the bots always know if they require attention.
+                    if (RequireReports && !ReportedTargets.Contains(target)) { continue; }
                 }
                 if (!IsValidTarget(target)) { continue; }
                 if (!ignoreList.Contains(target))
@@ -220,6 +227,7 @@ namespace Barotrauma
                 if (!Objectives.TryGetValue(target, out AIObjective objective))
                 {
                     objective = ObjectiveConstructor(target);
+                    if (objective == null) { continue; }
                     Objectives.Add(target, objective);
                     if (!subObjectives.Contains(objective))
                     {

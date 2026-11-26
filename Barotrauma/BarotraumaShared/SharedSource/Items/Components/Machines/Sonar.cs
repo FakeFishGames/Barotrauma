@@ -392,6 +392,7 @@ namespace Barotrauma.Items.Components
             screenOverlay?.Remove();
             screenBackground?.Remove();
             lineSprite?.Remove();
+            markerDistances.Clear();
 
             foreach (var t in targetIcons.Values)
             {

@@ -12,7 +12,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class CrewManager
+    public partial class CrewManager
     {
         private Point screenResolution;
 
@@ -79,7 +79,7 @@ namespace Barotrauma
         public CrewManager(XElement element, bool isSinglePlayer)
             : this(isSinglePlayer)
         {
-            AddCharacterElements(element);
+            LoadCharacterElements(element);
         }
 
         partial void InitProjectSpecific()
@@ -947,8 +947,8 @@ namespace Barotrauma
                 {
                     bool isGivingOrderToSelf = orderGiver == character;
                     character.SetOrder(order, isNewOrder, speak: !isGivingOrderToSelf);
-                        string message = order?.GetChatMessage(character.Name, orderGiver?.CurrentHull?.DisplayName?.Value, isGivingOrderToSelf, orderOption: order?.Option ?? Identifier.Empty, isNewOrder: isNewOrder);
-                        orderGiver?.Speak(message);
+                    string message = order?.GetChatMessage(character.Name, orderGiver?.CurrentHull?.DisplayName?.Value, isGivingOrderToSelf, orderOption: order?.Option ?? Identifier.Empty, isNewOrder: isNewOrder);
+                    orderGiver?.Speak(message);
                 }
                 else if (orderGiver != null)
                 {
@@ -1288,7 +1288,9 @@ namespace Barotrauma
 
             if (sub?.HullVertices == null) { return; }
 
-            var dockedBorders = sub.GetDockedBorders();
+            bool getOutpostBorders = Level.IsLoadedTeam1Outpost;
+
+            var dockedBorders = sub.GetDockedBorders(ignoreOutposts: !getOutpostBorders);
             dockedBorders.Location += sub.WorldPosition.ToPoint();
 
             float scale = Math.Min(
@@ -1505,11 +1507,10 @@ namespace Barotrauma
 
             #region Command UI
 
-            WasCommandInterfaceDisabledThisUpdate = false;
-
-            if (PlayerInput.KeyDown(InputType.Command) &&
+            if (!WasCommandInterfaceDisabledThisUpdate &&
+                PlayerInput.KeyDown(InputType.Command) &&
                 (GUI.KeyboardDispatcher.Subscriber == null || (GUI.KeyboardDispatcher.Subscriber is GUIComponent component && (component == crewList || component.IsChildOf(crewList)))) &&
-                commandFrame == null && !clicklessSelectionActive && CanIssueOrders && !(GameMain.GameSession?.Campaign?.ShowCampaignUI ?? false) &&
+                commandFrame == null && !clicklessSelectionActive && CanIssueOrders && GameMain.GameSession?.Campaign is not { ShowCampaignUI: true } &&
                 Character.Controlled?.SelectedItem?.Prefab is not { DisableCommandMenuWhenSelected: true } &&
                 !Inventory.IsMouseOnInventory)
             {
@@ -1524,6 +1525,7 @@ namespace Barotrauma
                 SoundPlayer.PlayUISound(GUISoundType.PopupMenu);
                 clicklessSelectionActive = isOpeningClick = true;
             }
+            WasCommandInterfaceDisabledThisUpdate = false;
 
             if (commandFrame != null)
             {
@@ -1948,6 +1950,9 @@ namespace Barotrauma
                 }
                 else
                 {
+                    // Crew menu is still considered open if it's been closed this update, this is to avoid
+                    // hotkeys (such as the player inventory ones) from triggering on the same update that
+                    // the UI was closed
                     return GameMain.GameSession.CrewManager.commandFrame != null || GameMain.GameSession.CrewManager.WasCommandInterfaceDisabledThisUpdate;
                 }
             }
@@ -2286,6 +2291,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Closes the command UI and keeps it from opening for one frame.
+        /// </summary>
         public void DisableCommandUI()
         {
             if (commandFrame == null) { return; }
@@ -2722,11 +2730,14 @@ namespace Barotrauma
             for (int i = 0; i < orderPrefabs.Length; i++)
             {
                 order = orderPrefabs[i].CreateInstance(OrderPrefab.OrderTargetType.Entity);
-                disableNode = !CanCharacterBeHeard() ||
-                              (order.MustSetTarget && (order.ItemComponentType != null || order.GetTargetItems().Any() || order.RequireItems.Any()) &&
-                               order.GetMatchingItems(true, interactableFor: characterContext ?? Character.Controlled).None());
+
+                bool isMissingTargets =
+                    order.MustSetTarget && (order.ItemComponentType != null || order.GetTargetItems().Any() || order.RequireItems.Any()) &&
+                    order.GetMatchingItems(true, interactableFor: characterContext ?? Character.Controlled).None();
+
+                disableNode = isMissingTargets || !CanCharacterBeHeard();
                 optionNodes.Add(new OptionNode(
-                    CreateOrderNode(nodeSize, commandFrame.RectTransform, offsets[i].ToPoint(), order, (i + 1) % 10, disableNode: disableNode, checkIfOrderCanBeHeard: false),
+                    CreateOrderNode(nodeSize, commandFrame.RectTransform, offsets[i].ToPoint(), order, (i + 1) % 10, disableNode: disableNode, isMissingTargets: isMissingTargets, checkIfOrderCanBeHeard: false),
                     !disableNode ? Keys.D0 + (i + 1) % 10 : Keys.None));
             }
         }
@@ -2800,6 +2811,14 @@ namespace Barotrauma
                     {
                         contextualOrders.Remove(pumpOrder);
                     }
+                    if (contextualOrders.None(info => info.Identifier.Equals("gardening")))
+                    {
+                        if (AIObjectiveGardening.IsValidTarget(itemContext, Character.Controlled) &&
+                            itemContext.GetComponent<Planter>() is { } planter)
+                        {
+                            contextualOrders.Add(new Order(OrderPrefab.Prefabs["gardening"], itemContext, targetItem: planter));
+                        }
+                    }
                     if (contextualOrders.None(info => info.Identifier.Equals("cleanupitems")))
                     {
                         if (AIObjectiveCleanupItems.IsValidTarget(itemContext, Character.Controlled, checkInventory: false) || AIObjectiveCleanupItems.IsValidContainer(itemContext, Character.Controlled))
@@ -2845,7 +2864,9 @@ namespace Barotrauma
                         }
                     }
                 }
-                if (contextualOrders.None(order => order.Identifier.Equals("wait")))
+                if (contextualOrders.None(order => order.Identifier.Equals("wait")) &&
+                    //can't order bots to wait at an item that's in an inventory
+                    itemContext?.ParentInventory == null)
                 {
                     Vector2 position = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
                     Hull hull = Hull.FindHull(position, guess: Character.Controlled?.CurrentHull);
@@ -2880,7 +2901,7 @@ namespace Barotrauma
         }
 
         /// <param name="hotkey">Use a negative value (e.g. -1) if there should be no hotkey associated with the node</param>
-        private GUIButton CreateOrderNode(Point size, RectTransform parent, Point offset, Order order, int hotkey, bool disableNode = false, bool checkIfOrderCanBeHeard = true)
+        private GUIButton CreateOrderNode(Point size, RectTransform parent, Point offset, Order order, int hotkey, bool disableNode = false, bool isMissingTargets = false, bool checkIfOrderCanBeHeard = true)
         {
             var node = new GUIButton(
                 new RectTransform(size, parent: parent, anchor: Anchor.Center), style: null)
@@ -2954,7 +2975,10 @@ namespace Barotrauma
             if (disableNode)
             {
                 node.CanBeFocused = icon.CanBeFocused = false;
-                CreateBlockIcon(node.RectTransform, tooltip: TextManager.Get(characterContext == null ? "nocharactercanhear" : "thischaractercanthear"));
+                CreateBlockIcon(node.RectTransform, tooltip:
+                    isMissingTargets ?
+                        TextManager.Get("commandui.novalidtargets") :
+                        TextManager.Get(characterContext == null ? "nocharactercanhear" : "thischaractercanthear"));
             }
             else if (hotkey >= 0)
             {
@@ -2973,7 +2997,7 @@ namespace Barotrauma
             // TODO: Further adjustments to frameSize calculations
             // I just divided the existing sizes by 2 to get it working quickly without it overlapping too much
             Point frameSize;
-            Rectangle subBorders = submarine.GetDockedBorders();
+            Rectangle subBorders = submarine.GetDockedBorders(ignoreOutposts: !Level.IsLoadedTeam1Outpost);
             if (subBorders.Width > subBorders.Height)
             {
                 frameSize.X = Math.Min(GameMain.GraphicsWidth / 2, GameMain.GraphicsWidth - 50) / 2;
@@ -3070,10 +3094,17 @@ namespace Barotrauma
                 {
                     optionElement.OnSecondaryClicked = (button, _) => CreateAssignmentNodes(button);
                 }
-                var colorMultiplier = characters.Any(c => c.CurrentOrders != null && c.CurrentOrders.Any(o => o != null &&
+                float colorMultiplier = characters.Any(c => c.CurrentOrders != null && c.CurrentOrders.Any(o => o != null &&
                     o.Identifier == userData.Order.Identifier &&
                     o.TargetEntity == userData.Order.TargetEntity)) ? 0.5f : 1f;
-                CreateNodeIcon(Vector2.One, optionElement.RectTransform, item.Prefab.MinimapIcon ?? order.SymbolSprite, order.Color * colorMultiplier, tooltip: item.Name);
+
+                Color iconColor = order.Color;
+                if (item.Submarine is { Info.IsOutpost: true })
+                {
+                    iconColor = GUIStyle.Yellow;
+                }
+
+                CreateNodeIcon(Vector2.One, optionElement.RectTransform, item.Prefab.MinimapIcon ?? order.SymbolSprite, iconColor * colorMultiplier, tooltip: item.Name);
                 optionNodes.Add(new OptionNode(optionElement, Keys.None));
                 optionElements.Add(optionElement);
             }
@@ -3106,9 +3137,10 @@ namespace Barotrauma
             var offsets = MathUtils.GetPointsOnCircumference(Vector2.Zero, nodeDistance,
                 GetCircumferencePointCount(order.Options.Length),
                 GetFirstNodeAngle(order.Options.Length));
-            var offsetIndex = 0;
+            int offsetIndex = 0;
             for (int i = 0; i < order.Options.Length; i++)
             {
+                if (!order.IsOptionValid(order.Options[i])) { continue; }
                 optionNodes.Add(new OptionNode(
                     CreateOrderOptionNode(nodeSize, commandFrame.RectTransform, offsets[offsetIndex++].ToPoint(), o.WithOption(order.Options[i]), (i + 1) % 10),
                     Keys.D0 + (i + 1) % 10));
@@ -3593,7 +3625,7 @@ namespace Barotrauma
                 // Pick the second main sub when we have two teams (in combat mission)
                 if (Character.Controlled.TeamID == CharacterTeamType.Team2 && Submarine.MainSubs.Length > 1)
                 {
-                    sub = Submarine.MainSubs[1];
+                    sub = Submarine.AnotherMainSub;
                 }
                 // Target current submarine (likely a shuttle) when undocked from the main sub
                 if (Character.Controlled.Submarine is Submarine currentSub && currentSub != sub && currentSub.TeamID == Character.Controlled.TeamID && !currentSub.IsConnectedTo(sub))
@@ -3638,7 +3670,7 @@ namespace Barotrauma
                     if (character?.Submarine == null) { return false; }
                     return character.Submarine.GetConnectedSubs().Any(s => s.TeamID != character.TeamID);
                 default:
-                    return true;
+                    return !order.Hidden;
             }
         }
 
@@ -3787,12 +3819,7 @@ namespace Barotrauma
             for (int i = 0; i < characterInfos.Count; i++)
             {
                 var ci = characterInfos[i];
-                var infoElement = ci.Save(element);
-                if (ci.InventoryData != null) { infoElement.Add(ci.InventoryData); }
-                if (ci.HealthData != null) { infoElement.Add(ci.HealthData); }
-                if (ci.OrderData != null) { infoElement.Add(ci.OrderData); }
-                infoElement.Add(new XAttribute("crewlistindex", ci.CrewListIndex));
-                if (ci.LastControlled) { infoElement.Add(new XAttribute("lastcontrolled", true)); }
+                var infoElement = ci.Save(element, includeInventoryData: true, includeHealthData: true, includeOrderData: true);
             }
             parentElement?.Add(element);
             return element;

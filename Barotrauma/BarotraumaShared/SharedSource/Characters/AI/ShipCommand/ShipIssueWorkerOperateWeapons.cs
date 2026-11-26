@@ -19,6 +19,8 @@ namespace Barotrauma
         {
             float currentDistanceToEnemy = Vector2.Distance(entity.WorldPosition, TargetItem.WorldPosition);
             if (currentDistanceToEnemy > Sonar.DefaultSonarRange) { return 0.0f; }
+            //if the target is on the same submarine, too late to use the sub's weapons on it
+            if (entity.Submarine != null && TargetItem.Submarine != null && TargetItem.Submarine.IsConnectedTo(entity.Submarine)) { return 0.0f; }
             float importance = MathHelper.Clamp(100 - (currentDistanceToEnemy / 100f), MaxImportance * 0.1f, MaxImportance * 0.5f);
             if (TargetItem.Submarine != null && importance > 0.0f)
             {

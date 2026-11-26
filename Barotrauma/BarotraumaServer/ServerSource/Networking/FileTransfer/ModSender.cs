@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Barotrauma.Networking
 {
-    class ModSender : IDisposable
+    public class ModSender : IDisposable
     {
         public const string UploadFolder = "TempMods_Upload";
         public const string Extension = ".barodir.gz";

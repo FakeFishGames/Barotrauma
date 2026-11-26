@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class IdCard
+    public partial class IdCard
     {
         public struct OwnerAppearance
         {

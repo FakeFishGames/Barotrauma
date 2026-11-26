@@ -10,7 +10,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Items.Components
 {
-    internal sealed partial class CircuitBox : ItemComponent, IClientSerializable, IServerSerializable
+    public sealed partial class CircuitBox : ItemComponent, IClientSerializable, IServerSerializable
     {
         public static readonly ImmutableHashSet<CircuitBoxOpcode> UnrealiableOpcodes
             = ImmutableHashSet.Create(CircuitBoxOpcode.Cursor);

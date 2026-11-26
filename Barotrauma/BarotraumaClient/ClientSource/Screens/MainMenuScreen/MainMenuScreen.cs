@@ -21,7 +21,7 @@ using Barotrauma.Steam;
 
 namespace Barotrauma
 {
-    sealed class MainMenuScreen : Screen
+    public sealed class MainMenuScreen : Screen
     {
         public static HashSet<Identifier> DismissedNotifications = new HashSet<Identifier>();
 
@@ -36,8 +36,9 @@ namespace Barotrauma
             CharacterEditor = 6,
             SubmarineEditor = 7,
             Mods = 8,
-            Credits = 9,
-            Empty = 10
+            ExtraContent = 9,
+            Credits = 10,
+            Empty = 11
         }
 
         private readonly GUIComponent buttonsParent;
@@ -53,6 +54,7 @@ namespace Barotrauma
 
         private readonly GUIFrame modsButtonContainer;
         private readonly GUIButton modsButton, modUpdatesButton;
+        private readonly GUIButton extraContentButton, extraContentNotificationButton;
         private (DateTime WhenToRefresh, int Count) modUpdateStatus = (DateTime.Now, 0);
         private static readonly TimeSpan ModUpdateInterval = TimeSpan.FromSeconds(60.0f);
         
@@ -69,6 +71,7 @@ namespace Barotrauma
         private Tab selectedTab = Tab.Empty;
 
         private Sprite backgroundSprite;
+        private ContentPackage backgroundSpriteContentPackage;
 
         private readonly GUIComponent titleText;
 
@@ -94,7 +97,7 @@ namespace Barotrauma
             rightTextFooterLayout = createTextFooter();
 
             gameAnalyticsStatusText = createLeftText(TextManager.Get($"GameAnalyticsStatus.{GameAnalyticsManager.Consent.Unknown}"));
-            createLeftText("Barotrauma v" + GameMain.Version + " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")");
+            createLeftText(AssemblyInfo.FullVersionDisplayText);
 
             var privacyPolicyText = createRightText(TextManager.Get("privacypolicy").Fallback("Privacy policy"));
             (Rectangle Rect, bool MouseOn) getPrivacyPolicyHoverRect()
@@ -391,6 +394,24 @@ namespace Barotrauma
                     return false;
                 },
                 Visible = false
+            };
+
+            var extraContentButtonContainer = new GUIFrame(new RectTransform(Vector2.One, customizeList.RectTransform), style: null);
+            extraContentButton = new GUIButton(new RectTransform(Vector2.One, extraContentButtonContainer.RectTransform),
+                                               TextManager.Get("settingstab.dlc"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            {
+                ForceUpperCase = ForceUpperCase.Yes,
+                Enabled = true,
+                UserData = Tab.ExtraContent,
+                OnClicked = SelectTab
+            };
+
+            extraContentNotificationButton = new GUIButton(new RectTransform(Vector2.One * 0.95f, extraContentButtonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "TalentPointNotification")
+            {
+                ToolTip = TextManager.Get("DLCAvailable"),
+                Visible = false,
+                UserData = Tab.ExtraContent,
+                OnClicked = SelectTab
             };
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
@@ -724,7 +745,7 @@ namespace Barotrauma
 
             ResetButtonStates(null);
 
-            Eos.EosAccount.ExecuteAfterLogin(AchievementManager.SyncBetweenPlatforms);
+            RefreshDlcNotificationVisibility();
         }
 
         public override void Deselect()
@@ -841,8 +862,11 @@ namespace Barotrauma
                     CoroutineManager.StartCoroutine(SelectScreenWithWaitCursor(GameMain.SubEditorScreen));
                     break;
                 case Tab.Mods:
-                    var settings = SettingsMenu.Create(menuTabs[Tab.Settings].RectTransform);
-                    settings.SelectTab(SettingsMenu.Tab.Mods);
+                    SettingsMenu.Create(menuTabs[Tab.Settings].RectTransform).SelectTab(SettingsMenu.Tab.Mods);
+                    tab = Tab.Settings;
+                    break;
+                case Tab.ExtraContent:
+                    SettingsMenu.Create(menuTabs[Tab.Settings].RectTransform).SelectTab(SettingsMenu.Tab.DLC);
                     tab = Tab.Settings;
                     break;
                 case Tab.Credits:
@@ -942,7 +966,6 @@ namespace Barotrauma
             }
             var gamesession = new GameSession(
                 selectedSub,
-                Option.None,
                 GameModePreset.DevSandbox,
                 missionPrefabs: null);
             //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
@@ -1101,17 +1124,10 @@ namespace Barotrauma
                 {
                     arguments.Add("-nopassword");
                 }
-
-                var puids = EosInterface.IdQueries.GetLoggedInPuids();
-
                 var endpoints = new List<Endpoint>();
                 if (SteamManager.GetSteamId().TryUnwrap(out var steamId))
                 {
                     endpoints.Add(new SteamP2PEndpoint(steamId));
-                }
-                if (puids.Length > 0)
-                {
-                    endpoints.Add(new EosP2PEndpoint(puids[0]));
                 }
                 if (endpoints.Count == 0)
                 {
@@ -1199,9 +1215,7 @@ namespace Barotrauma
         }
 
         private static bool CanHostServer()
-            => EosInterface.IdQueries.IsLoggedIntoEosConnect
-                || SteamManager.IsInitialized
-                || AssemblyInfo.CurrentConfiguration == AssemblyInfo.Configuration.Debug;
+            => SteamManager.IsInitialized || AssemblyInfo.CurrentConfiguration == AssemblyInfo.Configuration.Debug;
 
         public override void Update(double deltaTime)
         {
@@ -1220,7 +1234,16 @@ namespace Barotrauma
                 modUpdatesButton.RectTransform.AbsoluteOffset =
                     (modButtonLabelSize.X, modsButton.Rect.Height / 2 - modUpdatesButton.Rect.Height / 2);
             }
-            
+
+            if (extraContentNotificationButton.Visible)
+            {
+                var modButtonLabelSize =
+                    extraContentButton.Font.MeasureString(extraContentButton.Text).ToPoint()
+                    + new Point(GUI.IntScale(25));
+                extraContentNotificationButton.RectTransform.AbsoluteOffset =
+                    (modButtonLabelSize.X, extraContentButton.Rect.Height / 2 - extraContentNotificationButton.Rect.Height / 2);
+            }
+
             switch (selectedTab)
             {
                 case Tab.NewGame:
@@ -1229,21 +1252,35 @@ namespace Barotrauma
             }
         }
 
+        private void SetBackgroundSprite()
+        {
+#if UNSTABLE
+            if (backgroundSprite == null)
+{
+                backgroundSprite = new Sprite("Content/UnstableBackground.png", sourceRectangle: null);
+                return;
+            }
+#endif
+            if (GUIStyle.GetComponentStyle("MainMenuBackground") is { } mainMenuStyle &&
+                 mainMenuStyle.Sprites.TryGetValue(GUIComponent.ComponentState.None, out var sprites))
+            {
+                backgroundSprite = sprites.GetRandomUnsynced()?.Sprite;
+            }
+            backgroundSprite ??= LocationType.Prefabs.GetRandomUnsynced()?.GetPortrait(0);
+        }
+
+        public void OnContentPackagesChanged()
+        {
+            SetBackgroundSprite();
+        }
+
         public void DrawBackground(GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             graphics.Clear(Color.Black);
 
             if (backgroundSprite == null)
             {
-#if UNSTABLE
-                backgroundSprite = new Sprite("Content/UnstableBackground.png", sourceRectangle: null);
-#endif
-                if (GUIStyle.GetComponentStyle("MainMenuBackground") is { } mainMenuStyle &&
-                     mainMenuStyle.Sprites.TryGetValue(GUIComponent.ComponentState.None, out var sprites))
-                {
-                    backgroundSprite = sprites.GetRandomUnsynced()?.Sprite;
-                }
-                backgroundSprite ??= LocationType.Prefabs.GetRandomUnsynced()?.GetPortrait(0);
+                SetBackgroundSprite();
             }
 
             var vignette = GUIStyle.GetComponentStyle("mainmenuvignette")?.GetDefaultSprite();
@@ -1313,7 +1350,7 @@ namespace Barotrauma
 
             selectedSub = new SubmarineInfo(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"));
             
-            GameMain.GameSession = new GameSession(selectedSub, Option.None, CampaignDataPath.CreateRegular(savePath), GameModePreset.SinglePlayerCampaign, settings, mapSeed);
+            GameMain.GameSession = new GameSession(selectedSub, CampaignDataPath.CreateRegular(savePath), GameModePreset.SinglePlayerCampaign, settings, mapSeed);
             GameMain.GameSession.CrewManager.ClearCharacterInfos();
             foreach (var characterInfo in campaignSetupUI.CharacterMenus.Select(m => m.CharacterInfo))
             {
@@ -1494,6 +1531,7 @@ namespace Barotrauma
             };
             maxPlayersBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1.0f), buttonContainer.RectTransform), textAlignment: Alignment.Center)
             {
+                OverflowClip = true,
                 Text = maxPlayers.ToString()                
             };
             maxPlayersBox.OnEnterPressed += (GUITextBox sender, string text) =>
@@ -1518,6 +1556,7 @@ namespace Barotrauma
             label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("Password"), textAlignment: textAlignment);
             passwordBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), text: password, textAlignment: textAlignment)
             {
+                OverflowClip = true,
                 Censor = true
             };
             label.RectTransform.IsFixedSize = true;
@@ -1744,6 +1783,16 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.RemoteContentReceived:Exception", GameAnalyticsManager.ErrorSeverity.Error,
                     "Reading received remote main menu content failed. " + e.Message);
             }
+        }
+
+        public void RefreshDlcNotificationVisibility()
+        {
+            extraContentNotificationButton.Visible = DlcInfo.RetrieveDLCsFromCatalog().Any(static dlc =>
+            {
+                if (!dlc.HasContentPackage) { return false; }
+                ContentPackage cp = ContentPackageManager.DlcPackages.FirstOrDefault(dlc.Matches);
+                return dlc.IsOwned && (cp is null || !ContentPackageManager.EnabledPackages.All.Contains(cp));
+            });
         }
     }
 }

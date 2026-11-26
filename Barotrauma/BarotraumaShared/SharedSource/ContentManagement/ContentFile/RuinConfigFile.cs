@@ -4,7 +4,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
     [RequiredByCorePackage]
-    sealed class RuinConfigFile : GenericPrefabFile<RuinGenerationParams>
+    public sealed class RuinConfigFile : GenericPrefabFile<RuinGenerationParams>
     {
         public RuinConfigFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

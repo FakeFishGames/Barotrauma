@@ -19,8 +19,25 @@ namespace Barotrauma.Items.Components
         private float reload;
 
         private float reloadTimer;
-
-        public Attack Attack { get; private set; }
+        
+        private readonly Attack originalAttack;
+        public Attack Attack
+        {
+            get
+            {
+                Attack activeAttack = Item.FindAttackOverride(searchLinkedItems: false) ?? originalAttack;
+                if (activeAttack != originalAttack && activeAttack.DamageRange == 0)
+                {
+                    activeAttack.DamageRange = originalAttack.DamageRange;
+                }
+                return activeAttack;
+            }
+            private init
+            {
+                originalAttack = value;
+                originalAttack.DamageRange = item.body == null ? 10.0f : ConvertUnits.ToDisplayUnits(item.body.GetMaxExtent());
+            }
+        }
 
         private readonly HashSet<Entity> hitTargets = new HashSet<Entity>();
 
@@ -78,10 +95,7 @@ namespace Barotrauma.Items.Components
             foreach (var subElement in element.Elements())
             {
                 if (!subElement.Name.ToString().Equals("attack", StringComparison.OrdinalIgnoreCase)) { continue; }
-                Attack = new Attack(subElement, item.Name + ", MeleeWeapon", item)
-                {
-                    DamageRange = item.body == null ? 10.0f : ConvertUnits.ToDisplayUnits(item.body.GetMaxExtent())
-                };
+                Attack = new Attack(subElement, item.Name + ", MeleeWeapon", item);
             }
             item.IsShootable = true;
             item.RequireAimToUse = element.Parent.GetAttributeBool("requireaimtouse", true);
@@ -177,7 +191,10 @@ namespace Barotrauma.Items.Components
             //end hit first (which sets the weapon to the "held" state, with disabled physics and no special collision detection)
             EndHit();
             //ensure the physics body is enabled
-            item.body.PhysEnabled = true;
+            if (item.body != null)
+            {
+                item.body.PhysEnabled = true;
+            }
             base.Drop(dropper, setTransform);
         }
 
@@ -219,6 +236,8 @@ namespace Barotrauma.Items.Components
             {
                 item.FlipX(relativeToSub: false);
             }
+            equipRotationTimer += deltaTime;
+            float rotationOffset = GetEquipRotationOffset();
             AnimController ac = picker.AnimController;
             if (!hitting)
             {
@@ -227,7 +246,7 @@ namespace Barotrauma.Items.Components
                 {
                     UpdateSwingPos(deltaTime, out Vector2 swingPos);
                     hitPos = MathUtils.WrapAnglePi(Math.Min(hitPos + deltaTime * 3f, MathHelper.PiOver4));
-                    ac.HoldItem(deltaTime, item, handlePos, itemPos: aimPos + swingPos, aim: false, hitPos, holdAngle + hitPos + aimAngle, aimMelee: true);
+                    ac.HoldItem(deltaTime, item, handlePos, itemPos: aimPos + swingPos, aim: false, hitPos, holdAngle + hitPos + aimAngle + rotationOffset, aimMelee: true);
                     if (ac.InWater)
                     {
                         ac.LockFlipping();
@@ -236,7 +255,7 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     hitPos = 0;
-                    ac.HoldItem(deltaTime, item, handlePos, itemPos: holdPos, aim: false, holdAngle);
+                    ac.HoldItem(deltaTime, item, handlePos, itemPos: holdPos, aim: false, holdAngle, rotationOffset);
                 }
             }
             else
@@ -245,11 +264,11 @@ namespace Barotrauma.Items.Components
                 hitPos -= deltaTime * 15f;
                 if (Swing)
                 {
-                    ac.HoldItem(deltaTime, item, handlePos, itemPos: SwingPos, aim: false, hitPos, holdAngle);
+                    ac.HoldItem(deltaTime, item, handlePos, itemPos: SwingPos, aim: false, hitPos, holdAngle + rotationOffset);
                 }
                 else
                 {
-                    ac.HoldItem(deltaTime, item, handlePos, itemPos: holdPos, aim: false, holdAngle);
+                    ac.HoldItem(deltaTime, item, handlePos, itemPos: holdPos, aim: false, holdAngle, rotationOffset);
                 }
                 if (hitPos < -MathHelper.Pi)
                 {
@@ -301,6 +320,8 @@ namespace Barotrauma.Items.Components
         private void RestoreCollision()
         {
             impactQueue.Clear();
+            //the may be cases where hitting with the weapon causes it to be removed, in which case it would no longer exist here
+            if (item.body == null) { return; }
             item.body.FarseerBody.OnCollision -= OnCollision;
             item.body.CollisionCategories = Physics.CollisionItem;
             item.body.CollidesWith = Physics.DefaultItemCollidesWith;
@@ -345,11 +366,12 @@ namespace Barotrauma.Items.Components
                 }
                 hitTargets.Add(targetCharacter);
             }
-            else if (f2.Body.UserData is Character targetCharacter)
+            else if (f2.Body.UserData is Character targetCharacter && 
+                    (!targetCharacter.AnimController.SimplePhysicsEnabled || targetCharacter == User))
             {
                 //only allow hitting limbs, not the main collider
-                //otherwise it's difficult to make certain parts of the ragdoll not take hits by making them ignore collisions or melee weapons
-                return false;
+                //otherwise it's difficult to make certain parts of the ragdoll not take hits by making them ignore collisions or melee weapons           
+                return false;                
             }
             else if (!HitOnlyCharacters)
             {
@@ -427,39 +449,40 @@ namespace Barotrauma.Items.Components
             Item targetItem = target.UserData is Holdable h ? h.Item : target.UserData as Item ?? targetFixture.UserData as Item;
             Entity targetEntity = targetCharacter ?? targetStructure ?? targetItem ?? target.UserData as Entity;
 
-            if (Attack != null)
+            Attack activeAttack = Attack;
+            if (activeAttack != null)
             {
-                Attack.SetUser(user);
+                activeAttack.SetUser(user);
                 bool applyAttack = true;
-                if (Attack.Conditionals.Any(c => !c.TargetSelf && !c.Matches(targetEntity as ISerializableEntity)) ||
-                    Attack.Conditionals.Any(c => c.TargetSelf && !c.Matches(user)))
+                if (activeAttack.Conditionals.Any(c => !c.TargetSelf && !c.Matches(targetEntity as ISerializableEntity)) ||
+                    activeAttack.Conditionals.Any(c => c.TargetSelf && !c.Matches(user)))
                 {
                     applyAttack = false;
                 }
                 if (applyAttack)
                 {
-                    Attack.DamageMultiplier = damageMultiplier;
+                    activeAttack.DamageMultiplier = damageMultiplier;
                     if (targetLimb != null)
                     {
                         if (targetLimb.character.Removed) { return; }
                         targetLimb.character.LastDamageSource = item;
-                        Attack.DoDamageToLimb(user, targetLimb, item.WorldPosition, 1.0f);
+                        activeAttack.DoDamageToLimb(user, targetLimb, item.WorldPosition, 1.0f);
                     }
                     else if (targetCharacter != null)
                     {
                         if (targetCharacter.Removed) { return; }
                         targetCharacter.LastDamageSource = item;
-                        Attack.DoDamage(user, targetCharacter, item.WorldPosition, 1.0f);
+                        activeAttack.DoDamage(user, targetCharacter, item.WorldPosition, 1.0f);
                     }
                     else if (targetStructure != null)
                     {
                         if (targetStructure.Removed) { return; }
-                        Attack.DoDamage(user, targetStructure, item.WorldPosition, 1.0f);
+                        activeAttack.DoDamage(user, targetStructure, item.WorldPosition, 1.0f);
                     }
                     else if (targetItem != null && targetItem.Prefab.DamagedByMeleeWeapons && targetItem.Condition > 0)
                     {
                         if (targetItem.Removed) { return; }
-                        var attackResult = Attack.DoDamage(user, targetItem, item.WorldPosition, 1.0f);
+                        var attackResult = activeAttack.DoDamage(user, targetItem, item.WorldPosition, 1.0f);
 #if CLIENT
                         if (attackResult.Damage > 0.0f && targetItem.Prefab.ShowHealthBar && Character.Controlled != null &&
                             (user == Character.Controlled || Character.Controlled.CanSeeTarget(item)))
@@ -496,8 +519,12 @@ namespace Barotrauma.Items.Components
             }
             if (GameMain.NetworkMember is { IsServer: true } server && targetEntity != null)
             {
-                server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(conditionalActionType, targetItemComponent: this, targetCharacter, targetLimb, useTarget: targetEntity));
-                server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnUse, targetItemComponent: this, targetCharacter, targetLimb, useTarget: targetEntity));
+                server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(conditionalActionType, targetItemComponent: this, targetCharacter, targetLimb,
+                    useTarget: targetEntity,
+                    worldPosition: item.WorldPosition)); // send the impact position, otherwise if eg. hitting a wall (no limb to position by) clients would show the effect at wherever the weapon is at receive time
+                server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnUse, targetItemComponent: this, targetCharacter, targetLimb,
+                    useTarget: targetEntity,
+                    worldPosition: item.WorldPosition)); // same as above
                 serverLogger ??= new System.Text.StringBuilder();
                 serverLogger.Clear();
                 serverLogger.Append($"{picker?.LogName} used {item.Name}");

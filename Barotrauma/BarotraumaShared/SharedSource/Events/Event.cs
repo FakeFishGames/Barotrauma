@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    class Event
+    public class Event
     {
         public event Action Finished;
         protected bool isFinished;

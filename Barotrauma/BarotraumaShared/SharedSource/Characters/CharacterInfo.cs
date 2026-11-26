@@ -37,7 +37,7 @@ namespace Barotrauma
                                                      Color FacialHairColor,
                                                      ImmutableArray<NetJobVariant> JobVariants) : INetSerializableStruct;
 
-    class CharacterInfoPrefab
+    public class CharacterInfoPrefab
     {
         public readonly ImmutableArray<CharacterInfo.HeadPreset> Heads;
         public readonly ImmutableDictionary<Identifier, ImmutableHashSet<Identifier>> VarTags;
@@ -91,7 +91,7 @@ namespace Barotrauma
     /// Stores information about the Character that is needed between rounds in the
     /// menu etc., whereas Character itself is the object actually spawned in-game.
     /// </summary>
-    partial class CharacterInfo
+    public partial class CharacterInfo
     {
         public class HeadInfo
         {
@@ -330,6 +330,9 @@ namespace Barotrauma
 
         public LocalizedString Title;
 
+        /// <summary>
+        /// Setting this will automatically make the <see cref="HumanPrefab"/> getter find the appropriate prefab.
+        /// </summary>
         public (Identifier NpcSetIdentifier, Identifier NpcIdentifier) HumanPrefabIds;
         
         private HumanPrefab _humanPrefab;
@@ -343,6 +346,17 @@ namespace Barotrauma
             }
         }
         
+        /// <summary>
+        /// Reads the <see cref="HumanPrefabIds"/> stored in a saved character element. Also for callers that need the ids
+        /// before the <see cref="CharacterInfo"/> has been constructed, eg. to pass them to the constructor.
+        /// </summary>
+        public static (Identifier NpcSetIdentifier, Identifier NpcIdentifier) GetHumanPrefabIds(XElement element)
+        {
+            return (
+                element.GetAttributeIdentifier("npcsetid", Identifier.Empty),
+                element.GetAttributeIdentifier("npcid", Identifier.Empty));
+        }
+
         public string DisplayName
         {
             get
@@ -389,7 +403,63 @@ namespace Barotrauma
 
         }
 
-        public Job Job;
+        /// <summary>
+        /// The character's actual job, not affected by overrides.
+        /// </summary>
+        public Job ActualJob { get; private set; }
+
+        private Job jobOverride;
+
+        /// <summary>
+        /// Temporary non-destructive override of the character's actual Job.
+        /// Only applies to currently applying job behavior and display; will retain skills, talents and inventory.
+        /// </summary>
+        public Job JobOverride
+        {
+            get => jobOverride;
+            set
+            {
+                // The character's skills are part of the character more "deeply" than their job is, so the temporary job
+                // override shouldn't affect them, but the codebase has already been structured so that skills belongs to jobs.
+                // To solve this, let's just copy the character's actual skills to the override. They should also be copied
+                // back when removing the override, because the override will have received any skill changes.
+                
+                // If clearing an existing override, copy the up to date skills back to the actual job
+                if (jobOverride != null && value == null)
+                {
+                    SyncSkillsFromJobOverride();
+                }
+
+                jobOverride = value;
+
+                // If setting a new override, copy the character's current skills to it
+                if (jobOverride != null)
+                {
+                    jobOverride.OverrideSkills(ActualJob.GetSkills().ToDictionary(s => s.Identifier, s => s.Level));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Copies the up to date skills from the job override (if any) to the actual job.
+        /// </summary>
+        private void SyncSkillsFromJobOverride()
+        {
+            if (jobOverride == null) { return; }
+            ActualJob.OverrideSkills(jobOverride.GetSkills().ToDictionary(s => s.Identifier, s => s.Level));
+        }
+
+        /// <summary>
+        /// The character's current job, taking into account any overrides.
+        /// </summary>
+        public Job Job
+        {
+            get => JobOverride ?? ActualJob;
+            set
+            {
+                ActualJob = value;
+            }
+        }
 
         public int Salary;
 
@@ -397,13 +467,15 @@ namespace Barotrauma
 
         private int talentRefundPoints;
 
+        const int MaxTalentRefundPoints = 100;
+
         /// <summary>
         /// How many times the player is eligible to refund talents
         /// </summary>
         public int TalentRefundPoints
         {
             get => talentRefundPoints;
-            set => talentRefundPoints = MathHelper.Max(value, 0);
+            set => talentRefundPoints = Math.Min(value, MaxTalentRefundPoints);
         }
 
         public HashSet<Identifier> UnlockedTalents { get; private set; } = new HashSet<Identifier>();
@@ -415,13 +487,15 @@ namespace Barotrauma
 
         private int talentResetCount;
 
+        const int MaxTalentResetCount = 100;
+
         /// <summary>
         /// How many times have the characters' talents been reset?
         /// </summary>
         public int TalentResetCount
         {
             get => talentResetCount;
-            set => talentResetCount = MathHelper.Max(value, 0);
+            set => talentResetCount = MathHelper.Clamp(value, 0, MaxTalentResetCount);
         }
 
         public (Identifier factionId, float reputation) MinReputationToHire;
@@ -746,7 +820,7 @@ namespace Barotrauma
             Either<Job, JobPrefab> jobOrJobPrefab = null,
             int variant = 0,
             Rand.RandSync randSync = Rand.RandSync.Unsynced,
-            Identifier npcIdentifier = default)
+            (Identifier NpcSetIdentifier, Identifier NpcIdentifier) humanPrefabIds = default)
         {
             JobPrefab jobPrefab = null;
             Job job = null;
@@ -758,6 +832,7 @@ namespace Barotrauma
             ID = idCounter;
             idCounter++;
             if (idCounter == 0) { idCounter++; }
+            HumanPrefabIds = humanPrefabIds;
             SpeciesName = speciesName;
             SpriteTags = new List<Identifier>();
             CharacterConfigElement = CharacterPrefab.FindBySpeciesName(SpeciesName)?.ConfigElement;
@@ -791,7 +866,7 @@ namespace Barotrauma
                 {
                     Name = GetRandomName(randSync);
                 }
-                TryLoadNameAndTitle(npcIdentifier);
+                TryLoadNameAndTitle();
                 SetPersonalityTrait();
 
                 Salary = CalculateSalary();
@@ -864,7 +939,7 @@ namespace Barotrauma
         }
 
         // Used for loading the data
-        public CharacterInfo(ContentXElement infoElement, Identifier npcIdentifier = default)
+        public CharacterInfo(ContentXElement infoElement, (Identifier NpcSetIdentifier, Identifier NpcIdentifier) humanPrefabIds = default)
         {
             ID = idCounter;
             idCounter++;
@@ -880,6 +955,16 @@ namespace Barotrauma
             PermanentlyDead = infoElement.GetAttributeBool("permanentlydead", false);
             BotStatus = infoElement.GetAttributeBool(nameof(IsOnReserveBench), false) ? BotStatus.ReserveBench : BotStatus.ActiveService;
             RenamingEnabled = infoElement.GetAttributeBool("renamingenabled", false);
+#if CLIENT
+            if (infoElement.GetAttributeBool("lastcontrolled", false)) { LastControlled = true; }
+            CrewListIndex = infoElement.GetAttributeInt("crewlistindex", -1);
+#endif
+            // Needs to be determined before the name and title are loaded, because those are looked up based on the human prefab.
+            // The ids are normally stored in the element, but "custom" character infos defined inside a human prefab don't have them,
+            // so the prefab passes them here.
+            bool idsPassedByCaller = humanPrefabIds != default;
+            HumanPrefabIds = idsPassedByCaller ? humanPrefabIds : GetHumanPrefabIds(infoElement);
+
             ContentXElement element;
             if (!SpeciesName.IsEmpty)
             {
@@ -914,7 +999,11 @@ namespace Barotrauma
                 Head.FacialHairColor = infoElement.GetAttributeColor("facialhaircolor", Color.Transparent);
                 CheckColors();
 
-                TryLoadNameAndTitle(npcIdentifier);
+                if (idsPassedByCaller)
+                {
+                    // Overrides the name and title stored in the element, so only do this when the caller has "opted in" by passing them
+                    TryLoadNameAndTitle();
+                }
 
                 if (string.IsNullOrEmpty(Name))
                 {
@@ -946,10 +1035,6 @@ namespace Barotrauma
                 }
             }
 
-            HumanPrefabIds = (
-                infoElement.GetAttributeIdentifier("npcsetid", Identifier.Empty),
-                infoElement.GetAttributeIdentifier("npcid", Identifier.Empty));
-
             MissionsCompletedSinceDeath = infoElement.GetAttributeInt("missionscompletedsincedeath", 0);
             UnlockedTalents = new HashSet<Identifier>();
 
@@ -959,65 +1044,74 @@ namespace Barotrauma
             {
                 bool jobCreated = false;
 
-                Identifier elementName = subElement.Name.ToIdentifier();
-
-                if (elementName == "job" && !jobCreated)
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    Job = new Job(subElement);
-                    jobCreated = true;
-                    // there used to be a break here, but it had to be removed to make room for statvalues
-                    // using the jobCreated boolean to make sure that only the first job found is created
-                }
-                else if (elementName == "savedstatvalues")
-                {
-                    foreach (XElement savedStat in subElement.Elements())
-                    {
-                        string statTypeString = savedStat.GetAttributeString("stattype", "").ToLowerInvariant();
-                        if (!Enum.TryParse(statTypeString, true, out StatTypes statType))
+                    case "job":
+                        if (!jobCreated)
                         {
-                            DebugConsole.ThrowError("Invalid stat type type \"" + statTypeString + "\" when loading character data in CharacterInfo!");
-                            continue;
+                            Job = new Job(subElement);
+                            jobCreated = true;
+                            // there used to be a break here, but it had to be removed to make room for statvalues
+                            // using the jobCreated boolean to make sure that only the first job found is created
                         }
-
-                        float value = savedStat.GetAttributeFloat("statvalue", 0f);
-                        if (value == 0f) { continue; }
-
-                        Identifier statIdentifier = savedStat.GetAttributeIdentifier("statidentifier", Identifier.Empty);
-                        if (statIdentifier.IsEmpty)
+                        break;
+                    case "savedstatvalues":
+                        foreach (XElement savedStat in subElement.Elements())
                         {
-                            DebugConsole.ThrowError("Stat identifier not specified for Stat Value when loading character data in CharacterInfo!");
-                            return;
-                        }
-
-                        bool removeOnDeath = savedStat.GetAttributeBool("removeondeath", true);
-                        ChangeSavedStatValue(statType, value, statIdentifier, removeOnDeath);
-                    }
-                }
-                else if (elementName == "talents")
-                {
-                    Version version = subElement.GetAttributeVersion("version", GameMain.Version); // for future maybe
-
-                    foreach (XElement talentElement in subElement.Elements())
-                    {
-                        if (talentElement.Name.ToIdentifier() != "talent") { continue; }
-
-                        Identifier talentIdentifier = talentElement.GetAttributeIdentifier("identifier", Identifier.Empty);
-                        if (talentIdentifier == Identifier.Empty) { continue; }
-
-                        if (TalentPrefab.TalentPrefabs.TryGet(talentIdentifier, out TalentPrefab prefab))
-                        {
-                            foreach (TalentMigration migration in prefab.Migrations)
+                            string statTypeString = savedStat.GetAttributeString("stattype", "").ToLowerInvariant();
+                            if (!Enum.TryParse(statTypeString, true, out StatTypes statType))
                             {
-                                migration.TryApply(version, this);
+                                DebugConsole.ThrowError("Invalid stat type type \"" + statTypeString + "\" when loading character data in CharacterInfo!");
+                                continue;
+                            }
+
+                            float value = savedStat.GetAttributeFloat("statvalue", 0f);
+                            if (value == 0f) { continue; }
+
+                            Identifier statIdentifier = savedStat.GetAttributeIdentifier("statidentifier", Identifier.Empty);
+                            if (statIdentifier.IsEmpty)
+                            {
+                                DebugConsole.ThrowError("Stat identifier not specified for Stat Value when loading character data in CharacterInfo!");
+                                return;
+                            }
+
+                            bool removeOnDeath = savedStat.GetAttributeBool("removeondeath", true);
+                            ChangeSavedStatValue(statType, value, statIdentifier, removeOnDeath);
+                        }
+                        break;
+                    case "talents":
+                        Version version = subElement.GetAttributeVersion("version", GameMain.Version); // for future maybe
+                        foreach (XElement talentElement in subElement.Elements())
+                        {
+                            if (talentElement.Name.ToIdentifier() != "talent") { continue; }
+
+                            Identifier talentIdentifier = talentElement.GetAttributeIdentifier("identifier", Identifier.Empty);
+                            if (talentIdentifier == Identifier.Empty) { continue; }
+
+                            if (TalentPrefab.TalentPrefabs.TryGet(talentIdentifier, out TalentPrefab prefab))
+                            {
+                                foreach (TalentMigration migration in prefab.Migrations)
+                                {
+                                    migration.TryApply(version, this);
+                                }
+                            }
+
+                            UnlockedTalents.Add(talentIdentifier);
+                            if (talentElement.GetAttributeBool("resettable", defaultValue: false))
+                            {
+                                ResettableExtraTalents.Add(talentIdentifier);
                             }
                         }
-
-                        UnlockedTalents.Add(talentIdentifier);
-                        if (talentElement.GetAttributeBool("resettable", defaultValue: false))
-                        {
-                            ResettableExtraTalents.Add(talentIdentifier);
-                        }
-                    }
+                        break;
+                    case "inventory":
+                        InventoryData = subElement;
+                        break;
+                    case "health":
+                        HealthData = subElement;
+                        break;
+                    case "orders":
+                        OrderData = subElement;
+                        break;
                 }
             }
 
@@ -1032,17 +1126,48 @@ namespace Barotrauma
             LoadHeadAttachments();
         }
 
-        private void TryLoadNameAndTitle(Identifier npcIdentifier)
+        /// <summary>
+        /// Try load the name and title of the character based on <see cref="HumanPrefabIds"/>, which must be set before calling this.
+        /// If the title is missing and <see cref="HumanPrefab.StoreIdentifiers"/> is used, we look up the first one that
+        /// has one defined, left to right, so specialized merchant NPCs don't need to have a title defined and just
+        /// fall back to the "base" merchant in their storeidentifier pool.
+        /// </summary>
+        private void TryLoadNameAndTitle()
         {
+            Identifier npcIdentifier = HumanPrefabIds.NpcIdentifier;
             if (!npcIdentifier.IsEmpty)
             {
                 Title = TextManager.Get("npctitle." + npcIdentifier);
+                if (Title.IsNullOrEmpty() && GetStoreIdentifierTitleTags() is { Length: > 0 } fallbackTags)
+                {
+                    Title = TextManager.Get(fallbackTags);
+                }
                 string nameTag = "charactername." + npcIdentifier;
                 if (TextManager.ContainsTag(nameTag))
                 {
                     Name = TextManager.Get(nameTag).Value;
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets the title tags of the storeidentifier pools a merchant NPC draws from (see <see cref="HumanPrefab.StoreIdentifiers"/>),
+        /// for use with the title fallback mechanism.
+        /// Note: Here the NPC's own identifier is left out, because if this is reached, its title has already been found empty.
+        /// </summary>
+        private Identifier[] GetStoreIdentifierTitleTags()
+        {
+            // The set is required to correctly identify the prefab, NPC identifiers alone are only unique within a set
+            if (HumanPrefabIds.NpcSetIdentifier.IsEmpty || HumanPrefab is not { } humanPrefab)
+            {
+                return Array.Empty<Identifier>();
+            }
+
+            Identifier npcIdentifier = HumanPrefabIds.NpcIdentifier;
+            return humanPrefab.StoreIdentifiers
+                .Where(storeIdentifier => storeIdentifier != npcIdentifier)
+                .Select(static storeIdentifier => $"npctitle.{storeIdentifier}".ToIdentifier())
+                .ToArray();
         }
 
         private List<ContentXElement> hairs;
@@ -1370,24 +1495,28 @@ namespace Barotrauma
 
         /// <summary>
         /// Increase the skill by a specific amount. Talents may affect the actual, final skill increase.
+        /// Can be called without a Character, in which case talent-based multipliers and level-up callbacks are skipped, so should only be used for NPCs that way.
         /// </summary>
         public void IncreaseSkillLevel(Identifier skillIdentifier, float increase, bool gainedFromAbility = false, bool forceNotification = false)
         {
-            if (Job == null || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) || Character == null) { return; }
+            if (Job == null || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)) { return; }
 
             if (Job.Prefab.Identifier == "assistant")
             {
                 increase *= SkillSettings.Current.AssistantSkillIncreaseMultiplier;
             }
-            increase *= 1f + Character.GetStatValue(StatTypes.SkillGainSpeed);
-            increase = GetSkillSpecificGain(increase, skillIdentifier);
+            if (Character != null)
+            {
+                increase *= 1f + Character.GetStatValue(StatTypes.SkillGainSpeed);
+                increase = GetSkillSpecificGain(increase, skillIdentifier);
+            }
 
             float prevLevel = Job.GetSkillLevel(skillIdentifier);
-            Job.IncreaseSkillLevel(skillIdentifier, increase, Character.HasAbilityFlag(AbilityFlags.GainSkillPastMaximum));
+            Job.IncreaseSkillLevel(skillIdentifier, increase, Character?.HasAbilityFlag(AbilityFlags.GainSkillPastMaximum) ?? false);
 
             float newLevel = Job.GetSkillLevel(skillIdentifier);
 
-            if ((int)newLevel > (int)prevLevel)
+            if (Character != null && (int)newLevel > (int)prevLevel)
             {
                 float extraLevel = Character.GetStatValue(StatTypes.ExtraLevelGain);
                 Job.IncreaseSkillLevel(skillIdentifier, extraLevel, Character.HasAbilityFlag(AbilityFlags.GainSkillPastMaximum));
@@ -1615,7 +1744,7 @@ namespace Barotrauma
             Name = OriginalName;
         }
 
-        public XElement Save(XElement parentElement)
+        public XElement Save(XElement parentElement, bool includeInventoryData = false, bool includeHealthData = false, bool includeOrderData = false)
         {
             XElement charElement = new XElement("Character");
 
@@ -1667,8 +1796,10 @@ namespace Barotrauma
                     charElement.Add(new XAttribute("hull", Character.AnimController.CurrentHull.ID));
                 }
             }
-            
-            Job.Save(charElement);
+
+            // The override may have received skill changes that haven't been copied back to the actual job yet
+            SyncSkillsFromJobOverride();
+            ActualJob.Save(charElement);
 
             XElement savedStatElement = new XElement("savedstatvalues");
             foreach (var statValuePair in SavedStatValues)
@@ -1700,6 +1831,15 @@ namespace Barotrauma
             charElement.Add(savedStatElement);
             charElement.Add(talentElement);
             parentElement?.Add(charElement);
+
+            if (includeInventoryData && InventoryData != null) { charElement.Add(InventoryData); }
+            if (includeHealthData && HealthData != null) { charElement.Add(HealthData); }
+            if (includeOrderData && OrderData != null) { charElement.Add(OrderData); }
+#if CLIENT
+            charElement.Add(new XAttribute("crewlistindex", CrewListIndex));
+            if (LastControlled) { charElement.Add(new XAttribute("lastcontrolled", true)); }
+#endif
+
             return charElement;
         }
 
@@ -2181,7 +2321,7 @@ namespace Barotrauma
         public float LastResistanceMultiplierSkillLossRespawn = 1.0f;
     }
 
-    internal sealed class SavedStatValue
+    public sealed class SavedStatValue
     {
         public Identifier StatIdentifier { get; set; }
         public float StatValue { get; set; }

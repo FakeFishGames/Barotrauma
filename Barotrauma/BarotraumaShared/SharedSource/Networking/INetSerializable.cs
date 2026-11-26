@@ -1,11 +1,11 @@
 ﻿namespace Barotrauma.Networking
 {
-    interface INetSerializable { }
+    public interface INetSerializable { }
 
     /// <summary>
     /// Interface for entities that the clients can send events to the server
     /// </summary>
-    interface IClientSerializable : INetSerializable
+    public interface IClientSerializable : INetSerializable
     {
 #if CLIENT
         void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null);
@@ -18,7 +18,7 @@
     /// <summary>
     /// Interface for entities that the server can send events to the clients
     /// </summary>
-    interface IServerSerializable : INetSerializable
+    public interface IServerSerializable : INetSerializable
     {
 #if SERVER
         void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null);

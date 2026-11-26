@@ -9,7 +9,7 @@ namespace Barotrauma
     /// <summary>
     /// Spawns an entity (e.g. item, NPC, monster).
     /// </summary>
-    class SpawnAction : EventAction
+    public class SpawnAction : EventAction
     {
         public enum SpawnLocationType
         {
@@ -22,6 +22,10 @@ namespace Barotrauma
             /// Spawnpoint inside an outpost.
             /// </summary>
             Outpost,
+            /// <summary>
+            /// Spawnpoint outside an outpost.
+            /// </summary>
+            OutsideOutpost,
             /// <summary>
             /// Spawnpoint on the main path through the level.
             /// </summary>
@@ -64,6 +68,9 @@ namespace Barotrauma
         [Serialize(true, IsPropertySaveable.Yes, description: "Should taking the items of this npc be considered as stealing?")]
         public bool LootingIsStealing { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes, description: "If this is a creature, should creature saving in the campaign file be disabled for this character?")]
+        public bool DisableCreatureSaving { get; set; }
+
         [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the item to spawn.")]
         public Identifier ItemIdentifier { get; set; }
 
@@ -88,6 +95,18 @@ namespace Barotrauma
         [Serialize(CharacterTeamType.FriendlyNPC, IsPropertySaveable.Yes, description: "Team of the NPC to spawn. Only valid when spawning a character.")]
         public CharacterTeamType TeamID { get; protected set; }
 
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should the spawned creature ignore the submarine and any connected subs that it's spawned on?")]
+        public bool IgnoreOwnSubmarine { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the spawned creature ignore outpost submarines and any connected subs to it?")]
+        public bool IgnoreOutpost { get; set; }
+
+        [Serialize(CharacterTeamType.None, IsPropertySaveable.Yes, description: "Makes the creature ignore all submarines that have the specified team.")]
+        public CharacterTeamType IgnoreSubmarineTeam { get; set; }
+
+        [Serialize(0f, IsPropertySaveable.Yes, description: "Minimum distance from the outpost that the creature is allowed to spawn.")]
+        public float MinDistanceFromOutpost { get; set; }
+
         [Serialize(false, IsPropertySaveable.Yes, description: "Should we spawn the entity even when no spawn points with matching tags were found?")]
         public bool RequireSpawnPointTag { get; set; }
 
@@ -104,6 +123,12 @@ namespace Barotrauma
 
         [Serialize(100.0f, IsPropertySaveable.Yes, description: "Random offset to add to the spawn position.")]
         public float Offset { get; set; }
+
+        [Serialize(default, IsPropertySaveable.Yes, description: "Position offset to be added to the spawn position.")]
+        public Vector2 PosOffset { get; set; }
+
+        [Serialize(InvSlotType.None, IsPropertySaveable.Yes, description: "Specifies which slots the item allowed to go in when spawning inside an inventory.")]
+        public InvSlotType AllowedSlots { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes, "What outpost module tags does the entity prefer to spawn in.")]
         public string TargetModuleTags
@@ -132,13 +157,25 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes, description: "Should the event continue even if the entity failed to spawn for whatever reason?")]
         public bool ContinueIfFailedToSpawn { get; set; }
 
+        [Serialize("", IsPropertySaveable.Yes, description: "Forces the spawned character to be friendly towards the specified group. Note: normal team-friendliness logic still applies.")]
+        public Identifier ForceFriendlyWithGroup { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "If true, the spawning only happens in multiplayer, and the action does nothing in single player. Useful for e.g. spawning more enemies in some event in multiplayer.")]
+        public bool MultiplayerOnly { get; set; }
+
+        [Serialize(0, IsPropertySaveable.Yes, description: "The spawning only happens if there's at least this many players in the server. Players opted to spectate/AFK don't count. In single player, the player count is assumed to be one, and any value above 1 will mean the action does nothing in single player.")]
+        public int MinPlayerCount { get; set; }
+
         private bool spawned;
         private Entity spawnedEntity;
 
         private readonly bool ignoreSpawnPointType;
 
+        private readonly bool ignoreSubmarineTeamSet;
+
         public SpawnAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
         {
+            ignoreSubmarineTeamSet = element.GetAttribute(nameof(IgnoreSubmarineTeam)) != null;
             ignoreSpawnPointType = element.GetAttribute("spawnpointtype") == null;
             //backwards compatibility
             TeamID = element.GetAttributeEnum("teamtag", element.GetAttributeEnum("team", TeamID));
@@ -151,8 +188,35 @@ namespace Barotrauma
             }
         }
 
+        private bool PlayerCountAndMultiplayerRequirementsMet()
+        {
+            if (MultiplayerOnly)
+            {
+                if (GameMain.GameSession?.GameMode is { IsSinglePlayer: true })
+                {
+                    return false;
+                }
+            }
+            if (MinPlayerCount > 1)
+            {
+                if (GameMain.NetworkMember == null) { return false; }
+#if SERVER
+                if (GameMain.Server.GetPlayingClients().Count < MinPlayerCount) { return false; }
+#else
+                //client code: the clients shouldn't be executing actions or spawning anything, so we can treat this as a failure to meet the requirements
+                return false;
+#endif
+            }
+            return true;
+        }
+
         public override bool IsFinished(ref string goTo)
         {
+            if (!PlayerCountAndMultiplayerRequirementsMet())
+            {
+                return true;
+            }
+
             if (spawnedEntity != null || ContinueIfFailedToSpawn)
             {
                 return spawned;
@@ -163,7 +227,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Reset()
+        public override void Reset(bool shouldEndConversations = true)
         {
             spawned = false;
             spawnedEntity = null;
@@ -171,6 +235,11 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
+            if (!PlayerCountAndMultiplayerRequirementsMet())
+            {
+                return;
+            }
+
             if (spawned) { return; }
 
             if (!NPCSetIdentifier.IsEmpty && !NPCIdentifier.IsEmpty)
@@ -184,15 +253,21 @@ namespace Barotrauma
                 }
                 HumanPrefab TryFindHumanPrefab(Faction faction)
                 {
-                    if (faction == null) { return null; }
-                    return 
-                        NPCSet.Get(NPCSetIdentifier, 
-                        NPCIdentifier.Replace("[faction]".ToIdentifier(), faction.Prefab.Identifier), 
-                        logError: false) ??
-                        //try to spawn a coalition NPC if a correct one can't be found
-                        NPCSet.Get(NPCSetIdentifier,
-                        NPCIdentifier.Replace("[faction]".ToIdentifier(), "coalition".ToIdentifier()),
-                        logError: false);
+                    if (faction == null)
+                    {
+                        return
+                            //try to find an NPC without a faction specified
+                            NPCSet.Get(NPCSetIdentifier, NPCIdentifier.Replace("[faction]".ToIdentifier(), "".ToIdentifier()), logError: false) ??
+                            //try to spawn a coalition NPC if a correct one can't be found
+                            NPCSet.Get(NPCSetIdentifier, NPCIdentifier.Replace("[faction]".ToIdentifier(), "coalition".ToIdentifier()), logError: false);
+                    }
+                    else
+                    {
+                        return 
+                            NPCSet.Get(NPCSetIdentifier, NPCIdentifier.Replace("[faction]".ToIdentifier(), faction.Prefab.Identifier), logError: false) ??
+                            //try to spawn a coalition NPC if a correct one can't be found
+                            NPCSet.Get(NPCSetIdentifier, NPCIdentifier.Replace("[faction]".ToIdentifier(), "coalition".ToIdentifier()), logError: false);
+                    }
                 }
 
                 humanPrefab ??= NPCSet.Get(NPCSetIdentifier, NPCIdentifier, logError: true, contentPackageToLogInError: ParentEvent.Prefab.ContentPackage);
@@ -210,9 +285,10 @@ namespace Barotrauma
                     {
                         for (int i = 0; i < Amount; i++)
                         {
-                            Entity.Spawner.AddCharacterToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos.WorldPosition, Rand.Range(0.0f, Offset)), humanPrefab.CreateCharacterInfo(), onSpawn: newCharacter =>
+                            Entity.Spawner.AddCharacterToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos.WorldPosition, Rand.Range(0.0f, Offset), PosOffset), humanPrefab.CreateCharacterInfo(), onSpawn: newCharacter =>
                             {
                                 if (newCharacter == null) { return; }
+                                newCharacter.DisableCreatureSaving = DisableCreatureSaving;
                                 newCharacter.HumanPrefab = humanPrefab;
                                 //don't set the TeamID directly: we want to leave the character's original team untouched,
                                 //so they can behave offensively (and otherwise act "normally") if we spawn them in a hostile team inside a sub/outpost that doesn't belong to that team
@@ -225,7 +301,7 @@ namespace Barotrauma
                                 {
                                     foreach (Item item in newCharacter.Inventory.FindAllItems(recursive: true))
                                     {
-                                        item.SpawnedInCurrentOutpost = true;
+                                        item.SpawnedInNonPlayerOutpostOrSubmarine = true;
                                         item.AllowStealing = false;
                                     }
                                 }
@@ -235,13 +311,9 @@ namespace Barotrauma
                                     ParentEvent.AddTarget(TargetTag, newCharacter);
                                 }
                                 spawnedEntity = newCharacter;
-                                if (Level.Loaded?.StartOutpost?.Info is { } outPostInfo)
+                                if (Level.Loaded?.StartOutpost?.Info is { } outpostInfo)
                                 {
-                                    outPostInfo.AddOutpostNPCIdentifierOrTag(newCharacter, humanPrefab.Identifier);
-                                    foreach (Identifier tag in humanPrefab.GetTags())
-                                    {
-                                        outPostInfo.AddOutpostNPCIdentifierOrTag(newCharacter, tag);
-                                    }
+                                    outpostInfo.AddOutpostNPC(newCharacter);
                                 }
 #if SERVER
                                 newCharacter.LoadTalents();
@@ -264,16 +336,38 @@ namespace Barotrauma
                 {
                     for (int i = 0; i < Amount; i++)
                     {
-                        Entity.Spawner.AddCharacterToSpawnQueue(SpeciesName, OffsetSpawnPos(spawnPos.WorldPosition, Rand.Range(0.0f, Offset)), onSpawn: newCharacter =>
+                        Entity.Spawner.AddCharacterToSpawnQueue(SpeciesName, OffsetSpawnPos(spawnPos.WorldPosition, Rand.Range(0.0f, Offset), PosOffset), onSpawn: newCharacter =>
                         {
+                            newCharacter.DisableCreatureSaving = DisableCreatureSaving;
+                            newCharacter.ForceFriendlyWithGroup = ForceFriendlyWithGroup;
+
                             if (!TargetTag.IsEmpty && newCharacter != null)
                             {
                                 ParentEvent.AddTarget(TargetTag, newCharacter);
                             }
                             spawnedEntity = newCharacter;
-                            if (newCharacter is { AIController: EnemyAIController enemyAi, Submarine: Submarine ownSub })
+                            if (newCharacter is { AIController: EnemyAIController enemyAi })
                             {
-                                enemyAi.SetUnattackableSubmarines(ownSub);
+                                List<Submarine> submarinesToIgnore = [];
+
+                                if (IgnoreOutpost)
+                                {
+                                    Submarine.Loaded
+                                        .Where(sub => sub.Info.IsOutpost)
+                                        .ForEach(sub => enemyAi.SetUnattackableSubmarines(sub, clearExisting: false));
+                                }
+
+                                if (ignoreSubmarineTeamSet)
+                                {
+                                    Submarine.Loaded
+                                        .Where(sub => sub.TeamID == IgnoreSubmarineTeam)
+                                        .ForEach(sub => enemyAi.SetUnattackableSubmarines(sub, includeConnectedSubs: false, clearExisting: false));
+                                }
+
+                                if (newCharacter.Submarine != null && IgnoreOwnSubmarine)
+                                {
+                                    enemyAi.SetUnattackableSubmarines(newCharacter.Submarine, clearExisting: false);
+                                }
                             }
                         });
                     }
@@ -327,7 +421,7 @@ namespace Barotrauma
                     {
                         for (int i = 0; i < Amount; i++)
                         {
-                            Entity.Spawner.AddItemToSpawnQueue(itemPrefab, OffsetSpawnPos(spawnPos.WorldPosition, Rand.Range(0.0f, Offset)), onSpawned: onSpawned);
+                            Entity.Spawner.AddItemToSpawnQueue(itemPrefab, OffsetSpawnPos(spawnPos.WorldPosition, Rand.Range(0.0f, Offset), PosOffset), onSpawned: onSpawned);
                         }
                     }
                 }
@@ -335,8 +429,7 @@ namespace Barotrauma
                 {
                     for (int i = 0; i < Amount; i++)
                     {
-                        Entity.Spawner.AddItemToSpawnQueue(itemPrefab, spawnInventory, spawnIfInventoryFull: SpawnIfInventoryFull, onSpawned: onSpawned);
-
+                        Entity.Spawner.AddItemToSpawnQueue(itemPrefab, spawnInventory, spawnIfInventoryFull: SpawnIfInventoryFull, onSpawned: onSpawned, slot: AllowedSlots);
                     }
                 }
                 void onSpawned(Item newItem)
@@ -360,10 +453,11 @@ namespace Barotrauma
             spawned = true;            
         }
 
-        public static Vector2 OffsetSpawnPos(Vector2 pos, float offset)
+        public static Vector2 OffsetSpawnPos(Vector2 pos, float randomOffset, Vector2 offset = default)
         {
             Hull hull = Hull.FindHull(pos);            
-            pos += Rand.Vector(offset);
+            pos += Rand.Vector(randomOffset);
+            pos += offset;
             if (hull != null)
             {
                 float margin = 50.0f;
@@ -386,7 +480,11 @@ namespace Barotrauma
                 var item = potentialItems.Where(it => it.HasTag(SpawnPointTag)).GetRandomUnsynced();
                 if (item != null) { return item; }
 
-                var potentialTargets = ParentEvent.GetTargets(SpawnPointTag).Where(t => IsValidSubmarineType(SpawnLocation, t.Submarine));
+                var potentialTargets = ParentEvent.GetTargets(SpawnPointTag)
+                    //GetTargets returns waypoints by tag, but we're not interested in those at this point.
+                    //Waypoints are handled in GetSpawnPos below, with some extra checks for e.g. waypoints being obstructed by subs
+                    .Where(t => t is not WayPoint)
+                    .Where(t => IsValidSubmarineType(SpawnLocation, t.Submarine));
                 if (!AllowInPlayerView)
                 {
                     potentialTargets = GetEntitiesNotInPlayerView(potentialTargets);
@@ -398,7 +496,8 @@ namespace Barotrauma
             SpawnType? spawnPointType = null;
             if (!ignoreSpawnPointType) { spawnPointType = SpawnPointType; }
 
-            return GetSpawnPos(SpawnLocation, spawnPointType, targetModuleTags, SpawnPointTag.IsEmpty ? null : SpawnPointTag.ToEnumerable(), requireTaggedSpawnPoint: RequireSpawnPointTag, allowInPlayerView: AllowInPlayerView);
+            return GetSpawnPos(SpawnLocation, spawnPointType, targetModuleTags, SpawnPointTag.IsEmpty ? null : SpawnPointTag.ToEnumerable(), requireTaggedSpawnPoint: RequireSpawnPointTag, allowInPlayerView: AllowInPlayerView, minDistanceFromOutpost: MinDistanceFromOutpost,
+                debugLogName: $"SpawnAction ({ParentEvent?.Prefab?.Identifier.Value ?? "null"})");
         }
 
         private static bool IsValidSubmarineType(SpawnLocationType spawnLocation, Submarine submarine)
@@ -409,6 +508,7 @@ namespace Barotrauma
                 SpawnLocationType.MainSub => submarine == Submarine.MainSub,
                 SpawnLocationType.NearMainSub or SpawnLocationType.MainPath or SpawnLocationType.Cave or SpawnLocationType.AbyssCave => submarine == null,
                 SpawnLocationType.Outpost => submarine is { Info.IsOutpost: true },
+                SpawnLocationType.OutsideOutpost => submarine is { Info.IsOutpost: true },
                 SpawnLocationType.Wreck => submarine is { Info.IsWreck: true },
                 SpawnLocationType.Ruin => submarine is { Info.IsRuin: true },
                 SpawnLocationType.BeaconStation => submarine?.Info?.BeaconStationInfo != null,
@@ -438,11 +538,39 @@ namespace Barotrauma
             return false;
         }
 
-        public static WayPoint GetSpawnPos(SpawnLocationType spawnLocation, SpawnType? spawnPointType, IEnumerable<Identifier> moduleFlags = null, IEnumerable<Identifier> spawnpointTags = null, bool asFarAsPossibleFromAirlock = false, bool requireTaggedSpawnPoint = false, bool allowInPlayerView = true)
+        public static WayPoint GetSpawnPos(SpawnLocationType spawnLocation, SpawnType? spawnPointType, IEnumerable<Identifier> moduleFlags = null, IEnumerable<Identifier> spawnpointTags = null, 
+            bool asFarAsPossibleFromAirlock = false, bool requireTaggedSpawnPoint = false, bool allowInPlayerView = true,
+            string debugLogName = null, float minDistanceFromOutpost = 0f)
         {
             bool requireHull = spawnLocation == SpawnLocationType.MainSub || spawnLocation == SpawnLocationType.Outpost;
+            bool requireNoHull = spawnLocation == SpawnLocationType.OutsideOutpost;
 
-            IEnumerable<WayPoint> potentialSpawnPoints = WayPoint.WayPointList.FindAll(wp => IsValidSubmarineType(spawnLocation, wp.Submarine) && (wp.CurrentHull != null || !requireHull));           
+            IEnumerable<WayPoint> potentialSpawnPoints = WayPoint.WayPointList
+                .FindAll(wp =>
+                {
+                    if (!IsValidSubmarineType(spawnLocation, wp.Submarine)) { return false; }
+                    //explicitly tagged spawnpoints are allowed outside hulls (e.g. a spawnpoint tagged for spawning a monster outside an outpost)
+                    bool hasRequestedTag = spawnpointTags != null && spawnpointTags.Any(tag => wp.Tags.Contains(tag));
+                    if (wp.CurrentHull == null && requireHull && !hasRequestedTag) { return false; }
+                    if (wp.CurrentHull != null && requireNoHull) { return false; }
+                    //if the waypoint belongs to a sub (e.g. spawnpoint placed outside a sub or an outpost),
+                    //but is inside another sub, exclude it
+                    if (wp.Submarine != null &&
+                        wp.CurrentHull?.Submarine != wp.Submarine &&
+                        Hull.FindHull(wp.WorldPosition, useWorldCoordinates: true) is Hull insideHull &&
+                        insideHull.Submarine != wp.Submarine)
+                    {
+                        return false;
+                    }
+                    if (wp.CurrentHull == null &&
+                        Level.Loaded != null &&
+                        Level.Loaded.IsPositionInsideWall(wp.WorldPosition))
+                    {
+                        return false;
+                    }
+                    return true;
+                });      
+            
             potentialSpawnPoints = potentialSpawnPoints.Where(wp => wp.ConnectedDoor == null && wp.Ladders == null && wp.IsTraversable);
 
             //find spawnpoints with the desired type, or any random spawnpoints if not specified
@@ -466,10 +594,16 @@ namespace Barotrauma
             //with correct module flags, if there are any
             if (moduleFlags != null && moduleFlags.Any())
             {
-                var spawnPointsWithCorrectFlags = potentialSpawnPoints.Where(wp => wp.CurrentHull is Hull h && h.OutpostModuleTags.Any(moduleFlags.Contains));
+                var spawnPointsWithCorrectFlags = potentialSpawnPoints.Where(wp => (wp.CurrentHull is Hull h && h.OutpostModuleTags.Any(moduleFlags.Contains)) || wp.Tags.Any(moduleFlags.Contains));
+                Identifier noneTag = "none".ToIdentifier();
                 if (spawnPointsWithCorrectFlags.Any())
                 {
                     potentialSpawnPoints = spawnPointsWithCorrectFlags.ToList();
+                }
+                //"none" seems to be used as "I don't care where this NPC spawns" in the configs, let's not log a warning about a module with the flag "none" not being found
+                else if (moduleFlags.Any( f => f != noneTag))
+                {
+                    DebugConsole.AddWarning($"Could not find any modules with the flag(s) \"{string.Join(", ", moduleFlags)}\" when trying to choose a spawn position for {debugLogName ?? "unknown"}).");
                 }
             }
 
@@ -541,7 +675,7 @@ namespace Barotrauma
                 case SpawnLocationType.MainPath:
                 case SpawnLocationType.NearMainSub:                    
                     validSpawnPoints = validSpawnPoints.Where(p =>
-                        Submarine.Loaded.None(s => ToolBox.GetWorldBounds(s.Borders.Center, s.Borders.Size).ContainsWorld(p.WorldPosition)));
+                        Submarine.FindContaining(p.WorldPosition, inflate: 0) == null);
                     if (Level.Loaded != null)
                     {
                         validSpawnPoints = validSpawnPoints.Where(p =>
@@ -576,6 +710,17 @@ namespace Barotrauma
             if (!allowInPlayerView)
             {
                 validSpawnPoints = GetEntitiesNotInPlayerView(validSpawnPoints);
+            }
+
+            if (minDistanceFromOutpost > 0f && Level.Loaded.StartOutpost is { } outpost)
+            {
+                var spawnPoints = validSpawnPoints
+                    .Where(wp => Vector2.DistanceSquared(wp.WorldPosition, outpost.WorldPosition) > minDistanceFromOutpost * minDistanceFromOutpost);
+
+                if (spawnPoints.Any())
+                {
+                    validSpawnPoints = spawnPoints.ToList();
+                }
             }
 
             if (spawnLocation == SpawnLocationType.NearMainSub && Submarine.MainSub != null)

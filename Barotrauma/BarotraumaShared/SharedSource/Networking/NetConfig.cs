@@ -3,12 +3,12 @@ using System;
 
 namespace Barotrauma.Networking
 {
-    static class NetConfig
+    public static class NetConfig
     {
         public const int DefaultPort = 27015;
         public const int DefaultQueryPort = 27016;
 
-        public const int MaxPlayers = 16;
+        public static int MaxPlayers = 16;
 
         public const int ServerNameMaxLength = 60;
         public const int ServerMessageMaxLength = 2000;
@@ -16,28 +16,28 @@ namespace Barotrauma.Networking
         public const float MaxPhysicsBodyVelocity = 64.0f;
         public const float MaxPhysicsBodyAngularVelocity = 16.0f;
 
-        public const float MaxHealthUpdateInterval = 2.0f;
-        public const float MaxHealthUpdateIntervalDead = 10.0f;
+        public static float MaxHealthUpdateInterval = 2.0f;
+        public static float MaxHealthUpdateIntervalDead = 10.0f;
 
-        public const float HighPrioCharacterPositionUpdateDistance = 1000.0f;
-        public const float LowPrioCharacterPositionUpdateDistance = 10000.0f;
-        public const float HighPrioCharacterPositionUpdateInterval = 0.0f;
-        public const float LowPrioCharacterPositionUpdateInterval = 1.0f;
+        public static float HighPrioCharacterPositionUpdateDistance = 1000.0f;
+        public static float LowPrioCharacterPositionUpdateDistance = 10000.0f;
+        public static float HighPrioCharacterPositionUpdateInterval = 0.0f;
+        public static float LowPrioCharacterPositionUpdateInterval = 1.0f;
 
         //this should be higher than LowPrioCharacterPositionUpdateInterval,
         //otherwise the clients may freeze characters even though the server hasn't actually stopped sending position updates
-        public const float FreezeCharacterIfPositionDataMissingDelay = 2.0f;
-        public const float DisableCharacterIfPositionDataMissingDelay = 3.5f;
+        public static float FreezeCharacterIfPositionDataMissingDelay = 2.0f;
+        public static float DisableCharacterIfPositionDataMissingDelay = 3.5f;
 
-        public const float DeleteDisconnectedTime = 20.0f;
+        public static float DeleteDisconnectedTime = 20.0f;
 
-        public const float ItemConditionUpdateInterval = 0.15f;
-        public const float LevelObjectUpdateInterval = 0.5f;
-        public const float HullUpdateInterval = 0.5f;
-        public const float SparseHullUpdateInterval = 5.0f;
-        public const float HullUpdateDistance = 20000.0f;
+        public static float ItemConditionUpdateInterval = 0.15f;
+        public static float LevelObjectUpdateInterval = 0.5f;
+        public static float HullUpdateInterval = 0.5f;
+        public static float SparseHullUpdateInterval = 5.0f;
+        public static float HullUpdateDistance = 20000.0f;
 
-        public const int MaxEventPacketsPerUpdate = 4;
+        public static int MaxEventPacketsPerUpdate = 4;
 
         /// <summary>
         /// When enabled, uses more lenient Lidgren handshake timeouts (longer connection timeout, more retry attempts).

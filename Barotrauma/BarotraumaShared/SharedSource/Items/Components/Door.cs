@@ -12,7 +12,7 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Door : Pickable, IDrawableComponent, IServerSerializable
+    public partial class Door : Pickable, IDrawableComponent, IServerSerializable, IRepairToolDamageable
     {
         private static readonly HashSet<Door> doorList = new HashSet<Door>();
 
@@ -58,8 +58,6 @@ namespace Barotrauma.Items.Components
 #endif
             }
         }
-
-        public bool IgnoreSignals { get; private set; }
 
         //how much "less stuck" partially doors get when opened
         const float StuckReductionOnOpen = 30.0f;
@@ -161,6 +159,7 @@ namespace Barotrauma.Items.Components
                     Submarine = item.Submarine
                 };
                 item.linkedTo.Add(linkedGap);
+                if (item.IsDisabled) { linkedGap.SetDisabled(disabled: true); }
             }
             RefreshLinkedGap();
         }
@@ -282,6 +281,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+
             //do this here because the scale of the item might not be set to the final value yet in the constructor
             doorRect = new Rectangle(
                 item.Rect.Center.X - (int)(doorSprite.size.X / 2 * item.Scale),
@@ -305,10 +305,6 @@ namespace Barotrauma.Items.Components
             Body.SetTransformIgnoreContacts(
                 ConvertUnits.ToSimUnits(new Vector2(doorRect.Center.X, doorRect.Y - doorRect.Height / 2)),
                 0.0f);
-            if (isBroken)
-            {
-                DisableBody();
-            }
         }
 
         public override void Move(Vector2 amount, bool ignoreContacts = false)
@@ -540,6 +536,19 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void SetDisabled(bool isDisabled)
+        {
+            if (isDisabled)
+            {
+                DisableBody();
+            }
+            else
+            {
+                EnableBody();
+            }
+            linkedGap?.SetDisabled(isDisabled);
+        }
+
         private void EnableBody()
         {
             if (!Impassable)
@@ -611,12 +620,23 @@ namespace Barotrauma.Items.Components
             RefreshLinkedGap();
 #if CLIENT
             convexHull = new ConvexHull(doorRect, IsConvexHullHorizontal, item);
+            convexHull.Enabled = !item.IsDisabled;
             if (Window != Rectangle.Empty)
             {
                 convexHull2 = new ConvexHull(doorRect, IsConvexHullHorizontal, item);
+                convexHull2.Enabled = !item.IsDisabled;
             }
             UpdateConvexHulls();
 #endif
+            //clients receive an update about the item being broken if the door breaks mid-round, but if it's already broken after loading,
+            //both the server and clients set the state here, and the server won't send a notification about it
+
+            //done here instead of OnItemLoaded, because the sub body (OutsideSubmarineFixture) and convex hulls don't exist yet at that point.
+            isBroken = item.Condition <= 0.0f;
+            if (isBroken)
+            {
+                DisableBody();
+            }
         }
 
         public override void OnScaleChanged()
@@ -816,6 +836,11 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        public void OnDamageRepairTool(RepairTool repairTool, Character user, Vector2 hitPosition, float damage, float deltaTime, float degreeOfSuccess, Body targetBody)
+        {
+            HumanAIController.StructureDamaged(item, damage, user);
+        }
+
         partial void OnFailedToOpen();
         
         public override bool HasAccess(Character character)
@@ -830,7 +855,7 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            if (IsStuck || IsJammed || IgnoreSignals) { return; }
+            if (IsStuck || IsJammed) { return; }
 
             bool wasOpen = PredictedState == null ? isOpen : PredictedState.Value;
             

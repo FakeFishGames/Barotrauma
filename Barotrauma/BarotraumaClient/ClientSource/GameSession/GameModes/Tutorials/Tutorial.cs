@@ -86,7 +86,7 @@ namespace Barotrauma.Tutorials
 
             yield return CoroutineStatus.Running;
 
-            GameMain.GameSession = new GameSession(subInfo, Option.None, GameModePreset.Tutorial, missionPrefabs: null);
+            GameMain.GameSession = new GameSession(subInfo, GameModePreset.Tutorial, missionPrefabs: null);
             (GameMain.GameSession.GameMode as TutorialMode).Tutorial = this;
 
             if (generationParams is not null)
@@ -101,7 +101,8 @@ namespace Barotrauma.Tutorials
                 }
 
                 LevelData tutorialLevel = new LevelData(LevelSeed, 0, 0, generationParams, biome);
-                GameMain.GameSession.StartRound(tutorialLevel, startOutpost: startOutpost);
+                tutorialLevel.ForceStartOutpost = startOutpost;
+                GameMain.GameSession.StartRound(tutorialLevel);
             }
             else
             {

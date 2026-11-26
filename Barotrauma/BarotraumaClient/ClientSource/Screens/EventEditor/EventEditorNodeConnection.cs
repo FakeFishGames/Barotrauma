@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    internal class NodeConnectionType
+    public class NodeConnectionType
     {
         public static readonly NodeConnectionType Activate = new NodeConnectionType(Side.Left, "Activate");
         public static readonly NodeConnectionType Value = new NodeConnectionType(Side.Left, "Value");
@@ -39,7 +39,7 @@ namespace Barotrauma
         }
     }
 
-    internal class EventEditorNodeConnection
+    public class EventEditorNodeConnection
     {
         public string Attribute { get; }
 

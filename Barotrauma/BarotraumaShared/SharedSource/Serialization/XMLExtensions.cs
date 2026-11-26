@@ -405,6 +405,24 @@ namespace Barotrauma
             return val;
         }
 
+        public static Either<Identifier, float> GetAttributeFloatOrIdentifier(this XAttribute attribute)
+        {
+            if (attribute == null) { return Identifier.Empty; }
+
+            string strVal = attribute.Value;
+            if (strVal.LastOrDefault() is 'f')
+            {
+                strVal = strVal[..^1];
+            }
+
+            if (float.TryParse(strVal, CultureInfo.InvariantCulture, out float f))
+            {
+                return f;
+            }
+
+            return attribute.Value.ToIdentifier();
+        }
+
         public static double GetAttributeDouble(this XElement element, string name, double defaultValue) => GetAttributeDouble(element?.GetAttribute(name), defaultValue);
 
         public static double GetAttributeDouble(this XAttribute attribute, double defaultValue)
@@ -478,7 +496,7 @@ namespace Barotrauma
             }
             return false;
         }
-        
+
         public static int? GetAttributeNullableInt(this XElement element, string attributeName)
         {
             if (element.GetAttribute(attributeName) is XAttribute attribute)
@@ -623,6 +641,7 @@ namespace Barotrauma
 
             return intValue;
         }
+
         public static ushort[] GetAttributeUshortArray(this XElement element, string name, ushort[] defaultValue)
         {
             var attribute = element?.GetAttribute(name);
@@ -648,7 +667,33 @@ namespace Barotrauma
 
             return ushortValue;
         }
-        
+
+        public static uint[] GetAttributeUIntArray(this XElement element, string name, uint[] defaultValue)
+        {
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+
+            string stringValue = attribute.Value;
+            if (string.IsNullOrEmpty(stringValue)) { return defaultValue; }
+
+            string[] splitValue = stringValue.Split(',');
+            uint[] uintValue = new uint[splitValue.Length];
+            for (int i = 0; i < splitValue.Length; i++)
+            {
+                try
+                {
+                    uint val = uint.Parse(splitValue[i]);
+                    uintValue[i] = val;
+                }
+                catch (Exception e)
+                {
+                    LogAttributeError(attribute, element, e);
+                }
+            }
+
+            return uintValue;
+        }
+
         public static T ParseEnumValue<T>(string value, T defaultValue, XAttribute attribute) where T : struct, Enum
         {
             if (Enum.TryParse(value, true, out T result))
@@ -1238,11 +1283,15 @@ namespace Barotrauma
         /// Returns all child elements that match the name using the provided comparison method.
         /// </summary>
         public static IEnumerable<XElement> GetChildElements(this XContainer container, string name, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase) => container.Elements().Where(e => e.Name.ToString().Equals(name, comparisonMethod));
-
-        public static IEnumerable<XElement> GetChildElements(this XContainer container, params string[] names)
-        {
-            return names.SelectMany(name => container.GetChildElements(name));
-        }
+        
+        public static IEnumerable<XElement> GetChildElements(this XContainer container, params string[] names) => names.SelectMany(name => container.GetChildElements(name));
+        
+        /// <summary>
+        /// Returns all child elements, including grandchildren, that match the name using the provided comparison method.
+        /// </summary>
+        public static IEnumerable<XElement> GetAllChildElements(this XContainer container, string name, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase) => container.Descendants().Where(e => e.Name.ToString().Equals(name, comparisonMethod));
+        
+        public static IEnumerable<XElement> GetAllChildElements(this XContainer container, params string[] names) => names.SelectMany(name => container.GetAllChildElements(name));
 
         public static bool ComesAfter(this XElement element, XElement other)
         {

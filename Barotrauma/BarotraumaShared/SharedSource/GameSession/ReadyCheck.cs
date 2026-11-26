@@ -4,14 +4,14 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    internal enum ReadyStatus
+    public enum ReadyStatus
     {
         Unanswered,
         Yes,
         No,
     }
 
-    internal partial class ReadyCheck
+    public partial class ReadyCheck
     {
         private readonly DateTime endTime;
         private readonly DateTime startTime;

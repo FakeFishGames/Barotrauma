@@ -7,10 +7,24 @@ using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
-    class AIObjectiveGoTo : AIObjective
+    public class AIObjectiveGoTo : AIObjective
     {
         public override Identifier Identifier { get; set; } = "go to".ToIdentifier();
-        public override string DebugTag => $"{Identifier} ({Target?.ToString() ?? "none"})";
+        public override string DebugTag => $"{Identifier} ({DebugTargetName})";
+
+        private string DebugTargetName
+        {
+            get
+            {
+                if (Target == null) { return "null"; }
+                if (Target is WayPoint wp && wp.CurrentHull != null)
+                {
+                    return $"WayPoint ({wp.CurrentHull.DisplayName})";
+                }
+                return Target.ToString();
+            }
+        }
+
 
         public override bool KeepDivingGearOn => GetTargetHull() == null;
 
@@ -32,6 +46,11 @@ namespace Barotrauma
         /// </summary>
         public Func<bool> requiredCondition;
         public Func<PathNode, bool> endNodeFilter;
+
+        /// <summary>
+        /// Additional filter for the nodes the path is allowed to go through, applied on top of the existing node filter.
+        /// </summary>
+        public Func<PathNode, bool> ExtraNodeFilter { get; set; }
 
         public Func<float> PriorityGetter;
 
@@ -91,14 +110,17 @@ namespace Barotrauma
 
         public bool FaceTargetOnCompleted { get; set; } = true;
 
+        /// <summary>
+        /// If set, the character faces this entity instead of the target of the objective when it stops (see <see cref="FaceTargetOnCompleted"/>).
+        /// </summary>
+        public Entity FaceOverrideTarget { get; set; }
+
         public bool AlwaysUseEuclideanDistance { get; set; } = true;
 
         /// <summary>
         /// If true, the distance to the destination is calculated from the character's AimSourcePos (= shoulder) instead of the collider's position
         /// </summary>
         public bool UseDistanceRelativeToAimSourcePos { get; set; } = false;
-
-        public override bool AbandonWhenCannotCompleteSubObjectives => false;
 
         protected override bool AllowOutsideSubmarine => AllowGoingOutside;
         protected override bool AllowInAnySub => true;
@@ -127,6 +149,10 @@ namespace Barotrauma
         /// Note that this line includes the tag [name], which needs to be replaced with the name of the room the NPC is trying to get to.
         /// </summary>
         public static readonly Identifier DialogCannotReachLeak = "dialogcannotreachleak".ToIdentifier();
+        /// <summary>
+        /// NPC line for when the NPC fails to find a path to some nonspecific point outside (e.g. when doing the <see cref="AIObjectiveExploreOutside"/> objective.
+        /// </summary>
+        public static readonly Identifier DialogCannotReachOutside = "dialogcannotreachoutside".ToIdentifier();
 
         public Identifier DialogueIdentifier { get; set; } = DialogCannotReachPlace;
         private readonly Identifier ExoSuitRefuel = "dialog.exosuit.refuel".ToIdentifier();
@@ -180,7 +206,7 @@ namespace Barotrauma
         private readonly float avoidLookAheadDistance = 5;
         private readonly float pathWaitingTime = 3;
 
-        public AIObjectiveGoTo(ISpatialEntity target, Character character, AIObjectiveManager objectiveManager, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1, float closeEnough = 0)
+        public AIObjectiveGoTo(ISpatialEntity target, Character character, AIObjectiveManager objectiveManager, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1, float minimumCloseEnoughDistance = 0)
             : base(character, objectiveManager, priorityModifier)
         {
             Target = target;
@@ -189,17 +215,18 @@ namespace Barotrauma
             this.getDivingGearIfNeeded = getDivingGearIfNeeded;
             if (Target is Item i)
             {
-                CloseEnough = Math.Max(CloseEnough, i.InteractDistance + Math.Max(i.Rect.Width, i.Rect.Height) / 2);
+                CloseEnough = Math.Max(minimumCloseEnoughDistance, i.InteractDistance + Math.Max(i.Rect.Width, i.Rect.Height) / 2);
             }
             else if (Target is Character)
             {
                 //if closeEnough value is given, allow setting CloseEnough as low as 50, otherwise above AIObjectiveGetItem.DefaultReach
-                CloseEnough = Math.Max(closeEnough, MathUtils.NearlyEqual(closeEnough, 0.0f) ? AIObjectiveGetItem.DefaultReach : minDistance);
+                CloseEnough = Math.Max(minimumCloseEnoughDistance, MathUtils.NearlyEqual(minimumCloseEnoughDistance, 0.0f) ? AIObjectiveGetItem.DefaultReach : minDistance);
             }
             else
             {
-                CloseEnough = closeEnough;
+                CloseEnough = minimumCloseEnoughDistance;
             }
+            AbandonWhenCannotCompleteSubObjectives = false;
         }
 
         private void SpeakCannotReach()
@@ -251,7 +278,7 @@ namespace Barotrauma
                     if (HumanAIController.HasItem(character, Tags.DivingSuitFuel, out IEnumerable<Item> fuelRods, conditionPercentage: 1, recursive: true))
                     {
                         // Try to switch the fuel sources
-                        if (character.IsOnPlayerTeam)
+                        if (character.IsOnFriendlyTeam(CharacterTeamType.Team1))
                         {
                             character.Speak(TextManager.Get(ExoSuitRefuel).Value, minDurationBetweenSimilar: 10f, identifier: ExoSuitRefuel);
                         }
@@ -269,9 +296,20 @@ namespace Barotrauma
                         Item fuelRod = fuelRods.MaxBy(b => b.Condition);
                         exoSuitInventory.TryPutItem(fuelRod, targetSlot, allowSwapping: true, allowCombine: true, user: character);
                     }
-                    else if (character.IsOnPlayerTeam)
+                    else
                     {
-                        character.Speak(TextManager.Get(ExoSuitOutOfFuel).Value, minDurationBetweenSimilar: 30.0f, identifier: ExoSuitOutOfFuel);
+                        if (character.IsOnFriendlyTeam(CharacterTeamType.Team1))
+                        {
+                            character.Speak(TextManager.Get(ExoSuitOutOfFuel).Value, minDurationBetweenSimilar: 30.0f, identifier: ExoSuitOutOfFuel);
+                        }
+                        if (!character.InPressure)
+                        {
+                            exoSuit.Drop(dropper: character);
+                            AIObjectiveGetItem getFuelObjective = null;
+                            TryAddSubObjective(ref getFuelObjective, () => new AIObjectiveGetItem(character, Tags.DivingSuitFuel, objectiveManager),
+                                onCompleted: () => RemoveSubObjective(ref getFuelObjective));
+                        }
+                        return;
                     }
                 }
             }
@@ -346,7 +384,12 @@ namespace Barotrauma
                     }
                     else
                     {
-                        Abandon = true;
+                        waitUntilPathUnreachable -= deltaTime;
+                        if (waitUntilPathUnreachable < 0)
+                        {
+                            waitUntilPathUnreachable = pathWaitingTime;
+                            Abandon = true;
+                        }
                     }
                     return;
                 }
@@ -426,7 +469,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (character.LockHands)
+                    if (character.BothHandsDisabled)
                     {
                         cantFindDivingGear = true;
                     }
@@ -527,7 +570,8 @@ namespace Barotrauma
                 }
                 if (TargetGap != null)
                 {
-                    if (TargetGap.FlowTargetHull != null && HumanAIController.SteerThroughGap(TargetGap, IsFollowOrder ? Target.WorldPosition : TargetGap.FlowTargetHull.WorldPosition, deltaTime))
+                    // Don't try to reorient, because humans shouldn't get stuck in the gaps in practice (which sometimes happens e.g. on mudraptors). Theoretically, it could happen, and if it did, we could try the reorientation.
+                    if (TargetGap.FlowTargetHull != null && HumanAIController.SteerThroughGap(TargetGap, IsFollowOrder ? Target.WorldPosition : TargetGap.FlowTargetHull.WorldPosition, deltaTime, attemptColliderReorientationWithTightGaps: false))
                     {
                         SteeringManager.SteeringAvoid(deltaTime, avoidLookAheadDistance, weight: 1);
                         return;
@@ -640,16 +684,24 @@ namespace Barotrauma
                 {
                     nodeFilter = n => n.Waypoint.CurrentHull != null;
                 }
-                else if (!isInside)
+                else if (!isInside && !AllowGoingOutside)
                 {
-                    if (HumanAIController.UseOutsideWaypoints)
+                    if (HumanAIController.UseLevelWaypoints)
                     {
                         nodeFilter = n => n.Waypoint.Submarine == null;
                     }
                     else
                     {
                         nodeFilter = n => n.Waypoint.Submarine != null || n.Waypoint.Ruin != null;
-                    }         
+                    }
+                }
+                if (ExtraNodeFilter != null)
+                {
+                    // Combine with the existing node filter, but first making a local copy of it to avoid recursion
+                    Func<PathNode, bool> existingNodeFilter = nodeFilter;
+                    nodeFilter = existingNodeFilter == null ?
+                        ExtraNodeFilter :
+                        n => existingNodeFilter(n) && ExtraNodeFilter(n);
                 }
                 if (!isInside && !UsePathingOutside)
                 {
@@ -662,11 +714,20 @@ namespace Barotrauma
                 }
                 else
                 {
-                    PathSteering.SteeringSeek(targetPos, weight: 1,
-                        startNodeFilter: n => (n.Waypoint.CurrentHull == null) == (character.CurrentHull == null),
-                        endNodeFilter: endNodeFilter,
-                        nodeFilter: nodeFilter,
-                        checkVisiblity: Target is Item || Target is Character);
+                    //path finished, and the character is already inside the target hull -> we can stop navigating
+                    //this prevents the character from awkwardly shuffling at the center of the hull if the center is too high for the character to reach
+                    if (IsInsideTargetHullWithFinishedPath)
+                    {
+                        SteeringManager.Reset();
+                    }
+                    else
+                    {
+                        PathSteering.SteeringSeek(targetPos, weight: 1,
+                            startNodeFilter: PathSteering.IsStartNodeOnCharactersSide,
+                            endNodeFilter: endNodeFilter,
+                            nodeFilter: nodeFilter,
+                            checkVisiblity: Target is Item || Target is Character);
+                    }
                 }
                 if (!isInside && (PathSteering.CurrentPath == null || PathSteering.IsPathDirty || PathSteering.CurrentPath.Unreachable))
                 {
@@ -745,7 +806,10 @@ namespace Barotrauma
             
             bool IsDoneFollowing()
             {
-                if (repeat && IsCloseEnough)
+                bool cantCompleteByInteractingWithItem = Target is Item item && !item.IsInteractable(character);
+                //if the objective can't be considered Completed in CheckObjectiveState because the item can't be interacted with (e.g. hidden Defensible Position the character is just supposed to stay at)
+                //let's still consider the character to be "done following" and let it stop at the target
+                if ((repeat || cantCompleteByInteractingWithItem) && IsCloseEnough)
                 {
                     if (requiredCondition == null || requiredCondition())
                     {
@@ -815,6 +879,7 @@ namespace Barotrauma
             {
                 if (gap.Open < 1) { continue; }
                 if (gap.Submarine == null) { continue; }
+                if (!gap.CanFitThrough(HumanAIController.MinGapSize)) { continue; }
                 if (!IsFollowOrder)
                 {
                     if (gap.FlowTargetHull == null) { continue; }
@@ -833,10 +898,21 @@ namespace Barotrauma
             TargetGap = selectedGap;
         }
 
+        private bool IsInsideTargetHullWithFinishedPath =>
+            Target is Hull &&
+            Target == character.CurrentHull &&
+            PathSteering.CurrentPath is { Finished: true };
+
         public bool IsCloseEnough
         {
             get
             {
+                // Act() stops steering once the path has finished inside the target hull, so that has to count as arrived too,
+                // otherwise a character stopping just outside CloseEnough from the hull's center would wait forever
+                if (IsInsideTargetHullWithFinishedPath)
+                {
+                    return true;
+                }
                 if (character.IsClimbing)
                 {
                     if (SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.CurrentPath.Finished && PathSteering.IsCurrentNodeLadder && !PathSteering.CurrentPath.IsAtEndNode)
@@ -922,9 +998,16 @@ namespace Barotrauma
         private void StopMovement()
         {
             SteeringManager?.Reset();
-            if (FaceTargetOnCompleted && Target is Entity { Removed: false })
+            if (FaceTargetOnCompleted)
             {
-                HumanAIController.FaceTarget(Target);
+                if (FaceOverrideTarget is { Removed: false })
+                {
+                    HumanAIController.FaceTarget(FaceOverrideTarget);
+                }
+                else if (Target is Entity { Removed: false })
+                {
+                    HumanAIController.FaceTarget(Target);
+                }
             }
         }
 

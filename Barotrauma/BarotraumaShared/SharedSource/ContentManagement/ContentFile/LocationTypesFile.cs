@@ -3,7 +3,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
     [RequiredByCorePackage]
-    sealed class LocationTypesFile : GenericPrefabFile<LocationType>
+    public sealed class LocationTypesFile : GenericPrefabFile<LocationType>
     {
         public LocationTypesFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

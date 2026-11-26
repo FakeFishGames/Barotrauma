@@ -31,7 +31,7 @@ namespace Barotrauma
         Partial
     }
 
-    class HumanRagdollParams : RagdollParams
+    public class HumanRagdollParams : RagdollParams
     {
         public static HumanRagdollParams GetDefaultRagdollParams(Character character) => GetDefaultRagdollParams<HumanRagdollParams>(character);
     }
@@ -41,7 +41,7 @@ namespace Barotrauma
         public static FishRagdollParams GetDefaultRagdollParams(Character character) => GetDefaultRagdollParams<FishRagdollParams>(character);
     }
 
-    class RagdollParams : EditableParams, IMemorizable<RagdollParams>
+    public class RagdollParams : EditableParams, IMemorizable<RagdollParams>
     {
         #region Ragdoll
         public const float MIN_SCALE = 0.1f;
@@ -651,7 +651,10 @@ namespace Barotrauma
             [Serialize(true, IsPropertySaveable.Yes), Editable]
             public bool CanBeSevered { get; set; }
 
-            [Serialize(0f, IsPropertySaveable.Yes, description:"Default 0 (Can't be severed when the creature is alive). Modifies the severance probability (defined per item/attack) when the character is alive. Currently only affects non-humanoid ragdolls. Also note that if CanBeSevered is false, this property doesn't have any effect."), Editable(MinValueFloat = 0, MaxValueFloat = 10, ValueStep = 0.1f, DecimalCount = 2)]
+            [Serialize(true, IsPropertySaveable.Yes, description: "Can this joint be severed while the creature is alive, regardless of the source of severing (direct damage, affliction, other scripting)? Note that if CanBeSevered is false, this property doesn't have any effect."), Editable]
+            public bool CanBeSeveredAlive { get; set; }
+
+            [Serialize(0f, IsPropertySaveable.Yes, description:"Default 0 (Can't be severed by damage when the creature is alive). Modifies the severance probability (defined per item/attack) when the character is alive, but only applies to severing caused by direct damage, not by scripting etc. Also note that if CanBeSevered or CanBeSeveredAlive is false, this property doesn't have any effect."), Editable(MinValueFloat = 0, MaxValueFloat = 10, ValueStep = 0.1f, DecimalCount = 2)]
             public float SeveranceProbabilityModifier { get; set; }
 
             [Serialize("gore", IsPropertySaveable.Yes), Editable]
@@ -806,11 +809,17 @@ namespace Barotrauma
             [Serialize(2f, IsPropertySaveable.Yes, description: "How strong a linear impulse is applied on the head while updating the eating animations?"), Editable]
             public float EatImpulse { get; set; }
 
-            [Serialize(0f, IsPropertySaveable.Yes), Editable]
+            [Serialize(0f, IsPropertySaveable.Yes, description: "A torque that's constantly applied to the limb to rotate it towards ConstantAngle."), Editable]
             public float ConstantTorque { get; set; }
 
-            [Serialize(0f, IsPropertySaveable.Yes), Editable]
+            [Serialize(0f, IsPropertySaveable.Yes, description: "An angle that ConstantTorque should rotate the limb towards. Relative to the character's main limb."), Editable]
             public float ConstantAngle { get; set; }
+
+            [Serialize(false, IsPropertySaveable.Yes, description: "If enabled, ConstantTorque is always applied on the limb, ignoring ConstantAngle."), Editable]
+            public bool IgnoreConstantAngle { get; set; }
+
+            [Serialize(false, IsPropertySaveable.Yes, description: "If enabled, ConstantTorque is only applied when the character is moving."), Editable]
+            public bool OnlyApplyConstantTorqueWhenMoving { get; set; }
 
             [Serialize(1f, IsPropertySaveable.Yes), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = 10)]
             public float AttackForceMultiplier { get; set; }
@@ -818,8 +827,14 @@ namespace Barotrauma
             [Serialize(1f, IsPropertySaveable.Yes, description:"How much damage must be done by the attack in order to be able to cut off the limb. Note that it's evaluated after the damage modifiers."), Editable(DecimalCount = 0, MinValueFloat = 0, MaxValueFloat = 1000)]
             public float MinSeveranceDamage { get; set; }
 
-            [Serialize(true, IsPropertySaveable.Yes, description: "Disable if you don't want to allow severing this joint while the creature is alive. Note: Does nothing if the 'Severance Probability Modifier' in the joint settings is 0 (default). Also note that the setting doesn't override certain limitations, e.g. severing the main limb, or legs of a walking creature is not allowed."), Editable]
+            [Serialize(-1f, IsPropertySaveable.Yes, description: "Takes effect instead of MinSeveranceDamage when the character is below 0 vitality. Ignored if less than 0."), Editable(DecimalCount = 0, MinValueFloat = 0, MaxValueFloat = 1000)]
+            public float MinSeveranceDamageBelowZeroVitality { get; set; }
+
+            [Serialize(true, IsPropertySaveable.Yes, description: "Disable if you don't want to allow severing this limb while the creature is alive. NOTE: Whether any of the joints of the limb can be severed is decided separately, see JointParams' 'CanBeSeveredAlive' and 'SeveranceProbabilityModifier'. Also, the setting doesn't override certain limitations: severing the main limb is never allowed, and neither is severing the legs of a walking creature unless 'AllowSeveringLegs' is enabled in the character's HealthParams. Can also be overridden by IsAmputable."), Editable]
             public bool CanBeSeveredAlive { get; set; }
+
+            [Serialize(false, IsPropertySaveable.Yes, description: "Can this limb be deliberately removed as a medical procedure? Note that this is independent from CanBeSeveredAlive, which is about crude violence like explosions."), Editable]
+            public bool IsAmputable { get; set; }
 
             //how long it takes for severed limbs to fade out
             [Serialize(10f, IsPropertySaveable.Yes, "How long it takes for the severed limb to fade out"), Editable(MinValueFloat = 0, MaxValueFloat = 100, ValueStep = 1)]
@@ -1365,6 +1380,9 @@ namespace Barotrauma
             [Serialize("", IsPropertySaveable.Yes), Editable]
             public string Tag { get; private set; }
 
+            [Serialize(1.0f, IsPropertySaveable.Yes), Editable]
+            public float Volume { get; private set; }
+
             public SoundParams(ContentXElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
         }
 
@@ -1404,7 +1422,7 @@ namespace Barotrauma
             public virtual bool Serialize(ContentXElement element = null, bool recursive = true)
             {
                 element ??= Element;
-                SerializableProperty.SerializeProperties(this, element, true);
+                SerializableProperty.SerializeProperties(this, element, saveIfDefault: false, ignoreEditable: true);
                 if (recursive)
                 {
                     SubParams.ForEach(sp => sp.Serialize(recursive: true));

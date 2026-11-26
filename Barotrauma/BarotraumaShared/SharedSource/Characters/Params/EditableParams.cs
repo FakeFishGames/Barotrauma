@@ -11,7 +11,7 @@ using Barotrauma.IO;
 
 namespace Barotrauma
 {
-    abstract class EditableParams : ISerializableEntity
+    public abstract class EditableParams : ISerializableEntity
     {
         public bool IsLoaded { get; protected set; }
         public string Name { get; private set; }
@@ -75,7 +75,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("[EditableParams] The XML element is null! Failed to save the parameters.");
                 return false;
             }
-            SerializableProperty.SerializeProperties(this, element, true);
+            SerializableProperty.SerializeProperties(this, element, saveIfDefault: false, ignoreEditable: true);
             return true;
         }
 

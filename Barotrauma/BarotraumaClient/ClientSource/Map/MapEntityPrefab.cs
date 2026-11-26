@@ -18,7 +18,7 @@ namespace Barotrauma
 
             if (IsModded)
             {
-                tooltip = $"{tooltip}\n‖color:{Color.MediumPurple.ToStringHex()}‖{ContentPackage?.Name}‖color:end‖";
+                tooltip = $"{tooltip}\n‖color:{(ContentPackage?.GetAccentColor() ?? Color.MediumPurple).ToStringHex()}‖{ContentPackage?.Name}‖color:end‖";
             }
 
             return RichString.Rich(tooltip);

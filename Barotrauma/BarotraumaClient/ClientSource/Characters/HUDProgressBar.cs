@@ -4,7 +4,7 @@ using System;
 
 namespace Barotrauma
 {
-    class HUDProgressBar
+    public class HUDProgressBar
     {
         private float progress;
 
@@ -16,7 +16,7 @@ namespace Barotrauma
 
         public float FadeTimer;
 
-        private Color fullColor, emptyColor;
+        public Color FullColor, EmptyColor;
 
         private Vector2 worldPosition;
 
@@ -64,8 +64,8 @@ namespace Barotrauma
 
         public HUDProgressBar(Vector2 worldPosition, Submarine parentSubmarine, Color emptyColor, Color fullColor, string textTag)
         {
-            this.emptyColor = emptyColor;
-            this.fullColor = fullColor;
+            this.EmptyColor = emptyColor;
+            this.FullColor = fullColor;
             parentSub = parentSubmarine;
             WorldPosition = worldPosition;
             Size = new Vector2(100.0f, 20.0f);
@@ -94,7 +94,7 @@ namespace Barotrauma
             }
 
             pos = cam.WorldToScreen(pos);
-            Color color = Color.Lerp(emptyColor, fullColor, progress);
+            Color color = Color.Lerp(EmptyColor, FullColor, progress);
             GUI.DrawProgressBar(spriteBatch,
                 new Vector2(pos.X, -pos.Y),
                 Size, progress,

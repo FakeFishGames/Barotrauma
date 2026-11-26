@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class WreckAIConfig : PrefabWithUintIdentifier, ISerializableEntity
+    public class WreckAIConfig : PrefabWithUintIdentifier, ISerializableEntity
     {
         public readonly static PrefabCollection<WreckAIConfig> Prefabs = new PrefabCollection<WreckAIConfig>();
 

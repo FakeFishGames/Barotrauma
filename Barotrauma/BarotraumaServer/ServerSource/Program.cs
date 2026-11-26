@@ -78,8 +78,9 @@ namespace Barotrauma
             string executableDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             Directory.SetCurrentDirectory(executableDir);
             DebugConsoleCore.Init(
-                newMessage: (s, c) => DebugConsole.NewMessage(s, c),
-                log: DebugConsole.Log);
+                newMessage: (message, color) => DebugConsole.NewMessage(message, color),
+                log: DebugConsole.Log,
+                throwError: (message, exception) => DebugConsole.ThrowError(message, exception));
             Game = new GameMain(args);
 
             Game.Run();
@@ -94,15 +95,6 @@ namespace Barotrauma
 
             if (GameAnalyticsManager.SendUserStatistics) { GameAnalyticsManager.ShutDown(); }
             SteamManager.ShutDown();
-
-            // Gracefully exit EOS by ticking until the session is closed
-            EosInterface.Core.CleanupAndQuit();
-            while (EosInterface.Core.IsInitialized)
-            {
-                EosInterface.Core.Update();
-                TaskPool.Update();
-                Thread.Sleep(16);
-            }
         }
         
         private static void OnProcessExit(object sender, EventArgs e)

@@ -1,6 +1,4 @@
-﻿using System.Xml.Linq;
-
-namespace Barotrauma.Items.Components
+﻿namespace Barotrauma.Items.Components
 {
     partial class StatusHUD : ItemComponent
     {

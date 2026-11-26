@@ -26,14 +26,7 @@ namespace Barotrauma.Abilities
         protected override void ApplyEffect()
         {
             if (GameMain.GameSession?.Campaign is not { } campaign) { return; }
-
-            foreach (Faction faction in campaign.Factions)
-            {
-                if (faction.Prefab.Identifier != factionIdentifier) { continue; }
-
-                faction.Reputation.AddReputation(amount);
-                break;
-            }
+            campaign.GetFaction(factionIdentifier)?.Reputation.AddReputation(amount);
         }
 
         protected override void ApplyEffect(AbilityObject abilityObject) => ApplyEffect();

@@ -11,7 +11,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Wire : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
+    public partial class Wire : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
     {
         public partial class WireSection
         {
@@ -52,12 +52,20 @@ namespace Barotrauma.Items.Components
         private List<Vector2> nodes;
         private readonly List<WireSection> sections;
 
+        /// <summary>
+        /// The minimum extents of the wire nodes, relative to the submarine the wire is in.
+        /// </summary>
+        public Vector2 MinNodePosition { get; private set; }
+
+        /// <summary>
+        /// The maximum extents of the wire nodes, relative to the submarine the wire is in.
+        /// </summary>
+        public Vector2 MaxNodePosition { get; private set; }
+
         private readonly Connection[] connections;
 
         private bool canPlaceNode;
         private Vector2 newNodePos;
-
-        private Vector2 sectionExtents;
 
         private float currLength;
 
@@ -119,7 +127,12 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(true, IsPropertySaveable.Yes, "If disabled, the wire will not be dropped when connecting. Used in circuit box to store the wires inside the box.")]
+        //Not saved: circuit boxes set this when they load their wires (CircuitBoxWire.EnsureWireConnected),
+        //Saving it would cause wires taken out of a circuit box (e.g. by deconstructing the box) to never get dropped when connected,
+        //i.e. you can connect the wire somewhere and still have it in your inventory.
+        [Serialize(true, IsPropertySaveable.No,
+            "If disabled, the wire will not be dropped from the inventory it's in when connected from both ends." +
+            " Used in circuit box to store the wires inside the box.")]
         public bool DropOnConnect
         {
             get;
@@ -218,12 +231,12 @@ namespace Barotrauma.Items.Components
                 DebugConsole.ThrowError($"Error while connecting a wire to {newConnection.Item}: {connectionIndex} is not a valid index.");
                 return false;
             }
+
             if (connections[connectionIndex] != null)
             {
                 DebugConsole.ThrowError($"Error while connecting a wire to {newConnection.Item}: a wire is already connected to the index {connectionIndex}.");
                 return false;
             }
-
             for (int i = 0; i < 2; i++)
             {
                 if (connections[i] != null && connections[i].Item == newConnection.Item)
@@ -346,6 +359,9 @@ namespace Barotrauma.Items.Components
 
         public override void Equip(Character character)
         {
+            //a wire in a character's hands can't be inside a circuit box,
+            //it must be dropped from the character's inventory when it's connected between devices
+            DropOnConnect = true;
             if (shouldClearConnections) { ClearConnections(character); }
             IsActive = true;
         }
@@ -427,7 +443,7 @@ namespace Barotrauma.Items.Components
                         user.AnimController.Collider.ApplyForce(forceDir * user.Mass * 50.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);
                         if (diff.LengthSquared() > 50.0f * 50.0f)
                         {
-                            user.AnimController.UpdateUseItem(!user.IsClimbing, user.WorldPosition + pullBackDir * Math.Min(150.0f, diff.Length()));
+                            user.AnimController.UpdateUseItem(!user.IsClimbing, user.WorldPosition + pullBackDir * Math.Min(150.0f, diff.Length()), handMoveAmount: Vector2.Zero);
                         }
 
                         if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
@@ -454,20 +470,6 @@ namespace Barotrauma.Items.Components
 #endif
                 if (sub != null) { newNodePos -= sub.HiddenSubPosition; }
                 canPlaceNode = true;
-            }
-
-            if (item != null)
-            {
-                Vector2 relativeNodePos = newNodePos - item.Position;
-
-                if (sub != null)
-                {
-                    relativeNodePos += sub.HiddenSubPosition;
-                }
-
-                sectionExtents = new Vector2(
-                    Math.Max(Math.Abs(relativeNodePos.X), sectionExtents.X),
-                    Math.Max(Math.Abs(relativeNodePos.Y), sectionExtents.Y));
             }
         }
 
@@ -561,7 +563,7 @@ namespace Barotrauma.Items.Components
 
         public void MoveNode(int index, Vector2 amount)
         {
-            if (index < 0 || index >= nodes.Count) return;
+            if (index < 0 || index >= nodes.Count) { return; }
             nodes[index] += amount;            
             UpdateSections();
         }
@@ -590,18 +592,19 @@ namespace Barotrauma.Items.Components
 
         private void CalculateExtents()
         {
-            sectionExtents = Vector2.Zero;
-            if (sections.Count > 0)
+            if (nodes.Count > 0)
             {
-                for (int i = 0; i < nodes.Count; i++)
-                {
-                    sectionExtents.X = Math.Max(Math.Abs(nodes[i].X - item.Position.X), sectionExtents.X);
-                    sectionExtents.Y = Math.Max(Math.Abs(nodes[i].Y - item.Position.Y), sectionExtents.Y);
-                }
+                MinNodePosition = new Vector2(
+                    nodes.Min(static n => n.X),
+                    nodes.Min(static n => n.Y));
+                MaxNodePosition = new Vector2(
+                    nodes.Max(static n => n.X),
+                    nodes.Max(static n => n.Y));
             }
-#if CLIENT
-            item.ResetCachedVisibleSize();
-#endif
+            else
+            {
+                MinNodePosition = MaxNodePosition = Vector2.Zero;
+            }
         }
 
         public void ClearConnections(Character user = null)

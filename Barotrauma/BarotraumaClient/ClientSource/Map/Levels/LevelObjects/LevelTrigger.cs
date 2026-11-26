@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    partial class LevelTrigger
+    public partial class LevelTrigger
     {
         public void ClientRead(IReadMessage msg)
         {

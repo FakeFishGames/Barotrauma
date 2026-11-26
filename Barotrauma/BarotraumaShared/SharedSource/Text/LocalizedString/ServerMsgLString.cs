@@ -9,6 +9,8 @@ namespace Barotrauma
 {
     public class ServerMsgLString : LocalizedString
     {
+        public override bool UsingDefaultLanguageAsFallback => false;
+
         private static readonly Regex reFormattedMessage =
             new Regex(@"^(?<variable>[\[\].a-z0-9_]+?)=(?<formatter>[a-z0-9_]+?)\((?<value>.+?)\)",
                 RegexOptions.Compiled | RegexOptions.IgnoreCase);

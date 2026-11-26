@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    abstract class ExtraSubmarineInfo : ISerializableEntity
+    public abstract class ExtraSubmarineInfo : ISerializableEntity
     {
         public string Name { get; protected set; }
 
@@ -62,7 +62,7 @@ namespace Barotrauma
         }
     }
 
-    class BeaconStationInfo : ExtraSubmarineInfo
+    public class BeaconStationInfo : ExtraSubmarineInfo
     {
         [Serialize(true, IsPropertySaveable.Yes), Editable]
         public bool AllowDamagedWalls { get; set; }
@@ -89,7 +89,7 @@ namespace Barotrauma
         public BeaconStationInfo(BeaconStationInfo original) : base(original) { }
     }
 
-    class WreckInfo : ExtraSubmarineInfo
+    public class WreckInfo : ExtraSubmarineInfo
     {
         // Unknown -> older submarines before this property was added
         public enum HasThalamus { Unknown, Yes, No }
@@ -140,7 +140,7 @@ namespace Barotrauma
         }
     }
 
-    class EnemySubmarineInfo : ExtraSubmarineInfo
+    public class AISubmarineInfo : ExtraSubmarineInfo
     {
         [Serialize(4000.0f, IsPropertySaveable.Yes), Editable]
         public float Reward { get; set; }
@@ -148,21 +148,22 @@ namespace Barotrauma
         [Serialize(50.0f, IsPropertySaveable.Yes), Editable]
         public float PreferredDifficulty { get; set; }
 
-        public EnemySubmarineInfo(SubmarineInfo submarineInfo, XElement element) : base(submarineInfo, element)
+        [Serialize(100.0f, IsPropertySaveable.Yes), Editable]
+        public float Commonness { get; set; }
+
+        public AISubmarineInfo(SubmarineInfo submarineInfo, XElement element) : base(submarineInfo, element)
         {
-            Name = $"{nameof(EnemySubmarineInfo)} ({submarineInfo.Name})";
+            Name = $"{nameof(AISubmarineInfo)} ({submarineInfo.Name})";
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
         }
 
-        public EnemySubmarineInfo(SubmarineInfo submarineInfo) : base(submarineInfo)
+        public AISubmarineInfo(SubmarineInfo submarineInfo) : base(submarineInfo)
         {
-            Name = $"{nameof(EnemySubmarineInfo)} ({submarineInfo.Name})";
+            Name = $"{nameof(AISubmarineInfo)} ({submarineInfo.Name})";
         }
 
-        public EnemySubmarineInfo(EnemySubmarineInfo original) : base(original)
+        public AISubmarineInfo(AISubmarineInfo original) : base(original)
         {
         }
-
-
     }
 }

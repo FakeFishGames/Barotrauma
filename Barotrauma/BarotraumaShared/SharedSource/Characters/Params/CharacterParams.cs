@@ -15,7 +15,7 @@ namespace Barotrauma
     /// <summary>
     /// Contains character data that should be editable in the character editor.
     /// </summary>
-    class CharacterParams : EditableParams
+    public class CharacterParams : EditableParams
     {
         [Serialize("", IsPropertySaveable.Yes), Editable]
         public Identifier SpeciesName { get; private set; }
@@ -75,6 +75,15 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes, description: "Note: non-humans with a human AI aren't fully supported. Enabling this on a non-human character may lead to issues.")]
         public bool UseHumanAI { get; set; }
 
+        [Serialize(AIObjectiveIdle.BehaviorType.Undefined, IsPropertySaveable.Yes, description: "Can be used to change the idle behavior of characters that use human AI."), Editable]
+        public AIObjectiveIdle.BehaviorType HumanAIIdleBehavior { get; private set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description:
+            "By default, characters using human AI retreat from hostiles unless they have orders to fight intruders or assault."
+            + " This can be used to force them to always behave offensively (actively seeking and trying to kill the enemy)."
+            + " Creatures that use a Human AI and have this setting enabled this will also behave offensively when they spawn on the player sub."), Editable(ReadOnly = true)]
+        public bool ForceOffensiveCombatBehavior { get; private set; }
+
         [Serialize(false, IsPropertySaveable.Yes, description: "Is this creature an artificial creature, like robot or machine that shouldn't be affected by afflictions that affect only organic creatures? Overrides DoesBleed."), Editable]
         public bool IsMachine { get; set; }
 
@@ -94,7 +103,7 @@ namespace Barotrauma
         public float Visibility { get; set; }
 
         [Serialize("blood", IsPropertySaveable.Yes), Editable]
-        public string BloodDecal { get; private set; }
+        public Identifier BloodDecal { get; private set; }
 
         [Serialize("blooddrop", IsPropertySaveable.Yes), Editable]
         public string BleedParticleAir { get; private set; }
@@ -129,8 +138,20 @@ namespace Barotrauma
         [Serialize(0f, IsPropertySaveable.Yes, description: "Range at which \"long distance\" blips for this character will appear on the sonar (used on some of the Abyss monsters)."), Editable]
         public float DistantSonarRange { get; set; }
 
-        [Serialize(25000f, IsPropertySaveable.Yes, "If the character is farther than this (in pixels) from the sub and the players, it will be disabled. The halved value is used for triggering simple physics where the ragdoll is disabled and only the main collider is updated."), Editable(MinValueFloat = 10000f, MaxValueFloat = 100000f)]
+        [Serialize(25000f, IsPropertySaveable.Yes, "If the character is farther than this (in pixels) from the sub and the players, it will be disabled."), Editable(MinValueFloat = 10000f, MaxValueFloat = 100000f)]
         public float DisableDistance { get; set; }
+
+        [Serialize(2000.0f, IsPropertySaveable.Yes, description: "If the character is indoors and farther than this (in pixels) from the players, it will go into \"simple physics mode\", disabling the ragdoll and only keeping the main collider active. Used as an optimization that reduces the performance hit of simulating the character's physics."), 
+            Editable(MinValueFloat = 10000f, MaxValueFloat = 100000f)]
+        public float SimplePhysicsDistanceIndoors { get; set; }
+
+        [Serialize(Items.Components.Sonar.DefaultSonarRange, IsPropertySaveable.Yes, description: "If the character is outdoors and farther than this (in pixels) from the players, it will go into \"simple physics mode\", disabling the ragdoll and only keeping the main collider active. Used as an optimization that reduces the performance hit of simulating the character's physics."), 
+            Editable(MinValueFloat = 10000f, MaxValueFloat = 100000f)]
+        public float SimplePhysicsDistanceOutdoors { get; set; }
+
+        [Serialize(-1.0f, IsPropertySaveable.Yes, description: $"If the character is at least this distance outside the camera view, it will go into \"simple physics mode\", disabling the ragdoll and only keeping the main collider active. This value takes precedence over {nameof(SimplePhysicsDistanceIndoors)} and {nameof(SimplePhysicsDistanceOutdoors)}, meaning an off-screen character can go into simple physics mode even if it's not far enough from characters."), 
+            Editable]
+        public float SimplePhysicsDistanceOffscreen { get; set; }
 
         [Serialize(10f, IsPropertySaveable.Yes, "How frequent the recurring idle and attack sounds are?"), Editable(MinValueFloat = 1f, MaxValueFloat = 100f)]
         public float SoundInterval { get; set; }
@@ -143,6 +164,12 @@ namespace Barotrauma
 
         [Serialize(1.0f, IsPropertySaveable.Yes, "Tells the bots how much they should prefer targeting this character with submarine weapons tagged as \"slowturret\", like railguns. The tag is arbitrary and can be added to any turrets, just like the priority. Defaults to 1. Not used if AITurretPriority is 0. Distance to the target affects the decision making."), Editable]
         public float AISlowTurretPriority { get; set; }
+
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "A multiplier for the time it takes to deconstruct this character in a deconstructor. Defaults to 1. Stacks with the reduction caused by missing limbs."), Editable(MinValueFloat = 0.01f, MaxValueFloat = 100f)]
+        public float DeconstructTimeMultiplier { get; set; }
+
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "A multiplier for the buoyancy of the character's body when it's dead. Defaults to 1, which makes the body sink slowly. Values above roughly 1.02 make it float."), Editable(MinValueFloat = 0f, MaxValueFloat = 10f, DecimalCount = 2)]
+        public float DeadBuoyancyMultiplier { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes, description: "Identifier or tag of the item the character's items are placed inside when the character despawns."), Editable]
         public Identifier DespawnContainer { get; private set; }
@@ -722,7 +749,7 @@ namespace Barotrauma
             [Serialize(false, IsPropertySaveable.Yes, description: "Does the character try to break inside the sub?"), Editable]
             public bool AggressiveBoarding { get; private set; }
 
-            [Serialize(true, IsPropertySaveable.Yes, description: "Enforce aggressive behavior if the creature is spawned as a target of a monster mission."), Editable]
+            [Serialize(true, IsPropertySaveable.Yes, description: "Enforce aggressive behavior if the creature is spawned as a target of a monster mission. In outpost levels, makes the monster always able to perceive the outpost regardless of distance."), Editable]
             public bool EnforceAggressiveBehaviorForMissions { get; private set; }
 
             [Serialize(true, IsPropertySaveable.Yes, description: "Should the character target or ignore walls when it's outside the submarine."), Editable]
@@ -753,7 +780,13 @@ namespace Barotrauma
 
             [Serialize(false, IsPropertySaveable.Yes, "Does the creature patrol the dry hulls while idling inside a friendly submarine?"), Editable]
             public bool PatrolDry { get; set; }
-            
+
+            [Serialize("0,0", IsPropertySaveable.Yes, "How often does the character stop to stand still while idling(min, max)?"), Editable]
+            public Vector2 IdleStandStillInterval { get; set; }
+
+            [Serialize("0,0", IsPropertySaveable.Yes, "How long does the character stand still while idling (min, max)?"), Editable]
+            public Vector2 IdleStandStillDuration { get; set; }
+
             [Serialize(0f, IsPropertySaveable.Yes, description: "Initial aggression used in the circle attack pattern (0-100). The aggression affects how close and how fast to the target the monster circles."), Editable]
             public float StartAggression { get; private set; }
 
@@ -941,6 +974,15 @@ namespace Barotrauma
             [Serialize(false, IsPropertySaveable.Yes), Editable]
             public bool IgnoreIncapacitated { get; set; }
 
+            [Serialize(0, IsPropertySaveable.Yes, description: "These targeting params are only used if the number of friendly characters nearby (including the character itself) is at least this. Not used if 0 or 1."), Editable(MinValueInt = 0, MaxValueInt = 100)]
+            public int MinGroupSize { get; private set; }
+
+            [Serialize(0, IsPropertySaveable.Yes, description: "These targeting params are only used if the number of friendly characters nearby (including the character itself) is at most this. Not used if 0."), Editable(MinValueInt = 0, MaxValueInt = 100)]
+            public int MaxGroupSize { get; private set; }
+
+            [Serialize(1500f, IsPropertySaveable.Yes, description: "How close (in pixels) other friendly characters must be to be counted for MinGroupSize and MaxGroupSize."), Editable(MinValueFloat = 0, MaxValueFloat = 20000, ValueStep = 10, DecimalCount = 0)]
+            public float GroupRadius { get; private set; }
+
             [Serialize(0f, IsPropertySaveable.Yes, description: "A generic threshold. For example, how much damage the protected target should take from an attacker before the creature starts defending it."), Editable]
             public float Threshold { get; private set; }
 
@@ -1018,6 +1060,14 @@ namespace Barotrauma
                             break;
                     }
                 }
+
+                if (IgnoreTargetInside && Tag == "room")
+                {
+                    DebugConsole.AddWarning(
+                        $"Potential error in character config for {character.SpeciesName}: the character is configured to attack rooms, but {nameof(IgnoreTargetInside)} is set to true."+
+                        " Rooms are always considered to be inside, so these targeting parameters won't do anything.",
+                        contentPackage: element.ContentPackage);
+                }
             }
 
             public static ContentXElement CreateNewElement(CharacterParams character, Identifier tag, AIState state, float priority) =>
@@ -1063,10 +1113,10 @@ namespace Barotrauma
 
             public virtual bool Serialize(bool recursive = true)
             {
-                SerializableProperty.SerializeProperties(this, Element, true);
+                SerializableProperty.SerializeProperties(this, Element, saveIfDefault: false, ignoreEditable: true);
                 if (recursive)
                 {
-                    SubParams.ForEach(sp => sp.Serialize(true));
+                    SubParams.ForEach(sp => sp.Serialize(recursive: true));
                 }
                 return true;
             }

@@ -2,7 +2,7 @@
 
 namespace Barotrauma.Items.Components
 {
-    partial class DockingPort : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
+    public partial class DockingPort : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
     {
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {

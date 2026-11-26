@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class ConditionalSprite
+    public partial class ConditionalSprite
     {
         public readonly List<PropertyConditional> conditionals = new List<PropertyConditional>();
         public bool IsActive { get; private set; } = true;

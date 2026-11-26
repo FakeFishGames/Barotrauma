@@ -9,7 +9,7 @@ using System.Diagnostics;
 
 namespace Barotrauma
 {
-    internal class SubmarineTurretAI
+    public class SubmarineTurretAI
     {
         public Submarine Submarine { get; protected set; }
         protected readonly List<Turret> turrets = new List<Turret>();
@@ -81,12 +81,12 @@ namespace Barotrauma
         {
             foreach (var turret in turrets)
             {
-                turret.UpdateAutoOperate(deltaTime, ignorePower: true, friendlyTag);
+                turret.UpdateAutoOperate(deltaTime, ignorePower: true, friendlyTag, ignoreTeam: true);
             }
         }
     }
 
-    partial class WreckAI : SubmarineTurretAI, IServerSerializable
+    public partial class WreckAI : SubmarineTurretAI, IServerSerializable
     {
         public bool IsAlive { get; private set; }
 
@@ -173,7 +173,7 @@ namespace Barotrauma
             foreach (Item item in thalamusItems)
             {
                 // Ensure that thalamus items are visible
-                item.IsLayerHidden = false;
+                item.SetDisabled(disabled: false);
                 if (item.HasTag(Config.Spawner))
                 {
                     if (!spawnOrgans.Contains(item))
@@ -325,11 +325,11 @@ namespace Barotrauma
             foreach (var turret in turrets)
             {
                 // Snap all tendons
-                foreach (Item item in turret.ActiveProjectiles)
+                foreach (Projectile projectile in turret.ActiveProjectiles)
                 {
-                    if (item.GetComponent<Projectile>() is { IsStuckToTarget: true })
+                    if (projectile.IsStuckToTarget)
                     {
-                        item.Condition = 0;
+                        projectile.Item.Condition = 0;
                     }
                 }
             }

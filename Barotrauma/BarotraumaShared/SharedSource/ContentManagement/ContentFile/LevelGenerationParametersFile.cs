@@ -3,7 +3,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    sealed class LevelGenerationParametersFile : ContentFile
+    public sealed class LevelGenerationParametersFile : ContentFile
     {
         public LevelGenerationParametersFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

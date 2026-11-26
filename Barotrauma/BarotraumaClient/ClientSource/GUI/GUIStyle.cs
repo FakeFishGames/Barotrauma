@@ -42,6 +42,8 @@ namespace Barotrauma
         public readonly static GUIFont HotkeyFont = new GUIFont("HotkeyFont");
         public readonly static GUIFont MonospacedFont = new GUIFont("MonospacedFont");
 
+        public readonly static GUIFont IconFont = new GUIFont("IconFont");
+
         public readonly static GUICursor CursorSprite = new GUICursor("Cursor");
 
         public readonly static GUISprite SubmarineLocationIcon = new GUISprite("SubmarineLocationIcon");
@@ -90,7 +92,7 @@ namespace Barotrauma
         public readonly static GUIColor Green = new GUIColor("Green", new Color(154, 213, 163, 255));
 
         /// <summary>
-        /// General red color used for elements whose colors are set from code
+        /// General orange color used for elements whose colors are set from code
         /// </summary>
         public readonly static GUIColor Orange = new GUIColor("Orange", new Color(243, 162, 50, 255));
 

@@ -35,7 +35,7 @@ namespace Barotrauma.Networking
         {
             if (CoroutineManager.IsCoroutineRunning("ConnectToServer")) { return; }
 
-            var endpointOption = serverInfo.Endpoints.FirstOrNone(e => e is not EosP2PEndpoint);
+            var endpointOption = serverInfo.Endpoints.FirstOrNone();
             if (!endpointOption.TryUnwrap(out var endpoint)) { return; }
 
             switch (endpoint)
@@ -126,10 +126,6 @@ namespace Barotrauma.Networking
                 var lobby = src.Lobby;
                 pingLocationStr = lobby.GetData("steampinglocation");
                 if (pingLocationStr.IsNullOrEmpty()) { pingLocationStr = lobby.GetData("pinglocation"); }
-            }
-            else if (serverInfo.MetadataSource.TryUnwrap(out EosServerProvider.DataSource srcEos))
-            {
-                pingLocationStr = srcEos.SteamPingLocation;
             }
             else if (serverInfo.Endpoints.OfType<SteamP2PEndpoint>().FirstOrNone().TryUnwrap(out var steamP2PEndpoint))
             {

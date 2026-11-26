@@ -16,7 +16,7 @@ namespace Barotrauma
     /// For example, some StatusEffects use Conditionals to only trigger
     /// if the affected character is alive.
     /// </summary>
-    sealed class PropertyConditional
+    public sealed class PropertyConditional
     {
         // TODO: Make this testable and add tests
 

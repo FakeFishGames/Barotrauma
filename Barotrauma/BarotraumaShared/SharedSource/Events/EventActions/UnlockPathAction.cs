@@ -8,7 +8,7 @@ namespace Barotrauma
     /// <summary>
     /// Unlocks a "locked" pathways between locations, if there are any such paths adjacent to the current location.
     /// </summary>
-    class UnlockPathAction : EventAction
+    public class UnlockPathAction : EventAction
     {
         private static readonly HashSet<LocationConnection> pathsUnlockedThisRound = new HashSet<LocationConnection>();
 
@@ -26,7 +26,7 @@ namespace Barotrauma
             return isFinished;
         }
 
-        public override void Reset()
+        public override void Reset(bool shouldEndConversations = true)
         {
             isFinished = false;
         }

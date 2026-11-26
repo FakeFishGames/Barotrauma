@@ -31,13 +31,13 @@ namespace Barotrauma
         {
             Location[] locations = { GameMain.GameSession.StartLocation, GameMain.GameSession.EndLocation };
             float difficulty = GameMain.NetworkMember.ServerSettings.SelectedLevelDifficulty;
-            var mission = Mission.LoadRandom(locations, seed, requireCorrectLocationType: false, missionTypes, difficultyLevel: difficulty);
+            var mission = Mission.LoadRandom(locations, seed, requireCorrectLocationType: false, missionTypes, isCampaign: false, difficultyLevel: difficulty);
             if (mission == null)
             {
                 DebugConsole.AddWarning(
                     $"Could not find any missions matching the mission types {string.Join(", ", missionTypes.Select(m => m.Value))} " +
                     $"and the difficulty {difficulty}. Ignoring the difficulty requirement...");
-                mission = Mission.LoadRandom(locations, seed, requireCorrectLocationType: false, missionTypes);
+                mission = Mission.LoadRandom(locations, seed, requireCorrectLocationType: false, missionTypes, isCampaign: false);
             }
             if (mission != null)
             {
@@ -69,7 +69,7 @@ namespace Barotrauma
         {
             return missionTypes.Where(type => 
                 MissionPrefab.Prefabs.OrderBy(missionPrefab => missionPrefab.UintIdentifier)
-                    .Any(missionPrefab => missionPrefab.Type == type && !missionPrefab.CampaignOnly && missionClasses.ContainsValue(missionPrefab.MissionClass)));
+                    .Any(missionPrefab => !missionPrefab.CampaignOnly && missionPrefab.Type == type && missionClasses.ContainsValue(missionPrefab.MissionClass)));
         }
     }
 }

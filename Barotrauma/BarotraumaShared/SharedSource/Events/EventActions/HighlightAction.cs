@@ -42,5 +42,5 @@ partial class HighlightAction : EventAction
 
     public override bool IsFinished(ref string goToLabel) => isFinished;
 
-    public override void Reset() => isFinished = false;
+    public override void Reset(bool shouldEndConversations = true) => isFinished = false;
 }

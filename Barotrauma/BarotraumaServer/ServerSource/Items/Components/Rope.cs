@@ -2,7 +2,7 @@
 
 namespace Barotrauma.Items.Components
 {
-    partial class Rope : ItemComponent
+    public partial class Rope : ItemComponent
     {
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {

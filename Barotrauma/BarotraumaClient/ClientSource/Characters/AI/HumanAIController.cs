@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class HumanAIController : AIController
+    public partial class HumanAIController : AIController
     {
         public override void DebugDraw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {

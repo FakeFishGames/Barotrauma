@@ -68,14 +68,35 @@ namespace Barotrauma.Steam
                 case string serverMessage when key == "message":
                     int maxValueLength = 127;
                     int totalMaxLength = 2000;
-                    int chunkIndex = 0;
-                    for (int charIndex = 0; charIndex < serverMessage.Length && charIndex < totalMaxLength; charIndex += maxValueLength)
+                    if (serverMessage.Length > totalMaxLength)
                     {
-                        Steamworks.SteamServer.SetKey(
-                            $"message{chunkIndex}", 
-                            serverMessage.Substring(charIndex, Math.Min(maxValueLength, serverMessage.Length - charIndex)));
+                        serverMessage = serverMessage.Substring(0, totalMaxLength);
+                        //don't leave half of a surrogate pair at the end
+                        //e.g. cyrillic characters need to be represented by two 16-bit "surrogate symbols"
+                        //and we should not split the message between those
+                        if (char.IsHighSurrogate(serverMessage[serverMessage.Length - 1])) { serverMessage = serverMessage.Substring(0, serverMessage.Length - 1); }
+                    }
+                    int chunkIndex = 0;
+                    int chunkStart = 0;
+                    while (chunkStart < serverMessage.Length)
+                    {
+                        int chunkEnd = chunkStart;
+                        int chunkBytes = 0;
+                        while (chunkEnd < serverMessage.Length)
+                        {
+                            //keep surrogate pairs together so we never split a character in half
+                            int charLength = char.IsSurrogatePair(serverMessage, chunkEnd) ? 2 : 1;
+                            int charBytes = System.Text.Encoding.UTF8.GetByteCount(serverMessage.AsSpan(chunkEnd, charLength));
+                            if (chunkBytes + charBytes > maxValueLength) { break; }
+                            chunkBytes += charBytes;
+                            chunkEnd += charLength;
+                        }
+                        Steamworks.SteamServer.SetKey($"message{chunkIndex}", serverMessage.Substring(chunkStart, chunkEnd - chunkStart));
+                        chunkStart = chunkEnd;
                         chunkIndex++;
                     }
+                    //clear out the next key so clients don't read leftover chunks from a previous, longer message
+                    Steamworks.SteamServer.SetKey($"message{chunkIndex}", string.Empty);
                     return;
                 case IEnumerable<ContentPackage> contentPackages:
                     //a2s seems to break if too much data is added (seems to be related to MTU?)
@@ -89,6 +110,7 @@ namespace Barotrauma.Steam
                             new ServerListContentPackageInfo(contentPackage).ToString());
                         index++;
                     }
+                    Steamworks.SteamServer.SetKey("packagecount", contentPackages.Count().ToString());
                     return;
             }
 

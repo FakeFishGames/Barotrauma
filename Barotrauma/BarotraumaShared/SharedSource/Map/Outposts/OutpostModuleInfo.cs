@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class OutpostModuleInfo : ISerializableEntity
+    public class OutpostModuleInfo : ISerializableEntity
     {
         [Flags]
         public enum GapPosition

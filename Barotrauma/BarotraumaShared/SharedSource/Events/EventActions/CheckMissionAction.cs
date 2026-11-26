@@ -27,6 +27,9 @@ class CheckMissionAction : BinaryOptionAction
     [Serialize(1, IsPropertySaveable.Yes, description: "Minimum number of matching missions for the check to succeed.")]
     public int MissionCount { get; set; }
 
+    [Serialize(-1, IsPropertySaveable.Yes, description: "The state of the mission must be equal to this value for the check to succeed.")]
+    public int MissionState { get; set; }
+
     public CheckMissionAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
     {
         MissionCount = Math.Max(MissionCount, 0);
@@ -43,6 +46,11 @@ class CheckMissionAction : BinaryOptionAction
         };
         if (missions is not null)
         {
+            if (MissionState != -1)
+            {
+                missions = missions.Where(mission => MissionState == mission.State);
+            }
+
             if (!MissionIdentifier.IsEmpty)
             {
                 return missions.Any(m => m.Prefab.Identifier == MissionIdentifier);

@@ -10,7 +10,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
-    internal sealed class CircuitBoxUI
+    public sealed class CircuitBoxUI
     {
         private readonly Camera camera;
         private static readonly Vector2 gridSize = new Vector2(128f);

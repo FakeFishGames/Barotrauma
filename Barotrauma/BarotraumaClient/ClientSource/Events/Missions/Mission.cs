@@ -25,6 +25,17 @@ namespace Barotrauma
         /// </summary>
         public abstract bool DisplayAsFailed { get; }
 
+        /// <summary>
+        /// Whether the server determined the mission failed, received at the end of the round.
+        /// The client can't always determine it itself (e.g. if the mission was failed with <see cref="ForceFailure"/> by a server-side event).
+        /// </summary>
+        private bool? failedStateFromServer;
+
+        public void SetFailedStateFromServer(bool failed)
+        {
+            failedStateFromServer = failed;
+        }
+
         public Color GetDifficultyColor()
         {
             return GetDifficultyColor(Difficulty ?? MissionPrefab.MinDifficulty);
@@ -87,7 +98,7 @@ namespace Barotrauma
 
                 if (factionPrefab != null)
                 {
-                    AddReputationText(factionPrefab, reputationReward.Amount);
+                    AddReputationText(factionPrefab, GetReputationRewardAmount(reputationReward, preview: true));
                     if (!MathUtils.NearlyEqual(reputationReward.AmountForOpposingFaction, 0.0f) &&
                         FactionPrefab.Prefabs.TryGet(factionPrefab.OpposingFaction, out var opposingFactionPrefab))
                     {
@@ -101,7 +112,7 @@ namespace Barotrauma
                 if (factionPrefab == null) { return; }
 
                 float totalReputationChange = amount;
-                if (GameMain.GameSession?.Campaign?.Factions.Find(f => f.Prefab == factionPrefab) is Faction faction)
+                if (GameMain.GameSession?.Campaign?.GetFaction(factionPrefab.Identifier) is Faction faction)
                 {
                     totalReputationChange = amount * faction.Reputation.GetReputationChangeMultiplier(amount);
                 }
@@ -156,6 +167,8 @@ namespace Barotrauma
 
             LocalizedString header = messageIndex < Headers.Length ? Headers[messageIndex] : "";
             LocalizedString message = messageIndex < Messages.Length ? Messages[messageIndex] : "";
+
+            if (header.IsNullOrEmpty() && message.IsNullOrEmpty()) { return; }
             if (!message.IsNullOrEmpty())
             {
                 message = ModifyMessage(message);
@@ -180,6 +193,24 @@ namespace Barotrauma
             new GUIMessageBox(RichString.Rich(header), RichString.Rich(message), buttons: Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: Prefab.Icon)
             {
                 IconColor = Prefab.IconColor
+            };
+        }
+
+        public void ShowMissionStartMessageIfNeeded()
+        {
+            if (!Prefab.ShowStartMessage) { return; }
+            if (Name.IsNullOrEmpty() && Description.IsNullOrEmpty()) { return; }
+            if (!ShowInMenus && !Prefab.ShowStartMessageWhenHidden) { return; }
+            if (missionMessageShown) { return; }
+
+            missionMessageShown = true;
+
+            new GUIMessageBox(
+                RichString.Rich(NameWithContentPackage),
+                RichString.Rich(Description), Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: Prefab.Icon)
+            {
+                IconColor = Prefab.IconColor,
+                UserData = "missionstartmessage"
             };
         }
 

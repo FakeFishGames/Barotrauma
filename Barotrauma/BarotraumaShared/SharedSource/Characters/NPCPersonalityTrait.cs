@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class NPCPersonalityTrait : PrefabWithUintIdentifier
+    public class NPCPersonalityTrait : PrefabWithUintIdentifier
     {
         public readonly static PrefabCollection<NPCPersonalityTrait> Traits = new PrefabCollection<NPCPersonalityTrait>();
 

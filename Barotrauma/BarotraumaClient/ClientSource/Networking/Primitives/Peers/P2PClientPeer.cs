@@ -28,14 +28,9 @@ namespace Barotrauma.Networking
         private static P2PEndpoint GetPrimaryEndpoint(ImmutableArray<P2PEndpoint> allEndpoints)
         {
             var steamEndpointOption = allEndpoints.OfType<SteamP2PEndpoint>().FirstOrNone();
-            var eosEndpointOption = allEndpoints.OfType<EosP2PEndpoint>().FirstOrNone();
             if (SteamManager.IsInitialized)
             {
                 if (steamEndpointOption.TryUnwrap(out var steamEndpoint)) { return steamEndpoint; }
-            }
-            if (EosInterface.Core.IsInitialized)
-            {
-                if (eosEndpointOption.TryUnwrap(out var eosEndpoint)) { return eosEndpoint; }
             }
 
             throw new Exception($"Couldn't pick out a primary endpoint: {string.Join(", ", allEndpoints.Select(e => e.GetType().Name))}");
@@ -62,39 +57,28 @@ namespace Barotrauma.Networking
             var socketCallbacks = new P2PSocket.Callbacks(OnIncomingConnection, OnConnectionClosed, OnExcessivePackets, OnP2PData);
             var socketCreateResult = ServerEndpoint switch
             {
-                EosP2PEndpoint => EosP2PSocket.Create(socketCallbacks, P2PSocket.OwnerOrClient.Client),
                 SteamP2PEndpoint steamP2PEndpoint => SteamConnectSocket.Create(steamP2PEndpoint, socketCallbacks, P2PSocket.OwnerOrClient.Client),
                 _ => throw new Exception($"Invalid server endpoint: {ServerEndpoint.GetType()} {ServerEndpoint}")
             };
             socket = socketCreateResult.TryUnwrapSuccess(out var s)
                 ? s
                 : throw new Exception($"Failed to create socket for {ServerEndpoint}: {socketCreateResult}");
-            TaskPool.Add(
-                $"{nameof(P2PClientPeer)}.GetAuthTicket",
-                AuthenticationTicket.Create(ServerEndpoint),
-                t =>
-                {
-                    if (!t.TryGetResult(out Option<AuthenticationTicket> authenticationTicket))
-                    {
-                        Close(PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationFailed));
-                        return;
-                    }
-                    authTicket = authenticationTicket;
 
-                    var headers = new PeerPacketHeaders
-                    {
-                        DeliveryMethod = DeliveryMethod.Reliable,
-                        PacketHeader = PacketHeader.IsConnectionInitializationStep,
-                        Initialization = ConnectionInitialization.ConnectionStarted
-                    };
-                    SendMsgInternal(headers, null);
-                });
+            isActive = true;
+
+            authTicket = AuthenticationTicket.Create(ServerEndpoint);
+
+            var headers = new PeerPacketHeaders
+            {
+                DeliveryMethod = DeliveryMethod.Reliable,
+                PacketHeader = PacketHeader.IsConnectionInitializationStep,
+                Initialization = ConnectionInitialization.ConnectionStarted
+            };
+            SendMsgInternal(headers, null);
             initializationStep = ConnectionInitialization.AuthInfoAndVersion;
 
             timeout = NetworkConnection.TimeoutThresholdNotInGame;
             heartbeatTimer = 1.0;
-
-            isActive = true;
         }
 
         private void OnExcessivePackets(P2PEndpoint endpoint, bool shouldBan)
@@ -257,6 +241,9 @@ namespace Barotrauma.Networking
             {
                 foreach (IReadMessage inc in incomingDataMessages)
                 {
+                    //the connection may have been closed during this update (e.g. by a disconnect packet, some error/exception),
+                    //don't try to continue reading if that happens
+                    if (!isActive) { break; }
                     callbacks.OnMessageReceived.Invoke(inc);
                 }
             }
@@ -270,6 +257,7 @@ namespace Barotrauma.Networking
             if (!isActive) { return; }
 
             byte[] bufAux = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);
+            GameMain.Client.NetStats?.RegisterSentPacket(msg, bufAux.Length);
             if (bufAux.Length > MessageFragment.MaxSize)
             {
                 var fragments = fragmenter.FragmentMessage(msg.Buffer.AsSpan()[..msg.LengthBytes]);
@@ -405,21 +393,11 @@ namespace Barotrauma.Networking
             }
         }
 
-        protected override async Task<Option<AccountId>> GetAccountId()
+        protected override Option<AccountId> GetAccountId()
         {
             if (SteamManager.IsInitialized) { return SteamManager.GetSteamId().Select(id => (AccountId)id); }
 
-            if (EosInterface.IdQueries.GetLoggedInPuids() is not { Length: > 0 } puids)
-            {
-                return Option.None;
-            }
-            var externalAccountIdsResult = await EosInterface.IdQueries.GetSelfExternalAccountIds(puids[0]);
-            if (!externalAccountIdsResult.TryUnwrapSuccess(out var externalAccountIds)
-                || externalAccountIds is not { Length: > 0 })
-            {
-                return Option.None;
-            }
-            return Option.Some(externalAccountIds[0]);
+            return Option.None;
         }
 
 #if DEBUG

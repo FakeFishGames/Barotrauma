@@ -1,17 +1,17 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Extensions;
+using Barotrauma.Networking;
+using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
-using Barotrauma.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Networking;
-using LimbParams = Barotrauma.RagdollParams.LimbParams;
 using JointParams = Barotrauma.RagdollParams.JointParams;
-using Barotrauma.Abilities;
+using LimbParams = Barotrauma.RagdollParams.LimbParams;
 
 namespace Barotrauma
 {
@@ -21,13 +21,43 @@ namespace Barotrauma
         LeftLeg, RightLeg, LeftFoot, RightFoot, Head, Torso, Tail, Legs, RightThigh, LeftThigh, Waist, Jaw
     };
 
-    partial class LimbJoint
+    public partial class LimbJoint
     {
-        public bool IsSevered;
+        private bool isSevered;
+        public bool IsSevered
+        {
+            get => isSevered;
+            set
+            {
+                isSevered = value;
+                Joint.Enabled = !isSevered;
+                if (!isSevered)
+                {
+                    if (revoluteJoint != null)
+                    {
+                        revoluteJoint.MotorEnabled = true;
+                    }
+                    if (Dir != ragdoll.Dir)
+                    {
+                        Flip();
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Is this limb generally of a type that can be severed? Will always return true for such limbs, even if the particular limb might already be severed, or other conditions prevent severing.
+        /// </summary>
         public bool CanBeSevered => Params.CanBeSevered;
+
         public readonly JointParams Params;
         public readonly Ragdoll ragdoll;
         public readonly Limb LimbA, LimbB;
+
+        /// <summary>
+        /// Equivalent to <see cref="Ragdoll.Dir"/>, used to keep track of whether the joint has been flipped or not.
+        /// </summary>
+        public float Dir = 1;
 
         public float Scale => Params.Scale * ragdoll.RagdollParams.JointScale;
 
@@ -199,9 +229,22 @@ namespace Barotrauma
                 }
             }
         }
+
+        public void Flip()
+        {
+            Dir = -Dir;
+            float lowerLimit = -UpperLimit;
+            float upperLimit = -LowerLimit;
+
+            LowerLimit = lowerLimit;
+            UpperLimit = upperLimit;
+
+            LocalAnchorA = new Vector2(-LocalAnchorA.X, LocalAnchorA.Y);
+            LocalAnchorB = new Vector2(-LocalAnchorB.X, LocalAnchorB.Y);
+        }
     }
 
-    partial class Limb : ISerializableEntity, ISpatialEntity
+    public partial class Limb : ISerializableEntity, ISpatialEntity
     {
         //how long it takes for severed limbs to fade out
         public float SeveredFadeOutTime { get; private set; } = 10;
@@ -225,6 +268,11 @@ namespace Barotrauma
         public bool InWater { get; set; }
 
         private FixedMouseJoint pullJoint;
+
+        /// <summary>
+        /// Joints connected to this limb.
+        /// </summary>
+        private List<LimbJoint> connectedJoints = [];
 
         public readonly LimbType type;
 
@@ -362,7 +410,10 @@ namespace Barotrauma
                 };
             }
         }
-
+        
+        /// <summary>
+        /// Is this limb missing, and not replaced with a prosthetic?
+        /// </summary>
         public bool IsSevered
         {
             get { return isSevered; }
@@ -378,22 +429,50 @@ namespace Barotrauma
                 isSevered = value;
                 if (isSevered)
                 {
-                    ragdoll.SubtractMass(this);
                     if (type == LimbType.Head && character.Params.Health.DieFromBeheading)
                     {
                         character.Kill(CauseOfDeathType.Unknown, null);
                     }
+#if CLIENT
+                    damageOverlayStrength = 1.0f;
+                    DisableLights();
+#endif
                 }
                 else
                 {
+                    foreach ((WearableSprite wearableSprite, bool equipping) in SeveredWearableChanges)
+                    {
+                        if (equipping)
+                        {
+                            wearableSprite.Equip(this);
+                        }
+                        else
+                        {
+                            wearableSprite.Unequip(this);
+                        }
+                    }
+                    SeveredWearableChanges.Clear();
+#if CLIENT
+                    EnableLights(setToInitialColorAndAlpha: true);
+#endif
+                    //correct the position of the limb back to the joint it was attached to
+                    var furtherFromMainLimb = character.AnimController.GetConnectedLimbsFurtherFromMainLimb(this);
+                    //find the joint(s) that connect the limb to the main limb (e.g. elbow for the forearm, shoulder for the upper arm)
+                    //and move the limb back to that joint
+                    foreach (var limbJoint in character.AnimController.LimbJoints
+                        .Where(lj => (lj.LimbA == this && !furtherFromMainLimb.Contains(lj.LimbB)) || (lj.LimbB == this && !furtherFromMainLimb.Contains(lj.LimbA))))
+                    {
+                        Ragdoll.ResetLimbPositionRelativeToJoint(limbJoint, this);
+                    }
+                    body.ResetDynamics();
+                    body.Enabled = true;
+                    body.Submarine = character.Submarine;
+                    if (Dir != character.AnimController.Dir)
+                    {
+                        Flip();
+                    }
                     severedFadeOutTimer = 0.0f;
                 }
-#if CLIENT
-                if (isSevered)
-                {
-                    damageOverlayStrength = 1.0f;
-                }
-#endif
             }
         }
 
@@ -402,7 +481,7 @@ namespace Barotrauma
         private bool _hidden;
         public bool Hidden
         {
-            get => _hidden || Params.Hide;
+            get => _hidden || Params.Hide || HiddenByProsthesis;
             set => _hidden = value;
         }
         
@@ -412,6 +491,11 @@ namespace Barotrauma
             get => Hidden;
             set => Hidden = value;
         }
+
+        /// <summary>
+        /// Is the limb hidden because it's been replaced by a prosthesis?
+        /// </summary>
+        public bool HiddenByProsthesis;
 
         public Vector2 WorldPosition
         {
@@ -542,12 +626,19 @@ namespace Barotrauma
 
         public int RefJointIndex => Params.RefJoint;
 
-        public readonly List<WearableSprite> WearingItems = new List<WearableSprite>();
+        /// <summary>
+        /// Contains changes made to wearing items while the limb was severed.<br/>
+        /// Value is <see langword="true"/> if a new item was equipped, and <see langword="false"/> if an already-worn item was unequipped.
+        /// </summary>
+        public readonly Dictionary<WearableSprite, bool> SeveredWearableChanges = [];
+        public readonly List<WearableSprite> WearingItems = [];
+
+        public IEnumerable<WearableSprite> ActiveWearingItems => WearingItems.Where(static wearingItem => wearingItem.IsActive);
 
         /// <summary>
         /// Other wearables attached to the head. I.e. husk sprite, hair, beard, moustache, and face attachments.
         /// </summary>
-        public readonly List<WearableSprite> OtherWearables = new List<WearableSprite>();
+        public readonly List<WearableSprite> OtherWearables = [];
 
         public bool PullJointEnabled
         {
@@ -655,9 +746,6 @@ namespace Barotrauma
         {
             get
             {
-                if (character.IsHumanoid) { return false; }
-                // TODO: We might need this or solve the cases where a limb is severed while holding on to an item
-                //if (character.Params.CanInteract) { return false; }
                 if (this == character.AnimController.MainLimb) { return false; }
                 bool canBeSevered = Params.CanBeSeveredAlive;
                 if (character.AnimController.CanWalk && !character.Params.Health.AllowSeveringLegs)
@@ -678,6 +766,11 @@ namespace Barotrauma
                 return canBeSevered;
             }
         }
+
+        /// <summary>
+        /// Can this limb be removed by a deliberate medical procedure? Independent from <see cref="CanBeSeveredAlive"/>, which is about crude violence such as explosions.
+        /// </summary>
+        public bool IsAmputable => Params.IsAmputable;
 
         public Dictionary<Identifier, SerializableProperty> SerializableProperties
         {
@@ -753,11 +846,12 @@ namespace Barotrauma
                         var statusEffect = StatusEffect.Load(subElement, character.Name + ", " + Name);
                         if (statusEffect != null)
                         {
-                            if (!statusEffects.ContainsKey(statusEffect.type))
+                            if (!statusEffects.TryGetValue(statusEffect.Type, out List<StatusEffect> value))
                             {
-                                statusEffects.Add(statusEffect.type, new List<StatusEffect>());
+                                value = new List<StatusEffect>();
+                                statusEffects.Add(statusEffect.Type, value);
                             }
-                            statusEffects[statusEffect.type].Add(statusEffect);
+                            value.Add(statusEffect);
                         }
                         break;
                 }
@@ -781,6 +875,16 @@ namespace Barotrauma
 
             body.MoveToPos(pos, force, pullPos);
         }
+
+        public void Flip()
+        {
+            Dir = -Dir;
+            MouthPos = new Vector2(-MouthPos.X, MouthPos.Y);
+            MirrorPullJoint();
+            FlipProjSpecific();
+        }
+
+        partial void FlipProjSpecific();
 
         public void MirrorPullJoint()
         {
@@ -909,7 +1013,7 @@ namespace Barotrauma
                 if (bleedingDamage > 0)
                 {
                     float bloodDecalSize = MathHelper.Clamp(bleedingDamage / 5, 0.1f, 1.0f);
-                    if (character.CurrentHull != null && !string.IsNullOrEmpty(character.BloodDecalName))
+                    if (character.CurrentHull != null && !character.BloodDecalName.IsEmpty)
                     {
                         character.CurrentHull.AddDecal(character.BloodDecalName, WorldPosition, MathHelper.Clamp(bloodDecalSize, 0.5f, 1.0f), isNetworkEvent: false);
                     }
@@ -946,7 +1050,7 @@ namespace Barotrauma
 
             if (InWater)
             {
-                body.ApplyWaterForces();
+                body.ApplyWaterForces(character.IsDead ? character.Params.DeadBuoyancyMultiplier : 1.0f);
             }
 
             if (isSevered)
@@ -987,6 +1091,11 @@ namespace Barotrauma
             attack?.UpdateCoolDown(deltaTime);
         }
 
+        public void SkipSeveredFadeOutTimer()
+        {
+            severedFadeOutTimer = SeveredFadeOutTime;
+        }
+
         private bool temporarilyDisabled;
         private float reEnableTimer = -1;
         private bool originalIgnoreCollisions;
@@ -1003,10 +1112,7 @@ namespace Barotrauma
                 reEnableTimer = duration;
             }
 #if CLIENT
-            if (Hidden && LightSource != null)
-            {
-                LightSource.Enabled = false;
-            }
+            UpdateLights();
 #endif
         }
 
@@ -1062,7 +1168,7 @@ namespace Barotrauma
             }
 
             bool wasHit = false;
-            Body structureBody = null;
+            Body blockingBody = null;
             if (damageTarget != null)
             {
                 switch (attack.HitDetectionType)
@@ -1077,15 +1183,24 @@ namespace Barotrauma
                                 rayStart -= spatialEntity.Submarine.SimPosition;
                                 rayEnd -= spatialEntity.Submarine.SimPosition;
                             }
-                            structureBody = Submarine.CheckVisibility(rayStart, rayEnd);
-                            if (damageTarget is Item i && i.GetComponent<Items.Components.Door>() != null)
-                            {
-                                // If the attack is aimed to an item and hits an item, it's successful.
+
+                            // Note: some special items can have the structure collision category, resulting in them being a blocking body
+                            blockingBody = Submarine.CheckVisibility(rayStart, rayEnd);
+                            
+                            if (damageTarget is Item damageItem && (
+                                (
+                                    // If the attack is aimed to an item and hits the item, it's successful.
+                                    blockingBody != null && 
+                                    blockingBody.UserData is Item blockingItem && 
+                                    blockingItem == damageItem
+                                ) ||
                                 // Ignore blocking checks on doors, because it causes cases where a Mudraptor cannot hit the hatch, for example.
+                                damageItem.GetComponent<Items.Components.Door>() != null))
+                            {
                                 wasHit = true;
                             }
-                            else if (damageTarget is Structure wall && structureBody != null && 
-                                (structureBody.UserData is Structure || (structureBody.UserData is Submarine sub && sub == wall.Submarine)))
+                            else if (damageTarget is Structure wall && blockingBody != null && 
+                                (blockingBody.UserData is Structure || (blockingBody.UserData is Submarine sub && sub == wall.Submarine)))
                             {
                                 // If the attack is aimed to a structure (wall) and hits a structure or the sub, it's successful
                                 wasHit = true;
@@ -1093,7 +1208,7 @@ namespace Barotrauma
                             else
                             {
                                 // If there is nothing between, the hit is successful
-                                wasHit = structureBody == null;
+                                wasHit = blockingBody == null;
                             }
                         }
                         break;
@@ -1129,7 +1244,7 @@ namespace Barotrauma
                                 contactEdge.Contact.IsTouching &&
                                 contactBodies.Any(b => b == contactEdge.Contact.FixtureA?.Body || b == contactEdge.Contact.FixtureB?.Body))
                             {
-                                structureBody = contactBodies.LastOrDefault();
+                                blockingBody = contactBodies.LastOrDefault();
                                 wasHit = true;
                                 break;
                             }
@@ -1309,7 +1424,7 @@ namespace Barotrauma
                 if (statusEffect.ShouldWaitForInterval(character, deltaTime)) { continue; }
 
                 statusEffect.sourceBody = body;
-                if (statusEffect.type == ActionType.OnDamaged)
+                if (statusEffect.Type == ActionType.OnDamaged)
                 {
                     if (!statusEffect.HasRequiredAfflictions(character.LastDamage)) { continue; }
                     if (statusEffect.OnlyWhenDamagedByPlayer)
@@ -1453,7 +1568,26 @@ namespace Barotrauma
             }
         }
 
-        public IEnumerable<LimbJoint> GetConnectedJoints() => ragdoll.LimbJoints.Where(j => !j.IsSevered && (j.LimbA == this || j.LimbB == this));
+        public void RefreshConnectedJoints()
+        {
+            List<LimbJoint> refreshedJoints = [];
+            foreach (LimbJoint joint in ragdoll.LimbJoints)
+            {
+                if (joint == null) { continue; }
+                if (joint.LimbA == this || joint.LimbB == this)
+                {
+                    refreshedJoints.Add(joint);
+                }
+            }
+            connectedJoints = refreshedJoints;
+        }
+
+        public IEnumerable<LimbJoint> GetConnectedJoints(bool ignoreSeverance = false) => ignoreSeverance ? connectedJoints : connectedJoints.Where(j => !j.IsSevered);
+
+        /// <summary>
+        /// Unfiltered joints connected to this limb, exposed as a concrete list so hot-path callers (see <see cref="Ragdoll.GetConnectedLimbs(HashSet{Limb}, HashSet{LimbJoint}, Limb, bool)"/>) can iterate without the allocations of <see cref="GetConnectedJoints"/>'s IEnumerable/LINQ filtering.
+        /// </summary>
+        internal List<LimbJoint> ConnectedJointsRaw => connectedJoints;
 
         public IEnumerable<Limb> GetConnectedLimbs()
         {
@@ -1486,6 +1620,7 @@ namespace Barotrauma
                 }
                 pullJoint = null;
             }
+            connectedJoints = [];
             Release();
             RemoveProjSpecific();
             Removed = true;
@@ -1500,6 +1635,8 @@ namespace Barotrauma
         }
 
         partial void LoadParamsProjSpecific();
+        
+        public override string ToString() => $"{nameof(Limb)} ({type})";
     }
 
     class AbilityAfflictionCharacter : AbilityObject, IAbilityAffliction, IAbilityCharacter

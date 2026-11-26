@@ -124,7 +124,7 @@ namespace Barotrauma.Items.Components
             {
                 if (turret.BarrelSprite != null)
                 {
-                    startPos += new Vector2((float)Math.Cos(turret.Rotation), (float)Math.Sin(turret.Rotation)) * turret.BarrelSprite.size.Y * turret.BarrelSprite.RelativeOrigin.Y * turret.Item.Scale * BarrelLengthMultiplier;
+                    startPos += MathUtils.RotatedUnitXRadians(turret.FiringRotation) * turret.BarrelSprite.size.Y * turret.BarrelSprite.RelativeOrigin.Y * turret.Item.Scale * BarrelLengthMultiplier;
                 }
                 startPos -= turret.GetRecoilOffset();
             }

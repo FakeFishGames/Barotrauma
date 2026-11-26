@@ -1,4 +1,5 @@
-﻿using Barotrauma.IO;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -6,7 +7,7 @@ using System.Collections.Immutable;
 
 namespace Barotrauma
 {
-    internal sealed partial class MissionPrefab : PrefabWithUintIdentifier
+    public sealed partial class MissionPrefab : PrefabWithUintIdentifier
     {
         private ImmutableArray<Sprite> portraits = [];
         public bool HasPortraits => portraits.Length > 0;
@@ -14,8 +15,24 @@ namespace Barotrauma
         public Sprite Icon { get; private set; }
         public Color IconColor { get; private set; }
 
-        public bool DisplayTargetHudIcons { get; private set; }
-        public float HudIconMaxDistance { get; private set; }
+        public Sprite MapIcon { get; private set; }
+        public Color MapIconColor { get; private set; }
+        public float MapIconScale { get; private set; }
+        public bool RotateMapIcon { get; private set; }
+        public bool PulsateMapIcon { get; private set; }
+        public bool ShowOffScreenIndicator { get; private set; }
+
+        public bool DisplayTargetHudIcons
+        {
+            get;
+            private set;
+        }
+
+        public float HudIconMaxDistance
+        {
+            get;
+            private set;
+        }
 
         private Sprite hudIcon;
         public Sprite HudIcon => hudIcon ?? Icon;
@@ -40,6 +57,14 @@ namespace Barotrauma
                     case "icon":
                         Icon = new Sprite(subElement, GetTexturePath(subElement, variantOf));
                         IconColor = subElement.GetAttributeColor("color", Color.White);
+                        break;
+                    case "mapicon":
+                        MapIcon = new Sprite(subElement);
+                        MapIconColor = subElement.GetAttributeColor("color", Color.White);
+                        MapIconScale = subElement.GetAttributeFloat("scale", 0.5f);
+                        RotateMapIcon = subElement.GetAttributeBool("rotate", false);
+                        PulsateMapIcon = subElement.GetAttributeBool("pulsate", false);
+                        ShowOffScreenIndicator = subElement.GetAttributeBool("showoffscreenindicator", false);
                         break;
                     case "hudicon":
                         hudIcon = new Sprite(subElement, GetTexturePath(subElement, variantOf));
@@ -87,6 +112,7 @@ namespace Barotrauma
         partial void DisposeProjectSpecific()
         {
             Icon?.Remove();
+            MapIcon?.Remove();
         }
     }
 }

@@ -25,8 +25,19 @@ internal sealed class MissionStateAction : EventAction
     [Serialize(false, IsPropertySaveable.Yes, "If set to true, missions are forced to fail without a chance of retrying them.")]
     public bool ForceFailure { get; set; }
 
+    [Serialize(false, IsPropertySaveable.Yes, "If set to true, missions are forced to retry even if they were completed.")]
+    public bool ForceRetry { get; set; }
+
+    private bool setForceFailure = false;
+    private bool setForceRetry = false;
+    private bool setState = false;
+
     public MissionStateAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
     {
+        setForceFailure = element.GetAttribute("forcefailure") != null;
+        setForceRetry = element.GetAttribute("forceretry") != null;
+        //"value" is an accepted alias for "state"
+        setState = element.GetAttribute("value") != null || element.GetAttribute("state") != null;
         State = element.GetAttributeInt("value", State);
         if (Operation == OperationType.Add && State == 0 && !ForceFailure)
         {
@@ -37,7 +48,7 @@ internal sealed class MissionStateAction : EventAction
 
     private bool isFinished;
     public override bool IsFinished(ref string goTo) => isFinished;
-    public override void Reset() => isFinished = false;
+    public override void Reset(bool shouldEndConversations = true) => isFinished = false;
 
     public override void Update(float deltaTime)
     {
@@ -61,15 +72,19 @@ internal sealed class MissionStateAction : EventAction
 
     private void SetMissionState(Mission mission)
     {
-        if (ForceFailure) { mission.ForceFailure = true; }
-        switch (Operation)
+        if (setForceFailure) { mission.ForceFailure = ForceFailure; }
+        if (setForceRetry) { mission.ForceRetry = ForceRetry; }
+        if (setState)
         {
-            case OperationType.Set:
-                mission.State = State;
-                break;
-            case OperationType.Add:
-                mission.State += State;
-                break;
+            switch (Operation)
+            {
+                case OperationType.Set:
+                    mission.State = State;
+                    break;
+                case OperationType.Add:
+                    mission.State += State;
+                    break;
+            }
         }
     }
 

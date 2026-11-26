@@ -33,6 +33,7 @@ namespace Barotrauma
             PutToCharacter,
             PutToEquippedItem,
             UseTreatment,
+            OpenProstheticInterface
         }
 
         private static Dictionary<InvSlotType, Sprite> limbSlotIcons;
@@ -127,7 +128,7 @@ namespace Barotrauma
                     (int)SlotPositions[i].X, 
                     (int)SlotPositions[i].Y,
                     (int)(slotSprite.size.X * multiplier), (int)(slotSprite.size.Y * multiplier));
-             
+
                 ItemContainer itemContainer = slots[i].FirstOrDefault()?.GetComponent<ItemContainer>();
                 if (itemContainer != null)
                 {
@@ -191,25 +192,30 @@ namespace Barotrauma
         {
             if (visualSlots[i].Disabled || (slots[i].HideIfEmpty && slots[i].Empty())) { return true; }
 
-            if (SlotTypes[i] == InvSlotType.HealthInterface)
+            bool isHealthInterfaceSlot = HealthInterfaceSlots.HasFlag(SlotTypes[i]);
+            if (isHealthInterfaceSlot)
             {
-                //hide health interface slot unless this character's health window is open
-                if (CharacterHealth.OpenHealthWindow == null || Character.Controlled == null)
+                if (character != null && character.IsDead && slots[i].Empty()) { return true; }
+
+                // Hide health interface slot unless this character's health window is open
+                if (CharacterHealth.OpenHealthWindow == null || 
+                    CharacterHealth.OpenHealthWindow != character?.CharacterHealth)
                 {
                     return true;
                 }
-                if (character == Character.Controlled)
+
+                // Hide if we somehow end up with an open health interface and loose control of our character at the same time
+                if (Character.Controlled == null)
                 {
-                    bool ownHealthWindowOpen = CharacterHealth.OpenHealthWindow == Character.Controlled.CharacterHealth;
-                    if (!ownHealthWindowOpen) { return true; }
+                    return true;
                 }
-                else if (character == Character.Controlled.SelectedCharacter)
+
+                if (character.CharacterHealth?.ProsthesisOverlayEnabled is not true)
                 {
-                    bool otherCharacterHealthWindowOpen = CharacterHealth.OpenHealthWindow == Character.Controlled?.SelectedCharacter?.CharacterHealth;
-                    if (!otherCharacterHealthWindowOpen) { return true; }
-                    //can't access the health interface slot of a non-incapacitated player (bots are fine though)
-                    if (character.IsPlayer && !character.IsIncapacitated) { return true; }
+                    return true;
                 }
+
+                if (character.CharacterHealth?.CanAccessProsthesisInterface(Character.Controlled) is not true) { return true; }
             }
 
             if (layout == Layout.Default)
@@ -226,7 +232,7 @@ namespace Barotrauma
             }
 
             //don't show the limb-specific slot if the item is also in an Any slot
-            if (item != null && SlotTypes[i] != InvSlotType.Any)
+            if (item != null && SlotTypes[i] != InvSlotType.Any && !isHealthInterfaceSlot)
             {
                 if (IsInLimbSlot(item, InvSlotType.Any)) { return true; }
             }
@@ -264,7 +270,7 @@ namespace Barotrauma
                 case Layout.Default:
                     {
                         int personalSlotCount = SlotTypes.Count(s => PersonalSlots.HasFlag(s));
-                        int normalSlotCount = SlotTypes.Count(s => !PersonalSlots.HasFlag(s) && s != InvSlotType.HealthInterface);
+                        int normalSlotCount = SlotTypes.Count(s => !PersonalSlots.HasFlag(s) && !HealthInterfaceSlots.HasFlag(s));
 
                         int x = GameMain.GraphicsWidth / 2 - normalSlotCount * (SlotSize.X + spacing) / 2;
                         int upperX = HUDLayoutSettings.BottomRightInfoArea.X - SlotSize.X - spacing;
@@ -298,7 +304,7 @@ namespace Barotrauma
                         int personalSlotX = HUDLayoutSettings.InventoryAreaLower.Right - SlotSize.X - spacing;
                         for (int i = 0; i < visualSlots.Length; i++)
                         {
-                            if (HideSlot(i) || SlotTypes[i] == InvSlotType.HealthInterface) { continue; }
+                            if (HideSlot(i) || HealthInterfaceSlots.HasFlag(SlotTypes[i])) { continue; }
                             if (SlotTypes[i] == InvSlotType.RightHand || SlotTypes[i] == InvSlotType.LeftHand) { continue; }
                             if (PersonalSlots.HasFlag(SlotTypes[i]))
                             {
@@ -321,7 +327,7 @@ namespace Barotrauma
                                 continue;
                             }
 
-                            if (HideSlot(i) || SlotTypes[i] == InvSlotType.HealthInterface) { continue; }
+                            if (HideSlot(i) || HealthInterfaceSlots.HasFlag(SlotTypes[i])) { continue; }
                             if (PersonalSlots.HasFlag(SlotTypes[i]))
                             {
                                 SlotPositions[i] = new Vector2(personalSlotX, personalSlotY);
@@ -337,7 +343,7 @@ namespace Barotrauma
                         x = lowerX;
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
-                            if (!HideSlot(i) || SlotTypes[i] == InvSlotType.HealthInterface) { continue; }
+                            if (!HideSlot(i) || HealthInterfaceSlots.HasFlag(SlotTypes[i])) { continue; }
                             if (SlotTypes[i] == InvSlotType.RightHand || SlotTypes[i] == InvSlotType.LeftHand) { continue; }
                             x -= visualSlots[i].Rect.Width + spacing;
                             SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
@@ -359,7 +365,7 @@ namespace Barotrauma
 
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
-                            if (HideSlot(i) || SlotTypes[i] == InvSlotType.HealthInterface) { continue; }
+                            if (HideSlot(i) || HealthInterfaceSlots.HasFlag(SlotTypes[i])) { continue; }
                             if (SlotTypes[i] == InvSlotType.RightHand || SlotTypes[i] == InvSlotType.LeftHand) { continue; }
                             if (PersonalSlots.HasFlag(SlotTypes[i]))
                             {
@@ -381,7 +387,7 @@ namespace Barotrauma
                                 SlotPositions[i] = new Vector2(rightSlot ? handSlotX : handSlotX - visualSlots[0].Rect.Width - spacing, personalSlotY);
                                 continue;
                             }
-                            if (!HideSlot(i) || SlotTypes[i] == InvSlotType.HealthInterface) { continue; }
+                            if (!HideSlot(i) || HealthInterfaceSlots.HasFlag(SlotTypes[i])) { continue; }
                             SlotPositions[i] = new Vector2(x, y);
                             x += visualSlots[i].Rect.Width + spacing;
                         }
@@ -395,7 +401,7 @@ namespace Barotrauma
                         int x = startX, y = startY;
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
-                            if (HideSlot(i) || SlotTypes[i] == InvSlotType.HealthInterface) { continue; }
+                            if (HideSlot(i) || HealthInterfaceSlots.HasFlag(SlotTypes[i])) { continue; }
                             if (SlotTypes[i] == InvSlotType.Card || SlotTypes[i] == InvSlotType.Headset || SlotTypes[i] == InvSlotType.InnerClothes)
                             {
                                 SlotPositions[i] = new Vector2(x, y);
@@ -407,7 +413,7 @@ namespace Barotrauma
                         int n = 0;
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
-                            if (HideSlot(i) || SlotTypes[i] == InvSlotType.HealthInterface) { continue; }
+                            if (HideSlot(i) || HealthInterfaceSlots.HasFlag(SlotTypes[i])) { continue; }
                             if (SlotTypes[i] != InvSlotType.Card && SlotTypes[i] != InvSlotType.Headset && SlotTypes[i] != InvSlotType.InnerClothes)
                             {
                                 SlotPositions[i] = new Vector2(x, y);
@@ -430,9 +436,16 @@ namespace Barotrauma
                 Vector2 pos = character.CharacterHealth.InventorySlotContainer.Rect.Location.ToVector2();
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (SlotTypes[i] != InvSlotType.HealthInterface) { continue; }
-                    SlotPositions[i] = pos;
-                    pos.Y += visualSlots[i].Rect.Height + spacing;
+                    if (!HealthInterfaceSlots.HasFlag(SlotTypes[i])) { continue; }
+                    if (character.CharacterHealth.GetInventorySlotPosition(SlotTypes[i], visualSlots[i].Rect.Size) is Vector2 slotPosition)
+                    {
+                        SlotPositions[i] = slotPosition;
+                    }
+                    else
+                    {
+                        SlotPositions[i] = pos;
+                        pos.Y += visualSlots[i].Rect.Height + spacing;
+                    }
                 }
             }
 
@@ -621,7 +634,7 @@ namespace Barotrauma
                 if (item != null)
                 {
                     var slot = visualSlots[i];
-                    if (item.AllowedSlots.Any(a => a != InvSlotType.Any && a != InvSlotType.HealthInterface))
+                    if (slots[i].ShowEquipButton)
                     {
                         HandleButtonEquipStates(item, slot, deltaTime);
                     }
@@ -685,7 +698,7 @@ namespace Barotrauma
 
         private void HandleButtonEquipStates(Item item, VisualSlot slot, float deltaTime)
         {
-            slot.EquipButtonState = slot.EquipButtonRect.Contains(PlayerInput.MousePosition) ?
+            slot.EquipButtonState = GUI.MouseOn is null && slot.EquipButtonRect.Contains(PlayerInput.MousePosition) ?
                         GUIComponent.ComponentState.Hover : GUIComponent.ComponentState.None;
             if (PlayerInput.PrimaryMouseButtonHeld() && PlayerInput.SecondaryMouseButtonHeld())
             {
@@ -774,6 +787,8 @@ namespace Barotrauma
             {
                 return QuickUseAction.UseTreatment;
             }
+
+            if (item.IsStuckInHandSlot) { return QuickUseAction.None; }
             
             if (item.ParentInventory != this)
             {
@@ -875,8 +890,11 @@ namespace Barotrauma
                         }
                     }
                     return QuickUseAction.PutToEquippedItem;
-                }
-                else if (allowEquip) //doubleclicked and no other inventory is selected
+                } 
+                //no other inventory is selected -> see if we can equip or unequip
+                else if (allowEquip && 
+                    //can only equip/unequip if the item is equippable somewhere else than the health interface (equipping on the health interface slots must be done via the health interface)
+                    item.AllowedSlots.Any(slot => slot != InvSlotType.Any && !slot.HasAnyFlag(HealthInterfaceSlots)))
                 {
                     //not equipped -> attempt to equip
                     if (!character.HasEquippedItem(item) || item.GetComponents<Pickable>().Count() > 1)
@@ -893,9 +911,42 @@ namespace Barotrauma
                         return QuickUseAction.Drop;
                     }
                 }
+                else if (item.AllowedSlots.Any(slot => slot.HasAnyFlag(HealthInterfaceSlots)))
+                {
+                    return QuickUseAction.OpenProstheticInterface;
+                }
             }
 
             return QuickUseAction.None;
+        }
+
+        /// <summary>
+        /// True if the item currently occupies a prosthetic slot and its Wearable has an OnEquippedAsProsthetic sound configured.
+        /// </summary>
+        public static bool InstalledAsProstheticWithSound(Item item)
+        {
+            if (item?.ParentInventory is not CharacterInventory ci) { return false; }
+            foreach (var prostheticSlot in EnumExtensions.GetIndividualFlags(ProstheticSlots))
+            {
+                // Checking only after installing is the simplest we can do
+                if (ci.IsInLimbSlot(item, prostheticSlot) && item.GetComponent<Wearable>() is Wearable wearable &&
+                    wearable.HasSoundsOfType[(int)ActionType.OnEquippedAsProsthetic])
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Plays the correct UI sound for an inventory slot drop depending on the situation.
+        /// </summary>
+        /// <param name="success">Was the drop successful? Defaults to true.</param>
+        public static void PlayInventorySound(IEnumerable<Item> items, bool success = true)
+        {
+            // Skip if this is a prosthetic install that has a sound, so the sounds don't overlap
+            if (success && items.Any(InstalledAsProstheticWithSound)) { return; }
+            SoundPlayer.PlayUISound(success ? GUISoundType.PickItem : GUISoundType.PickItemFail);
         }
 
         private void QuickUseItem(Item item, bool allowEquip, bool allowInventorySwap, bool allowApplyTreatment, QuickUseAction? action = null, bool playSound = true)
@@ -965,14 +1016,17 @@ namespace Barotrauma
 
                         if (!success)
                         {
+                            AttemptToFreeHandsFor(item);
                             for (int i = capacity - 1; i >= 0; i--)
                             {
                                 if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) { continue; }
                                 // something else already equipped in a hand slot, attempt to unequip it so items aren't unnecessarily swapped to it
-                                if (!slots[i].Empty() && slots[i].First().AllowedSlots.Contains(InvSlotType.Any) && 
+                                if (slots[i].FirstOrDefault() is Item itemInSlot && 
+                                    itemInSlot.AllowedSlots.Contains(InvSlotType.Any) &&
+                                    !IsInHealthInterfaceSlot(itemInSlot) && 
                                     (SlotTypes[i] == InvSlotType.LeftHand || SlotTypes[i] == InvSlotType.RightHand))
                                 {
-                                    TryPutItem(slots[i].First(), Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
+                                    TryPutItem(itemInSlot, Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, createNetworkEvent: true);
                                 }
                                 success = TryPutItem(item, i, true, false, Character.Controlled, true);
                                 if (success) { break; }
@@ -1073,6 +1127,14 @@ namespace Barotrauma
                         }
                         return -container.GetContainedIndicatorState();
                     }
+                case QuickUseAction.OpenProstheticInterface:
+                    if (Character.Controlled != null)
+                    {
+                        var targetCharacter = Character.Controlled.SelectedCharacter ?? Character.Controlled;
+                        CharacterHealth.OpenHealthWindow = targetCharacter.CharacterHealth;
+                        targetCharacter.CharacterHealth.SetProsthesisInterfaceOpen(isOpen: true, flashTickBox: true);                        
+                    }
+                    break;
             }
 
             if (success)
@@ -1086,7 +1148,7 @@ namespace Barotrauma
             DraggingItems.Clear();
             if (playSound)
             {
-                SoundPlayer.PlayUISound(success ? GUISoundType.PickItem : GUISoundType.PickItemFail);
+                PlayInventorySound([item], success);
             }
         }
 
@@ -1157,7 +1219,7 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (HideSlot(i) || SlotTypes[i] == InvSlotType.HealthInterface) { continue; }
+                if (HideSlot(i) || HealthInterfaceSlots.HasFlag(SlotTypes[i])) { continue; }
 
                 //don't draw the item if it's being dragged out of the slot
                 bool drawItem = !DraggingItems.Any() || !slots[i].Items.All(it => DraggingItems.Contains(it)) || visualSlots[i].MouseOn();
@@ -1179,36 +1241,43 @@ namespace Barotrauma
                     !slots[i].First().AllowedSlots.Any(a => a != InvSlotType.Any))
                 {
                     //draw limb icons on empty slots
-                    if (LimbSlotIcons.ContainsKey(SlotTypes[i]))
+                    if (!ProstheticSlots.HasFlag(SlotTypes[i]) && LimbSlotIcons.TryGetValue(SlotTypes[i], out Sprite icon))
                     {
-                        var icon = LimbSlotIcons[SlotTypes[i]];
                         icon.Draw(spriteBatch, visualSlots[i].Rect.Center.ToVector2() + visualSlots[i].DrawOffset, GUIStyle.EquipmentSlotIconColor, origin: icon.size / 2, scale: visualSlots[i].Rect.Width / icon.size.X);
                     }
                     continue;
                 }
                 if (DraggingItems.Any(it => slots[i].Contains(it)) && !visualSlots[i].IsHighlighted) { continue; }
-                
+
+                bool inHandSlot = false;
                 //draw hand icons if the item is equipped in a hand slot
                 if (IsInLimbSlot(slots[i].First(), InvSlotType.LeftHand))
                 {
                     var icon = LimbSlotIcons[InvSlotType.LeftHand];
                     icon.Draw(spriteBatch, new Vector2(visualSlots[i].Rect.X, visualSlots[i].Rect.Bottom) + visualSlots[i].DrawOffset, Color.White * 0.6f, origin: new Vector2(icon.size.X * 0.35f, icon.size.Y * 0.75f), scale: visualSlots[i].Rect.Width / icon.size.X * 0.7f);
+                    inHandSlot = true;
                 }
                 if (IsInLimbSlot(slots[i].First(), InvSlotType.RightHand))
                 {
                     var icon = LimbSlotIcons[InvSlotType.RightHand];
                     icon.Draw(spriteBatch, new Vector2(visualSlots[i].Rect.Right, visualSlots[i].Rect.Bottom) + visualSlots[i].DrawOffset, Color.White * 0.6f, origin: new Vector2(icon.size.X * 0.65f, icon.size.Y * 0.75f), scale: visualSlots[i].Rect.Width / icon.size.X * 0.7f);
+                    inHandSlot = true;
+                }
+
+                if (!slots[i].ShowEquipButton)
+                {
+                    continue;
+                }
+                //don't show the equip button if you can't unequip the item
+                if (inHandSlot && !slots[i].First().CanBeUnheld)
+                {
+                    continue;
                 }
 
                 GUIComponent.ComponentState state = visualSlots[i].EquipButtonState;
                 if (state == GUIComponent.ComponentState.Hover)
                 {       
                     highlightedQuickUseSlot = visualSlots[i];
-                }
-
-                if (slots[i].First().AllowedSlots.Count() == 1 || SlotTypes[i] == InvSlotType.HealthInterface)
-                {
-                    continue;
                 }
 
                 Color color = Color.White;
@@ -1242,9 +1311,20 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, inventoryArea, new Color(30,30,30,100), isFilled: true);
                 var lockIcon = GUIStyle.GetComponentStyle("LockIcon")?.GetDefaultSprite();
                 lockIcon?.Draw(spriteBatch, inventoryArea.Center.ToVector2(), scale: Math.Min(inventoryArea.Height / lockIcon.size.Y * 0.7f, 1.0f));
-                if (inventoryArea.Contains(PlayerInput.MousePosition) && character.LockHands)
+                if (inventoryArea.Contains(PlayerInput.MousePosition))
                 {
-                    GUIComponent.DrawToolTip(spriteBatch, TextManager.Get("handcuffed"), new Rectangle(inventoryArea.Center - new Point(inventoryArea.Height / 2), new Point(inventoryArea.Height)));
+                    if (character.LockHands)
+                    {
+                        DrawInventoryLockedTooltip("handcuffed");
+                    }
+                    else if (character.BothHandsDisabled)
+                    {
+                        DrawInventoryLockedTooltip("inventorylocked.handslost");
+                    }
+                    void DrawInventoryLockedTooltip(string textTag)
+                    {
+                        GUIComponent.DrawToolTip(spriteBatch, TextManager.Get(textTag), new Rectangle(inventoryArea.Center - new Point(inventoryArea.Height / 2), new Point(inventoryArea.Height)));
+                    }
                 }
             }
             else if (highlightedQuickUseSlot != null && !highlightedQuickUseSlot.QuickUseButtonToolTip.IsNullOrEmpty())

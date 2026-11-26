@@ -15,6 +15,11 @@ namespace Barotrauma.Items.Components
 
         private GUICustomComponent guiCustomComponent;
 
+        // The container type text, the tags version and the tag editing permission the current GUI was created with, see RefreshGUIIfOutdated
+        private string containerTypeTextInGUI = string.Empty;
+        private int tagsVersionInGUI = -1;
+        private bool canChangeTagsInGUI;
+
         /// <summary>
         /// Can be used to set the sprite depth individually for each contained item
         /// </summary>
@@ -203,6 +208,86 @@ namespace Barotrauma.Items.Components
                     IgnoreLayoutGroups = true
                 };
             
+            //show what kind of container this is (based on the container tag) underneath the label
+            //(the text is fixed until RefreshGUIIfOutdated rebuilds the GUI if any of the tags change)
+            LocalizedString containerTypeText = GetContainerTypeText();
+            containerTypeTextInGUI = containerTypeText?.Value ?? string.Empty;
+            tagsVersionInGUI = item.TagsVersion;
+            GUITextBlock containerTypeBlock = null;
+            if (!containerTypeText.IsNullOrEmpty())
+            {
+                containerTypeBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), label.RectTransform, Anchor.BottomLeft, Pivot.TopLeft),
+                    containerTypeText, font: GUIStyle.SmallFont, textColor: GUIStyle.TextColorDim, textAlignment: Alignment.TopLeft, wrap: true)
+                {
+                    IgnoreLayoutGroups = true,
+                    CanBeFocused = false
+                };
+                
+                RichString containerTypeDescription = null;
+                var matchingTags = ContainerTagPrefab.GetDistinctDisplayedTags(Item);
+                // If there's just one description, show it without the tag heading because it's displayed on the window already
+                if (matchingTags.Count == 1)
+                {
+                    if (!matchingTags[0].Description.IsNullOrEmpty())
+                    {
+                        
+                        containerTypeDescription = matchingTags[0].Description;
+                    }
+                }
+                // If there's more than one description, show them as a list with the tags as subheadings
+                if (matchingTags.Count > 1)
+                {
+                    // Note: Tags without a description text are listed by name only
+                    var entries = matchingTags.Select(t => LocalizedString.JoinIfNotNullOrEmpty("\n",
+                        "‖color:gui.textcolordim‖" + t.BaseName + "‖end‖",
+                        t.Description));
+                    containerTypeDescription = RichString.Rich(LocalizedString.Join("\n", entries));
+                }
+                if (!containerTypeDescription.IsNullOrEmpty())
+                {
+                    containerTypeBlock.CanBeFocused = true;
+                    containerTypeBlock.ToolTip = containerTypeDescription;
+                }
+            }
+
+            // If the words of the text would get broken up, make the frame wider instead
+            float typeTextLongestWordWidth = containerTypeBlock == null ?
+                0.0f :
+                ToolBox.GetLongestWordWidth(containerTypeBlock.Text.SanitizedString.Value, containerTypeBlock.Font);
+            int longestWordWidth = (int)Math.Floor(Math.Max(
+                ToolBox.GetLongestWordWidth(label.Text.SanitizedString.Value, label.Font),
+                typeTextLongestWordWidth))
+                                   + 1; // it needs to be wider, not just matching, to not break
+            int availableTextWidth = label.Rect.Width - (int)Math.Ceiling(label.Padding.X + label.Padding.Z);
+            if (longestWordWidth > availableTextWidth)
+            {
+                int newWidth = GuiFrame.Rect.Width + longestWordWidth - availableTextWidth;
+                if (newWidth > GuiFrame.RectTransform.MaxSize.X)
+                {
+                    Point newMaxSize = GuiFrame.RectTransform.MaxSize;
+                    newMaxSize.X = newWidth;
+                    GuiFrame.RectTransform.MaxSize = newMaxSize;
+                }
+                GuiFrame.RectTransform.MinSize = new Point(Math.Max(GuiFrame.RectTransform.MinSize.X, newWidth), GuiFrame.RectTransform.MinSize.Y);
+                GuiFrame.RectTransform.Resize(new Point(newWidth, GuiFrame.Rect.Height));
+                content.RectTransform.Resize(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin);
+                label.CalculateHeightFromText();
+                containerTypeBlock?.CalculateHeightFromText();
+            }
+
+            //the container type text is drawn below the label, so it needs to be included in the height of the label area
+            float GetLabelAreaRelativeHeight()
+            {
+                float height = label.RectTransform.RelativeSize.Y;
+                // The label can be offset below the buttons
+                height += label.RectTransform.AbsoluteOffset.Y / (float)Math.Max(content.Rect.Height, 1);
+                if (containerTypeBlock != null)
+                {
+                    height += containerTypeBlock.Rect.Height / (float)Math.Max(content.Rect.Height, 1);
+                }
+                return height;
+            }
+
             int buttonSize = GUIStyle.ItemFrameTopBarHeight;
             Point margin = new Point(buttonSize / 4, buttonSize / 6);
 
@@ -241,16 +326,50 @@ namespace Barotrauma.Items.Components
                         }
                     };
                 }
+                // Only created when the tags can be changed, so the button doesn't take up space from the label otherwise
+                // (that depends on the sub the item is in, which is not known yet when the GUI is first created, see RefreshGUIIfOutdated)
+                if (ShowContainerType && canChangeTagsInGUI)
+                {
+                    buttonCount++;
+                    new GUIButton(new RectTransform(Vector2.One, buttonArea.RectTransform, scaleBasis: ScaleBasis.Smallest),
+                        style: "EditContainerTagsButton")
+                    {
+                        ToolTip = TextManager.Get("containertags.edit"),
+                        OnClicked = (btn, userdata) =>
+                        {
+                            CreateTagSelectionPopup();
+                            return true;
+                        }
+                    };
+                }
             }
 
             if (buttonCount > 0)
             {
-                label.RectTransform.MaxSize = new Point(label.Parent.Rect.Width - buttonCount * buttonSize, int.MaxValue);
+                int widthBesideButtons = label.Parent.Rect.Width - buttonCount * buttonSize;
+                bool labelFitsOnOneLineBesideButtons =
+                    !label.WrappedText.Value.Contains('\n') &&
+                    label.TextSize.X + label.Padding.X + label.Padding.Z < widthBesideButtons;
+                // The container type text is as wide as the label, so its words need to fit beside the buttons too
+                bool typeTextFitsBesideButtons =
+                    containerTypeBlock == null ||
+                    typeTextLongestWordWidth + containerTypeBlock.Padding.X + containerTypeBlock.Padding.Z < widthBesideButtons;
+                if (labelFitsOnOneLineBesideButtons && typeTextFitsBesideButtons)
+                {
+                    label.RectTransform.MaxSize = new Point(widthBesideButtons, int.MaxValue);
+                }
+                else
+                {
+                    // If the label doesn't fit neatly on the same line with the buttons, move it below them.
+                    // This looks better especially with single-column containers, rather than just pushing them wider to fit everything. 
+                    label.RectTransform.AbsoluteOffset = new Point(0, buttonSize);
+                }
+                containerTypeBlock?.CalculateHeightFromText();
             }
 
             float minInventoryAreaSize = 0.5f;
             guiCustomComponent = new GUICustomComponent(
-                new RectTransform(new Vector2(1.0f, label == null ? 1.0f : Math.Max(1.0f - label.RectTransform.RelativeSize.Y, minInventoryAreaSize)), content.RectTransform, Anchor.BottomCenter),
+                new RectTransform(new Vector2(1.0f, label == null ? 1.0f : Math.Max(1.0f - GetLabelAreaRelativeHeight(), minInventoryAreaSize)), content.RectTransform, Anchor.BottomCenter),
                 onDraw: (SpriteBatch spriteBatch, GUICustomComponent component) => { Inventory.Draw(spriteBatch); },
                 onUpdate: null)
             {
@@ -258,22 +377,151 @@ namespace Barotrauma.Items.Components
             };
 
             // Expand the frame vertically if it's too small to fit the text
-            if (label != null && label.RectTransform.RelativeSize.Y > 0.5f)
+            if (label != null && GetLabelAreaRelativeHeight() > 0.5f)
             {
-                int newHeight = (int)(GuiFrame.Rect.Height + (2 * (label.RectTransform.RelativeSize.Y - 0.5f) * content.Rect.Height));
+                int newHeight = (int)(GuiFrame.Rect.Height + (2 * (GetLabelAreaRelativeHeight() - 0.5f) * content.Rect.Height));
                 if (newHeight > GuiFrame.RectTransform.MaxSize.Y)
                 {
                     Point newMaxSize = GuiFrame.RectTransform.MaxSize;
                     newMaxSize.Y = newHeight;
                     GuiFrame.RectTransform.MaxSize = newMaxSize;
                 }
+                GuiFrame.RectTransform.MinSize = new Point(GuiFrame.RectTransform.MinSize.X, Math.Max(GuiFrame.RectTransform.MinSize.Y, newHeight));
                 GuiFrame.RectTransform.Resize(new Point(GuiFrame.Rect.Width, newHeight));
                 content.RectTransform.Resize(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin);
                 label.CalculateHeightFromText();
-                guiCustomComponent.RectTransform.Resize(new Vector2(1.0f, Math.Max(1.0f - label.RectTransform.RelativeSize.Y, minInventoryAreaSize)));
+                containerTypeBlock?.CalculateHeightFromText();
+                guiCustomComponent.RectTransform.Resize(new Vector2(1.0f, Math.Max(1.0f - GetLabelAreaRelativeHeight(), minInventoryAreaSize)));
             }
 
             Inventory.RectTransform = guiCustomComponent.RectTransform;
+        }
+
+        /// <summary>
+        /// Lets the player pick the container tags of the item among the tags available for the sub/outpost it's in.
+        /// </summary>
+        private void CreateTagSelectionPopup()
+        {
+            var selectableTags = ContainerTagPrefab.GetSelectableTags(item).ToList();
+            if (selectableTags.Count == 0) { return; }
+
+            // Tags the item has that can't be changed here (ie. tags defined in the item prefab, tags of other categories etc.)
+            var lockedTags = ContainerTagPrefab.GetDisplayedTags(item)
+                .Where(t => item.Prefab.Tags.Contains(t.Identifier) || !selectableTags.Contains(t))
+                .ToList();
+            // One row per tag, including locked tags (a tag can be both selectable and locked, eg. if it's defined in the item prefab)
+            var tagRows = selectableTags
+                .Concat(lockedTags)
+                .Distinct()
+                .OrderBy(t => t.BaseName.Value)
+                .ToList();
+
+            var msgBox = new GUIMessageBox(
+                headerText: TextManager.Get("containertags.edit"),
+                text: TextManager.Get("containertags.edit.description"),
+                buttons: new LocalizedString[] { TextManager.Get("Ok"), TextManager.Get("Cancel") },
+                relativeSize: new Vector2(0.25f, 0.5f), minSize: new Point(400, 400));
+
+            //the list takes up whatever height is left after the header, the description and the buttons
+            //(the button container is drawn over the bottom of the content instead of being part of the layout)
+            int buttonAreaHeight = msgBox.Buttons[0].Parent.Rect.Height;
+            int descriptionHeight = msgBox.Text == null ? 0 : msgBox.Text.Rect.Height + msgBox.Content.AbsoluteSpacing;
+            int listHeight = msgBox.Content.Rect.Height - msgBox.Header.Rect.Height - descriptionHeight - buttonAreaHeight - msgBox.Content.AbsoluteSpacing * 2;
+            var list = new GUIListBox(new RectTransform(new Point(msgBox.Content.Rect.Width, listHeight), msgBox.Content.RectTransform));
+            var selectedTags = new HashSet<Identifier>();
+            foreach (ContainerTagPrefab tag in tagRows)
+            {
+                bool hasTag = item.HasTag(tag.Identifier);
+                if (hasTag) { selectedTags.Add(tag.Identifier); }
+                Identifier tagIdentifier = tag.Identifier;
+                bool isLocked = lockedTags.Contains(tag);
+                var tagTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), list.Content.RectTransform),
+                    tag.BaseName,
+                    font: GUIStyle.SmallFont)
+                {
+                    Selected = hasTag || isLocked,
+                    Enabled = !isLocked,
+                    ToolTip = tag.Description,
+                    OnSelected = (tickBox) =>
+                    {
+                        if (tickBox.Selected) { selectedTags.Add(tagIdentifier); } else { selectedTags.Remove(tagIdentifier); }
+                        return true;
+                    }
+                };
+                // Rare, but tags can share a name (or same translation for two tags), in those cases show the tag identifier to tell them apart
+                if (tagRows.Count(t => t.BaseName.Value == tag.BaseName.Value) > 1)
+                {
+                    string dimmedIdentifier = $"‖color:gui.textcolordim‖({tag.Identifier})‖end‖";
+                    tagTickBox.TextBlock.Text = RichString.Rich($"{tag.BaseName} {dimmedIdentifier}");
+                    tagTickBox.ToolTip = RichString.Rich(tag.Description.IsNullOrEmpty() ? dimmedIdentifier : $"{tag.Description}\n{dimmedIdentifier}");
+                }
+            }
+
+            new GUICustomComponent(new RectTransform(Vector2.Zero, msgBox.InnerFrame.RectTransform),
+                onUpdate: (_, _) =>
+                {
+                    // Close the popup if the character dies, walks away etc.
+                    if (!ContainerTagPrefab.CanChangeTags(item))
+                    {
+                        msgBox.Close();
+                    }
+                })
+            {
+                IgnoreLayoutGroups = true,
+                CanBeFocused = false
+            };
+
+            msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+            {
+                // Rechecked so changes the server would reject don't get applied locally
+                if (ContainerTagPrefab.CanChangeTags(item))
+                {
+                    ContainerTagPrefab.SetTags(item, selectedTags);
+                }
+                msgBox.Close();
+                return true;
+            };
+            msgBox.Buttons[1].OnClicked = (btn, userdata) =>
+            {
+                msgBox.Close();
+                return true;
+            };
+        }
+
+        /// <summary>
+        /// Text describing what kind of container this is, shown under the label. Null if it shouldn't be shown.
+        /// </summary>
+        private LocalizedString GetContainerTypeText()
+        {
+            if (!ShowContainerType || GetUILabel().IsNullOrEmpty()) { return null; }
+            return ContainerTagPrefab.GetContainerTypeText(this);
+        }
+
+        /// <summary>
+        /// Recreates the GUI if the item's tags have changed the container type text, or if the character's permission
+        /// to change the tags has changed, since the GUI was created.
+        /// The layout depends on the height of the text and the number of buttons, so they can't just be swapped in place.
+        /// Needed e.g. because the tags and the sub of an item loaded from a submarine file are only set after the GUI has been created.
+        /// </summary>
+        private void RefreshGUIIfOutdated(Character character)
+        {
+            // No GUIFrame defined in the XML = CreateGUI isn't used and there's no label to show the text under
+            if (GuiFrameSource == null) { return; }
+
+            bool canChangeTags = ContainerTagPrefab.CanChangeTags(item);
+            if (item.TagsVersion == tagsVersionInGUI &&
+                canChangeTags == canChangeTagsInGUI) { return; }
+
+            tagsVersionInGUI = item.TagsVersion;
+            if ((GetContainerTypeText()?.Value ?? string.Empty) == containerTypeTextInGUI &&
+                canChangeTags == canChangeTagsInGUI) { return; }
+
+            canChangeTagsInGUI = canChangeTags;
+            ReloadGuiFrame();
+            CreateGUI();
+            // The new frame starts from the default layout, so position it again like when the item's HUDs are opened
+            if (UseAlternativeLayout) { AlternativeLayout?.ApplyTo(GuiFrame.RectTransform); }
+            (character?.SelectedItem ?? item).SetHUDLayout();
         }
 
         private void SortItems()
@@ -602,6 +850,7 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             if (!item.IsInteractable(character)) { return; }
+            RefreshGUIIfOutdated(character);
             if (Inventory.RectTransform != null)
             {
                 guiCustomComponent.RectTransform.Parent = Inventory.RectTransform;

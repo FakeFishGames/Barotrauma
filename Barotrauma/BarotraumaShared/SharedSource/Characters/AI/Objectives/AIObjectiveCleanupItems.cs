@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveCleanupItems : AIObjectiveLoop<Item>
+    public class AIObjectiveCleanupItems : AIObjectiveLoop<Item>
     {
         public override Identifier Identifier { get; set; } = "cleanup items".ToIdentifier();
         public override bool KeepDivingGearOn => true;
@@ -15,6 +15,8 @@ namespace Barotrauma
         public readonly List<Item> prioritizedItems = new List<Item>();
 
         protected override int MaxTargets => 100;
+
+        protected override bool RequireReports => false;
 
         public AIObjectiveCleanupItems(Character character, AIObjectiveManager objectiveManager, Item prioritizedItem = null, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier)
@@ -85,7 +87,7 @@ namespace Barotrauma
             if (character == null || character.Removed) { return false; }
             if (item.CurrentHull == null) { return false; }
             if (item.Submarine == null) { return false; }
-            if (item.Submarine.TeamID != character.TeamID) { return false; }
+            if (!character.IsAllowedToInteractWithItemsOnSub(item.Submarine)) { return false; }
             if (character.Submarine != null && !character.Submarine.IsConnectedTo(item.Submarine)) { return false; }
             return true;
         }
@@ -103,7 +105,13 @@ namespace Barotrauma
             if (item == null) { return false; }
             if (item.GetComponents<Pickable>().None(c => c is not Door && c.CanBePicked)) { return false; }
             if (item.DontCleanUp) { return false; }
-            if (item.Illegitimate == character.IsOnPlayerTeam) { return false; }
+            if (character.IsOnPlayerTeam && item.Illegitimate) { return false; }
+            if (!character.IsOnPlayerTeam && item.Submarine is { Info.IsOutpost: true } outpost)
+            {
+                bool isPlayerOwnedOutpost = outpost.TeamID is CharacterTeamType.Team1 or CharacterTeamType.Team2;
+                // NPCs in non-player outposts shouldn't tidy up items that don't belong to the outpost (e.g. stuff the players fabricated or brought in and dropped on the floor)
+                if (!isPlayerOwnedOutpost && !item.SpawnedInNonPlayerOutpostOrSubmarine) { return false; }
+            }
             if (item.ParentInventory != null)
             {
                 if (item.Container == null)

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -6,19 +7,19 @@ using System.Linq;
 
 namespace Barotrauma.Particles
 {
-    enum ParticleBlendState
+    public enum ParticleBlendState
     {
         AlphaBlend, Additive//, Distortion
     }
 
-    enum ParticleDrawOrder
+    public enum ParticleDrawOrder
     {
         Default,
         Foreground,
         Background
     }
 
-    class ParticleManager
+    public class ParticleManager
     {
         private const int MaxOutOfViewDist = 500;
 
@@ -161,6 +162,12 @@ namespace Barotrauma.Particles
             ParticlePrefab.Prefabs.TryGet(prefabName, out ParticlePrefab prefab);
             return prefab;
         }
+        
+        public static ParticlePrefab FindPrefab(Identifier prefabIdentifier)
+        {
+            ParticlePrefab.Prefabs.TryGet(prefabIdentifier, out ParticlePrefab prefab);
+            return prefab;
+        }
 
         private void RemoveParticle(int index)
         {
@@ -249,10 +256,22 @@ namespace Barotrauma.Particles
             }
         }
 
+        /// <summary>
+        /// Removes all particles and clears the references held by them.
+        /// </summary>
         public void ClearParticles()
         {
             particleCount = 0;
             particlesInCreationOrder.Clear();
+            CleanUpReferences();
+        }
+
+        private void CleanUpReferences()
+        {
+            for (int i = 0; i < particles.Length; i++)
+            {
+                particles[i] = null;
+            }
         }
 
         public void RemoveByPrefab(ParticlePrefab prefab)

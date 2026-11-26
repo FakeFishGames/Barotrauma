@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    partial class CharacterInventory : Inventory
+    public partial class CharacterInventory : Inventory
     { 
         public void ServerEventWrite(IWriteMessage msg, Client c, Character.InventoryStateEventData inventoryData)
         {

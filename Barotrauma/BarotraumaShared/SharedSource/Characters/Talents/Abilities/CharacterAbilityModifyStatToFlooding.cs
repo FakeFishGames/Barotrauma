@@ -17,7 +17,7 @@
         {
             Character.ChangeStat(statType, -lastValue);
 
-            if (conditionsMatched && Character.IsInFriendlySub)
+            if (conditionsMatched && Character.IsInSameTeamSub)
             {
                 float waterVolume = 0.0f, totalVolume = 0.0f;
                 foreach (Hull hull in Hull.HullList)

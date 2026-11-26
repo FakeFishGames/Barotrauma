@@ -7,10 +7,13 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 using Barotrauma.IO;
+using Barotrauma.Plugins;
 using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
+using Steamworks;
 
 namespace Barotrauma
 {
@@ -23,7 +26,43 @@ namespace Barotrauma
         public const string RegularPackagesElementName = "regularpackages";
         public const string RegularPackagesSubElementName = "package";
 
+        private static readonly string ApprovedAssembliesFilePath = Path.Combine("Data", "approvedassemblies.xml");
+        private static readonly Dictionary<string, Md5Hash> ApprovedAssemblies = new();
+
         public static bool ModsEnabled => GameMain.VanillaContent == null || EnabledPackages.All.Any(p => p.HasMultiplayerSyncedContent && p != GameMain.VanillaContent);
+
+        static ContentPackageManager()
+        {
+            if (!File.Exists(ApprovedAssembliesFilePath)) { return; }
+
+            XDocument doc;
+            try
+            {
+                doc = XDocument.Load(ApprovedAssembliesFilePath);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError($"Failed to load approved assemblies file: {e.Message}");
+                return;
+            }
+
+            if (doc.Root is null)
+            {
+                DebugConsole.ThrowError("Approved assemblies file is empty");
+                File.Delete(ApprovedAssembliesFilePath);
+                return;
+            }
+
+            foreach (var element in doc.Root.Elements())
+            {
+                string filePath = element.GetAttributeString("filePath", string.Empty);
+                string hashStr = element.GetAttributeString("hash", string.Empty);
+                if (string.IsNullOrWhiteSpace(filePath) || string.IsNullOrWhiteSpace(hashStr)) { continue; }
+
+                Md5Hash hash = Md5Hash.StringAsHash(hashStr);
+                ApprovedAssemblies[filePath] = hash;
+            }
+        }
 
         public static class EnabledPackages
         {
@@ -31,6 +70,12 @@ namespace Barotrauma
 
             private static readonly List<RegularPackage> regular = new List<RegularPackage>();
             public static IReadOnlyList<RegularPackage> Regular => regular;
+
+            private static readonly List<RegularPackage> failedRegular = new List<RegularPackage>();
+            /// <summary>
+            /// Regular packages that didn't get enabled by SetRegularEnumerable because they had errors.
+            /// </summary>
+            public static IReadOnlyList<RegularPackage> FailedRegular => failedRegular;
 
             /// <summary>
             /// Combined hash of the currently enabled packages. Can be used to check if the enabled mods or their load order has changed.
@@ -54,10 +99,32 @@ namespace Barotrauma
             {
                 var oldCore = Core;
                 if (newCore == oldCore) { yield break; }
-                if (newCore.FatalLoadErrors.Any()) { yield break; }
                 Core?.UnloadContent();
                 Core = newCore;
-                foreach (var p in newCore.LoadContentEnumerable()) { yield return p; }
+                if (Core != VanillaCorePackage && Core.FatalLoadErrors.Any())
+                {
+                    DebugConsole.ThrowError("Custom core package contains fatal load errors, loading Vanilla instead to prevent crashes");
+                    Core = VanillaCorePackage!;
+                    GameSettings.SaveCurrentConfig();
+                }
+                foreach (var progress in Core.LoadContentEnumerable())
+                {
+                    yield return progress;
+
+                    if (Core != VanillaCorePackage && progress.Result.TryUnwrapFailure(out var error))
+                    {
+                        DebugConsole.ThrowError("Failed to load custom core package, loading Vanilla to prevent crashes");
+                        GameSettings.SaveCurrentConfig();
+
+                        Core = VanillaCorePackage!;
+
+                        foreach (var progress2 in Core.LoadContentEnumerable())
+                        {
+                            yield return progress2;
+                        }
+                    }
+                }
+
                 SortContent();
                 yield return LoadProgress.Progress(1.0f);
             }
@@ -88,37 +155,64 @@ namespace Barotrauma
                 => SetRegularEnumerable(newRegular).Consume();
             
             public static IEnumerable<LoadProgress> SetRegularEnumerable(IReadOnlyList<RegularPackage> inNewRegular)
-            {
+            {                
                 if (ReferenceEquals(inNewRegular, regular)) { yield break; }
                 if (inNewRegular.SequenceEqual(regular)) { yield break; }
                 ThrowIfDuplicates(inNewRegular);
-                var newRegular = inNewRegular
-                    // Refuse to enable packages with load errors
-                    // so people are forced away from broken mods
-                    .Where(r => !r.FatalLoadErrors.Any())
-                    .ToList();
-                IEnumerable<RegularPackage> toUnload = regular.Where(r => !newRegular.Contains(r));
-                RegularPackage[] toLoad = newRegular.Where(r => !regular.Contains(r)).ToArray();
+
+                HashSet<RegularPackage> packagesChangedDependencies = inNewRegular.Where(p => p.CheckDependencies(inNewRegular)).ToHashSet();
+
+                failedRegular.Clear();
+                failedRegular.AddRange(inNewRegular
+                                 // Refuse to enable packages with load errors and missing dependencies
+                                 // so people are forced away from broken mods
+                                 .Where(r => r.FatalLoadErrors.Any() || r.MissingDependencies.Any()));
+
+                var newRegular = inNewRegular.Where(r => !failedRegular.Contains(r)).ToList();
+
+                // We want content packages that had their dependencies changed to be loaded/unloaded since
+                // they can potentially load/unload new content files
+                bool wasPackageChanged(RegularPackage package)
+                {
+                    return packagesChangedDependencies.Contains(package);
+                }
+
+                IEnumerable<RegularPackage> toUnload = regular.Where(r => !newRegular.Contains(r) || wasPackageChanged(r));
+                RegularPackage[] toLoad = newRegular.Where(r => !regular.Contains(r) || wasPackageChanged(r)).ToArray();
                 toUnload.ForEach(r => r.UnloadContent());
 
+                regular.Clear();
+                regular.AddRange(newRegular);
+
                 Range<float> loadingRange = new Range<float>(0.0f, 1.0f);
-                
-                for (int i = 0; i < toLoad.Length; i++)
+
+                // Load Regular content packages in reverse order.
+                //
+                // The content package list is ordered top-to-bottom, with the top entries intended
+                // to have higher priority. To achieve this, we load the list bottom-to-top, so that
+                // the topmost packages are loaded last.
+                //
+                // In practice, for pure XML content, load order doesn't really matter, because overrides
+                // are sorted later based on each package's index. However, this is not the case for
+                // plugins: plugins are loaded and initialized immediately when their content package
+                // is processed, so the load order directly affects which plugins take priority.
+                for (int i = toLoad.Length - 1; i >= 0; i--)
                 {
                     var package = toLoad[i];
-                    loadingRange = new Range<float>(i / (float)toLoad.Length, (i + 1) / (float)toLoad.Length);
+
+                    int packageNumber = toLoad.Length - i - 1;
+                    loadingRange = new Range<float>(packageNumber / (float)toLoad.Length, (packageNumber + 1) / (float)toLoad.Length);
                     foreach (var progress in package.LoadContentEnumerable())
                     {
                         if (progress.Result.IsFailure)
                         {
                             //If an exception was thrown while loading this package, refuse to add it to the list of enabled packages
-                            newRegular.Remove(package);
+                            regular.Remove(package);
                             break;
                         }
                         yield return progress.Transform(loadingRange);
                     }
                 }
-                regular.Clear(); regular.AddRange(newRegular);
                 SortContent();
                 yield return LoadProgress.Progress(1.0f);
             }
@@ -133,6 +227,52 @@ namespace Barotrauma
                         throw new InvalidOperationException($"There are duplicates in the list of selected content packages (\"{cp.Name}\", hash: {cp.Hash?.ShortRepresentation ?? "none"})");
                     }
                 }
+            }
+
+            /// <summary>
+            /// Attempts to reorder the current mod list to match the order constraints set by each content package. 
+            /// Throws an error to the console if a cyclic dependency is detected.
+            /// </summary>
+            public static bool TryReOrderPackagesToMatchDependencies(List<RegularPackage> packages)
+            {
+                HashSet<(RegularPackage, RegularPackage)> edges = new HashSet<(RegularPackage, RegularPackage)>();
+
+                foreach (RegularPackage package in packages)
+                {
+                    foreach (ContentPackage.Dependency dependency in package.Dependencies)
+                    {
+                        if (!dependency.TryResolve(packages, out ContentPackage? packageDependency)) { continue; }
+                        if (packageDependency is not RegularPackage regularPackageDependency) { continue; }
+
+                        switch (dependency.Order)
+                        {
+                            case ContentPackage.Dependency.RelativeOrder.Below:
+                                if (!edges.Contains((regularPackageDependency, package)))
+                                {
+                                    edges.Add((regularPackageDependency, package));
+                                }
+                                break;
+                            case ContentPackage.Dependency.RelativeOrder.Above:
+                                if (!edges.Contains((package, regularPackageDependency)))
+                                {
+                                    edges.Add((package, regularPackageDependency));
+                                }
+                                break;
+                        }
+                    }
+                }
+
+                if (!ToolBox.TryTopologicalSort(packages, edges, out var newList))
+                {
+                    DebugConsole.ThrowError("The mod list could not be rearranged to satisfy the content package " +
+                        "constraints because a cyclic dependency was detected. This typically occurs when package " +
+                        "order requirements conflict, such as when two packages each demand to be placed above the other.");
+                    return false;
+                }
+
+                packages.Clear();
+                packages.AddRange(newList);
+                return true;
             }
 
             private class TypeComparer<T> : IEqualityComparer<T>
@@ -156,7 +296,7 @@ namespace Barotrauma
             {
                 ThrowIfDuplicates(All);
                 All
-                    .SelectMany(r => r.Files)
+                    .SelectMany(r => r.ActiveFiles)
                     .Distinct(new TypeComparer<ContentFile>())
                     .ForEach(f => f.Sort());
                 MergedHash = Md5Hash.MergeHashes(All.Select(cp => cp.Hash));
@@ -189,7 +329,7 @@ namespace Barotrauma
                 }
                 SetRegular(Regular.Where(p => !mods.Contains(p)).ToArray());
             }
-            
+
             public static void DisableRemovedMods()
             {
                 if (Core != null && !ContentPackageManager.CorePackages.Contains(Core))
@@ -382,6 +522,7 @@ namespace Barotrauma
                 ContentPackage.LocalModsDir,
                 skipPredicate: null,
                 onLoadFail: null);
+
         public static readonly PackageSource WorkshopPackages = new PackageSource(
             ContentPackage.WorkshopModsDir,
             skipPredicate: SteamManager.Workshop.IsInstallingToPath,
@@ -392,8 +533,14 @@ namespace Barotrauma
                 Directory.TryDelete(Path.GetDirectoryName(fileListPath)!);
             });
 
+        public static readonly PackageSource DlcPackages
+            = new PackageSource(
+                ContentPackage.DlcDir,
+                skipPredicate: null,
+                onLoadFail: null);
+
         public static CorePackage? VanillaCorePackage { get; private set; } = null;
-        
+
         public static IEnumerable<CorePackage> CorePackages
             => (VanillaCorePackage is null
                 ? Enumerable.Empty<CorePackage>()
@@ -401,17 +548,26 @@ namespace Barotrauma
                     .CollectionConcat(LocalPackages.Core.CollectionConcat(WorkshopPackages.Core));
 
         public static IEnumerable<RegularPackage> RegularPackages
-            => LocalPackages.Regular.CollectionConcat(WorkshopPackages.Regular);
+            => LocalPackages.Regular
+                            .CollectionConcat(WorkshopPackages.Regular)
+                            .CollectionConcat(DlcPackages.Regular);
 
         public static IEnumerable<ContentPackage> AllPackages
-            => VanillaCorePackage.ToEnumerable().CollectionConcat(LocalPackages).CollectionConcat(WorkshopPackages)
+            => VanillaCorePackage.ToEnumerable()
+                                 .CollectionConcat(LocalPackages)
+                                 .CollectionConcat(WorkshopPackages)
+                                 .CollectionConcat(DlcPackages)
                 .OfType<ContentPackage>();
 
         public static void UpdateContentPackageList()
         {
             LocalPackages.Refresh();
             WorkshopPackages.Refresh();
+            DlcPackages.Refresh();
             EnabledPackages.DisableRemovedMods();
+#if CLIENT
+            GameMain.MainMenuScreen?.OnContentPackagesChanged();
+#endif
         }
 
         public static Result<ContentPackage, Exception> ReloadContentPackage(ContentPackage p)
@@ -444,6 +600,7 @@ namespace Barotrauma
 
                 LocalPackages.SwapPackage(p, newPackage);
                 WorkshopPackages.SwapPackage(p, newPackage);
+                DlcPackages.SwapPackage(p, newPackage);
             }
             EnabledPackages.DisableRemovedMods();
             return result;
@@ -544,10 +701,20 @@ namespace Barotrauma
                 if (regularPackagesElement != null)
                 {
                     XElement[] regularPackageElements = regularPackagesElement.GetChildElements(RegularPackagesSubElementName).ToArray();
-                    for (int i = 0; i < regularPackageElements.Length; i++)
+                    foreach (var t in regularPackageElements)
                     {
-                        var regularPackage = findPackage(RegularPackages, regularPackageElements[i]);
-                        if (regularPackage != null) { enabledRegularPackages.Add(regularPackage); }
+                        var regularPackage = findPackage(RegularPackages, t);
+                        if (regularPackage != null)
+                        {
+#if RELEASE
+                            if (SteamManager.IsInitialized && regularPackage.SteamDlcAppId.TryUnwrap(out AppId id))
+                            {
+                                if (!SteamApps.IsDlcInstalled(id)) { continue; }
+                            }
+#endif
+
+                            enabledRegularPackages.Add(regularPackage);
+                        }
                     }
                 }
             }
@@ -560,41 +727,115 @@ namespace Barotrauma
                 yield return p.Transform(loadingRange);
             }
 
-            loadingRange = new Range<float>(0.01f + (0.99f / pkgCount), 1.0f);
-            foreach (var p in EnabledPackages.SetRegularEnumerable(enabledRegularPackages))
+            if (GameSettings.CurrentConfig.AutoOrderModList) 
             {
-                yield return p.Transform(loadingRange);
+                EnabledPackages.TryReOrderPackagesToMatchDependencies(enabledRegularPackages);
+            }
+
+            List<RegularPackage> regularPackagesToRemove = [];
+            foreach (RegularPackage package in enabledRegularPackages)
+            {
+                if (package.FilesThatShouldPromptWarning.Any())
+                {
+                    regularPackagesToRemove.Add(package);
+                }
+            }
+
+#if CLIENT
+
+#if DEBUG
+            // in debug builds, prevent changes to DLCs from disabling and prompting to make development easier
+            if (regularPackagesToRemove.All(static rp => DlcPackages.Contains(rp)))
+            {
+                regularPackagesToRemove.Clear();
+            }
+#endif
+            if (regularPackagesToRemove.Count > 0)
+            {
+                MutableWorkshopMenu.PromptWarnings(regularPackagesToRemove,
+                                                   onContinue: () =>
+                                                   {
+                                                       EnabledPackages.SetRegular(enabledRegularPackages);
+                                                   },
+                                                   onCancel: static () =>
+                                                   {
+                                                       // do nothing
+                                                   });
+            }
+            else
+#elif SERVER
+            // Always enable mods on dedicated server since there is no UI to warn the user
+            regularPackagesToRemove.Clear();
+#endif
+            {
+                loadingRange = new Range<float>(0.01f + (0.99f / pkgCount), 1.0f);
+                foreach (var p in EnabledPackages.SetRegularEnumerable(enabledRegularPackages.Where(rp => !regularPackagesToRemove.Contains(rp)).ToArray()))
+                {
+                    yield return p.Transform(loadingRange);
+                }
             }
 
             yield return LoadProgress.Progress(1.0f);
         }
 
-        public static void CheckMissingDependencies()
-        {
-            foreach (var enabledPackage in EnabledPackages.All)
-            {
-                enabledPackage.ClearMissingDependencies();
-                enabledPackage.TryFetchUgcChildren((Steamworks.Data.PublishedFileId[]? children) =>
-                {
-                    if (children == null) { return; }
-                    var missingChildren = children
-                        .Where(childUgcItemId =>
-                            EnabledPackages.All.None(package =>
-                                package.UgcId.TryUnwrap(out var ugcId) && ugcId is SteamWorkshopId workshopId && workshopId.Value == childUgcItemId.Value));
-                    foreach (var missingChild in missingChildren)
-                    {
-                        enabledPackage.AddMissingDependency(missingChild);
-                    }
-                });
-            }
-        }
-
         public static void LogEnabledRegularPackageErrors()
         {
-            foreach (var p in EnabledPackages.Regular)
+            MissionPrefab.CheckForErrors();
+            foreach (var p in EnabledPackages.FailedRegular)
             {
                 p.LogErrors();
             }
+        }
+
+        public static ImmutableDictionary<string, PluginApprovalStatus> GetApprovalStatus(PluginInfoFile file)
+            => file.AssemblyInfos.Where(static ai => ai.MatchesPlatform).ToImmutableDictionary(static info => info.AssemblyPath.FullPath, GetApprovalStatus);
+
+        public static PluginApprovalStatus GetApprovalStatus(PluginAssemblyInfo assemblyInfo)
+        {
+            if (ApprovedAssemblies.TryGetValue(assemblyInfo.AssemblyPath.FullPath, out Md5Hash? oldHash))
+            {
+                if (oldHash == assemblyInfo.Hash)
+                {
+                    return PluginApprovalStatus.Approved;
+                }
+                else
+                {
+                    return PluginApprovalStatus.Modified;
+                }
+            }
+            else
+            {
+                // File has been moved
+                if (ApprovedAssemblies.ContainsValue(assemblyInfo.Hash))
+                {
+                    return PluginApprovalStatus.Moved;
+                }
+
+                return PluginApprovalStatus.New;
+            }
+        }
+
+        public static void ApproveContentPackages(IEnumerable<ContentPackage> newApprovedPackages)
+        {
+            foreach (PluginInfoFile file in newApprovedPackages.SelectMany(static c => c.GetFiles<PluginInfoFile>()))
+            {
+                foreach (var info in file.AssemblyInfos)
+                {
+                    if (!info.MatchesPlatform) { continue; }
+                    ApprovedAssemblies.Remove(info.AssemblyPath.FullPath);
+                    ApprovedAssemblies.TryAdd(info.AssemblyPath.FullPath, info.Hash);
+                }
+            }
+
+            XDocument doc = new XDocument(new XElement("ApprovedAssemblies"));
+
+            foreach (var (filePath, hash) in ApprovedAssemblies)
+            {
+                XElement element = new XElement("ApprovedAssembly", new XAttribute("filePath", filePath), new XAttribute("hash", hash.StringRepresentation));
+                doc.Root!.Add(element);
+            }
+
+            doc.SaveSafe(ApprovedAssembliesFilePath);
         }
     }
 }

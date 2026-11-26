@@ -1,7 +1,7 @@
 ﻿#nullable enable
 namespace Barotrauma.Networking;
 
-abstract class P2PEndpoint : Endpoint
+public abstract class P2PEndpoint : Endpoint
 {
     protected P2PEndpoint(P2PAddress address) : base(address) { }
 

@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Wire : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
+    public partial class Wire : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
     {
         private readonly struct ClientEventData : IEventData
         {
@@ -108,7 +108,11 @@ namespace Barotrauma.Items.Components
 
         public Vector2 DrawSize
         {
-            get { return sectionExtents; }
+            get 
+            { 
+                //just return zero - the visibility of wires is determined based on the nodes using Wire.IsVisible
+                return Vector2.Zero; 
+            }
         }
 
         public readonly record struct VisualSignal(
@@ -412,6 +416,18 @@ namespace Barotrauma.Items.Components
             {
                 return sub.DrawPosition + sub.HiddenSubPosition;
             }
+        }
+
+        public bool IsVisible(Rectangle worldView)
+        {
+            //active = being rewired, just draw in any case so we don't need to calculate take not-yet-placed nodes into account
+            if (IsActive) { return true; }
+
+            Vector2 offset = GetDrawOffset();
+            if (offset.X + MinNodePosition.X > worldView.Right || offset.X + MaxNodePosition.X < worldView.X) { return false; }
+            if (offset.Y + MinNodePosition.Y > worldView.Y || offset.Y + MaxNodePosition.Y < worldView.Y - worldView.Height) { return false; }
+
+            return true;
         }
 
         private void DrawHangingWire(SpriteBatch spriteBatch, Vector2 start, float depth)

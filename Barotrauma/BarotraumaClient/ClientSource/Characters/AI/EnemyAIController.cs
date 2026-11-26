@@ -131,7 +131,8 @@ namespace Barotrauma
                     Vector2 hitPos = ConvertUnits.ToDisplayUnits(steeringManager.AvoidRayCastHitPosition);
                     hitPos.Y = -hitPos.Y;
 
-                    GUI.DrawLine(spriteBatch, hitPos, hitPos + new Vector2(steeringManager.AvoidDir.X, -steeringManager.AvoidDir.Y) * 100, GUIStyle.Red, width: 5);
+                    GUI.DrawLine(spriteBatch, hitPos, hitPos + new Vector2(steeringManager.AvoidDir.X, -steeringManager.AvoidDir.Y) * 100, Color.MonoGameOrange * 0.5f, width: 5);
+                    GUI.DrawLine(spriteBatch, hitPos, hitPos + new Vector2(steeringManager.AvoidDir.X, -steeringManager.AvoidDir.Y) * 100 * steeringManager.avoidDirStrength, Color.Yellow, width: 5);
                     //GUI.DrawLine(spriteBatch, pos, ConvertUnits.ToDisplayUnits(steeringManager.AvoidLookAheadPos.X, -steeringManager.AvoidLookAheadPos.Y), Color.Orange, width: 4);
                 }
             }

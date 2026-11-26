@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma.Abilities
 {
-    abstract class AbilityCondition
+    public abstract class AbilityCondition
     {
         protected CharacterTalent characterTalent;
         protected Character character;

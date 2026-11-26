@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -9,12 +10,17 @@ namespace Barotrauma
     /// <summary>
     /// Tags a specific entity. Tags are used by other actions to refer to specific entities. The tags are event-specific, i.e. you cannot use a tag that was added by another event to refer to an entity.
     /// </summary>
-    class TagAction : EventAction
+    public class TagAction : EventAction
     {
-        public enum SubType { Any = 0, Player = 1, Outpost = 2, Wreck = 4, BeaconStation = 8, Enemy = 16, Ruin = 32 }
+        public enum SubType { Any = 0, Player = 1, Outpost = 2, Wreck = 4, BeaconStation = 8, AIControlled = 16, Ruin = 32, 
+            /// <summary>
+            /// Deprecated, use <see cref="AIControlled"/> AIControlled.
+            /// </summary>
+            Enemy = AIControlled }
+        
         public enum CharacterTeam {  Any = 0, None = 1, Team1 = 2, Team2 = 4, FriendlyNPC = 8 }
 
-        [Serialize("", IsPropertySaveable.Yes, description: "What criteria to use to select the entities to target. Valid values are players, player, traitor, nontraitor, nontraitorplayer, bot, crew, humanprefabidentifier:[id], jobidentifier:[id], structureidentifier:[id], structurespecialtag:[tag], itemidentifier:[id], itemtag:[tag], hull, hullname:[name], submarine:[type], eventtag:[tag], speciesname:[id].")]
+        [Serialize("", IsPropertySaveable.Yes, description: "What criteria to use to select the entities to target. Valid values are players, player, traitor, nontraitor, nontraitorplayer, bot, crew, humanprefabidentifier:[id], jobidentifier:[id], structureidentifier:[id], structurespecialtag:[tag], itemidentifier:[id], itemtag:[tag], persistenttag:[tag], hull, playersubmarineoutpostentrancehull, hullname:[name], submarine:[type], eventtag:[tag], speciesname:[id]. More than one can be given (separated by a ;), but note that this will include any entity that matches even just one of the criteria.")]
         public string Criteria { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes, description: "The tag to apply to the target.")]
@@ -32,8 +38,11 @@ namespace Barotrauma
         [Serialize(true, IsPropertySaveable.Yes, description: "Should incapacitated (e.g. dead, paralyzed, unconscious) characters be ignored, i.e. not considered valid targets?")]
         public bool IgnoreIncapacitatedCharacters { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes, description: "Can items that have been set to be hidden in-game be tagged?")]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Can items that have been set to be hidden in-game be tagged? Defaults to false.")]
         public bool AllowHiddenItems { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes, description: $"Can items that aren't interactable by players (see {nameof(Item.IsPlayerTeamInteractable)}) be tagged? Defaults to true, for backwards compatibility reasons and because the TagAction can't tell whether the tag is going to be used for something that requires interaction, or whether it's for example just a distance check.")]
+        public bool AllowNonPlayerInteractableItems { get; set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "If there are multiple matching targets, should all of them be tagged or one chosen randomly?")]
         public bool ChooseRandom { get; set; }
@@ -48,6 +57,11 @@ namespace Barotrauma
         public float ChoosePercentage { get; set; }
 
         private bool isFinished = false;
+
+        public void ForceFinished()
+        {
+            isFinished = true;
+        }
 
         /// <summary>
         /// If the action tags some entities directly (not trying to find targets on the fly), 
@@ -85,7 +99,9 @@ namespace Barotrauma
                 ("hullname", TagHullsByName),
                 ("submarine", TagSubmarinesByType),
                 ("eventtag", TagByEventTag),
-                ("speciesname", TagBySpeciesName)
+                ("speciesname", TagBySpeciesName),
+                ("persistenttag", TagByPersistentTag),
+                ("playersubmarineoutpostentrancehull", TagByPlayerSubmarineOutpostEntranceHull)
             }.Select(t => (t.k.ToIdentifier(), t.v)).ToImmutableDictionary();
         }
 
@@ -93,7 +109,7 @@ namespace Barotrauma
         {
             return isFinished;
         }
-        public override void Reset()
+        public override void Reset(bool shouldEndConversations = true)
         {
             taggingDone = false;
             cantFindTargets = false;
@@ -102,7 +118,7 @@ namespace Barotrauma
 
         private void TagBySpeciesName(Identifier speciesName)
         {
-            AddTarget(Tag, Character.CharacterList.Where(c => c.SpeciesName == speciesName && CharacterTeamMatches(c)));
+            AddTarget(Tag, Character.CharacterList.Where(c => c.SpeciesName == speciesName && CharacterFilterMatches(c)));
         }
 
         private void TagByEventTag(Identifier eventTag)
@@ -115,7 +131,7 @@ namespace Barotrauma
             AddTargetPredicate(
                 Tag, 
                 ScriptedEvent.TargetPredicate.EntityType.Character, 
-                e => e is Character c && c.IsPlayer && (!c.IsIncapacitated || !IgnoreIncapacitatedCharacters) && CharacterTeamMatches(c));
+                e => e is Character c && c.IsPlayer && CharacterFilterMatches(c));
         }
 
         private void TagTraitors()
@@ -123,7 +139,7 @@ namespace Barotrauma
             AddTargetPredicate(
                 Tags.Traitor,
                 ScriptedEvent.TargetPredicate.EntityType.Character, 
-                e => e is Character c && (c.IsPlayer || c.IsBot) && c.IsTraitor && !c.IsIncapacitated && CharacterTeamMatches(c));
+                e => e is Character c && (c.IsPlayer || c.IsBot) && c.IsTraitor && CharacterFilterMatches(c));
         }
 
         private void TagNonTraitors()
@@ -131,7 +147,7 @@ namespace Barotrauma
             AddTargetPredicate(
                 Tags.NonTraitor,
                 ScriptedEvent.TargetPredicate.EntityType.Character,
-                e => e is Character c && (c.IsPlayer || c.IsBot) && !c.IsTraitor && c.IsOnPlayerTeam && !c.IsIncapacitated && CharacterTeamMatches(c));
+                e => e is Character c && (c.IsPlayer || c.IsBot) && !c.IsTraitor && c.IsOnPlayerTeam && CharacterFilterMatches(c));
         }
 
         private void TagNonTraitorPlayers()
@@ -139,7 +155,7 @@ namespace Barotrauma
             AddTargetPredicate(
                 Tags.NonTraitorPlayer,
                 ScriptedEvent.TargetPredicate.EntityType.Character,
-                e => e is Character c && c.IsPlayer && !c.IsTraitor && c.IsOnPlayerTeam && !c.IsIncapacitated && CharacterTeamMatches(c));
+                e => e is Character c && c.IsPlayer && !c.IsTraitor && c.IsOnPlayerTeam && CharacterFilterMatches(c));
         }
 
         private void TagBots(bool playerCrewOnly)
@@ -151,14 +167,16 @@ namespace Barotrauma
                     e is Character c &&
                     c.IsBot && 
                     (!c.IsIncapacitated || !IgnoreIncapacitatedCharacters) && 
-                    (!playerCrewOnly || c.TeamID == CharacterTeamType.Team1) && 
-                    CharacterTeamMatches(c));
+                    (!playerCrewOnly || c.TeamID == CharacterTeamType.Team1) &&
+                    ModuleTagMatches(c) &&
+                    CharacterTeamMatches(c) &&
+                    AdditionalCharacterFilter(c));
         }
 
         private void TagCrew()
         {
 #if CLIENT
-            AddTarget(Tag, GameMain.GameSession.CrewManager.GetCharacters());
+            AddTarget(Tag, GameMain.GameSession.CrewManager.GetCharacters().Where(c => AdditionalCharacterFilter(c)));
 #else
             TagPlayers(); 
             TagBots(playerCrewOnly: true);
@@ -167,17 +185,17 @@ namespace Barotrauma
 
         private void TagHumansByIdentifier(Identifier identifier)
         {
-            AddTarget(Tag, Character.CharacterList.Where(c => c.HumanPrefab?.Identifier == identifier && CharacterTeamMatches(c)));
+            AddTarget(Tag, Character.CharacterList.Where(c => c.HumanPrefab?.Identifier == identifier && CharacterFilterMatches(c)));
         }
 
         private void TagHumansByTag(Identifier tag)
         {
-            AddTarget(Tag, Character.CharacterList.Where(c => c.HumanPrefab != null && c.HumanPrefab.GetTags().Contains(tag) && CharacterTeamMatches(c)));
+            AddTarget(Tag, Character.CharacterList.Where(c => c.HumanPrefab != null && c.HumanPrefab.GetTags().Contains(tag) && CharacterFilterMatches(c)));
         }
 
         private void TagHumansByJobIdentifier(Identifier jobIdentifier)
         {
-            AddTarget(Tag, Character.CharacterList.Where(c => c.HasJob(jobIdentifier) && CharacterTeamMatches(c)));
+            AddTarget(Tag, Character.CharacterList.Where(c => c.HasJob(jobIdentifier) && CharacterFilterMatches(c)));
         }
 
         private void TagStructuresByIdentifier(Identifier identifier)
@@ -236,11 +254,57 @@ namespace Barotrauma
                 e => e is Submarine s && MatchesRequirements(s) && (type.IsEmpty || type == s.Info?.Type.ToIdentifier()));
         }
 
+        private void TagByPersistentTag(Identifier tagIdentifier)
+        {
+            if (GameMain.GameSession?.GameMode is not CampaignMode campaign)
+            {
+                return;
+            }
+
+            AddTarget(Tag, Character.CharacterList
+                .Where(c =>
+                    CharacterFilterMatches(c) &&
+                    campaign.CampaignMetadata.GetBoolean(PersistentTagCharacterAction.GetMetadataIdentifer(c, tagIdentifier), defaultValue: false))
+                );
+        }
+
+        private void TagByPlayerSubmarineOutpostEntranceHull(Identifier type)
+        {
+            if (Submarine.MainSub == null) { return; }
+
+            foreach ((Submarine submarine, DockingPort dockingPort) in Submarine.MainSub.ConnectedDockingPorts)
+            {
+                if (submarine != null && submarine.Info.IsOutpost)
+                {
+                    // Since the docking port is on the procedurally generated hull lets find the next hull in the player submarine.
+                    // Search depth of 3 so we can find the player sub's hulls even if there's a docking port extension in between.
+                    foreach (Hull hull in dockingPort.Item.CurrentHull.GetConnectedHulls(false, 3))
+                    {
+                        if (hull.Submarine.Info.IsPlayer)
+                        {
+                            AddTarget(Tag, hull.ToEnumerable());
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         private bool IsValidItem(Item it)
         {
+            //diabled items are treated as if they didn't exist, regardless if hidden items should be allowed
+            if (it.IsDisabled) { return false; }
+
+            if (!AllowHiddenItems)
+            {
+                if (it.HiddenInGame) { return false; }
+            }
+            if (!AllowNonPlayerInteractableItems)
+            {
+                if (!it.IsPlayerTeamInteractable) { return false; }
+            }
+
             return 
-                !it.IsLayerHidden && /*items in hidden layers are treated as if they didn't exist, regardless if hidden items should be allowed*/
-                (!it.HiddenInGame || AllowHiddenItems) && 
                 ModuleTagMatches(it) && 
                 //if the item has just spawned, it may be in a hull but not moved into the coordinate space of the hull yet
                 //= it.Submarine still null
@@ -249,6 +313,11 @@ namespace Barotrauma
 
         private bool MatchesRequirements(Entity e)
         {
+            if (e is Character character && !CharacterFilterMatches(character))
+            {
+                return false;
+            }
+
             return ModuleTagMatches(e) && SubmarineTypeMatches(e as Submarine ?? e.Submarine);
         }
 
@@ -283,6 +352,11 @@ namespace Barotrauma
             return hull != null && hull.OutpostModuleTags.Contains(RequiredModuleTag);
         }
 
+        private bool CharacterFilterMatches(Character character)
+        {
+            return (!character.IsIncapacitated || !IgnoreIncapacitatedCharacters) && CharacterTeamMatches(character) && AdditionalCharacterFilter(character);
+        }
+
         private bool CharacterTeamMatches(Character character)
         {
             if (Team == CharacterTeam.Any) { return true;  }
@@ -299,6 +373,16 @@ namespace Barotrauma
                 default:
                     return false;
             }
+        }
+
+        /// <summary>
+        /// Virtual method that can be overridden in deriving classes to add additional character filtering criteria.
+        /// </summary>
+        /// <param name="character">The character to validate</param>
+        /// <returns>True if the character should be included in tagging, false otherwise</returns>
+        protected virtual bool AdditionalCharacterFilter(Character character)
+        {
+            return true;
         } 
 
         private bool SubmarineTypeMatches(Submarine sub)
@@ -321,8 +405,8 @@ namespace Barotrauma
                     return submarineType.HasFlag(SubType.Wreck);
                 case Barotrauma.SubmarineType.BeaconStation:
                     return submarineType.HasFlag(SubType.BeaconStation);
-                case Barotrauma.SubmarineType.EnemySubmarine:
-                    return submarineType.HasFlag(SubType.Enemy);
+                case Barotrauma.SubmarineType.AIControlled:
+                    return submarineType.HasFlag(SubType.AIControlled);
                 case Barotrauma.SubmarineType.Ruin:
                     return submarineType.HasFlag(SubType.Ruin);
                 default:
@@ -416,7 +500,7 @@ namespace Barotrauma
             if (!taggingDone)
             {
                 cantFindTargets = false;
-                string[] criteriaSplit = Criteria.Split(';');
+                string[] criteriaSplit = Criteria.Split(';'); // multiple taggers are joined by OR (as opposed to AND),
                 foreach (string entry in criteriaSplit)
                 {
                     string[] kvp = entry.Split(':');

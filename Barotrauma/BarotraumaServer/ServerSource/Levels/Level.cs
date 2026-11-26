@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    partial class Level : Entity, IServerSerializable
+    public partial class Level : Entity, IServerSerializable
     {
         public interface IEventData : NetEntityEvent.IData
         {

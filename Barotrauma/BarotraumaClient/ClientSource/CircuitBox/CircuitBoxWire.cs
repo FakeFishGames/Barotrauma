@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    internal partial class CircuitBoxWire
+    public partial class CircuitBoxWire
     {
         public CircuitBoxWireRenderer Renderer;
 

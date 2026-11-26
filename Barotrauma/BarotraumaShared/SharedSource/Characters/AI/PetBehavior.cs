@@ -3,6 +3,7 @@ using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -11,7 +12,7 @@ using static Barotrauma.CharacterParams;
 
 namespace Barotrauma
 {
-    class PetBehavior
+    public class PetBehavior
     {
         public enum StatusIndicatorType
         {
@@ -22,6 +23,10 @@ namespace Barotrauma
         }
 
         private float hunger = 50.0f;
+
+        /// <summary>
+        /// Value between 0.0 and <see cref="MaxHunger"/> that measures how hungry the pet is. Note: 0.0 means that the pet is fully fed.
+        /// </summary>
         public float Hunger 
         { 
             get { return hunger; }
@@ -304,9 +309,9 @@ namespace Barotrauma
         {
             if (PlayTimer > 0.0f) { return; }
             if (!CanPlayWith(player)) { return; }
-            if (ToggleOwner)
+            if (ToggleOwner && Owner == player)
             {
-                Owner = Owner == player ? null : player;
+                Owner = null;
             }
             else
             {
@@ -342,7 +347,17 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             var character = AIController.Character;
-            if (character?.Removed ?? true || character.IsDead) { return; }
+            if (character == null || character.Removed || character.IsDead) { return; }
+
+            //don't allow non-owners to drag the pet around when in an aggressive state
+            if (AIController is { IsInAggressiveState: true } && 
+                !character.IsIncapacitated &&
+                character.SelectedBy != null && 
+                character.SelectedBy != Owner)
+            {
+                character.SelectedBy.DeselectCharacter();
+                Debug.Assert(character.SelectedCharacter == null);
+            }
 
             if (UnstunY.HasValue)
             {
@@ -422,111 +437,6 @@ namespace Barotrauma
             for (int i = 0; i < itemsToProduce.Count; i++)
             {
                 itemsToProduce[i].Update(this, deltaTime);
-            }
-        }
-
-        public static void SavePets(XElement petsElement)
-        {
-            foreach (Character c in Character.CharacterList)
-            {
-                if (!c.IsPet || c.IsDead) { continue; }
-                if (c.Submarine == null) { continue; }
-
-                var petBehavior = (c.AIController as EnemyAIController)?.PetBehavior;
-                if (petBehavior == null) { continue; }
-
-                //never save hostile pets or pets left outside
-                if (c.TeamID == CharacterTeamType.None ||
-                    c.TeamID == CharacterTeamType.Team2 ||
-                    c.Submarine == null)
-                {
-                    continue;
-                }
-
-                //pets must be in a player sub or owned by someone to be persistent
-                if (c.Submarine is not { Info.IsPlayer: true } && 
-                    petBehavior.Owner is not { IsOnPlayerTeam: true }) 
-                { 
-                    continue; 
-                }
-
-                XElement petElement = new XElement("pet", 
-                    new XAttribute("speciesname", c.SpeciesName), 
-                    new XAttribute("ownerhash", petBehavior.Owner?.Info?.GetIdentifier() ?? 0),
-                    new XAttribute("seed", c.Seed));
-
-                var petBehaviorElement = new XElement("petbehavior",
-                    new XAttribute("hunger", petBehavior.Hunger.ToString("G", CultureInfo.InvariantCulture)),
-                    new XAttribute("happiness", petBehavior.Happiness.ToString("G", CultureInfo.InvariantCulture)));
-                petElement.Add(petBehaviorElement);
-
-                var healthElement = new XElement("health");
-                c.CharacterHealth.Save(healthElement);
-                petElement.Add(healthElement);
-
-                if (c.Inventory != null)
-                {
-                    var inventoryElement = new XElement("inventory");
-                    Character.SaveInventory(c.Inventory, inventoryElement);
-                    petElement.Add(inventoryElement);
-                }
-
-                petsElement.Add(petElement);
-            }
-        }
-
-        public static void LoadPets(XElement petsElement)
-        {
-            foreach (var subElement in petsElement.Elements())
-            {
-                string speciesName = subElement.GetAttributeString("speciesname", "");
-                string seed = subElement.GetAttributeString("seed", "123");
-                int ownerHash = subElement.GetAttributeInt("ownerhash", 0);
-                Vector2 spawnPos = Vector2.Zero;
-                Character owner = Character.CharacterList.Find(c => c.Info?.GetIdentifier() == ownerHash);
-                if (owner != null && owner.Submarine?.Info.Type == SubmarineType.Player)
-                {
-                    spawnPos = owner.WorldPosition;
-                }
-                else
-                {
-                    WayPoint spawnPoint = null;
-                    //try to find a spawnpoint in the main sub
-                    if (Submarine.MainSub != null)
-                    {
-                        spawnPoint = WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine == Submarine.MainSub).GetRandomUnsynced();
-                    }
-                    //if not found, try any player sub (shuttle/drone etc)
-                    spawnPoint ??= WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine?.Info.Type == SubmarineType.Player).GetRandomUnsynced();
-                    spawnPos = spawnPoint?.WorldPosition ?? Submarine.MainSub?.WorldPosition ?? Vector2.Zero;
-                }
-                
-                var characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName.ToIdentifier());
-                if (characterPrefab == null)
-                {
-                    DebugConsole.ThrowError($"Failed to load the pet \"{speciesName}\". Character prefab not found.");
-                    continue;
-                }
-                var pet = Character.Create(characterPrefab, spawnPos, seed, spawnInitialItems: false);
-                if (pet != null)
-                {
-                    var petBehavior = (pet.AIController as EnemyAIController)?.PetBehavior;
-                    if (petBehavior != null)
-                    {
-                        petBehavior.Owner = owner;
-                        var petBehaviorElement = subElement.Element("petbehavior");
-                        if (petBehaviorElement != null)
-                        {
-                            petBehavior.Hunger = petBehaviorElement.GetAttributeFloat("hunger", 50.0f);
-                            petBehavior.Happiness = petBehaviorElement.GetAttributeFloat("happiness", 50.0f);
-                        }
-                    }
-                }
-                var inventoryElement = subElement.Element("inventory");
-                if (inventoryElement != null)
-                {
-                    pet.SpawnInventoryItems(pet.Inventory, inventoryElement.FromPackage(null));
-                }                
             }
         }
     }

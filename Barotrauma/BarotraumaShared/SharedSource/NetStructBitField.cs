@@ -8,7 +8,7 @@ using Lidgren.Network;
 
 namespace Barotrauma
 {
-    sealed class WriteOnlyBitField : IDisposable
+    public sealed class WriteOnlyBitField : IDisposable
     {
         private const int AmountOfBoolsInByte = 7; // Reserve last bit for end marker
         private readonly List<byte> Buffer = new List<byte>();
@@ -84,7 +84,7 @@ namespace Barotrauma
         }
     }
 
-    sealed class ReadOnlyBitField
+    public sealed class ReadOnlyBitField
     {
         private const int AmountOfBoolsInByte = 7; // Reserve last bit for end marker
         private readonly ImmutableArray<byte> buffer;
@@ -99,7 +99,7 @@ namespace Barotrauma
             {
                 if (inc.BitPosition >= inc.LengthBits)
                 {
-                    throw new NetStructReadException("Failed to find the end of the bit field: end of the message reached.");
+                    throw new MalformedDataException("Failed to find the end of the bit field: end of the message reached.");
                 }
                 currentByte = inc.ReadByte();
                 bytes.Add(currentByte);

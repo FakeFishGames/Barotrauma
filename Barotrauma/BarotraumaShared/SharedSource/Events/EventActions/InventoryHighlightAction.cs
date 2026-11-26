@@ -1,4 +1,4 @@
-namespace Barotrauma;
+﻿namespace Barotrauma;
 
 /// <summary>
 /// Highlights specific items in a specific inventory.
@@ -32,5 +32,5 @@ partial class InventoryHighlightAction : EventAction
 
     public override bool IsFinished(ref string goToLabel) => isFinished;
 
-    public override void Reset() => isFinished = false;
+    public override void Reset(bool shouldEndConversations = true) => isFinished = false;
 }

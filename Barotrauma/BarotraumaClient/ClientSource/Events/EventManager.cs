@@ -209,7 +209,7 @@ namespace Barotrauma
             {
                 if (Submarine.MainSub == null) { break; }
 
-                GUI.DrawString(spriteBatch, new Vector2(x, y), "New event (ID " + eventSet.Identifier + ") after: ", Color.Orange * 0.8f, null, 0, GUIStyle.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(x, y), "New event set (ID " + eventSet.Identifier + ") after: ", Color.Orange * 0.8f, null, 0, GUIStyle.SmallFont);
                 y += adjustedYStep;
 
                 if (eventSet.PerCave)
@@ -610,11 +610,11 @@ namespace Barotrauma
                             {
                                 if (target is Item item)
                                 {
-                                    effect.Apply(effect.type, 1.0f, item, item.AllPropertyObjects);
+                                    effect.Apply(effect.Type, 1.0f, item, item.AllPropertyObjects);
                                 }
                                 else
                                 {
-                                    effect.Apply(effect.type, 1.0f, target, target as ISerializableEntity);
+                                    effect.Apply(effect.Type, 1.0f, target, target as ISerializableEntity);
                                 }
                             }
                         }
@@ -630,6 +630,7 @@ namespace Barotrauma
                         UInt16 speakerId = msg.ReadUInt16();
                         string text = msg.ReadString();
                         bool fadeToBlack = msg.ReadBoolean();
+                        bool disableCloseButton = msg.ReadBoolean();
                         byte optionCount = msg.ReadByte();
                         List<string> options = new List<string>();
                         for (int i = 0; i < optionCount; i++)
@@ -656,7 +657,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            ConversationAction.CreateDialog(text, Entity.FindEntityByID(speakerId) as Character, options, endings, eventSprite, identifier, fadeToBlack, (ConversationAction.DialogTypes)dialogType, continueConversation);
+                            ConversationAction.CreateDialog(text, Entity.FindEntityByID(speakerId) as Character, options, endings, eventSprite, identifier, fadeToBlack, (ConversationAction.DialogTypes)dialogType, continueConversation, disableCloseButton);
                         }
                         if (Entity.FindEntityByID(speakerId) is Character speaker)
                         {
@@ -669,42 +670,63 @@ namespace Barotrauma
                     {
                         UInt16 identifier = msg.ReadUInt16();
                         int selectedOption = msg.ReadByte() - 1;
-                        ConversationAction.SelectOption(identifier, selectedOption);
+                        bool isClosingOption = msg.ReadBoolean();
+                        ConversationAction.SelectOption(identifier, selectedOption, isClosingOption);
                         break;
                     }
                 case NetworkEventType.MISSION:
                     Identifier missionIdentifier = msg.ReadIdentifier();
                     int locationIndex = msg.ReadInt32();
                     int destinationIndex = msg.ReadInt32();
+                    int serverMissionIndexInLocation = msg.ReadInt32();
+                    bool createUnlockNotification = msg.ReadBoolean();
                     string missionName = msg.ReadString();
+                    bool markAsDiscovered = msg.ReadBoolean();
                     if (Screen.Selected != GameMain.NetLobbyScreen)
                     {
                         MissionPrefab? prefab = MissionPrefab.Prefabs.Find(mp => mp.Identifier == missionIdentifier);
                         if (prefab != null)
                         {
-                            new GUIMessageBox(string.Empty, TextManager.GetWithVariable("missionunlocked", "[missionname]", missionName),
-                                Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: prefab.Icon, relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128))
+                            if (createUnlockNotification)
                             {
-                                IconColor = prefab.IconColor
-                            };
+                                new GUIMessageBox(string.Empty, TextManager.GetWithVariable("missionunlocked", "[missionname]", missionName),
+                                    Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: prefab.Icon, relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128))
+                                {
+                                    IconColor = prefab.IconColor
+                                };
+                            }
                             if (GameMain.GameSession?.Map is { } map && locationIndex >= 0 && locationIndex < map.Locations.Count)
                             {
                                 Location location = map.Locations[locationIndex];
-                                map.Discover(location, checkTalents: false);
-
+                                if (markAsDiscovered)
+                                {
+                                    map.Discover(location, checkTalents: false);
+                                }
                                 LocationConnection? connection = null;
                                 if (destinationIndex != locationIndex && destinationIndex >= 0 && destinationIndex < map.Locations.Count)
                                 {
                                     Location destination = map.Locations[destinationIndex];
+                                    if (markAsDiscovered)
+                                    {
+                                        map.Discover(destination, checkTalents: false);
+                                    }
                                     connection = map.Connections.FirstOrDefault(c => c.Locations.Contains(location) && c.Locations.Contains(destination));
                                 }
+                                Mission? unlockedMission = null;
                                 if (connection != null)
                                 {
-                                    location.UnlockMission(prefab, connection);
+                                    unlockedMission = location.UnlockMission(prefab, connection);
                                 }
                                 else
                                 {
-                                    location.UnlockMission(prefab);
+                                    unlockedMission = location.UnlockMission(prefab);
+                                }
+                                int clientMissionIndexInLocation = location.GetAvailableMissionIndex(unlockedMission);
+                                if (unlockedMission != null && serverMissionIndexInLocation != clientMissionIndexInLocation)
+                                {
+                                    DebugConsole.ThrowError(
+                                        $"Potential error when unlocking mission {prefab.Identifier} in location {location.DisplayName}:"+
+                                        $" Client index in location: {clientMissionIndexInLocation}, server index: {serverMissionIndexInLocation}. This may cause issues with selecting missions.");
                                 }
                             }
                         }
@@ -729,8 +751,48 @@ namespace Barotrauma
                 case NetworkEventType.EVENTLOG:
                     ClientReadEventLog(GameMain.Client, msg);
                     break;
+                case NetworkEventType.EVENTLOGSTATE:
+                    ClientReadEventState(GameMain.Client, msg);
+                    break;
+                case NetworkEventType.EVENTLOGREMOVE:
+                    ClientReadEventLogRemoval(GameMain.Client, msg);
+                    break;
                 case NetworkEventType.EVENTOBJECTIVE:
                     ClientReadEventObjective(GameMain.Client, msg);
+                    break;
+                case NetworkEventType.MODIFYLOCATION:
+                    UInt16 locationToChangeIndex = msg.ReadUInt16();
+                    Identifier locationTypeIdentifier = msg.ReadIdentifier();
+                    Identifier factionIdentifier = msg.ReadIdentifier();
+                    Identifier secondaryFactionIdentifier = msg.ReadIdentifier();
+                    if (GameMain.GameSession?.Map?.Locations != null)
+                    {
+                        if (locationToChangeIndex >= GameMain.GameSession.Map.Locations.Count)
+                        {
+                            DebugConsole.ThrowError($"Failed to change the type of a location. Location index out of bounds (index: {locationToChangeIndex}, number of location: {GameMain.GameSession.Map.Locations.Count})");
+                        }
+                        else if (GameMain.GameSession.Map.Locations[locationToChangeIndex] is { } location)
+                        {
+                            if (!LocationType.Prefabs.TryGet(locationTypeIdentifier, out LocationType? locationType) || locationType == null)
+                            {
+                                DebugConsole.ThrowError($"Failed to change the type of a location. Could not find a location with the identifier \"{locationTypeIdentifier}\".");
+                            }
+                            location.ChangeType(GameMain.GameSession.Campaign, locationType);
+                            location.Faction = GameMain.GameSession.Campaign?.GetFaction(factionIdentifier);
+                            location.SecondaryFaction = GameMain.GameSession.Campaign?.GetFaction(secondaryFactionIdentifier);
+                        }
+                    }
+                    break;
+                case NetworkEventType.MESSAGEBOXACTION:
+                    MessageBoxAction.Show(INetSerializableStruct.Read<MessageBoxAction.MessageBoxData>(msg));
+                    break;
+                case NetworkEventType.SETCAMPAIGNMETADATA:
+
+                    var operation = INetSerializableStruct.Read<SetDataAction.SetMetadataOperation>(msg);
+                    if (GameMain.GameSession?.GameMode is CampaignMode campaign)
+                    {
+                        SetDataAction.PerformOperation(campaign.CampaignMetadata, operation);
+                    }
                     break;
             }
         }
@@ -738,8 +800,21 @@ namespace Barotrauma
         private void ClientReadEventLog(GameClient client, IReadMessage msg)
         {
             NetEventLogEntry entry = INetSerializableStruct.Read<NetEventLogEntry>(msg);
-            EventLog.AddEntry(entry.EventPrefabId, entry.LogEntryId, entry.Text.Replace("\\n", "\n"));
+            EventLog.AddEntry(entry.EventPrefabId, entry.LogEntryId, entry.Text.Replace("\\n", "\n"), entry.SendMessage, entry.IsPersistent);
         }
+
+        private void ClientReadEventState(GameClient client, IReadMessage msg)
+        {
+            NetEventLogState logState = INetSerializableStruct.Read<NetEventLogState>(msg);
+            EventLog.SetEventLogState(logState.EventPrefabId, logState.State);
+        }
+
+        private void ClientReadEventLogRemoval(GameClient client, IReadMessage msg)
+        {
+            NetEventLogRemoval removal = INetSerializableStruct.Read<NetEventLogRemoval>(msg);
+            EventLog.RemoveEvent(removal.EventPrefabId);
+        }
+
         private static void ClientReadEventObjective(GameClient client, IReadMessage msg)
         {
             NetEventObjective entry = INetSerializableStruct.Read<NetEventObjective>(msg);

@@ -10,7 +10,7 @@ using Barotrauma.Networking;
 
 namespace Barotrauma
 {
-    internal partial class MedicalClinic
+    public partial class MedicalClinic
     {
         // allow 20 requests per 5 seconds, announce to chat if the limit is reached
         private readonly RateLimiter rateLimiter = new(
@@ -49,6 +49,8 @@ namespace Barotrauma
                 }
                 charactersWithAfflictionChanges.Clear();
                 processAfflictionChangesTimer = ProcessAfflictionChangesInterval;
+
+                RemoveInvalidPendingHeals();
             }
         }
 
@@ -89,9 +91,27 @@ namespace Barotrauma
         {
             if (rateLimiter.IsLimitReached(client)) { return; }
 
-            NetCrewMember newCrewMember = INetSerializableStruct.Read<NetCrewMember>(inc);
+            NetCrewMember receivedCrewMember = INetSerializableStruct.Read<NetCrewMember>(inc);
+            if (!TryValidateCrewMember(receivedCrewMember, out NetCrewMember newCrewMember)) { return; }
+
             InsertPendingCrewMember(newCrewMember);
             ServerSend(new NetCollection<NetCrewMember>(newCrewMember), NetworkHeader.ADD_PENDING, DeliveryMethod.Reliable, reponseClient: client);
+        }
+
+        private bool TryValidateCrewMember(NetCrewMember receivedCrewMember, out NetCrewMember validatedCrewMember)
+        {
+            validatedCrewMember = default;
+            if (receivedCrewMember.Afflictions.IsDefaultOrEmpty) { return false; }
+
+            CharacterInfo? info = receivedCrewMember.FindCharacterInfo(GetCrewCharacters());
+            if (info?.Character?.CharacterHealth is not { } health) { return false; }
+
+            HashSet<Identifier> requestedAfflictions = receivedCrewMember.Afflictions.Select(static a => a.Identifier).ToHashSet();
+            ImmutableArray<NetAffliction> afflictions = GetAllAfflictions(health).Where(a => requestedAfflictions.Contains(a.Identifier)).ToImmutableArray();
+            if (!afflictions.Any()) { return false; }
+
+            validatedCrewMember = new NetCrewMember(info, afflictions);
+            return true;
         }
 
         private void ProcessAddEverything(Client client)

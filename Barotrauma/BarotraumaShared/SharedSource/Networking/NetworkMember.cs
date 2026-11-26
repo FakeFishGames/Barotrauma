@@ -45,10 +45,14 @@ namespace Barotrauma.Networking
         TAKEOVERBOT,
         TOGGLE_RESERVE_BENCH,
 
-        REQUEST_BACKUP_INDICES // client wants a list of available backups for a save file
+        REQUEST_BACKUP_INDICES, // client wants a list of available backups for a save file
+
+        PLUGIN_SETTINGS,
+
+        PLUGIN_CUSTOM // custom packet for plugins
     }
 
-    enum ClientNetSegment
+    public enum ClientNetSegment
     {
         SyncIds,       //ids of the last changes the client knows about
         ChatMessage,   //also self-explanatory
@@ -74,7 +78,7 @@ namespace Barotrauma.Networking
         PERMISSIONS,        //tell the client which special permissions they have (if any)
         ACHIEVEMENT,        //give the client a steam achievement
         ACHIEVEMENT_STAT,   //increment stat for an achievement
-        CHEATS_ENABLED,     //tell the clients whether cheats are on or off
+        DEBUG_VALUES,       //sync debug values (including cheats) from server to clients
 
         CAMPAIGN_SETUP_INFO,
 
@@ -102,10 +106,17 @@ namespace Barotrauma.Networking
         MONEY,
         READY_CHECK,        //start, end and update a ready check
         UNLOCKRECIPE,       //unlocking a fabrication recipe
+        STORES,             //the stores at the current location (sent when they've changed since the save the clients got them from)
+        STORE_CHANGES_REJECTED, // the server rejected the client's store changes, which the client has already applied on its end and has to invalidate
 
-        SEND_BACKUP_INDICES // the server sends a list of available backups for a save file
+        SEND_BACKUP_INDICES, // the server sends a list of available backups for a save file
+
+        PLUGIN_SETTINGS,
+
+        PLUGIN_CUSTOM // custom packet for plugins
     }
-    enum ServerNetSegment
+
+    public enum ServerNetSegment
     {
         SyncIds,
         ChatMessage,
@@ -129,7 +140,7 @@ namespace Barotrauma.Networking
                 EntityId: entity.ID);
     }
 
-    enum VoteType
+    public enum VoteType
     {
         Unknown,
         Sub,
@@ -151,7 +162,7 @@ namespace Barotrauma.Networking
         End
     }
 
-    enum DisconnectReason
+    public enum DisconnectReason
     {
         //do not attempt reconnecting with these reasons
         Unknown,
@@ -163,6 +174,7 @@ namespace Barotrauma.Networking
         ServerFull,
         AuthenticationRequired,
         AuthenticationFailed,
+        DLCAuthenticationFailed,
         SessionTaken,
         TooManyFailedLogins,
         InvalidName,
@@ -179,7 +191,7 @@ namespace Barotrauma.Networking
         SteamP2PTimeOut
     }
 
-    abstract partial class NetworkMember
+    public abstract partial class NetworkMember
     {
         protected const int MaxSubNameLengthInErrorMessages = 16;
 
@@ -193,7 +205,14 @@ namespace Barotrauma.Networking
 
         public abstract bool IsClient { get; }
 
-        public abstract void CreateEntityEvent(INetSerializable entity, NetEntityEvent.IData extraData = null);
+        /// <param name="pluginContentPackageHash">
+        /// Optional hash of the plugin content package that the entity event may be associated with.
+        /// None in the case of a vanilla event and Some in the case of an event sent by a plugin via
+        /// <see cref="Barotrauma.Plugins.IGameNetwork.CreateEntityEvent{TSerializable}"/>.
+        /// Used to determine if the event should be handled via vanilla methods or passed to custom
+        /// plugin-defined methods via <see cref="PluginData.WriteEvent"/>
+        /// </param>
+        internal abstract void CreateEntityEvent(INetSerializable entity, NetEntityEvent.IData extraData = null, Option<uint> pluginContentPackageHash = default);
 
         public abstract Voting Voting { get; }
 

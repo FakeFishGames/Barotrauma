@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    struct WaterVertexData
+    public struct WaterVertexData
     {
         float DistortStrengthX;
         float DistortStrengthY;
@@ -26,7 +26,7 @@ namespace Barotrauma
         }
     }
 
-    class WaterRenderer : IDisposable
+    public class WaterRenderer : IDisposable
     {
         public static WaterRenderer Instance;
 

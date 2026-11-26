@@ -1,3 +1,5 @@
+﻿using System;
+
 namespace Barotrauma
 {
     /// <summary>
@@ -6,6 +8,30 @@ namespace Barotrauma
     partial class MessageBoxAction : EventAction
     {
         public enum ActionType { Create, ConnectObjective, Close, Clear }
+
+        public enum BoxStyle { Tutorial, Default }
+
+        [NetworkSerialize]
+        public readonly record struct MessageBoxData(
+            ActionType Type,
+            Identifier Identifier,
+            string Tag,
+            Identifier Header,
+            Identifier Text,
+            string IconStyle,
+            BoxStyle Style,
+            bool HideCloseButton,
+            Identifier TargetTag,
+            string CloseOnInput,
+            Identifier CloseOnSelectTag,
+            Identifier CloseOnPickUpTag,
+            Identifier CloseOnEquipTag,
+            Identifier CloseOnExitRoomName,
+            Identifier CloseOnInRoomName,
+            Identifier ObjectiveTag,
+            bool ObjectiveCanBeCompleted,
+            Identifier ParentObjectiveId
+        ) : INetSerializableStruct;
 
         [Serialize(ActionType.Create, IsPropertySaveable.Yes, description: "What do you want to do with the message box (Create, ConnectObjective, Close, Clear)?")]
         public ActionType Type { get; set; }
@@ -24,6 +50,9 @@ namespace Barotrauma
 
         [Serialize("", IsPropertySaveable.Yes, description: "Style of the icon displayed in the corner of the message box (optional). The style must be defined in a UIStyle file.")]
         public string IconStyle { get; set; }
+
+        [Serialize(BoxStyle.Tutorial, IsPropertySaveable.Yes, description: "Tutorial = a box that slides in at the top of the screen, Default = a box in the middle of the screen with an OK button (icon and close button settings are ignored).")]
+        public BoxStyle Style { get; set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Should the button that closes the box be hidden? If it is hidden, you must close the box manually using another MessageBoxAction.")]
         public bool HideCloseButton { get; set; }
@@ -79,8 +108,29 @@ namespace Barotrauma
 
         public override bool IsFinished(ref string goToLabel) => isFinished;
 
-        public override void Reset() => isFinished = false;
+        public override void Reset(bool shouldEndConversations = true) => isFinished = false;
 
         public override string ToDebugString() => $"{ToolBox.GetDebugSymbol(isFinished)} {nameof(MessageBoxAction)}";
+
+        public MessageBoxData ToMessageBoxData()
+            => new(
+                Type,
+                Identifier,
+                Tag,
+                Header,
+                Text,
+                IconStyle,
+                Style,
+                HideCloseButton,
+                TargetTag,
+                CloseOnInput,
+                CloseOnSelectTag,
+                CloseOnPickUpTag,
+                CloseOnEquipTag,
+                CloseOnExitRoomName,
+                CloseOnInRoomName,
+                ObjectiveTag,
+                ObjectiveCanBeCompleted,
+                ParentObjectiveId);
     }
 }

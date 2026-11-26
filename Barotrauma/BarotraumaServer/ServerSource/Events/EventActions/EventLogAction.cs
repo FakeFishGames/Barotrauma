@@ -9,7 +9,7 @@ namespace Barotrauma;
 
 partial class EventLogAction : EventAction
 {
-    partial void AddEntryProjSpecific(EventLog? eventLog, string displayText)
+    partial void AddEntryProjSpecific(EventLog? eventLog, Identifier eventIdentifier, string displayText)
     {
         if (eventLog == null) { return; }
         if (!TargetTag.IsEmpty)
@@ -31,14 +31,14 @@ partial class EventLogAction : EventAction
                         ParentEvent.Prefab.ContentPackage);
                 }
             }
-            if (eventLog!.TryAddEntry(ParentEvent.Prefab.Identifier, Id, displayText, targetClients) && ShowInServerLog)
+            if (eventLog!.TryAddEntry(eventIdentifier, ResolvedId, displayText, SendMessage, Persistent, targetClients) && ShowInServerLog)
             {
                 Log(targetClients);
             }
         }
         else
         {
-            if (eventLog.TryAddEntry(ParentEvent.Prefab.Identifier, Id, displayText, GameMain.Server.ConnectedClients) && ShowInServerLog)
+            if (eventLog.TryAddEntry(eventIdentifier, ResolvedId, displayText, SendMessage, Persistent, GameMain.Server.ConnectedClients) && ShowInServerLog)
             {
                 Log(targetClients: null);
             }
@@ -50,6 +50,16 @@ partial class EventLogAction : EventAction
                 string.Empty :
                 $" ({string.Join(", ", targetClients.Select(c => NetworkMember.ClientLogName(c)))})";
             GameServer.Log($"Event \"{ParentEvent.Prefab.Name}\"{clientStr}: " + displayText,
+                ParentEvent is TraitorEvent ? ServerLog.MessageType.Traitors : ServerLog.MessageType.Chat);
+        }
+    }
+
+    partial void RemoveEntriesProjSpecific(EventLog? eventLog, Identifier eventIdentifier)
+    {
+        if (eventLog == null) { return; }
+        if (eventLog.RemoveEvent(eventIdentifier, GameMain.Server.ConnectedClients) && ShowInServerLog)
+        {
+            GameServer.Log($"Event \"{ParentEvent.Prefab.Name}\": Removed event log entries associated with \"{eventIdentifier}\".",
                 ParentEvent is TraitorEvent ? ServerLog.MessageType.Traitors : ServerLog.MessageType.Chat);
         }
     }

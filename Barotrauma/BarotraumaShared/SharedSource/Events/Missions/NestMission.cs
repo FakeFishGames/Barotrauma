@@ -209,7 +209,7 @@ namespace Barotrauma
                     }
 
                     var item = new Item(itemPrefab, spawnPos, null);
-                    item.body.FarseerBody.BodyType = BodyType.Kinematic;
+                    item.body.BodyType = BodyType.Kinematic;
                     item.body.SetTransformIgnoreContacts(item.body.SimPosition, rotation);
                     item.FindHull();
                     item.AddTag("nestmission");
@@ -238,7 +238,7 @@ namespace Barotrauma
             {
                 foreach (Item item in items)
                 {
-                    if (item.ParentInventory != null && item.body != null) { item.body.FarseerBody.BodyType = BodyType.Dynamic; }
+                    if (item.ParentInventory != null && item.body != null) { item.body.BodyType = BodyType.Dynamic; }
                 }
                 return;
             }
@@ -247,14 +247,14 @@ namespace Barotrauma
                 case 0:
                     foreach (Item item in items)
                     {
-                        if (item.ParentInventory != null && item.body != null) { item.body.FarseerBody.BodyType = BodyType.Dynamic; }
+                        if (item.ParentInventory != null && item.body != null) { item.body.BodyType = BodyType.Dynamic; }
                         if (statusEffectOnApproach.ContainsKey(item))
                         {
                             foreach (Character character in Character.CharacterList)
                             {
                                 if (character.IsPlayer && Vector2.DistanceSquared(nestPosition, character.WorldPosition) < approachItemsRadius * approachItemsRadius)
                                 {
-                                    statusEffectOnApproach[item].Apply(statusEffectOnApproach[item].type, 1.0f, item, item);
+                                    statusEffectOnApproach[item].Apply(statusEffectOnApproach[item].Type, 1.0f, item, item);
                                     statusEffectOnApproach.Remove(item);
                                     break;
                                 }
@@ -328,6 +328,11 @@ namespace Barotrauma
                 foreach (Item item in items)
                 {
                     if (item.Removed || item.Condition <= 0.0f) { continue; }
+                    if (!requireDelivery)
+                    {
+                        //if delivery is not required, picking up the eggs counts as retrieving
+                        if (item.ParentInventory is CharacterInventory characterInventory && characterInventory.Owner is Character { IsPlayer: true }) { continue; }
+                    }
                     if (Vector2.Distance(item.WorldPosition, nestPosition) > Math.Max(itemSpawnRadius * 2, 3000.0f)) { continue; }
                     Submarine parentSub = item.CurrentHull?.Submarine ?? item.GetRootInventoryOwner()?.Submarine;
                     if (parentSub?.Info?.Type == SubmarineType.Player) { continue; }
@@ -344,13 +349,17 @@ namespace Barotrauma
 
         protected override void EndMissionSpecific(bool completed)
         {
-            foreach (Item item in items)
+            if (requireDelivery)
             {
-                if (item != null && !item.Removed)
+                foreach (Item item in items)
                 {
-                    item.Remove();
+                    if (item != null && !item.Removed)
+                    {
+                        item.Remove();
+                    }
                 }
             }
+
             items.Clear();
             failed = !completed && state > 0;
         }

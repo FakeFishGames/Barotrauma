@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class Pickable : ItemComponent, IServerSerializable
+    public class Pickable : ItemComponent, IServerSerializable
     {
         protected Character picker;
 
@@ -21,12 +21,43 @@ namespace Barotrauma.Items.Components
 
         public virtual bool IsAttached => false;
 
-        public List<InvSlotType> AllowedSlots
+        /// <summary>
+        /// Which type of slot the item is allowed to go to by default if not defined in the XML.
+        /// </summary>
+        protected virtual InvSlotType DefaultAllowedSlot => InvSlotType.Any;
+
+        /// <summary>
+        /// Which slots the item can be placed in when this component is used to pick it up.
+        /// Each entry is one combination of slots, ie. several entries mean any one of them will do, while several flags
+        /// within a single entry mean the item needs all of them at once (eg. "RightHand,LeftHand" = either hand, "bothhands" = both hands simultaneously).
+        /// <br/><br/>
+        /// Read-only, because <see cref="Item.AllowedSlots"/> caches these from all of that item's components.
+        /// Use <see cref="SetAllowedSlots"/> to change them during runtime.
+        /// </summary>
+        public IReadOnlyList<InvSlotType> AllowedSlots => allowedSlots;
+
+        /// <summary>
+        /// Replaces the slots the item is allowed to be placed in, keeping the <see cref="Item.AllowedSlots"/> cache in sync.
+        /// Meant for components that restrict the slots while the game is running (eg. <see cref="SwappableProsthetic"/>).
+        /// </summary>
+        public void SetAllowedSlots(IEnumerable<InvSlotType> slots)
         {
-            get { return allowedSlots; }
+            // Make sure the new slots are enumerated first
+            List<InvSlotType> newSlots = slots.ToList();
+            allowedSlots.Clear();
+            allowedSlots.AddRange(newSlots);
+            item.RefreshAllowedSlotsCache();
         }
 
+        /// <summary>
+        /// True once the pick timer has reached the item's PickingTime, or PickingTime is 0.
+        /// </summary>
         public bool PickingDone => pickTimer >= PickingTime;
+
+        /// <summary>
+        /// True while a timed pick is currently underway. Only possible when PickingTime > 0.
+        /// </summary>
+        protected bool IsPickInProgress => pickTimer > 0.0f;
 
         public Character Picker
         {
@@ -45,7 +76,7 @@ namespace Barotrauma.Items.Components
         {
             allowedSlots = new List<InvSlotType>();
 
-            string slotString = element.GetAttributeString("slots", "Any");
+            string slotString = element.GetAttributeString("slots", DefaultAllowedSlot.ToString());
             string[] slotCombinations = slotString.Split(',');
             foreach (string slotCombination in slotCombinations)
             {
@@ -224,7 +255,7 @@ namespace Barotrauma.Items.Components
                             text);
                     }
 #endif
-                    picker.AnimController.UpdateUseItem(!picker.IsClimbing, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((pickTimer / 10.0f) % 0.1f));
+                    picker.AnimController.UpdateUseItem(!picker.IsClimbing, item.WorldPosition, handMoveAmount: new Vector2(0.0f, 100.0f) * ((pickTimer / 10.0f) % 0.1f));
                     pickTimer += CoroutineManager.DeltaTime;
                 }
                 yield return CoroutineStatus.Running;

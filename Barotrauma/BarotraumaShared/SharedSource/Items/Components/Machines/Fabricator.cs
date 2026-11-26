@@ -8,10 +8,11 @@ using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Abilities;
+using System.Xml;
 
 namespace Barotrauma.Items.Components
 {   
-    partial class Fabricator : Powered, IServerSerializable, IClientSerializable
+    public partial class Fabricator : Powered, IServerSerializable, IClientSerializable
     {
         private ImmutableDictionary<uint, FabricationRecipe> fabricationRecipes; //this is not readonly because tutorials fuck this up!!!!
 
@@ -25,6 +26,8 @@ namespace Barotrauma.Items.Components
         private float savedTimeUntilReady, savedRequiredTime;
 
         private readonly Dictionary<Identifier, List<Item>> availableIngredients = new Dictionary<Identifier, List<Item>>();
+
+        private readonly List<Item> chosenIngredients = new List<Item>();
 
         const float RefreshIngredientsInterval = 1.0f;
         private float refreshIngredientsTimer;
@@ -93,6 +96,11 @@ namespace Barotrauma.Items.Components
         private readonly Dictionary<uint, int> fabricationLimits = new Dictionary<uint, int>();
 
         public Action<Item, Character> OnItemFabricated;
+
+        /// <summary>
+        /// Fabricators rely on setting <see cref="Repairable.LastActiveTime"/> to make the item deteriorate during fabrication.
+        /// </summary>
+        public override bool ShouldCauseDeterioration => false; 
 
         public Fabricator(Item item, ContentXElement element)
             : base(item, element)
@@ -342,10 +350,22 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
+            //don't progress while the level is still being generated (OutpostGenerator.PowerUpOutpost updates powered items):
+            //the EntitySpawner for the round doesn't exist yet, so the fabricated item either wouldn't spawn or would be queued to the previous round's spawner
+            if (Level.Loaded is { Generating: true }) { return; }
 
             float fabricationSpeedIncrease = 1f + tinkeringStrength * TinkeringSpeedIncrease;
 
             timeUntilReady -= deltaTime * fabricationSpeedIncrease * Math.Min(powerConsumption <= 0 ? 1 : Voltage, MaxOverVoltageFactor);
+
+            if (!isClient)
+            {
+                if (chosenIngredients.Any(it => it.Removed))
+                {
+                    CancelFabricating();
+                    chosenIngredients.Clear();
+                }
+            }
 
             UpdateRequiredTimeProjSpecific();
 
@@ -391,7 +411,7 @@ namespace Barotrauma.Items.Components
                 }
                 else if (GameMain.GameSession?.GameMode is CampaignMode campaign)
                 {
-                    campaign.Bank.Deduct(fabricatedItem.RequiredMoney);
+                    campaign.TryPurchase(null, fabricatedItem.RequiredMoney);
                 }
             }
 
@@ -400,7 +420,7 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.NetworkMember is null || GameMain.NetworkMember.IsServer)
             {
-                List<Item> chosenIngredients = new List<Item>();
+                chosenIngredients.Clear();
                 var suitableIngredients = GetSortedSuitableIngredients();
 
                 foreach (var requiredItem in fabricatedItem.RequiredItems)
@@ -994,7 +1014,7 @@ namespace Barotrauma.Items.Components
         /// </summary>
         private void MoveIngredientsToInputContainer(FabricationRecipe targetItem)
         {
-            List<Item> chosenIngredients = new List<Item>();
+            chosenIngredients.Clear();
             var suitableIngredients = GetSortedSuitableIngredients();
 
             foreach (var requiredItem in targetItem.RequiredItems)

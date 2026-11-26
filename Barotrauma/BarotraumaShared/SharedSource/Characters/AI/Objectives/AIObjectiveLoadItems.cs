@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using System;
 using System.Collections.Generic;
@@ -7,19 +7,30 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveLoadItems : AIObjectiveLoop<Item>
+    public class AIObjectiveLoadItems : AIObjectiveLoop<Item>
     {
         public override Identifier Identifier { get; set; } = "load items".ToIdentifier();
         protected override float IgnoreListClearInterval => 20.0f;
         protected override bool ResetWhenClearingIgnoreList => false;
+        protected override bool RequireReports => false;
+        protected override bool RequireBothHandsAvailable => true;
 
         private ImmutableArray<Identifier> TargetContainerTags { get; }
         private List<Item> TargetContainers { get; } = new List<Item>();
         private ItemCondition TargetCondition { get; }
 
+        private float nextUpdateTargetsTime;
+        const float UpdateTargetsInterval = 10.0f;
+
         public enum ItemCondition
         {
+            /// <summary>
+            /// The bot tries to replace empty items with non-empty ones (e.g. ammo in a loader)
+            /// </summary>
             Empty,
+            /// <summary>
+            /// The bot tries to replace full items in the container with empty ones (e.g. batteries in a charging dock)
+            /// </summary>
             Full
         }
 
@@ -41,13 +52,35 @@ namespace Barotrauma
             }
             else
             {
-                foreach (Item item in Item.ItemList)
-                {
-                    if (!OrderPrefab.TargetItemsMatchItem(TargetContainerTags, item)) { continue; }
-                    TargetContainers.Add(item);
-                }
+                FindTargetContainers();
             }
-            TargetCondition = option == "turretammo" ? ItemCondition.Empty : ItemCondition.Full;
+            TargetCondition = 
+                option == "turretammo" || option == "refuelableitem" || containerTags.Contains("refuelableitem".ToIdentifier()) ? 
+                //empty turret ammo and oxygen tanks in a dispenser should be taken out and replaced with non-empty
+                ItemCondition.Empty : 
+                //full batteries/tanks in a charger should be taken out and replaced with non-full
+                ItemCondition.Full;
+        }
+
+        private void FindTargetContainers()
+        {
+            TargetContainers.Clear();
+            if (TargetContainerTags.None()) { return; }
+            foreach (Item item in Item.ItemList)
+            {
+                if (!OrderPrefab.TargetItemsMatchItem(TargetContainerTags, item)) { continue; }
+                TargetContainers.Add(item);
+            }
+        }
+
+        protected override void FindTargets()
+        {
+            if (Timing.TotalTime > nextUpdateTargetsTime)
+            {
+                FindTargetContainers();
+                nextUpdateTargetsTime = (float)Timing.TotalTime + UpdateTargetsInterval;
+            }
+            base.FindTargets();
         }
 
         protected override bool IsValidTarget(Item target)
@@ -77,7 +110,7 @@ namespace Barotrauma
 
         public static bool ItemMatchesTargetCondition(Item item, ItemCondition targetCondition)
         {
-            if(item == null) { return false; }
+            if (item == null) { return false; }
             try
             {
                 return targetCondition switch

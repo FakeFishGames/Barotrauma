@@ -1,21 +1,25 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
-using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
-using LimbParams = Barotrauma.RagdollParams.LimbParams;
 using JointParams = Barotrauma.RagdollParams.JointParams;
+using LimbParams = Barotrauma.RagdollParams.LimbParams;
 
 namespace Barotrauma
 {
-    abstract partial class Ragdoll
+    public abstract partial class Ragdoll
     {
+        /// <summary>
+        /// When enabled, all characters are forced to stay in the <see cref="SimplePhysicsEnabled">simple physics mode</see>. Useful for debugging.
+        /// </summary>
+        public static bool ForceSimplePhysics;
+
         public abstract RagdollParams RagdollParams { get; protected set; }
 
         const float ImpactDamageMultiplayer = 10.0f;
@@ -169,6 +173,33 @@ namespace Barotrauma
             catch
             {
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Returns the physics bodies of all the limbs and all the colliders of the ragdoll (not just the active collider, e.g. both standing and crouching colliders of humans).
+        /// Server-side, the limbs' lag-compensated bodies are included too. Useful e.g. for making projectiles and raycasts ignore the character.
+        /// </summary>
+        /// <param name="includeSeveredLimbs">Should the bodies of severed limbs be included?</param>
+        public IEnumerable<Body> GetAllPhysicsBodies(bool includeSeveredLimbs = false)
+        {
+            foreach (Limb limb in Limbs)
+            {
+                if (limb.IsSevered && !includeSeveredLimbs) { continue; }
+                yield return limb.body.FarseerBody;
+#if SERVER
+                if (limb.LagCompensatedBody != null)
+                {
+                    yield return limb.LagCompensatedBody.FarseerBody;
+                }
+#endif
+            }
+            if (collider != null)
+            {
+                foreach (PhysicsBody colliderBody in collider)
+                {
+                    yield return colliderBody.FarseerBody;
+                }
             }
         }
 
@@ -525,11 +556,34 @@ namespace Barotrauma
             foreach (var joint in LimbJoints)
             {
                 if (joint == null) { continue; }
-                float angle = (joint.LowerLimit + joint.UpperLimit) / 2.0f;
-                joint.LimbB?.body?.SetTransformIgnoreContacts(
-                    (joint.WorldAnchorA - MathUtils.RotatePointAroundTarget(joint.LocalAnchorB, Vector2.Zero, joint.BodyA.Rotation + angle, true)),
+                ResetLimbPositionRelativeToJoint(joint, joint.LimbB);
+            }
+        }
+
+        /// <summary>
+        /// Resets the position of the limb so it's in a neutral position and rotation relative to the joint. 
+        /// For example, setting the forearm to extend out from the elbow joint, midway between the rotation limits of the joint.
+        /// </summary>
+        public static void ResetLimbPositionRelativeToJoint(LimbJoint joint, Limb limb)
+        {
+            float angle = (joint.LowerLimit + joint.UpperLimit) / 2.0f;
+            if (limb == joint.LimbB)
+            {
+                limb.body?.SetTransformIgnoreContacts(
+                    joint.WorldAnchorA - MathUtils.RotatePointAroundTarget(joint.LocalAnchorB, Vector2.Zero, joint.BodyA.Rotation + angle),
                     joint.BodyA.Rotation + angle);
             }
+            else if (limb == joint.LimbA)
+            {
+                limb.body?.SetTransformIgnoreContacts(
+                    joint.WorldAnchorB - MathUtils.RotatePointAroundTarget(joint.LocalAnchorA, Vector2.Zero, joint.BodyB.Rotation + angle),
+                    joint.BodyB.Rotation + angle);
+            }
+            else
+            {
+                DebugConsole.ThrowError($"Cannot set the position of the limb {limb.type} relative to the joint {joint.Params.Name} because it's not attached to it.");
+            }
+
         }
 
         protected void CreateLimbs()
@@ -572,6 +626,7 @@ namespace Barotrauma
         public void ResetJoints()
         {
             LimbJoints.ForEach(j => j.LoadParams());
+            Limbs.ForEach(l => l.RefreshConnectedJoints());
         }
 
         /// <summary>
@@ -580,6 +635,7 @@ namespace Barotrauma
         public void ResetLimbs()
         {
             Limbs.ForEach(l => l.LoadParams());
+            Limbs.ForEach(l => l.RefreshConnectedJoints());
             SetupDrawOrder();
         }
 
@@ -593,13 +649,14 @@ namespace Barotrauma
             GameMain.World.Add(joint.Joint);
             for (int i = 0; i < LimbJoints.Length; i++)
             {
-                if (LimbJoints[i] != null) continue;
+                if (LimbJoints[i] != null) { continue; }
                 LimbJoints[i] = joint;
+                joint.LimbA?.RefreshConnectedJoints();
+                joint.LimbB?.RefreshConnectedJoints();
                 return;
             }
             Array.Resize(ref LimbJoints, LimbJoints.Length + 1);
             LimbJoints[LimbJoints.Length - 1] = joint;
-
             bool checkLimbIndex(int index, string debugName)
             {
                 if (index < 0 || index >= limbs.Length)
@@ -614,6 +671,8 @@ namespace Barotrauma
                 }
                 return true;
             }
+            joint.LimbA?.RefreshConnectedJoints();
+            joint.LimbB?.RefreshConnectedJoints();
         }
 
         protected void AddLimb(LimbParams limbParams)
@@ -687,13 +746,13 @@ namespace Barotrauma
                 i = 0;
                 foreach (LimbJoint limbJoint in LimbJoints)
                 {
-                    if (attachedJoints.Contains(limbJoint)) continue;
+                    if (attachedJoints.Contains(limbJoint)) { continue; }
                     newJoints[i] = limbJoint;
                     i++;
                 }
                 LimbJoints = newJoints;
             }
-
+            Limbs.ForEach(l => l.RefreshConnectedJoints());
             limbBodies.Remove(limb.body.FarseerBody);
             limb.Remove();
             System.Diagnostics.Debug.Assert(!limbs.Contains(limb));
@@ -879,17 +938,17 @@ namespace Barotrauma
             return Math.Min((impact - tolerance) * ImpactDamageMultiplayer, character.MaxVitality * MaxImpactDamage);
         }
 
-        private readonly List<Limb> connectedLimbs = new List<Limb>();
-        private readonly List<LimbJoint> checkedJoints = new List<LimbJoint>();
-        public bool SeverLimbJoint(LimbJoint limbJoint)
+        private readonly HashSet<Limb> connectedLimbs = [];
+        private readonly HashSet<LimbJoint> checkedJoints = [];
+        public bool SeverLimbJoint(LimbJoint limbJoint, bool showHints = false, bool disableSeverEffects = false, bool dropProstheses = true)
         {
             if (!limbJoint.CanBeSevered || limbJoint.IsSevered)
             {
+                DebugConsole.NewMessage($"Attempted to sever {limbJoint}, but it's not possible: CanBeSevered {limbJoint.CanBeSevered}, IsSevered {limbJoint.IsSevered}");
                 return false;
             }
 
             limbJoint.IsSevered = true;
-            limbJoint.Enabled = false;
 
             Vector2 limbDiff = limbJoint.LimbA.SimPosition - limbJoint.LimbB.SimPosition;
             if (limbDiff.LengthSquared() < 0.0001f) { limbDiff = Rand.Vector(1.0f); }
@@ -904,34 +963,64 @@ namespace Barotrauma
             foreach (Limb limb in Limbs)
             {
                 if (connectedLimbs.Contains(limb)) { continue; }
+                bool wasSevered = limb.IsSevered;
                 limb.IsSevered = true;
                 if (limb.type == LimbType.RightHand)
                 {
                     character.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand)?.Drop(character);
+                    character.DeselectCharacter();
                 }
                 else if (limb.type == LimbType.LeftHand)
                 {
                     character.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand)?.Drop(character);
+                    character.DeselectCharacter();
+                }
+                if (dropProstheses)
+                {
+                    //if a prosthetic is worn on the limb (or rather, serving as the limb), drop it from the character's inventory
+                    foreach (var wornItem in limb.WearingItems.ToList())
+                    {
+                        if (wornItem.WearableComponent.ProstheticForLimbs.Contains(limb))
+                        {
+                            wornItem.WearableComponent.Item.Drop(dropper: null);
+                        }
+                    }
+                }
+                if (!wasSevered && !disableSeverEffects)
+                {
+                    limb.ApplyStatusEffects(ActionType.OnSevered, 1.0f);
                 }
             }
 
-            if (!string.IsNullOrEmpty(character.BloodDecalName))
+            if (!character.BloodDecalName.IsEmpty && !disableSeverEffects)
             {
                 character.CurrentHull?.AddDecal(character.BloodDecalName, 
                     (limbJoint.LimbA.WorldPosition + limbJoint.LimbB.WorldPosition) / 2, MathHelper.Clamp(Math.Min(limbJoint.LimbA.Mass, limbJoint.LimbB.Mass), 0.5f, 2.0f), isNetworkEvent: false);
             }
 
-            SeverLimbJointProjSpecific(limbJoint, playSound: true);
+            SeverLimbJointProjSpecific(limbJoint, showHints: showHints, disableSeverEffects: disableSeverEffects);
+#if SERVER
             if (GameMain.NetworkMember is { IsServer: true })
             {
-                GameMain.NetworkMember.CreateEntityEvent(character, new Character.CharacterStatusEventData());
+                GameMain.NetworkMember.CreateEntityEvent(character,
+                    new Character.CharacterStatusEventData(forceAfflictionData: true, forceLimbSeveringData: true, disableSeverEffects: disableSeverEffects));
             }
+#endif
+            if (!disableSeverEffects)
+            {
+                character.ApplyStatusEffects(ActionType.OnSevered, 1.0f);
+            }           
+
             return true;
         }
 
-        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint, bool playSound);
+        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint, bool showHints, bool disableSeverEffects);
 
-        protected List<Limb> GetConnectedLimbs(Limb limb)
+        /// <summary>
+        /// Finds all the limbs connected to the specified limb by unsevered joints. 
+        /// For example, if a character's entire arm was severed, calling this method on the hand would return the hand, forearm and upper arm.
+        /// </summary>
+        public HashSet<Limb> GetConnectedLimbs(Limb limb)
         {
             connectedLimbs.Clear();
             checkedJoints.Clear();
@@ -939,19 +1028,62 @@ namespace Barotrauma
             return connectedLimbs;
         }
 
-        private void GetConnectedLimbs(List<Limb> connectedLimbs, List<LimbJoint> checkedJoints, Limb limb)
+        /// <summary>
+        /// Finds all the limbs connected to the specified limb, that are further away from the main limb. 
+        /// For example, if this was called on the right upper arm, it would return the right hand, forearm and upper arm.
+        /// </summary>
+        /// <remarks>
+        /// Note that this method allocates memory and shouldn't be called frequently.
+        /// </remarks>
+        public List<Limb> GetConnectedLimbsFurtherFromMainLimb(Limb limb)
         {
+            HashSet<Limb> limbsConnectedToMainLimb = [];
+            HashSet<Limb> connectedLimbs = [];
+            HashSet<LimbJoint> checkedJoints = [];
+
+            var connectedJoints = limb.GetConnectedJoints(ignoreSeverance: true);
+
+            checkedJoints.Clear();
+            //find the limbs connected to the main limb first (cutting of the search at this limb)
+            //(e.g. if this is the upper arm, find everything connected to the main limb except the right arm)
+            foreach (var connectedJoint in connectedJoints)
+            {
+                checkedJoints.Add(connectedJoint);
+            }
+            GetConnectedLimbs(limbsConnectedToMainLimb, checkedJoints, MainLimb, ignoreSeverance: true);
+
+            connectedLimbs.Clear();
+            checkedJoints.Clear();
+            foreach (var joint in connectedJoints)
+            {
+                //if this joint connects this limb to the main limb, 
+                //cut off the search from that joint and search for everything else
+                //(e.g. if this is the right upper arm, search for the rest of the arm)
+                if (limbsConnectedToMainLimb.Contains(joint.LimbA) || 
+                    limbsConnectedToMainLimb.Contains(joint.LimbB))
+                {
+                    checkedJoints.Add(joint);
+                    GetConnectedLimbs(connectedLimbs, checkedJoints, limb, ignoreSeverance: true);
+                }
+            }
+            return connectedLimbs.ToList();
+        }
+
+        private void GetConnectedLimbs(HashSet<Limb> connectedLimbs, HashSet<LimbJoint> checkedJoints, Limb limb, bool ignoreSeverance = false)
+        {
+            if (limb == null) { return; }
             connectedLimbs.Add(limb);
 
-            foreach (LimbJoint joint in LimbJoints)
+            foreach (LimbJoint joint in limb.ConnectedJointsRaw)
             {
-                if (joint.IsSevered || checkedJoints.Contains(joint)) { continue; }
+                if (!ignoreSeverance && joint.IsSevered) { continue; }
+                if (checkedJoints.Contains(joint)) { continue; }
                 if (joint.LimbA == limb)
                 {
                     if (!connectedLimbs.Contains(joint.LimbB))
                     {
                         checkedJoints.Add(joint);
-                        GetConnectedLimbs(connectedLimbs, checkedJoints, joint.LimbB);
+                        GetConnectedLimbs(connectedLimbs, checkedJoints, joint.LimbB, ignoreSeverance);
                     }
                 }
                 else if (joint.LimbB == limb)
@@ -959,7 +1091,7 @@ namespace Barotrauma
                     if (!connectedLimbs.Contains(joint.LimbA))
                     {
                         checkedJoints.Add(joint);
-                        GetConnectedLimbs(connectedLimbs, checkedJoints, joint.LimbA);
+                        GetConnectedLimbs(connectedLimbs, checkedJoints, joint.LimbA, ignoreSeverance);
                     }
                 }
             }
@@ -974,30 +1106,18 @@ namespace Barotrauma
             IsFlipped = !IsFlipped;
             dir = (dir == Direction.Left) ? Direction.Right : Direction.Left;
 
-            for (int i = 0; i < LimbJoints.Length; i++)
+            foreach (LimbJoint limbJoint in LimbJoints)
             {
-                float lowerLimit = -LimbJoints[i].UpperLimit;
-                float upperLimit = -LimbJoints[i].LowerLimit;
-
-                LimbJoints[i].LowerLimit = lowerLimit;
-                LimbJoints[i].UpperLimit = upperLimit;
-
-                LimbJoints[i].LocalAnchorA = new Vector2(-LimbJoints[i].LocalAnchorA.X, LimbJoints[i].LocalAnchorA.Y);
-                LimbJoints[i].LocalAnchorB = new Vector2(-LimbJoints[i].LocalAnchorB.X, LimbJoints[i].LocalAnchorB.Y);
+                if (limbJoint.IsSevered || (limbJoint.LimbA.IsSevered && limbJoint.LimbB.IsSevered)) { continue; }
+                limbJoint.Flip();
             }
 
             foreach (Limb limb in Limbs)
             {
                 if (limb == null || limb.IsSevered || !limb.DoesMirror) { continue; }
-                limb.Dir = Dir;
-                limb.MouthPos = new Vector2(-limb.MouthPos.X, limb.MouthPos.Y);
-                limb.MirrorPullJoint();
+                limb.Flip();
             }
-
-            FlipProjSpecific();
         }
-
-        partial void FlipProjSpecific();
 
         public Vector2 GetCenterOfMass()
         {
@@ -1322,18 +1442,9 @@ namespace Barotrauma
             }
 
             float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
-            if (GameMain.NetworkMember != null)
-            {
-                Collider.LinearVelocity = new Vector2(
-                    NetConfig.Quantize(Collider.LinearVelocity.X, -MaxVel, MaxVel, 12),
-                    NetConfig.Quantize(Collider.LinearVelocity.Y, -MaxVel, MaxVel, 12));
-            }
-            else
-            {
-                Collider.LinearVelocity = new Vector2(
-                    MathHelper.Clamp(Collider.LinearVelocity.X, -MaxVel, MaxVel),
-                    MathHelper.Clamp(Collider.LinearVelocity.Y, -MaxVel, MaxVel));
-            }
+            Collider.LinearVelocity = new Vector2(
+                MathHelper.Clamp(Collider.LinearVelocity.X, -MaxVel, MaxVel),
+                MathHelper.Clamp(Collider.LinearVelocity.Y, -MaxVel, MaxVel));            
 
             if (forceStanding)
             {
@@ -1401,7 +1512,7 @@ namespace Barotrauma
 
             if (applyWaterForces)
             {
-                Collider.ApplyWaterForces();
+                Collider.ApplyWaterForces(character.IsDead ? character.Params.DeadBuoyancyMultiplier : 1.0f);
             }
 
             foreach (Limb limb in Limbs)
@@ -1489,7 +1600,7 @@ namespace Barotrauma
                 else
                 {
                     // Falling -> ragdoll briefly if we are not moving at all, because we are probably stuck.
-                    if (Collider.LinearVelocity == Vector2.Zero && GameMain.NetworkMember is not { IsClient: true })
+                    if (Collider.LinearVelocity == Vector2.Zero && !SimplePhysicsEnabled && !character.IsRemotePlayer && GameMain.NetworkMember is not { IsClient: true })
                     {
                         character.IsRagdolled = true;
                         if (!character.IsPlayer)
@@ -1848,7 +1959,7 @@ namespace Barotrauma
                 return closestFraction;
             }, rayStart, rayEnd, Physics.CollisionStairs | Physics.CollisionPlatform | Physics.CollisionWall | Physics.CollisionLevel);
 
-            if (standOnFloorFixture != null && !IsHangingWithRope)
+            if (standOnFloorFixture != null && !IsHangingWithRope && !IsFlyingWithItem)
             {
                 floorFixture = standOnFloorFixture;
                 standOnFloorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * standOnFloorFraction;
@@ -1919,39 +2030,39 @@ namespace Barotrauma
             float surfaceY = currentHull.Surface;
             float ceilingY = currentHull.Rect.Y;
             float surfaceThreshold = ConvertUnits.ToDisplayUnits(Collider.SimPosition.Y + 1.0f);
-            //if the hull is almost full of water, check if there's a water-filled hull above it
-            //and use its water surface instead of the current hull's 
-            if (currentHull.Rect.Y - currentHull.Surface < 5.0f)
-            {                
-                GetSurfacePos(currentHull, ref surfaceY, ref ceilingY);
-                void GetSurfacePos(Hull hull, ref float prevSurfacePos, ref float ceilingPos)
+
+            //if there's a hull above, connected with a gap to this one,
+            //use its water surface instead of the current hull's 
+            //this allows the bots to swim up from the current hull, or for it to stand up if there's room
+            GetSurfacePos(currentHull, ref surfaceY, ref ceilingY);
+            void GetSurfacePos(Hull hull, ref float prevSurfacePos, ref float ceilingPos)
+            {
+                if (prevSurfacePos > surfaceThreshold) { return; }
+                bool hullAlmostFullOfWater = currentHull.Rect.Y - currentHull.Surface < 5.0f;
+                foreach (Gap gap in hull.ConnectedGaps)
                 {
-                    if (prevSurfacePos > surfaceThreshold) { return; }
-                    foreach (Gap gap in hull.ConnectedGaps)
+                    if (gap.IsHorizontal || gap.Open <= 0.0f || gap.WorldPosition.Y < hull.WorldPosition.Y) { continue; }
+                    if (Collider.SimPosition.X < ConvertUnits.ToSimUnits(gap.Rect.X) || Collider.SimPosition.X > ConvertUnits.ToSimUnits(gap.Rect.Right)) { continue; }
+
+                    //if the gap is above us and leads outside, there's no surface to limit the movement
+                    if (!gap.IsRoomToRoom && gap.Position.Y > hull.Position.Y)
                     {
-                        if (gap.IsHorizontal || gap.Open <= 0.0f || gap.WorldPosition.Y < hull.WorldPosition.Y) { continue; }
-                        if (Collider.SimPosition.X < ConvertUnits.ToSimUnits(gap.Rect.X) || Collider.SimPosition.X > ConvertUnits.ToSimUnits(gap.Rect.Right)) { continue; }
+                        ceilingPos += 100000.0f;
+                        if (hullAlmostFullOfWater) { prevSurfacePos += 100000.0f; }
+                        return;
+                    }
 
-                        //if the gap is above us and leads outside, there's no surface to limit the movement
-                        if (!gap.IsRoomToRoom && gap.Position.Y > hull.Position.Y)
+                    foreach (var linkedTo in gap.linkedTo)
+                    {
+                        if (linkedTo is Hull otherHull && otherHull != hull && otherHull != currentHull)
                         {
-                            ceilingPos += 100000.0f;
-                            prevSurfacePos += 100000.0f;
-                            return;
-                        }
-
-                        foreach (var linkedTo in gap.linkedTo)
-                        {
-                            if (linkedTo is Hull otherHull && otherHull != hull && otherHull != currentHull)
-                            {
-                                prevSurfacePos = Math.Max(surfaceY, otherHull.Surface);
-                                ceilingPos = Math.Max(ceilingPos, otherHull.Rect.Y);
-                                GetSurfacePos(otherHull, ref prevSurfacePos, ref ceilingPos);
-                                break;
-                            }
+                            if (hullAlmostFullOfWater) { prevSurfacePos = Math.Max(surfaceY, otherHull.Surface); }
+                            ceilingPos = Math.Max(ceilingPos, otherHull.Rect.Y);
+                            GetSurfacePos(otherHull, ref prevSurfacePos, ref ceilingPos);
+                            break;
                         }
                     }
-                }
+                }                
             }
             return (surfaceY, ceilingY);            
         }
@@ -2010,7 +2121,25 @@ namespace Barotrauma
                 }
             }
         }
-        
+
+        private double lastFlyingTime;
+        public bool IsFlyingWithItem
+        {
+            get => Timing.TotalTime < lastFlyingTime + 0.1;
+            set
+            {
+                if (value)
+                {
+                    onGround = false;
+                    lastFlyingTime = Timing.TotalTime;
+                }
+                else
+                {
+                    lastFlyingTime = 0.0f;
+                }
+            }
+        }
+
         /// <summary>
         /// Is attached to something with a rope.
         /// </summary>
@@ -2246,9 +2375,47 @@ namespace Barotrauma
             return limb;
         }
 
-        public Vector2? GetMouthPosition()
+        /// <summary>
+        /// Returns true if the limb of the given type exists and is not severed.
+        /// </summary>
+        /// <param name="acceptProsthetics">If true (default), a limb with a prosthesis also counts as functional.</param>
+        public bool HasFunctionalLimb(LimbType limbType, bool acceptProsthetics = true)
         {
-            Limb mouthLimb = GetLimb(LimbType.Head);
+            Limb limb = GetLimb(limbType, excludeSevered: true);
+            // If a prosthesis is already equipped on the limb, it is not technically severed, just hidden by the prosthesis
+            return limb != null && (acceptProsthetics || !limb.HiddenByProsthesis);
+        }
+
+        /// <summary>
+        /// Returns true if the natural limb of the given type is still intact: present, not severed, and not replaced by a prosthesis.
+        /// </summary>
+        public bool HasIntactLimb(LimbType limbType)
+        {
+            return HasFunctionalLimb(limbType, acceptProsthetics: false);
+        }
+
+        /// <summary>
+        /// Number of functional hands the character has, natural or prosthetic, doesn't matter as long as it works as a hand.
+        /// </summary>
+        public int FunctionalHandCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (Limb limb in Limbs)
+                {
+                    if (limb.Removed) { continue; }
+                    if (limb.IsSevered) { continue; } // IsSevered == false if there's a prosthetic 
+                    if (limb.type != LimbType.LeftHand && limb.type != LimbType.RightHand) { continue; }
+                    count++;
+                }
+                return count;
+            }
+        }
+        
+        public Vector2? GetMouthPosition(Limb mouthLimb = null)
+        {
+            mouthLimb ??= GetLimb(LimbType.Head) ?? GetLimb(LimbType.Head, useSecondaryType: true);
             if (mouthLimb == null) { return null; }
             float cos = (float)Math.Cos(mouthLimb.Rotation);
             float sin = (float)Math.Sin(mouthLimb.Rotation);
@@ -2280,23 +2447,14 @@ namespace Barotrauma
             return new Vector2(Collider.SimPosition.X, lowestBound + offset);
         }
 
+        public Limb FindHighestLimb()
+        {
+            return Limbs.Where(static l => !l.IsSevered).MaxBy(static l => l.SimPosition.Y);
+        }
+
         public Limb FindLowestLimb()
         {
-            Limb lowestLimb = null;
-            foreach (Limb limb in Limbs)
-            {
-                if (limb.IsSevered) { continue; }
-                if (lowestLimb == null)
-                {
-                    lowestLimb = limb;
-                }
-                else if (limb.SimPosition.Y < lowestLimb.SimPosition.Y)
-                {
-                    lowestLimb = limb;
-                }
-            }
-
-            return lowestLimb;
+            return Limbs.Where(static l => !l.IsSevered).MinBy(static l => l.SimPosition.Y);
         }
 
         public void ReleaseStuckLimbs()

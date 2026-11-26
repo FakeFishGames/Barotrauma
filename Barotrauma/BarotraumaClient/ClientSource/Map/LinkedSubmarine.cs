@@ -1,16 +1,15 @@
-﻿using System;
+﻿using Barotrauma.Extensions;
 using Barotrauma.IO;
-using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    partial class LinkedSubmarine : MapEntity
+    public partial class LinkedSubmarine : MapEntity
     {
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
@@ -18,12 +17,11 @@ namespace Barotrauma
             
             Draw(spriteBatch, Position);
 
-            if (!Item.ShowLinks) { return; }
+            if (!ShowLinks) { return; }
 
             foreach (MapEntity e in linkedTo)
             {
-                bool isLinkAllowed = e is Item item && item.HasTag(Tags.DockingPort);
-
+                bool isLinkAllowed = LinkedSubmarinePrefab.IsLinkedAllowed(e);
                 GUI.DrawLine(spriteBatch,
                              new Vector2(WorldPosition.X, -WorldPosition.Y),
                              new Vector2(e.WorldPosition.X, -e.WorldPosition.Y),
@@ -73,7 +71,7 @@ namespace Barotrauma
             foreach (MapEntity entity in HighlightedEntities)
             {
                 if (entity == this|| entity is not Item || !entity.IsMouseOn(position)) { continue; }
-                if (((Item)entity).GetComponent<DockingPort>() == null) { continue; }
+                if (!LinkedSubmarinePrefab.IsLinkedAllowed(entity)) { continue; }
                 if (linkedTo.Contains(entity))
                 {
                     linkedTo.Remove(entity);

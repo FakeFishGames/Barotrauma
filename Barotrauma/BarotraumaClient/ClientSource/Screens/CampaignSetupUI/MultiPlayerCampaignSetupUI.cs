@@ -1,14 +1,15 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Barotrauma.Networking;
+using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    class MultiPlayerCampaignSetupUI : CampaignSetupUI
+    public class MultiPlayerCampaignSetupUI : CampaignSetupUI
     {
         private GUIButton rollbackSaveButton;
         private GUIButton deleteMpSaveButton;
@@ -43,12 +44,13 @@ namespace Barotrauma
             var saveLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, GUI.IntScale(24)) }, TextManager.Get("SaveName"), textAlignment: Alignment.CenterLeft);
             saveNameBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), saveLabel.RectTransform, Anchor.CenterRight), string.Empty)
             {
+                OverflowClip = true,
                 textFilterFunction = ToolBox.RemoveInvalidFileNameChars
             };
             saveLabel.InheritTotalChildrenMinHeight();
 
             var seedLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, GUI.IntScale(24)) }, TextManager.Get("MapSeed"), textAlignment: Alignment.CenterLeft);
-            seedBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), seedLabel.RectTransform, Anchor.CenterRight), ToolBox.RandomSeed(8));
+            seedBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), seedLabel.RectTransform, Anchor.CenterRight), ToolBox.RandomSeed(8)) { OverflowClip = true };
             seedLabel.InheritTotalChildrenMinHeight();
 
             nameSeedLayout.InheritTotalChildrenMinHeight();
@@ -227,6 +229,8 @@ namespace Barotrauma
 
             foreach (CampaignMode.SaveInfo saveInfo in saveFiles)
             {
+                // The save list comes from the server and the paths point to the server's filesystem, don't try read
+                // them locally to filter out incompatible saves
                 CreateSaveElement(saveInfo);
             }
 
@@ -259,14 +263,17 @@ namespace Barotrauma
                         };
                         return false;
                     }
-                    
+
                     LoadSaveGame();
                     return true;
-                    
+
                     void LoadSaveGame()
                     {
-                        LoadGame?.Invoke(saveInfo.FilePath, backupIndex: Option.None);
-                        CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
+                        ConfirmLoadIfMissingFreshSavePackages(saveInfo, () =>
+                        {
+                            LoadGame?.Invoke(saveInfo.FilePath, backupIndex: Option.None);
+                            CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
+                        });
                     }
                 },
                 Enabled = false
@@ -301,7 +308,10 @@ namespace Barotrauma
             {
                 CreateBackupMenu(SaveUtil.GetIndexData(saveInfo.FilePath), index =>
                 {
-                    LoadGame(saveInfo.FilePath, backupIndex: Option.Some(index.Index));
+                    ConfirmLoadIfMissingFreshSavePackages(saveInfo, () =>
+                    {
+                        LoadGame?.Invoke(saveInfo.FilePath, backupIndex: Option.Some(index.Index));
+                    });
                 });
             }
             else
@@ -350,7 +360,20 @@ namespace Barotrauma
             var indexData = INetSerializableStruct.Read<NetCollection<SaveUtil.BackupIndexData>>(message);
             CreateBackupMenu(indexData, selectedIndex =>
             {
-                LoadGame?.Invoke(path, backupIndex: Option.Some(selectedIndex.Index));
+                var matchingSaveInfo = saveList.Content.Children
+                                               .Select(static c => c.UserData)
+                                               .OfType<CampaignMode.SaveInfo>()
+                                               .FirstOrNone(si => si.FilePath == path);
+
+                if (!matchingSaveInfo.TryUnwrap(out var saveInfo))
+                {
+                    // In theory, this should never happen
+                    DebugConsole.AddWarning($"Failed to find save info for backup path: {path}, skipping fresh save check.");
+                    LoadGame?.Invoke(path, backupIndex: Option.Some(selectedIndex.Index));
+                    return;
+                }
+
+                ConfirmLoadIfMissingFreshSavePackages(saveInfo, () => LoadGame?.Invoke(path, backupIndex: Option.Some(selectedIndex.Index)));
             });
         }
 

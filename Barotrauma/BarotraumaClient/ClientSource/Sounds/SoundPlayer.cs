@@ -9,7 +9,7 @@ using System.Threading;
 
 namespace Barotrauma
 {
-    static class SoundPlayer
+    public static class SoundPlayer
     {
         //music
         private const float MusicLerpSpeed = 1.0f;
@@ -27,6 +27,8 @@ namespace Barotrauma
         private static BackgroundMusic previousDefaultMusic;
 
         private static float updateMusicTimer;
+
+        private static bool switchMusicImmediately;
 
         //ambience
         private static SoundPrefab waterAmbienceIn => SoundPrefab.WaterAmbienceIn.ActivePrefab;
@@ -555,9 +557,15 @@ namespace Barotrauma
             if (musicDisposed) { Thread.Sleep(60); }
         }
 
-        public static void ForceMusicUpdate()
+        /// <param name="immediate">
+        /// Normally a new track only starts once the previous one has faded out (which takes several seconds).
+        /// If true, the previous tracks are quickly faded out in the background and the new ones start (fading in) right away,
+        /// e.g. for music that needs to be in sync with something happening on screen.
+        /// </param>
+        public static void ForceMusicUpdate(bool immediate = false)
         {
             updateMusicTimer = 0.0f;
+            switchMusicImmediately |= immediate;
         }
         
         private static void UpdateMusic(float deltaTime)
@@ -691,7 +699,7 @@ namespace Barotrauma
                 }
 
                 LogCurrentMusic();
-                updateMusicTimer = UpdateMusicInterval; 
+                updateMusicTimer = UpdateMusicInterval;
                 if (mainTrack != null)
                 {
                     updateMusicTimer += mainTrack.MinimumPlayDuration;
@@ -733,8 +741,16 @@ namespace Barotrauma
                     //something playing -> mute it first
                     if (musicChannel[i] != null && musicChannel[i].IsPlaying)
                     {
-                        musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, 0.0f, MusicLerpSpeed * deltaTime);
-                        if (musicChannel[i].Gain < 0.01f) { DisposeMusicChannel(i); }                   
+                        if (switchMusicImmediately)
+                        {
+                            //let the sound manager fade it out quickly in the background, so the new clip can start right away
+                            DisposeMusicChannel(i, fadeOut: true);
+                        }
+                        else
+                        {
+                            musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, 0.0f, MusicLerpSpeed * deltaTime);
+                            if (musicChannel[i].Gain < 0.01f) { DisposeMusicChannel(i); }
+                        }
                     }
                     //channel free now, start playing the correct clip
                     if (currentMusic[i] == null || (musicChannel[i] == null || !musicChannel[i].IsPlaying))
@@ -775,7 +791,8 @@ namespace Barotrauma
                     }
                     musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, targetGain, MusicLerpSpeed * deltaTime);
                 }
-            } 
+            }
+            switchMusicImmediately = false;
         }
 
         private static double lastMusicLogTime;
@@ -798,7 +815,7 @@ namespace Barotrauma
             lastMusicLogTime = Timing.TotalTime;
         }
 
-        private static void DisposeMusicChannel(int index)
+        private static void DisposeMusicChannel(int index, bool fadeOut = false)
         {
             var clip = musicClips.FirstOrDefault(m => m.Sound == musicChannel[index]?.Sound);
             if (clip != null)
@@ -806,7 +823,15 @@ namespace Barotrauma
                 if (clip.ContinueFromPreviousTime) { clip.PreviousTime = musicChannel[index].StreamSeekPos; }
             }
 
-            musicChannel[index]?.Dispose(); musicChannel[index] = null;
+            if (fadeOut)
+            {
+                musicChannel[index]?.FadeOutAndDispose();
+            }
+            else
+            {
+                musicChannel[index]?.Dispose();
+            }
+            musicChannel[index] = null;
             currentMusic[index] = null;
         }
         
@@ -1003,12 +1028,7 @@ namespace Barotrauma
             {
                 return listener.CurrentHull != targetHull;
             }
-            Vector2 soundPos = soundWorldPos;
-            if (targetHull.Submarine != null)
-            {
-                soundPos += -targetHull.Submarine.WorldPosition + targetHull.Submarine.HiddenSubPosition;
-            }
-            return listener.CurrentHull.GetApproximateDistance(listener.Position, soundPos, targetHull, range) > range;
+            return listener.CurrentHull.GetApproximateDistance(listener.WorldPosition, soundWorldPos, targetHull, range) > range;
         }
 
         public static void PlaySplashSound(Vector2 worldPosition, float strength)

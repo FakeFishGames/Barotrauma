@@ -14,7 +14,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma.MapCreatures.Behavior
 {
-    class BallastFloraBranch : VineTile
+    public class BallastFloraBranch : VineTile
     {
         public readonly BallastFloraBehavior? ParentBallastFlora;
         public int ID = -1;
@@ -126,7 +126,7 @@ namespace Barotrauma.MapCreatures.Behavior
         }
     }
 
-    internal partial class BallastFloraBehavior : ISerializableEntity
+    public partial class BallastFloraBehavior : ISerializableEntity
     {
 #if DEBUG
         public List<Tuple<Vector2, Vector2>> debugSearchLines = new List<Tuple<Vector2, Vector2>>();
@@ -396,8 +396,8 @@ namespace Barotrauma.MapCreatures.Behavior
             foreach (BallastFloraBranch branch in Branches)
             {
                 XElement be = new XElement("Branch",
-                    new XAttribute("flowerconfig", branch.FlowerConfig.Serialize()),
-                    new XAttribute("leafconfig", branch.LeafConfig.Serialize()),
+                    branch.FlowerConfig.ToXML("FlowerConfig"),
+                    branch.LeafConfig.ToXML("LeafConfig"),
                     new XAttribute("pos", XMLExtensions.Vector2ToString(branch.Position)),
                     new XAttribute("ID", branch.ID),
                     new XAttribute("isroot", branch.IsRoot),
@@ -489,8 +489,6 @@ namespace Barotrauma.MapCreatures.Behavior
                 Vector2 pos = branchElement.GetAttributeVector2("pos", Vector2.Zero);
                 bool isRoot = branchElement.GetAttributeBool("isroot", false);
                 bool isRootGrowth = branchElement.GetAttributeBool("isrootgrowth", false);
-                int flowerConfig = getInt("flowerconfig");
-                int leafconfig = getInt("leafconfig");
                 int id = getInt("ID");
                 float health = getFloat("health");
                 float maxhealth = getFloat("maxhealth");
@@ -500,7 +498,23 @@ namespace Barotrauma.MapCreatures.Behavior
                 int parentBranchId = branchElement.GetAttributeInt("parentbranch", -1);
                 VineTileType type = (VineTileType)branchElement.GetAttributeInt("tile", 0);
 
-                BallastFloraBranch newBranch = new BallastFloraBranch(this, null, pos, type, FoliageConfig.Deserialize(flowerConfig), FoliageConfig.Deserialize(leafconfig))
+                FoliageConfig flowerConfig, leafConfig;
+
+                if (branchElement.GetAttribute("flowerconfig") is { } flowerConfigAttr && branchElement.GetAttribute("leafconfig") is { } leafConfigAttr)
+                {
+                    flowerConfig = LegacyFoliageConfig.Deserialize(flowerConfigAttr.GetAttributeInt(LegacyFoliageConfig.EmptyConfigValue)).ToNewFormat();
+                    leafConfig = LegacyFoliageConfig.Deserialize(leafConfigAttr.GetAttributeInt(LegacyFoliageConfig.EmptyConfigValue)).ToNewFormat();
+                }
+                else
+                {
+                    XElement? flowerConfigElement = branchElement.GetChildElement("FlowerConfig");
+                    XElement? leafConfigElement = branchElement.GetChildElement("LeafConfig");
+
+                    flowerConfig = flowerConfigElement != null ? FoliageConfig.FromXML(flowerConfigElement) : FoliageConfig.EmptyConfig;
+                    leafConfig = leafConfigElement != null ? FoliageConfig.FromXML(leafConfigElement) : FoliageConfig.EmptyConfig;
+                }
+
+                BallastFloraBranch newBranch = new BallastFloraBranch(this, null, pos, type, flowerConfig, leafConfig)
                 {
                     ID = id,
                     Health = health,
@@ -539,7 +553,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
             foreach (BallastFloraBranch branch in Branches)
             {
-                branch.UpdateScale(deltaTime);
+                branch.UpdateScale(deltaTime, growthInterval: 1.0f);
                 branch.UpdatePulse(deltaTime, PulseInflateSpeed, PulseDeflateSpeed, PulseDelay);
 #if CLIENT
                 branch.UpdateHealth();
@@ -791,7 +805,7 @@ namespace Barotrauma.MapCreatures.Behavior
             root = new BallastFloraBranch(this, null, Vector2.Zero, VineTileType.Stem, FoliageConfig.EmptyConfig, FoliageConfig.EmptyConfig)
             {
                 BlockedSides = TileSide.Bottom | TileSide.Left | TileSide.Right,
-                GrowthStep = 1f,
+                GrowthStep = VineTile.VineGrownFloweringStarted,
                 MaxHealth = RootHealth,
                 Health = RootHealth,
                 IsRoot = true,
@@ -983,7 +997,7 @@ namespace Barotrauma.MapCreatures.Behavior
                 {
                     Vector2 flowerPos = GetWorldPosition() + newBranch.Position;
                     CreateShapnel(flowerPos);
-                    newBranch.GrowthStep = 2.0f;
+                    newBranch.GrowthStep = VineTile.FullyGrownWithFlowers;
                     SoundPlayer.PlayDamageSound(BurstSound, 1.0f, flowerPos, range: 800);
                 }
 #endif

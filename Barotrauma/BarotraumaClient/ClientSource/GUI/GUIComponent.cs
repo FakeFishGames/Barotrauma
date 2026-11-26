@@ -307,8 +307,10 @@ namespace Barotrauma
 
         protected Rectangle ClampRect(Rectangle r)
         {
-            if (Parent is null) { return r; }
-            Rectangle parentRect = !Parent.ClampMouseRectToParent ? Parent.Rect : Parent.ClampRect(Parent.Rect);
+            var parent = ClampMouseRectToGUIComponent ?? Parent;
+
+            if (parent is null) { return r; }
+            Rectangle parentRect = !parent.ClampMouseRectToParent && parent.ClampMouseRectToGUIComponent == null ? parent.Rect : parent.ClampRect(parent.Rect);
             if (parentRect.Width <= 0 || parentRect.Height <= 0) { return Rectangle.Empty; }
             if (parentRect.X > r.X)
             {
@@ -343,13 +345,18 @@ namespace Barotrauma
 
         public bool ClampMouseRectToParent { get; set; } = false;
 
+        /// <summary>
+        /// If set, the mouse rect of this element is clamped within the bounds of the specified component (<see cref="ClampRect(Rectangle)"/> and <see cref="ClampMouseRectToParent"/>).
+        /// </summary>
+        public GUIComponent ClampMouseRectToGUIComponent;
+
         public virtual Rectangle MouseRect
         {
             get
             {
                 if (!CanBeFocused) { return Rectangle.Empty; }
 
-                return ClampMouseRectToParent ? ClampRect(Rect) : Rect;
+                return ClampMouseRectToParent || ClampMouseRectToGUIComponent != null ? ClampRect(Rect) : Rect;
             }
         }
 
@@ -358,6 +365,8 @@ namespace Barotrauma
         public SpriteEffects SpriteEffects;
 
         public virtual Color OutlineColor { get; set; }
+
+        public float OutlineThickness { get; set; }
 
         protected ComponentState _state;
         protected ComponentState _previousState;
@@ -781,6 +790,11 @@ namespace Barotrauma
                         flashColor * (float)Math.Sin(flashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f));
                 }
             }
+
+            if (OutlineColor != Color.Transparent)
+            {
+                GUI.DrawRectangle(spriteBatch, Rect, OutlineColor, false, thickness: OutlineThickness);
+            }
         }
 
         /// <summary>
@@ -832,11 +846,11 @@ namespace Barotrauma
 
             int width = (int)(400 * GUI.Scale);
             int height = (int)(18 * GUI.Scale);
-            Point padding = new Point((int)(10 * GUI.Scale));
 
             if (toolTipBlock == null || (RichString)toolTipBlock.UserData != toolTip)
             {
                 toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, height), null), toolTip, font: GUIStyle.SmallFont, wrap: true, style: "GUIToolTip");
+                Vector4 padding = toolTipBlock.Padding;
                 toolTipBlock.RectTransform.NonScaledSize = new Point(
                     (int)(toolTipBlock.Font.MeasureString(toolTipBlock.WrappedText).X + padding.X + toolTipBlock.Padding.X + toolTipBlock.Padding.Z),
                     (int)(toolTipBlock.Font.MeasureString(toolTipBlock.WrappedText).Y + padding.Y + toolTipBlock.Padding.Y + toolTipBlock.Padding.W));
@@ -1067,21 +1081,30 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Sets the minimum height of the transfrom to equal to the largest of the children's minimum heights
+        /// (i.e. makes the rect at least large enough to fit the largest element in it vertically)
+        /// </summary>
+        public void InheritChildrenMinHeight(int additionalHeight = 0)
+        {
+            RectTransform.InheritChildrenMinHeight(additionalHeight);
+        }
+
+        /// <summary>
         /// Sets the minimum height of the transfrom to equal to the sum of the minimum heights of the children 
         /// (i.e. makes the element at least large enough to fit all the children vertically)
         /// </summary>
-        public void InheritTotalChildrenMinHeight()
+        public virtual void InheritTotalChildrenMinHeight(int additionalHeight = 0)
         {
-            RectTransform.InheritTotalChildrenMinHeight();
+            RectTransform.InheritTotalChildrenMinHeight(additionalHeight);
         }
 
         /// <summary>
         /// Sets the minimum height of the transfrom to equal to the sum of the heights of the children 
         /// (i.e. makes the element at least large enough to fit all the children vertically)
         /// </summary>
-        public void InheritTotalChildrenHeight()
+        public virtual void InheritTotalChildrenHeight(int additionalHeight = 0)
         {
-            RectTransform.InheritTotalChildrenHeight();
+            RectTransform.InheritTotalChildrenHeight(additionalHeight);
         }
 
         public static GUIComponent FromXML(ContentXElement element, RectTransform parent)

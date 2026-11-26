@@ -3,7 +3,7 @@ using System;
 
 namespace Barotrauma
 {
-    static class Timing
+    public static class Timing
     {
         private static double alpha;
 
@@ -19,7 +19,7 @@ namespace Barotrauma
         public static double Accumulator;
         public const int FixedUpdateRate = 60;
         public const double Step = 1.0 / FixedUpdateRate;
-        public const double AccumulatorMax = 0.25f;
+        public static double AccumulatorMax = 0.25f;
 
         /// <summary>
         /// Maximum FPS (0 = unlimited).

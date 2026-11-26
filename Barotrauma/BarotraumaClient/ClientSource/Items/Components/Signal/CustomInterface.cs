@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 
 namespace Barotrauma.Items.Components
 {
@@ -171,23 +172,14 @@ namespace Barotrauma.Items.Components
                 else if (ciElement.InputType is CustomInterfaceElement.InputTypeOption.Button)
                 {
                     var btn = new GUIButton(new RectTransform(new Vector2(1.0f, elementSize), uiElementContainer.RectTransform),
-                        TextManager.Get(ciElement.Label).Fallback(ciElement.Label), style: "DeviceButton")
+                        GetLabelText(ciElement), style: "DeviceButton")
                     {
                         UserData = ciElement
                     };
+
                     btn.OnClicked += (_, userdata) =>
                     {
-                        CustomInterfaceElement btnElement = userdata as CustomInterfaceElement;
-                        if (GameMain.Client == null)
-                        {
-                            ButtonClicked(btnElement);
-                        }
-                        else if (!suppressNetworkEvents && GameMain.Client != null)
-                        {
-                            //don't use CreateClientEventWithCorrectionDelay here, because buttons have no state,
-                            //which means we don't need to worry about server updates interfering with client-side changes to the values in the interface
-                            item.CreateClientEvent(this, new EventData(btnElement));
-                        }
+                        OnButtonPressed(userdata as CustomInterfaceElement);
                         return true;
                     };
 
@@ -216,15 +208,50 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private void OnButtonPressed(CustomInterfaceElement btnElement)
+        {
+            if (btnElement is null) { return; }
+
+            if (GameMain.Client is null)
+            {
+                ButtonClicked(btnElement, user: Character.Controlled);
+            }
+            else if (!suppressNetworkEvents)
+            {
+                //don't use CreateClientEventWithCorrectionDelay here, because buttons have no state,
+                //which means we don't need to worry about server updates interfering with client-side changes to the values in the interface
+                item.CreateClientEvent(this, new EventData(btnElement, user: Character.Controlled));
+            }
+        }
+
+        /// <summary>
+        /// Returns the localized label of the element.
+        /// If the element has a key binding, the '[Key]' text is added to the end of the text
+        /// </summary>
+        private static LocalizedString GetLabelText(CustomInterfaceElement element, LocalizedString label = null)
+        {
+            label ??= TextManager.Get(element.Label).Fallback(element.Label);
+            if (element.KeyBind is not InputType keyBind)
+            {
+                return label;
+            }
+
+            LocalizedString keyText = GameSettings.CurrentConfig.KeyMap.KeyBindText(keyBind);
+
+            return TextManager.GetWithVariables("custominterface.labelwithkeybind",
+                ("[label]", label),
+                ("[key]", keyText));
+        }
+
         public override void CreateEditingHUD(SerializableEntityEditor editor)
         {
             base.CreateEditingHUD(editor);
 
-            if (customInterfaceElementList.Count > 0) 
-            { 
-                PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(customInterfaceElementList[0]);
-                PropertyDescriptor labelProperty = properties.Find("Label", false);
-                PropertyDescriptor signalProperty = properties.Find("Signal", false);
+            if (customInterfaceElementList.Count > 0)
+            {
+                PropertyInfo[] properties = customInterfaceElementList[0].GetType().GetProperties();
+                PropertyInfo labelProperty = properties.Find(nameof(CustomInterfaceElement.Label), ignoreCase: false);
+                PropertyInfo signalProperty = properties.Find(nameof(CustomInterfaceElement.Signal), ignoreCase: false);
                 for (int i = 0; i < customInterfaceElementList.Count; i++)
                 {
                     editor.CreateStringField(customInterfaceElementList[i],
@@ -263,6 +290,9 @@ namespace Barotrauma.Items.Components
             foreach (var uiElement in uiElements)
             {
                 if (uiElement.UserData is not CustomInterfaceElement element) { continue; }
+
+                uiElement.Enabled = IsEnabled;
+
                 bool visible = Screen.Selected == GameMain.SubEditorScreen || element.StatusEffects.Any() || element.HasPropertyName || (element.Connection != null && element.Connection.Wires.Count > 0);
                 if (visible) 
                 { 
@@ -283,6 +313,16 @@ namespace Barotrauma.Items.Components
                     uiElement.Visible = visible;
                     uiElement.IgnoreLayoutGroups = !uiElement.Visible;
                     elementVisibilityChanged = true;
+                }
+
+                if (element.KeyBind is InputType keyBind &&
+                    uiElement is GUIButton { Visible: true, Enabled: true } &&
+                    character == Character.Controlled &&
+                    GUI.KeyboardDispatcher.Subscriber == null &&
+                    PlayerInput.KeyHit(keyBind))
+                {
+                    uiElement.Flash(GUIStyle.Green, flashDuration: 0.2f);
+                    OnButtonPressed(element);
                 }
             }
 
@@ -329,10 +369,11 @@ namespace Barotrauma.Items.Components
 
             LocalizedString CreateLabelText(int elementIndex)
             {
-                string label = customInterfaceElementList[elementIndex].Label;
-                return string.IsNullOrWhiteSpace(label) ?
-                    TextManager.GetWithVariable("connection.signaloutx", "[num]", (elementIndex + 1).ToString()) :
-                    TextManager.Get(label).Fallback(label);
+                CustomInterfaceElement element = customInterfaceElementList[elementIndex];
+                string label = element.Label;
+                return string.IsNullOrWhiteSpace(label)
+                           ? GetLabelText(element, TextManager.GetWithVariable("connection.signaloutx", "[num]", (elementIndex + 1).ToString()))
+                           : GetLabelText(element);
             }
 
             uiElementContainer.Recalculate();
@@ -445,6 +486,7 @@ namespace Barotrauma.Items.Components
             {
                 string[] stringValues = new string[customInterfaceElementList.Count];
                 bool[] boolValues = new bool[customInterfaceElementList.Count];
+                UInt16[] userIds = new UInt16[customInterfaceElementList.Count];
                 for (int i = 0; i < customInterfaceElementList.Count; i++)
                 {
                     var element = customInterfaceElementList[i];
@@ -455,7 +497,10 @@ namespace Barotrauma.Items.Components
                             stringValues[i] = msg.ReadString();
                             break;
                         case CustomInterfaceElement.InputTypeOption.TickBox:
+                            boolValues[i] = msg.ReadBoolean();
+                            break;
                         case CustomInterfaceElement.InputTypeOption.Button:
+                            userIds[i] = msg.ReadUInt16();
                             boolValues[i] = msg.ReadBoolean();
                             break;
                     }
@@ -496,7 +541,7 @@ namespace Barotrauma.Items.Components
                         case CustomInterfaceElement.InputTypeOption.Button:
                             if (boolValues[i])
                             {
-                                ButtonClicked(element);
+                                ButtonClicked(element, user: Entity.FindEntityByID(userIds[i]) as Character);
                             }
                             break;
                     }

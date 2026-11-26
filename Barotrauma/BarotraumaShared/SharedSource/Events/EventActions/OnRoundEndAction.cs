@@ -5,7 +5,7 @@ namespace Barotrauma
     /// <summary>
     /// Executes all the child actions when the round ends.
     /// </summary>
-    class OnRoundEndAction : EventAction
+    public class OnRoundEndAction : EventAction
     {
         private readonly SubactionGroup subActions;
 
@@ -33,7 +33,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Reset()
+        public override void Reset(bool shouldEndConversations = true)
         {
         }
 

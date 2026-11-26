@@ -32,6 +32,18 @@ namespace Barotrauma
 
         private static bool shouldFadeToBlack;
 
+        /// <summary>
+        /// Is a menu that should prevent conversations from starting open? Same as <see cref="GUI.InputBlockingMenuOpen"/>,
+        /// except that the campaign map is allowed (the player can browse the map while in a conversation).
+        /// </summary>
+        public static bool IsBlockedByMenu =>
+            GUI.InputBlockingMenuOpen && !IsCampaignMapOpen;
+
+        private static bool IsCampaignMapOpen =>
+            GameMain.GameSession?.Campaign is { } campaign &&
+            (campaign.ShowCampaignUI || campaign.ForceMapUI) &&
+            campaign.CampaignUI?.SelectedTab == CampaignMode.InteractionType.Map;
+
         private bool IsBlockedByAnotherConversation(IEnumerable<Entity> _, float duration)
         {
             return 
@@ -43,20 +55,21 @@ namespace Barotrauma
 
         partial void ShowDialog(Character speaker, Character targetCharacter)
         {
-            CreateDialog(GetDisplayText(), speaker, Options.Select(opt => opt.Text), GetEndingOptions(), actionInstance: this, spriteIdentifier: EventSprite, fadeToBlack: FadeToBlack, dialogType: DialogType, continueConversation: ContinueConversation);
+            CreateDialog(GetDisplayText(), speaker, Options.Select(opt => opt.Text), GetEndingOptions(), actionInstance: this, spriteIdentifier: EventSprite, fadeToBlack: FadeToBlack, dialogType: DialogType, continueConversation: ContinueConversation, disableCloseButton: DisableCloseButton);
         }
 
-        public static void CreateDialog(LocalizedString text, Character speaker, IEnumerable<string> options, int[] closingOptions, string eventSprite, UInt16 actionId, bool fadeToBlack, DialogTypes dialogType, bool continueConversation = false)
+
+        public static void CreateDialog(LocalizedString text, Character speaker, IEnumerable<string> options, int[] closingOptions, string eventSprite, UInt16 actionId, bool fadeToBlack, DialogTypes dialogType, bool continueConversation = false, bool disableCloseButton = false)
         {
-            CreateDialog(text, speaker, options, closingOptions, actionInstance: null, actionId: actionId, spriteIdentifier: eventSprite, fadeToBlack: fadeToBlack, dialogType: dialogType, continueConversation: continueConversation);
+            CreateDialog(text, speaker, options, closingOptions, actionInstance: null, actionId: actionId, spriteIdentifier: eventSprite, fadeToBlack: fadeToBlack, dialogType: dialogType, continueConversation: continueConversation, disableCloseButton: disableCloseButton);
         }
 
         private static void CreateDialog(LocalizedString text, Character speaker, IEnumerable<string> options, int[] closingOptions, string spriteIdentifier = null, 
-                                         ConversationAction actionInstance = null, UInt16? actionId = null, bool fadeToBlack = false, DialogTypes dialogType = DialogTypes.Regular, bool continueConversation = false)
+                                         ConversationAction actionInstance = null, UInt16? actionId = null, bool fadeToBlack = false, DialogTypes dialogType = DialogTypes.Regular, bool continueConversation = false, bool disableCloseButton = false)
         {
             Debug.Assert(actionInstance == null || actionId == null);
 
-            if (GUI.InputBlockingMenuOpen)
+            if (IsBlockedByMenu)
             {
                 if (actionId.HasValue) { SendIgnore(actionId.Value); }
                 return;
@@ -68,7 +81,7 @@ namespace Barotrauma
 
             if (lastMessageBox != null && !lastMessageBox.Closed && GUIMessageBox.MessageBoxes.Contains(lastMessageBox))
             {
-                if (eventSprite != null && lastMessageBox.BackgroundIcon == null)
+                if (eventSprite != null && !lastMessageBox.HasBackgroundIcon)
                 {
                     //no background icon in the last message box: we need to create a new one
                     lastMessageBox.Close();
@@ -111,7 +124,7 @@ namespace Barotrauma
 
             GUIMessageBox messageBox = new GUIMessageBox(string.Empty, string.Empty, Array.Empty<LocalizedString>(), 
                 relativeSize: relative, minSize: min,
-                type: GUIMessageBox.Type.InGame, backgroundIcon: EventSet.GetEventSprite(spriteIdentifier))
+                type: GUIMessageBox.Type.InGame, backgroundIcon: eventSprite)
             {
                 UserData = "ConversationAction"
             };
@@ -204,7 +217,7 @@ namespace Barotrauma
 
             void AssignActionsToButtons(List<GUIButton> optionButtons, GUIMessageBox target)
             {
-                if (!options.Any())
+                if (!options.Any() && !disableCloseButton)
                 {
                     GUIButton closeButton = new GUIButton(new RectTransform(Vector2.One, target.InnerFrame.RectTransform, Anchor.BottomRight, scaleBasis: ScaleBasis.Smallest)
                     {
@@ -278,12 +291,13 @@ namespace Barotrauma
                         if (actionInstance != null)
                         {
                             var option = actionInstance.Options[selectedOption];
-                            if (GameMain.Client == null && option.ForceSay)
+                            if (GameMain.Client == null && option.ForceSay && (!option.ForceSayOnlyShowToOthers || GameMain.DebugDraw))
                             {
                                 Character.Controlled.ForceSay(
                                     option.ForceSayText.IsNullOrEmpty() ? TextManager.Get(option.Text).Fallback(option.Text) : TextManager.Get(option.ForceSayText).Fallback(option.ForceSayText),
-                                    option.ForceSayInRadio,
-                                    option.ForceSayRemoveQuotes);
+                                    sayInRadio: option.ForceSayInRadio,
+                                    option.ForceSayOptions,
+                                    ignoreSpeechImpediments: option.ForceSayEvenIfCantSpeak);
                             }
                             actionInstance.selectedOption = selectedOption;
                             DisableButtons(optionButtons, btn);
@@ -308,7 +322,7 @@ namespace Barotrauma
             }
         }
 
-        public static void SelectOption(ushort actionId, int option)
+        public static void SelectOption(ushort actionId, int option, bool isClosingOption)
         {
             if (lastMessageBox.UserData is Pair<string, ushort> userData)
             {
@@ -317,6 +331,11 @@ namespace Barotrauma
                 GUIListBox conversationList = lastMessageBox.FindChild("conversationlist", true) as GUIListBox;
                 Debug.Assert(conversationList != null);
                 DisableButtons(conversationList.Content.GetAllChildren<GUIButton>(), (btn) => btn.UserData is int i && i == option);
+                if (isClosingOption)
+                {
+                    //close with a brief delay so the user has time to see which option some other client chose
+                    CoroutineManager.Invoke(lastMessageBox.Close, delay: 2.0f);
+                }
             }
         }
 

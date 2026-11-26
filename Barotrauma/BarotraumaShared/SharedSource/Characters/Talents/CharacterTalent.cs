@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    class CharacterTalent
+    public class CharacterTalent
     {
         public Character Character { get; }
         public string DebugIdentifier { get; }
@@ -102,6 +102,20 @@ namespace Barotrauma
                 foreach (var characterAbilityGroup in characterAbilityGroups)
                 {
                     characterAbilityGroup.CheckAbilityGroup(abilityObject);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Same as <see cref="CheckTalent"/>, but without side effects, see <see cref="CharacterAbilityGroupEffect.PreviewAbilityGroup"/>.
+        /// </summary>
+        public void PreviewTalentEffects(AbilityEffectType abilityEffectType, AbilityObject abilityObject)
+        {
+            if (characterAbilityGroupEffectDictionary.TryGetValue(abilityEffectType, out var characterAbilityGroups))
+            {
+                foreach (var characterAbilityGroup in characterAbilityGroups)
+                {
+                    characterAbilityGroup.PreviewAbilityGroup(abilityObject);
                 }
             }
         }

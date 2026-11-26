@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    internal sealed partial class CircuitBoxInputOutputNode
+    public sealed partial class CircuitBoxInputOutputNode
     {
         private const string PromptUserData = "InputOutputEditPrompt";
 

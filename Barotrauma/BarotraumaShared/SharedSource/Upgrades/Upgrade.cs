@@ -9,7 +9,7 @@ using Barotrauma.Items.Components;
 // ReSharper disable ArrangeThisQualifier
 namespace Barotrauma
 {
-    internal sealed class PropertyReference
+    public sealed class PropertyReference
     {
         public object? OriginalValue { get; private set; }
 
@@ -159,7 +159,7 @@ namespace Barotrauma
         }
     }
 
-    internal sealed class Upgrade : IDisposable
+    public sealed class Upgrade : IDisposable
     {
         private ISerializableEntity TargetEntity { get; }
 

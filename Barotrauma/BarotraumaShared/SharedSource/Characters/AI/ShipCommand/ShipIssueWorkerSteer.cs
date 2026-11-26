@@ -10,7 +10,7 @@ namespace Barotrauma
         public ShipIssueWorkerSteer(ShipCommandManager shipCommandManager, Order order) : base(shipCommandManager, order) { }
         public override void CalculateImportanceSpecific()
         {
-            if (shipCommandManager.NavigationState == ShipCommandManager.NavigationStates.Inactive) { return; }
+            if (shipCommandManager.NavigationState == ShipCommandManager.NavigationStates.Stationary) { return; }
             if (TargetItemComponent is Powered { HasPower: false }) { return; }
             if (TargetItem.Condition <= 0f) { return; }
 

@@ -8,11 +8,12 @@ using Voronoi2;
 
 namespace Barotrauma
 {
-    partial class Map
+    public partial class Map
     {
         public bool AllowDebugTeleport;
 
         private readonly MapGenerationParams generationParams;
+        public MapGenerationParams GenerationParams => generationParams;
 
         private Location furthestDiscoveredLocation;
 
@@ -21,6 +22,8 @@ namespace Barotrauma
 
         public Action<Location, LocationConnection> OnLocationSelected;
         public Action<LocationConnection, IEnumerable<Mission>> OnMissionsSelected;
+
+        public int WorldStepCount { get; private set; }
 
         public readonly struct LocationChangeInfo
         {
@@ -39,12 +42,15 @@ namespace Barotrauma
         /// </summary>
         public readonly NamedEvent<LocationChangeInfo> OnLocationChanged = new NamedEvent<LocationChangeInfo>();
 
+
         private List<Location> endLocations = new List<Location>();
         public IReadOnlyList<Location> EndLocations { get { return endLocations; } }
 
         public Location StartLocation { get; private set; }
 
         public Location CurrentLocation { get; private set; }
+
+        public Location LocationToTeleportTo { get; set; }
 
         public int CurrentLocationIndex
         {
@@ -69,8 +75,19 @@ namespace Barotrauma
 
         public List<Location> Locations { get; private set; }
 
-        private readonly List<Location> locationsDiscovered = new List<Location>();
-        private readonly List<Location> locationsVisited = new List<Location>();
+        /// <summary>
+        /// Discovered location = location that's visible on the map, not necessarily visited. Locations can be discovered by e.g. a mission unlocking in some remote location.
+        /// </summary>
+        private readonly List<Location> locationsDiscovered = [];
+        /// <summary>
+        /// Visited location = a location the player has either actually visited, or a "remotely visited" location.
+        /// </summary>
+        private readonly List<Location> locationsVisited = [];
+        /// <summary>
+        /// Locations that have been marked as visited without the players actually going there (e.g. reached by an expedition).
+        /// Subset of <see cref="locationsVisited"/>. Removed from here when the players visit the location themselves.
+        /// </summary>
+        private readonly HashSet<Location> locationsVisitedRemotely = [];
 
         public List<LocationConnection> Connections { get; private set; }
 
@@ -92,7 +109,7 @@ namespace Barotrauma
             {
                 Radiation = new Radiation(this, generationParams.RadiationParams)
                 {
-                    Enabled = settings.RadiationEnabled
+                    Enabled = settings.RadiationEnabled && !DetermineRadiationDisabledByPlugin()
                 };
             }
         }
@@ -124,9 +141,10 @@ namespace Barotrauma
                         Locations[i] = new Location(campaign, subElement);
                         break;
                     case "radiation":
+
                         Radiation = new Radiation(this, generationParams.RadiationParams, subElement)
                         {
-                            Enabled = campaign.Settings.RadiationEnabled
+                            Enabled = campaign.Settings.RadiationEnabled && !DetermineRadiationDisabledByPlugin()
                         };
                         break;
                 }
@@ -153,7 +171,6 @@ namespace Barotrauma
                             Biome.Prefabs.FirstOrDefault(b => b.Identifier == biomeId) ??
                             Biome.Prefabs.FirstOrDefault(b => !b.OldIdentifier.IsEmpty && b.OldIdentifier == biomeId) ??
                             Biome.Prefabs.First();
-                        connection.Difficulty = MathHelper.Clamp(connection.Difficulty, connection.Biome.MinDifficulty, connection.Biome.AdjustedMaxDifficulty);
                         connection.LevelData = new LevelData(subElement.Element("Level"), connection.Difficulty);
                         Connections.Add(connection);
                         connectionElements.Add(subElement);
@@ -256,7 +273,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < Connections.Count; i++)
                 {
-                    Connections[i].LevelData.HasHuntingGrounds = Rand.Range(0.0f, 1.0f) < Connections[i].Difficulty / 100.0f * LevelData.MaxHuntingGroundsProbability;
+                    Connections[i].LevelData.HasHuntingGrounds = Rand.Range(0.0f, 1.0f) < Connections[i].Difficulty / 100.0f * generationParams.MaxHuntingGroundsProbability;
                     connectionElements[i].SetAttributeValue("hashuntinggrounds", true);
                 }
             }
@@ -350,7 +367,7 @@ namespace Barotrauma
                     if (locationConnection.Difficulty > 0.0f)
                     {
                         locationConnection.Difficulty = 0.0f;
-                        locationConnection.LevelData = new LevelData(locationConnection);
+                        locationConnection.LevelData = new LevelData(locationConnection, this);
                     }
                 }
             }
@@ -367,16 +384,39 @@ namespace Barotrauma
                     CurrentLocation.ChangeType(campaign, forceStartOutpostType);
                 }
             }
+
+            // Inform plugins of map generation having finished
+            foreach (var hook in PluginData.GetHooks<PluginCampaignMapGenerationFinishedDelegate>())
+            {
+                hook(campaign, this, Locations);
+            }
+
             Discover(CurrentLocation);
             Visit(CurrentLocation);
             CurrentLocation.CreateStores();
 
             foreach (var location in Locations)
             {
+                location.OriginalFaction = location.Faction;
+                //the type may have changed during generation (end locations, biome gates, start outpost, etc)
+                location.OriginalType = location.Type;
                 location.UnlockInitialMissions();
             }
 
+            CheckForErrors();
+
             InitProjectSpecific();
+        }
+
+        private bool DetermineRadiationDisabledByPlugin()
+        {
+            bool radiationDisabled = false;
+            foreach (var hook in PluginData.GetHooks<PluginShouldDisableJovianRadiation>())
+            {
+                radiationDisabled = hook(out RichString _);
+            }
+
+            return radiationDisabled;
         }
 
         partial void InitProjectSpecific();
@@ -398,7 +438,18 @@ namespace Barotrauma
                         y + generationParams.VoronoiSiteVariance.Y * Rand.Range(-0.5f, 0.5f, Rand.RandSync.ServerAndClient)));
                 }
             }
-            
+
+            //add more dense voronoi sites at the boundaries between biomes, to ensure we get lots of locations and potential connections between them
+            //otherwise we may end up with a map with just one valid connection from biome to another
+            float zoneWidth = Width / generationParams.DifficultyZones;
+            for (int x = 0; x < generationParams.DifficultyZones; x++)
+            {
+                for (float y = 10.0f; y < Height - 10.0f; y += generationParams.VoronoiSiteInterval.Y * 2)
+                {
+                    voronoiSites.Add(new Vector2((x + 1) * zoneWidth, y));
+                }
+            }
+
             // put some of this stuff in a helper class, this function is getting unwieldy
             MapLocationTypeGenerator mapLocationTypeGenerator = new MapLocationTypeGenerator(campaign, this);
 
@@ -449,7 +500,7 @@ namespace Barotrauma
                     int zone = GetZoneIndex(position.X);
 
                     newLocations[i] = Location.CreateRandom(position, zone, GetBiome(position.X)?.Identifier, Rand.GetRNG(Rand.RandSync.ServerAndClient),
-                        requireOutpost: false, forceLocationType: null, existingLocations: Locations);
+                                                            requireOutpost: false, forceLocationType: null, existingLocations: Locations);
                     
                     mapLocationTypeGenerator.AddToLocationsPerZone(zone, newLocations[i]);
                     Locations.Add(newLocations[i]);
@@ -561,13 +612,34 @@ namespace Barotrauma
                 }
                 if (generationParams.GateCount[zone1] == 0) { continue; }
 
+                var leftMostLocation =
+                        connection.Locations[0].MapPosition.X < connection.Locations[1].MapPosition.X ?
+                            connection.Locations[0] :
+                            connection.Locations[1];
+                var rightMostLocation =
+                    leftMostLocation == connection.Locations[0] ?
+                    connection.Locations[1] :
+                    connection.Locations[0];
+
+                //if the leftmost location doesn't have any connections to the left (e.g. a "deadend location" between biomes),
+                //we cannot choose it as the gate location. It must have connections both to the left, and to the right (the next biome)
+                if (leftMostLocation.Connections.None(c => c.OtherLocation(leftMostLocation).MapPosition.X < leftMostLocation.MapPosition.X))
+                {
+                    continue;
+                }
+                //same for the rightmost location - it must have connections leading further on the map
+                if (rightMostLocation.Connections.None(c => c.OtherLocation(rightMostLocation).MapPosition.X > rightMostLocation.MapPosition.X))
+                {
+                    continue;
+                }
+
                 if (!connectionsBetweenZones[zone1].Any())
                 {
                     connectionsBetweenZones[zone1].Add(connection);
                 }
                 else if (generationParams.GateCount[zone1] == 1)
                 {
-                    //if there's only one connection, place it at the center of the map
+                    //if we only want one connection between the biomes, place it at the center of the map
                     if (Math.Abs(connection.CenterPos.Y - Height / 2) < Math.Abs(connectionsBetweenZones[zone1].First().CenterPos.Y - Height / 2))
                     {
                         connectionsBetweenZones[zone1].Clear();
@@ -609,33 +681,7 @@ namespace Barotrauma
                             Connections[i].Locations[1];
                     if (!AllowAsBiomeGate(leftMostLocation.Type))
                     {
-                        var potentialGateLocationTypes = orderedPrefabs.Where(AllowAsBiomeGate);
-                        LocationType gateLocationType =
-                            //choose some location type that's allowed in this zone/biome, and has a non zero commonness (instead of some fixed count)
-                            potentialGateLocationTypes.Where(lt => lt.AreaSettings.Any(areaSettings => areaSettings.MatchesLocation(this, leftMostLocation) && areaSettings.Commonness > 0)).GetRandom(Rand.RandSync.ServerAndClient) ??
-                            //if not found, use something with a fixed count
-                            potentialGateLocationTypes.Where(lt => lt.AreaSettings.Any(areaSettings => areaSettings.MatchesLocation(this, leftMostLocation) && areaSettings.MinCount > 0)).GetRandom(Rand.RandSync.ServerAndClient) ??
-                            //if that's not found either, try finding a type that doesn't spawn in any biome, but is allowed as a biome gate
-                            //(a mod might have some special "biome gate" location types that are meant just for the gate locations)
-                            potentialGateLocationTypes.Where(lt => lt.AreaSettings.None(areaSettings => areaSettings.Commonness > 0.0f || areaSettings.HasCounts)).GetRandom(Rand.RandSync.ServerAndClient);
-
-                        if (gateLocationType == null)
-                        {
-                            DebugConsole.ThrowError($"Failed to find a suitable location type for a gate location between zones {zone1} and {zone2}.");
-                            continue;
-                        }
-                        leftMostLocation.ChangeType(
-                            campaign,
-                            gateLocationType,
-                            createStores: false,
-                            unlockInitialMissions: false);
                         forciblyReassignedGateLocations.Add(leftMostLocation);
-                    }
-                    static bool AllowAsBiomeGate(LocationType lt)
-                    {
-                        //checking for "abandoned" is not strictly necessary here because it's now configured to not be allowed as a biome gate
-                        //but might be better to keep it for backwards compatibility (previously we relied only on that check)
-                        return lt.HasOutpost && lt.Identifier != "abandoned" && lt.BiomeGate != LocationType.BiomeGateSetting.Deny;
                     }
 
                     leftMostLocation.IsGateBetweenBiomes = true;
@@ -704,6 +750,27 @@ namespace Barotrauma
             var gateLocations = Locations.Where(l => l.IsGateBetweenBiomes);
             foreach (var gateLocation in forciblyReassignedGateLocations)
             {
+                var potentialGateLocationTypes = orderedPrefabs.Where(AllowAsBiomeGate);
+                LocationType gateLocationType =
+                    //choose some location type that's allowed in this zone/biome, and has a non zero commonness (instead of some fixed count)
+                    potentialGateLocationTypes.Where(lt => lt.AreaSettings.Any(areaSettings => areaSettings.MatchesLocation(this, gateLocation) && areaSettings.Commonness > 0)).GetRandom(Rand.RandSync.ServerAndClient) ??
+                    //if not found, use something with a fixed count
+                    potentialGateLocationTypes.Where(lt => lt.AreaSettings.Any(areaSettings => areaSettings.MatchesLocation(this, gateLocation) && areaSettings.MinCount > 0)).GetRandom(Rand.RandSync.ServerAndClient) ??
+                    //if that's not found either, try finding a type that doesn't spawn in any biome, but is allowed as a biome gate
+                    //(a mod might have some special "biome gate" location types that are meant just for the gate locations)
+                    potentialGateLocationTypes.Where(lt => lt.AreaSettings.None(areaSettings => areaSettings.Commonness > 0.0f || areaSettings.HasCounts)).GetRandom(Rand.RandSync.ServerAndClient);
+
+                if (gateLocation == null)
+                {
+                    DebugConsole.ThrowError($"Failed to find a suitable location type for a gate location at the end of the biome {gateLocation.Biome}.");
+                    continue;
+                }
+                gateLocation.ChangeType(
+                    campaign,
+                    gateLocationType,
+                    createStores: false,
+                    unlockInitialMissions: false);
+
                 //remove the gate locations who's types we've reassigned from the remaining types left to assign,
                 //(i.e. if we want just 1 of some location type, and we were forced to choose it as a gate, don't use that type again)
                 //must be done after assigning biomes
@@ -719,7 +786,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    connection.Difficulty = CalculateDifficulty(connection.CenterPos.X, connection.Biome);
+                    connection.Difficulty = CalculateDifficultyForConnection(connection, campaign);
                 }
             }
 
@@ -737,7 +804,7 @@ namespace Barotrauma
             //(needs to be done before AssignLocationCounts, since LevelData may be required for the location type changes)
             foreach (Location location in Locations)
             {
-                location.LevelData = new LevelData(location, this, CalculateDifficulty(location.MapPosition.X, location.Biome));
+                location.LevelData = new LevelData(location, this, CalculateDifficultyForLocation(location, campaign));
                 location.TryAssignFactionBasedOnLocationType(campaign);
                 if (location.Type.HasOutpost && campaign != null && location.Type.OutpostTeam == CharacterTeamType.FriendlyNPC)
                 {
@@ -765,27 +832,62 @@ namespace Barotrauma
 
             foreach (LocationConnection connection in Connections) 
             { 
-                connection.LevelData = new LevelData(connection);
+                connection.LevelData = new LevelData(connection, this);
             }
 
             CreateEndLocation(campaign);
-            float CalculateDifficulty(float mapPosition, Biome biome)
+        }
+
+        private static bool AllowAsBiomeGate(LocationType lt)
+        {
+            //checking for "abandoned" is not strictly necessary here because it's now configured to not be allowed as a biome gate
+            //but might be better to keep it for backwards compatibility (previously we relied only on that check)
+            return lt.HasOutpost && lt.Identifier != "abandoned" && lt.BiomeGate != LocationType.BiomeGateSetting.Deny;
+        }
+
+        public void CheckForErrors()
+        {
+            //check path to the first end location, because there are no normal connections between the end locations
+            var lastLocation = EndLocations[0];
+            int endDistance = GetDistanceToClosestLocationOrConnection(StartLocation, maxDistance: int.MaxValue, criteria: (Location location) => location == lastLocation);
+            if (endDistance == int.MaxValue)
             {
-                float settingsFactor = campaign.Settings.LevelDifficultyMultiplier;
-                float minDifficulty = 0;
-                float maxDifficulty = 100;
-                float difficulty = mapPosition / Width * 100;
-                System.Diagnostics.Debug.Assert(biome != null);
-                if (biome != null)
-                {
-                    minDifficulty = biome.MinDifficulty;
-                    maxDifficulty = biome.AdjustedMaxDifficulty;
-                    float diff = 1 - settingsFactor;
-                    difficulty *= 1 - (1f / biome.AllowedZones.Max() * diff);
-                }
-                return MathHelper.Clamp(difficulty, minDifficulty, maxDifficulty);
+                DebugConsole.ThrowError($"No path to the end of the map found. Seed: {Seed}");
+            }
+
+            if (Locations.None(l => l.Type.Identifier == "outpost" && GetZoneIndex(l.MapPosition.X) == 1))
+            {
+                DebugConsole.ThrowError($"No outpost in the first zone of the map. Seed: {Seed}");
             }
         }
+
+        public float CalculateDifficultyForLocation(Location location, CampaignMode campaign)
+        {
+            return CalculateDifficultyForMapPosition(location.MapPosition.X, campaign, location.Biome);
+        }
+
+        public float CalculateDifficultyForConnection(LocationConnection connection, CampaignMode campaign)
+        {
+            return CalculateDifficultyForMapPosition(connection.CenterPos.X, campaign, connection.Biome);
+        }
+
+        private float CalculateDifficultyForMapPosition(float mapPosition, CampaignMode campaign, Biome biome)
+        {
+            float settingsFactor = campaign.Settings.LevelDifficultyMultiplier;
+            float minDifficulty = 0;
+            float maxDifficulty = 100;
+            float difficulty = mapPosition / Width * 100;
+            System.Diagnostics.Debug.Assert(biome != null);
+            if (biome != null)
+            {
+                minDifficulty = biome.MinDifficulty;
+                maxDifficulty = biome.AdjustedMaxDifficulty;
+                float diff = 1 - settingsFactor;
+                difficulty *= 1 - (1f / biome.AllowedZones.Max() * diff);
+            }
+            return MathHelper.Clamp(difficulty, minDifficulty, maxDifficulty);
+        }
+
 
         partial void GenerateAllLocationConnectionVisuals();
 
@@ -936,23 +1038,31 @@ namespace Barotrauma
             //removed all connections from the second-to-last location, need to reconnect it
             if (previousToEndLocation.Connections.None())
             {
-                Location connectTo = Locations.First();
+                Location connectTo = null;
                 foreach (Location location in Locations)
                 {
-                    if (!location.Biome.IsEndBiome && location != previousToEndLocation && location.MapPosition.X > connectTo.MapPosition.X)
+                    if (!location.Biome.IsEndBiome && location != previousToEndLocation && 
+                        (connectTo == null || location.MapPosition.X > connectTo.MapPosition.X))
                     {
                         connectTo = location;
                     }
                 }
-                var newConnection = new LocationConnection(previousToEndLocation, connectTo)
+                if (connectTo == null)
                 {
-                    Biome = endLocation.Biome,
-                    Difficulty = 100.0f
-                };
-                newConnection.LevelData = new LevelData(newConnection);
-                Connections.Add(newConnection);
-                previousToEndLocation.Connections.Add(newConnection);
-                connectTo.Connections.Add(newConnection);
+                    DebugConsole.ThrowError("Something went wrong when generating the map! Tried to make sure the location leading to the end locations is connected to earlier biomes, but couldn't find any location to connect to.");
+                }
+                else
+                {
+                    var newConnection = new LocationConnection(previousToEndLocation, connectTo)
+                    {
+                        Biome = endLocation.Biome,
+                        Difficulty = 100.0f
+                    };
+                    newConnection.LevelData = new LevelData(newConnection, this);
+                    Connections.Add(newConnection);
+                    previousToEndLocation.Connections.Add(newConnection);
+                    connectTo.Connections.Add(newConnection);
+                }
             }
 
             var endConnection = new LocationConnection(previousToEndLocation, endLocation)
@@ -960,7 +1070,7 @@ namespace Barotrauma
                 Biome = endLocation.Biome,
                 Difficulty = 100.0f
             };
-            endConnection.LevelData = new LevelData(endConnection);
+            endConnection.LevelData = new LevelData(endConnection, this);
             Connections.Add(endConnection);
             previousToEndLocation.Connections.Add(endConnection);
             endLocation.Connections.Add(endConnection);
@@ -1037,7 +1147,7 @@ namespace Barotrauma
 
         #endregion Generation
 
-        public void MoveToNextLocation()
+        public void MoveToNextLocation(bool teleportDirectlyToSelectedLocation = false)
         {
             if (SelectedLocation == null && Level.Loaded?.EndLocation != null)
             {
@@ -1045,7 +1155,8 @@ namespace Barotrauma
                 //(e.g. due to returning to an empty location the beginning of the level during the round)
                 SelectLocation(Level.Loaded.EndLocation);
             }
-            if (SelectedConnection == null)
+
+            if (SelectedConnection == null && !teleportDirectlyToSelectedLocation)
             {
                 if (!endLocations.Contains(CurrentLocation))
                 {
@@ -1093,7 +1204,8 @@ namespace Barotrauma
             if (GameMain.GameSession is { Campaign.CampaignMetadata: { } metadata })
             {
                 metadata.SetValue("campaign.location.id".ToIdentifier(), CurrentLocationIndex);
-                metadata.SetValue("campaign.location.name".ToIdentifier(), CurrentLocation.NameIdentifier.Value);
+                //name identifier can be empty if the name has been forced to some non-localized string (e.g. by renaming the outpost in the DLC)
+                metadata.SetValue("campaign.location.name".ToIdentifier(), CurrentLocation.NameIdentifier.IsEmpty ? CurrentLocation.DisplayName.Value : CurrentLocation.NameIdentifier);
                 metadata.SetValue("campaign.location.biome".ToIdentifier(), CurrentLocation.Biome?.Identifier ?? "null".ToIdentifier());
                 metadata.SetValue("campaign.location.type".ToIdentifier(), CurrentLocation.Type?.Identifier ?? "null".ToIdentifier());
             }
@@ -1241,20 +1353,20 @@ namespace Barotrauma
             }
         }
 
-        public void ProgressWorld(CampaignMode campaign, CampaignMode.TransitionType transitionType, float roundDuration)
+        /// <param name="roundLocation">The location the players were at during the round that just ended. The steps don't count towards the expiry of the missions available in that location. Defaults to the current location.</param>
+        /// <param name="roundMissions">The missions played during the round that just ended. The steps don't count towards the expiry of these missions either.</param>
+        public void ProgressWorld(CampaignMode campaign, CampaignMode.TransitionType transitionType, float roundDuration, Location roundLocation = null, IReadOnlyCollection<Mission> roundMissions = null)
         {
-            //one step per 10 minutes of play time
-            int steps = (int)Math.Floor(roundDuration / (60.0f * 10.0f));
-            if (transitionType == CampaignMode.TransitionType.ProgressToNextLocation || 
-                transitionType == CampaignMode.TransitionType.ProgressToNextEmptyLocation)
-            {
-                //at least one step when progressing to the next location, regardless of how long the round took
-                steps = Math.Max(1, steps);
-            }
-            steps = Math.Min(steps, 5);
+            int steps = (int)Math.Floor(CampaignMode.GetElapsedWorldSteps(roundDuration, transitionType));
+            ProgressWorld(campaign, transitionType, steps, roundLocation, roundMissions);
+        }
+
+        /// <inheritdoc cref="ProgressWorld(CampaignMode, CampaignMode.TransitionType, float, Location, IReadOnlyCollection{Mission})"/>
+        public void ProgressWorld(CampaignMode campaign, CampaignMode.TransitionType transitionType, int steps, Location roundLocation = null, IReadOnlyCollection<Mission> roundMissions = null)
+        {
             for (int i = 0; i < steps; i++)
             {
-                ProgressWorld(campaign);
+                ProgressWorld(campaign, roundLocation, roundMissions);
             }
 
             // always update specials every step
@@ -1270,10 +1382,25 @@ namespace Barotrauma
             Radiation?.OnStep(steps);
         }
 
-        private void ProgressWorld(CampaignMode campaign)
+        public void ProgressWorld(CampaignMode campaign)
         {
+            ProgressWorld(campaign, roundLocation: CurrentLocation, roundMissions: null);
+        }
+
+        /// <inheritdoc cref="ProgressWorld(CampaignMode, CampaignMode.TransitionType, float, Location, IReadOnlyCollection{Mission})"/>
+        public void ProgressWorld(CampaignMode campaign, Location roundLocation, IReadOnlyCollection<Mission> roundMissions)
+        {
+            roundLocation ??= CurrentLocation;
             foreach (Location location in Locations)
             {
+                //create a new list because missions that complete/fail based on a timer may trigger other missions
+                foreach (Mission mission in location.AvailableMissions.ToList())
+                {
+                    //missions shouldn't expire while they're available in the players' location or being played
+                    //(otherwise they could expire just because the players spent a long time in the outpost or in the mission level)
+                    bool progressExpiry = location != roundLocation && (roundMissions == null || !roundMissions.Contains(mission));
+                    mission.ProgressWorld(progressExpiry);
+                }
                 if (location.Visited)
                 {
                     location.WorldStepsSinceVisited++;
@@ -1287,6 +1414,7 @@ namespace Barotrauma
                     location.ClearStores();
                 }
                 location.LevelData.ResetExhaustedEventSets();
+                location.LevelData.ResetFinishedEvents();
                 if (location.Discovered)
                 {
                     if (furthestDiscoveredLocation == null ||
@@ -1295,23 +1423,38 @@ namespace Barotrauma
                         furthestDiscoveredLocation = location;
                     }
                 }
+                //don't let the deaths "expire" if the population is too low
+                if (!location.IsBelowInsufficientPopulationThreshold)
+                {
+                    foreach (var killedCharacter in location.KilledCharacters)
+                    {
+                        killedCharacter.WorldStepsSinceKilled++;
+                    }
+                }
             }
             foreach (LocationConnection connection in Connections)
             {
                 connection.LevelData.ResetExhaustedEventSets();
+                connection.LevelData.ResetFinishedEvents();
+                //note that we shouldn't progress the missions here: they're handled in the Locations foreach above,
+                //since the missions are also registered to the locations
+                //connection.AvailableMissions.ForEach(m => m.ProgressWorld());
             }
 
             foreach (Location location in Locations)
             {
+                //don't update location type changes on the current location
+                //don't update stores at this point either, that's handled later in the method
+                if (location == CurrentLocation) { continue; }
                 if (location.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
                 {
                     continue;
                 }
 
                 bool shouldUpdateStores = location.Discovered;
-                //don't allow the type of the current location or the destination to change (it'd be weird to arrive at a different type of location than the one you were travelling to)
+                //don't allow the type of the destination to change (it'd be weird to arrive at a different type of location than the one you were travelling to)
                 //biome gates should also remain unchanged
-                bool shouldProcessLocationTypeChanges = location != CurrentLocation && location != SelectedLocation && !location.IsGateBetweenBiomes;
+                bool shouldProcessLocationTypeChanges = location != SelectedLocation && !location.IsGateBetweenBiomes;
                 if (shouldProcessLocationTypeChanges &&
                     ProgressLocationTypeChanges(campaign, location)) 
                 {
@@ -1325,11 +1468,25 @@ namespace Barotrauma
                 }
             }
 
+            foreach (Faction faction in campaign.Factions)
+            {
+                faction.ProgressWorld();
+            }
+
+            AutomaticMission.CreateAcrossMap(campaign, campaign.Map);
+
             if (CurrentLocation != null)
             {
                 CurrentLocation.UpdateStores(createStoresIfNotCreated: true);
                 CurrentLocation.WorldStepsSinceVisited = 0;
             }
+
+            foreach (var hook in PluginData.GetHooks<PluginOnProgressWorldDelegate>())
+            {
+                hook(this, campaign);
+            }
+
+            WorldStepCount++;
         }
 
         private bool ProgressLocationTypeChanges(CampaignMode campaign, Location location)
@@ -1355,8 +1512,17 @@ namespace Barotrauma
                         return ChangeLocationType(campaign, location, location.PendingLocationTypeChange.Value.typeChange);
                     }
                 }
+                return false;
             }
 
+            return ProcessXmlBasedTypeChange(campaign, location);
+        }
+
+        /// <summary>
+        /// The original location type change logic.
+        /// </summary>
+        private bool ProcessXmlBasedTypeChange(CampaignMode campaign, Location location)
+        {
             //find which types of locations this one can change to
             Dictionary<LocationTypeChange, float> allowedTypeChanges = new Dictionary<LocationTypeChange, float>();
             foreach (LocationTypeChange typeChange in location.Type.CanChangeTo)
@@ -1391,13 +1557,23 @@ namespace Barotrauma
                 }
             }
 
+            UpdateProximityTimers(location);
+
+            return false;
+        }
+
+        private void UpdateProximityTimers(Location location)
+        {
             foreach (LocationTypeChange typeChange in location.Type.CanChangeTo)
             {
-                foreach (var requirement in typeChange.Requirements)
+                foreach (var requirement in typeChange.Modifiers)
                 {
                     if (requirement.AnyWithinDistance(location, requirement.RequiredProximityForProbabilityIncrease))
                     {
-                        if (!location.ProximityTimer.ContainsKey(requirement)) { location.ProximityTimer[requirement] = 0; }
+                        if (!location.ProximityTimer.ContainsKey(requirement))
+                        {
+                            location.ProximityTimer[requirement] = 0;
+                        }
                         location.ProximityTimer[requirement] += 1;
                     }
                     else
@@ -1406,20 +1582,18 @@ namespace Barotrauma
                     }
                 }
             }
-
-            return false;
         }
 
-        private bool ChangeLocationType(CampaignMode campaign, Location location, LocationTypeChange change)
+        /// <summary>
+        /// Changes the type of a location. Can be used by plugins to change location types.
+        /// </summary>
+        /// <param name="campaign">The campaign mode instance.</param>
+        /// <param name="location">The location to change.</param>
+        /// <param name="newType">The target location type.</param>
+        /// <param name="cooldownAfterChange">Number of turns before this location can change type again.</param>
+        /// <returns>True if the type was changed, false if blocked.</returns>
+        public bool ChangeLocationType(CampaignMode campaign, Location location, LocationType newType, int cooldownAfterChange = 0)
         {
-            LocalizedString prevName = location.DisplayName;
-
-            if (!LocationType.Prefabs.TryGet(change.ChangeToType, out var newType))
-            {
-                DebugConsole.ThrowError($"Failed to change the type of the location \"{location.DisplayName}\". Location type \"{change.ChangeToType}\" not found.");
-                return false;
-            }
-
             if (location.LocationTypeChangesBlocked) { return false; }
 
             if (newType.OutpostTeam != location.Type.OutpostTeam ||
@@ -1428,15 +1602,78 @@ namespace Barotrauma
                 location.ClearMissions();
             }
             location.ChangeType(campaign, newType, createStores: false);
+            location.TimeSinceLastTypeChange = 0;
+            location.LocationTypeChangeCooldown = cooldownAfterChange;
+            location.PendingLocationTypeChange = null;
+            return true;
+        }
+
+        /// <summary>
+        /// Changes the type of a location based on an XML-defined <see cref="LocationTypeChange"/> rule.
+        /// Wraps the public overload with additional behavior (map notifications and proximity timer cleanup).
+        /// </summary>
+        private bool ChangeLocationType(CampaignMode campaign, Location location, LocationTypeChange change)
+        {
+            if (!LocationType.Prefabs.TryGet(change.ChangeToType, out var newType))
+            {
+                DebugConsole.ThrowError($"Failed to change the type of the location \"{location.DisplayName}\". Location type \"{change.ChangeToType}\" not found.");
+                return false;
+            }
+            LocalizedString prevName = location.DisplayName;
+            if (!ChangeLocationType(campaign, location, newType, change.CooldownAfterChange)) { return false; }
+            // Show a notification about the type change on the client
             ChangeLocationTypeProjSpecific(location, prevName, change);
-            foreach (var requirement in change.Requirements)
+            foreach (var requirement in change.Modifiers)
             {
                 location.ProximityTimer.Remove(requirement);
             }
-            location.TimeSinceLastTypeChange = 0;
-            location.LocationTypeChangeCooldown = change.CooldownAfterChange;
-            location.PendingLocationTypeChange = null;
             return true;
+        }
+
+        /// <summary>
+        /// Difficulty of the most difficult level the player has visited themselves (ignores locations only visited remotely, e.g. by an expedition).
+        /// </summary>
+        public float GetHighestVisitedLevelDifficulty()
+        {
+            float highestDifficulty = 0.0f;
+            foreach (var location in locationsVisited)
+            {
+                if (locationsVisitedRemotely.Contains(location)) { continue; }
+                if (location.LevelData.Difficulty > highestDifficulty)
+                {
+                    highestDifficulty = location.LevelData.Difficulty;
+                }
+            }
+            return highestDifficulty;
+        }
+
+        /// <summary>
+        /// Get all the locations within the specified distance from the start location (including the start location itself).
+        /// </summary>
+        /// <param name="connectionFilter">Optional filter that determines whether a connection can be traversed.</param>
+        public static IEnumerable<Location> GetLocationsWithinDistance(Location startLocation, int maxDistance, Func<LocationConnection, bool> connectionFilter = null)
+        {
+            var checkedLocations = new HashSet<Location>() { startLocation };
+            var currentLocations = new List<Location>() { startLocation };
+            //breadth-first, so each location is reached via the shortest path
+            for (int distance = 1; distance <= maxDistance && currentLocations.Any(); distance++)
+            {
+                var nextLocations = new List<Location>();
+                foreach (var location in currentLocations)
+                {
+                    foreach (var connection in location.Connections)
+                    {
+                        if (connectionFilter != null && !connectionFilter(connection)) { continue; }
+                        var otherLocation = connection.OtherLocation(location);
+                        if (checkedLocations.Add(otherLocation))
+                        {
+                            nextLocations.Add(otherLocation);
+                        }
+                    }
+                }
+                currentLocations = nextLocations;
+            }
+            return checkedLocations;
         }
 
         public static bool LocationOrConnectionWithinDistance(Location startLocation, int maxDistance, Func<Location, bool> criteria, Func<LocationConnection, bool> connectionCriteria = null)
@@ -1482,6 +1719,51 @@ namespace Barotrauma
             return int.MaxValue;
         }
 
+        /// <summary>  
+        /// Get the path from the start location to a destination location. Uses a simple flood fill algorithm.
+        /// </summary>  
+        /// <returns>The path as a list of locations, or an empty list if no path is found.</returns>  
+        /// <param name="connectionFilter">Optional filter that determines whether a connection can be traversed.</param>
+        public static List<Location> GetPathToLocation(Location startLocation, Location destination, int maxDistance, Func<LocationConnection, bool> connectionFilter = null)
+        {
+            var locationsToTest = new Queue<List<Location>>();
+            var checkedLocations = new HashSet<Location>();
+
+            locationsToTest.Enqueue([startLocation]);
+
+            while (locationsToTest.Count != 0)
+            {
+                var currentPath = locationsToTest.Dequeue();
+                var currentLocation = currentPath.Last();
+
+                if (checkedLocations.Contains(currentLocation))
+                {
+                    continue;
+                }
+
+                checkedLocations.Add(currentLocation);
+
+                if (currentLocation == destination)
+                {
+                    return currentPath;
+                }
+
+                foreach (var connection in currentLocation.Connections)
+                {
+                    if (connectionFilter != null && !connectionFilter(connection)) { continue; }
+                    var otherLocation = connection.OtherLocation(currentLocation);
+                    if (!checkedLocations.Contains(otherLocation) && currentPath.Count <= maxDistance)
+                    {
+                        var newPath = new List<Location>(currentPath) { otherLocation };
+                        locationsToTest.Enqueue(newPath);
+                    }
+                }
+            }
+
+            //return empty list if no path was found
+            return [];
+        }
+
 
         partial void ChangeLocationTypeProjSpecific(Location location, LocalizedString prevName, LocationTypeChange change);
 
@@ -1492,29 +1774,65 @@ namespace Barotrauma
             if (location is null) { return; }
             if (locationsDiscovered.Contains(location)) { return; }
             locationsDiscovered.Add(location);
+            if (furthestDiscoveredLocation == null || location.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
+            {
+                furthestDiscoveredLocation = location;
+            }
             if (checkTalents)
             {
                 GameSession.GetSessionCrewCharacters(CharacterType.Both).ForEach(c => c.CheckTalents(AbilityEffectType.OnLocationDiscovered, new Location.AbilityLocation(location)));
             }
         }
 
-        public void Visit(Location location, bool resetTimeSinceVisited = true)
+        /// <param name="visitedRemotely">Is the location marked as visited without the players actually going there (e.g. reached by an expedition)?
+        /// Remote visits don't count towards <see cref="GetHighestVisitedLevelDifficulty"/>.</param>
+        /// <param name="checkTalents">Should <see cref="AbilityEffectType.OnLocationVisited"/> be triggered if this is the first time the players visit the location in person?</param>
+        public void Visit(Location location, bool resetTimeSinceVisited = true, bool incrementTimesVisited = true, bool visitedRemotely = false, bool checkTalents = true)
         {
             if (location is null) { return; }
+            //a location visited remotely before (e.g. by an expedition) hasn't been visited in person yet
+            bool firstVisitInPerson = !visitedRemotely && (!locationsVisited.Contains(location) || locationsVisitedRemotely.Contains(location));
             if (resetTimeSinceVisited)
             {
                 location.WorldStepsSinceVisited = 0;
             }
-            if (locationsVisited.Contains(location)) { return; }
-            locationsVisited.Add(location);
-            RemoveFogOfWarProjSpecific(location);
+            if (incrementTimesVisited)
+            {
+                location.TimesVisited++;
+            }
+            if (!visitedRemotely)
+            {
+                locationsVisitedRemotely.Remove(location);
+            }
+            if (!locationsVisited.Contains(location))
+            {
+                locationsVisited.Add(location);
+                if (visitedRemotely)
+                {
+                    locationsVisitedRemotely.Add(location);
+                }
+                RemoveFogOfWarProjSpecific(location);
+            }
+            if (checkTalents && firstVisitInPerson)
+            {
+                GameSession.GetSessionCrewCharacters(CharacterType.Both).ForEach(c => c.CheckTalents(AbilityEffectType.OnLocationVisited, new Location.AbilityLocation(location)));
+            }
         }
 
+        /// <summary>
+        /// Clears the history of discovered and visited locations. Used when loading a save file to reset the state before applying the saved data,
+        /// and when resetting the campaign map after finishing the campaign.
+        /// </summary>
         public void ClearLocationHistory()
         {
             locationsDiscovered.Clear();
             locationsVisited.Clear();
+            locationsVisitedRemotely.Clear();
+            furthestDiscoveredLocation = StartLocation;
+            ClearLocationHistoryProjSpecific();
         }
+
+        partial void ClearLocationHistoryProjSpecific();
 
         public int? GetDiscoveryIndex(Location location)
         {
@@ -1573,6 +1891,7 @@ namespace Barotrauma
         {
             ClearAnimQueue();
             SetLocation(element.GetAttributeInt("currentlocation", 0));
+            WorldStepCount = element.GetAttributeInt("worldstepcount", 0);
 
             if (!Version.TryParse(element.GetAttributeString("version", ""), out Version version))
             {
@@ -1596,9 +1915,9 @@ namespace Barotrauma
                         location.ProximityTimer.Clear();
                         for (int i = 0; i < location.Type.CanChangeTo.Count; i++)
                         {
-                            for (int j = 0; j < location.Type.CanChangeTo[i].Requirements.Count; j++)
+                            for (int j = 0; j < location.Type.CanChangeTo[i].Modifiers.Count; j++)
                             {
-                                location.ProximityTimer.Add(location.Type.CanChangeTo[i].Requirements[j], subElement.GetAttributeInt("changetimer" + i + "-" + j, 0));
+                                location.ProximityTimer.Add(location.Type.CanChangeTo[i].Modifiers[j], subElement.GetAttributeInt("changetimer" + i + "-" + j, 0));
                             }
                         }
                         location.LoadLocationTypeChange(subElement);
@@ -1610,7 +1929,7 @@ namespace Barotrauma
                         if (subElement.GetAttributeBool("discovered", false))
                         {
                             Discover(location);
-                            Visit(location, resetTimeSinceVisited: false);
+                            Visit(location, resetTimeSinceVisited: false, incrementTimesVisited: false, checkTalents: false);
                             trackedLocationDiscoveryAndVisitOrder = false;
                         }
 
@@ -1628,10 +1947,22 @@ namespace Barotrauma
                                 ChangeLocationTypeProjSpecific(location, prevLocationName, change);
                                 location.TimeSinceLastTypeChange = 0;
                             }
+                            else if (!string.IsNullOrEmpty(location.LastTypeChangeMessage))
+                            {
+                                // No XML-defined type change rule but a message was stored, show it as a map notification on the client
+#if CLIENT
+                                AddMapNotification(location.LastTypeChangeMessage, location);
+#endif
+                            }
                         }
 
                         location.LoadStores(subElement);
                         location.LoadMissions(subElement);
+
+                        foreach (var hook in PluginData.GetHooks<PluginLocationLoadDelegate>())
+                        {
+                            hook(location, campaign, subElement);
+                        }
 
                         break;
                     case "connection":
@@ -1649,6 +1980,12 @@ namespace Barotrauma
                         break;
                     case "radiation":
                         Radiation = new Radiation(this, generationParams.RadiationParams, subElement);
+                        
+                        if (DetermineRadiationDisabledByPlugin())
+                        {
+                            Radiation.Enabled = false;
+                        }
+                        
                         break;
                     case "discovered":
                         bool trackedVisitedEmptyLocations = subElement.GetAttributeBool("trackedvisitedemptylocations", false);
@@ -1669,7 +2006,7 @@ namespace Barotrauma
                                 {
                                     if (!l.HasOutpost())
                                     {
-                                        Visit(l, resetTimeSinceVisited: false);
+                                        Visit(l, resetTimeSinceVisited: false, checkTalents: false);
                                     }
                                     trackedLocationDiscoveryAndVisitOrder = false;
                                 }
@@ -1680,14 +2017,21 @@ namespace Barotrauma
                         int[] visitedIndices = subElement.GetAttributeIntArray("indices", Array.Empty<int>());
                         foreach (int visitedIndex in visitedIndices)
                         {
-                            Visit(Locations[visitedIndex], resetTimeSinceVisited: false);
+                            Visit(Locations[visitedIndex], resetTimeSinceVisited: false, incrementTimesVisited: false, checkTalents: false);
+                        }
+                        int[] visitedRemotelyIndices = subElement.GetAttributeIntArray("visitedRemotelyIndices", Array.Empty<int>());
+                        foreach (int visitedIndex in visitedRemotelyIndices)
+                        {
+                            if (visitedIndex < 0 || visitedIndex >= Locations.Count) { continue; }
+                            Location remoteLocation = Locations[visitedIndex];
+                            if (locationsVisited.Contains(remoteLocation)) { locationsVisitedRemotely.Add(remoteLocation); }
                         }
                         //backwards compatibility
                         foreach (var childElement in subElement.GetChildElements("location"))
                         {
                             if (GetLocation(childElement) is Location l)
                             {
-                                Visit(l, resetTimeSinceVisited: false);
+                                Visit(l, resetTimeSinceVisited: false, incrementTimesVisited: false, checkTalents: false);
                             }
                         }
                         break;
@@ -1763,6 +2107,7 @@ namespace Barotrauma
 
             mapElement.Add(new XAttribute("version", GameMain.Version.ToString()));
             mapElement.Add(new XAttribute("currentlocation", CurrentLocationIndex));
+            mapElement.Add(new XAttribute("worldstepcount", WorldStepCount));
             if (GameMain.GameSession.GameMode is CampaignMode campaign)
             {
                 if (campaign.NextLevel != null && campaign.NextLevel.Type == LevelData.LevelType.LocationConnection)
@@ -1820,6 +2165,10 @@ namespace Barotrauma
             {
                 var visitElement = new XElement("visited",
                     new XAttribute("indices", string.Join(',', locationsVisited.Select(l => Locations.IndexOf(l)))));
+                if (locationsVisitedRemotely.Any())
+                {
+                    visitElement.Add(new XAttribute("visitedRemotelyIndices", string.Join(',', locationsVisitedRemotely.Select(l => Locations.IndexOf(l)))));
+                }
                 mapElement.Add(visitElement);
             }
 
@@ -1836,5 +2185,6 @@ namespace Barotrauma
         }
 
         partial void RemoveProjSpecific();
+
     }
 }

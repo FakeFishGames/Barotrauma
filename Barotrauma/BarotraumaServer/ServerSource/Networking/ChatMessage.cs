@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Barotrauma.Networking
 {
-    partial class ChatMessage
+    public partial class ChatMessage
     {
         private static string SanitizeText(Client client, string text)
         {

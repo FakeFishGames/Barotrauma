@@ -22,7 +22,7 @@
         {
             return isFinished;
         }
-        public override void Reset()
+        public override void Reset(bool shouldEndConversations = true)
         {
             isFinished = false;
         }
@@ -39,15 +39,7 @@
                 }
                 else
                 {
-                    EventPrefab eventPrefab = EventPrefab.FindEventPrefab(Identifier, EventTag, ParentEvent.Prefab.ContentPackage);
-                    if (eventPrefab != null)
-                    {
-                        var ev = eventPrefab.CreateInstance(GameMain.GameSession.EventManager.RandomSeed);
-                        if (ev != null)
-                        {
-                            GameMain.GameSession.EventManager.QueuedEvents.Enqueue(ev);                            
-                        }
-                    }
+                    GameMain.GameSession.EventManager.TryTriggerEvent(Identifier, EventTag, ParentEvent.Prefab.ContentPackage);
                 }
             }
 

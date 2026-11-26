@@ -1,32 +1,58 @@
 ﻿using Barotrauma.Extensions;
+using Barotrauma.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SharpFont;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Xml.Linq;
-using Barotrauma.Threading;
 
 namespace Barotrauma
 {
+    /// <param name="Color">The color of the strike. Defaults to the text color.</param>
+    /// <param name="Thickness">The thickness of the strike.</param>
+    /// <param name="Expand">The length (in pixels) that the strike extends beyond the text boundaries.</param>
+    public readonly record struct Strikethrough(Color? Color = null, float Thickness = 2, float Expand = 0)
+    {
+        public readonly void Draw(SpriteBatch sb, in float lineHeight, Color textColor, Vector2 advanceUnit, Vector2 lineStart, Vector2 lineEnd)
+        {
+            if (lineStart == lineEnd) { return; }
+            Vector2 expand = Expand * advanceUnit;
+            Vector2 offset = lineHeight / 2 * new Vector2(-advanceUnit.Y, advanceUnit.X);
+            sb.DrawLine(lineStart - expand + offset, lineEnd + expand + offset, Color ?? textColor, Thickness);
+        }
+        public readonly void Draw(SpriteBatch sb, in float lineHeight, Color textColor, Vector2 lineStart, Vector2 lineEnd)
+        {
+            if (lineStart == lineEnd) { return; }
+            Vector2 expand = new(Expand);
+            Vector2 offset = new(0, lineHeight / 2);
+            sb.DrawLine(lineStart - expand + offset, lineEnd + expand + offset, Color ?? textColor, Thickness);
+        }
+    }
+
     public class ScalableFont : IDisposable
     {
         private static readonly List<ScalableFont> FontList = new List<ScalableFont>();
         private static Library Lib = null;
         private static readonly object globalMutex = new object();
-        
+
         private readonly ReaderWriterLockSlim rwl = new ReaderWriterLockSlim();
 
         private readonly string filename;
         private readonly Face face;
         private uint size;
         private int baseHeight;
+
         private readonly Dictionary<uint, GlyphData> texCoords;
         private readonly List<Texture2D> textures;
         private readonly GraphicsDevice graphicsDevice;
+
+        [MaybeNull, AllowNull]
+        private readonly ScalableFont iconFont;
 
         private Vector2 currentDynamicAtlasCoords;
         private int currentDynamicAtlasNextY;
@@ -53,7 +79,7 @@ namespace Barotrauma
             set
             {
                 size = value;
-                if (graphicsDevice != null) { RenderAtlas(graphicsDevice, charRanges, texDims, baseChar); }
+                if (graphicsDevice != null) { RenderAtlas(graphicsDevice); }
             }
         }
 
@@ -61,8 +87,19 @@ namespace Barotrauma
 
         public float LineHeight => baseHeight * 1.8f;
 
+        /// <summary>
+        /// Character ranges between each even element with their corresponding odd element. Default is 0x20 to 0xFFFF.
+        /// </summary>
         private uint[] charRanges;
-        private int texDims;
+
+        /// <summary>
+        /// Texture dimensions. Default is 1024x1024.
+        /// </summary>
+        private int texDims = 1024;
+
+        /// <summary>
+        /// Base character used to shift all other characters downwards when rendering. Defaults to T.
+        /// </summary>
         private uint baseChar;
 
         public readonly record struct GlyphData(
@@ -70,6 +107,44 @@ namespace Barotrauma
             Vector2 DrawOffset = default,
             float Advance = default,
             Rectangle TexCoords = default);
+
+        public static Dictionary<Identifier, uint> GetGlyphNamesForFont(string filePath, Range<uint> charRange)
+        {
+            lock (globalMutex)
+            {
+                Lib ??= new Library();
+            }
+
+            using Face face = new Face(Lib, filePath);
+            Dictionary<Identifier, uint> charMap = [];
+
+            if (!face.HasGlyphNames)
+            {
+                DebugConsole.ThrowError($"Error in {nameof(GetGlyphNamesForFont)}: {filePath}: Font does not have glyph names");
+                return charMap;
+            }
+
+            byte[] buffer = new byte[32];
+            for (uint charIndex = charRange.Start; charIndex <= charRange.End; charIndex++)
+            {
+                uint glyphIndex = face.GetCharIndex(charIndex);
+                face.GetGlyphName(glyphIndex, buffer);
+                string name = string.Empty;
+                for (int i = 0; i < buffer.Length; i++)
+                {
+                    if (buffer[i] is 0)
+                    {
+                        name = System.Text.Encoding.UTF8.GetString(buffer.AsSpan()[..i]);
+                        break;
+                    }
+
+                }
+
+                charMap[name.ToIdentifier()] = charIndex;
+            }
+
+            return charMap;
+        }
 
         public static TextManager.SpeciallyHandledCharCategory ExtractShccFromXElement(XElement element)
             => TextManager.SpeciallyHandledCharCategories
@@ -85,12 +160,15 @@ namespace Barotrauma
                 }))
                 .Aggregate(TextManager.SpeciallyHandledCharCategory.None, (current, category) => current | category);
 
-        public ScalableFont(ContentXElement element, uint defaultSize = 14, GraphicsDevice gd = null)
+        public ScalableFont(ContentXElement element, uint defaultSize = 14, GraphicsDevice gd = null, uint[] charRanges = null, uint baseChar = 0x54)
             : this(
                 element.GetAttributeContentPath("file")?.Value,
                 (uint)element.GetAttributeInt("size", (int)defaultSize),
                 gd,
                 element.GetAttributeBool("dynamicloading", false),
+                iconFont: null,
+                charRanges: charRanges,
+                baseChar: baseChar,
                 ExtractShccFromXElement(element))
         {
         }
@@ -100,6 +178,9 @@ namespace Barotrauma
             uint size,
             GraphicsDevice gd = null,
             bool dynamicLoading = false,
+            ScalableFont iconFont = null,
+            uint[] charRanges = null,
+            uint baseChar = 0x54,
             TextManager.SpeciallyHandledCharCategory speciallyHandledCharCategory = TextManager.SpeciallyHandledCharCategory.None)
         {
             lock (globalMutex)
@@ -109,6 +190,7 @@ namespace Barotrauma
 
             this.filename = filename;
             this.face = null;
+            this.iconFont = iconFont;
             using (new ReadLock(rwl))
             {
                 foreach (ScalableFont font in FontList)
@@ -128,6 +210,8 @@ namespace Barotrauma
             this.DynamicLoading = dynamicLoading;
             this.SpeciallyHandledCharCategory = speciallyHandledCharCategory;
             this.graphicsDevice = gd;
+            this.charRanges = charRanges ?? [0x20, 0xFFFF];
+            this.baseChar = baseChar;
 
             if (gd != null && !dynamicLoading)
             {
@@ -145,20 +229,9 @@ namespace Barotrauma
         /// Don't call this too often or with very large sizes.
         /// </summary>
         /// <param name="gd">Graphics device, required to create textures.</param>
-        /// <param name="charRanges">Character ranges between each even element with their corresponding odd element. Default is 0x20 to 0xFFFF.</param>
-        /// <param name="texDims">Texture dimensions. Default is 512x512.</param>
-        /// <param name="baseChar">Base character used to shift all other characters downwards when rendering. Defaults to T.</param>
-        private void RenderAtlas(GraphicsDevice gd, uint[] charRanges = null, int texDims = 1024, uint baseChar = 0x54)
+        private void RenderAtlas(GraphicsDevice gd)
         {
             if (DynamicLoading) { return; }
-
-            if (charRanges == null)
-            {
-                charRanges = new uint[] { 0x20, 0xFFFF };
-            }
-            this.charRanges = charRanges;
-            this.texDims = texDims;
-            this.baseChar = baseChar;
 
             textures.ForEach(t => t.Dispose());
             textures.Clear();
@@ -274,7 +347,7 @@ namespace Barotrauma
             }
         }
 
-        private void DynamicRenderAtlas(GraphicsDevice gd, uint character, int texDims = 1024, uint baseChar = 0x54)
+        private void DynamicRenderAtlas(GraphicsDevice gd, uint character)
         {
             bool missingCharacterFound = false;
             using (new ReadLock(rwl))
@@ -282,10 +355,10 @@ namespace Barotrauma
                 missingCharacterFound = !texCoords.ContainsKey(character);
             }
             if (!missingCharacterFound) { return; }
-            DynamicRenderAtlas(gd, character.ToEnumerable(), texDims, baseChar);
+            DynamicRenderAtlas(gd, character.ToEnumerable());
         }
 
-        private void DynamicRenderAtlas(GraphicsDevice gd, string str, int texDims = 1024, uint baseChar = 0x54)
+        private void DynamicRenderAtlas(GraphicsDevice gd, string str)
         {
             bool missingCharacterFound = false;
             using (new ReadLock(rwl))
@@ -299,16 +372,16 @@ namespace Barotrauma
                 }
             }
             if (!missingCharacterFound) { return; }
-            DynamicRenderAtlas(gd, str.Select(c => (uint)c), texDims, baseChar);
+            DynamicRenderAtlas(gd, str.Select(c => (uint)c));
         }
 
-        private void DynamicRenderAtlas(GraphicsDevice gd, IEnumerable<uint> characters, int texDims = 1024, uint baseChar = 0x54)
+        private void DynamicRenderAtlas(GraphicsDevice gd, IEnumerable<uint> characters)
         {
             if (System.Threading.Thread.CurrentThread != GameMain.MainThread)
             {
                 CrossThread.RequestExecutionOnMainThread(() =>
                 {
-                    DynamicRenderAtlas(gd, characters, texDims, baseChar);
+                    DynamicRenderAtlas(gd, characters);
                 });                
                 return;
             }
@@ -322,8 +395,6 @@ namespace Barotrauma
             {
                 if (textures.Count == 0)
                 {
-                    this.texDims = texDims;
-                    this.baseChar = baseChar;
                     face.SetPixelSizes(0, size);
                     face.LoadGlyph(face.GetCharIndex(baseChar), LoadFlags.Default, LoadTarget.Normal);
                     baseHeight = face.Glyph.Metrics.Height.ToInt32();
@@ -432,9 +503,10 @@ namespace Barotrauma
             ref int lineNum,
             ref Vector2 currentPos,
             out uint charIndex,
-            out bool shouldContinue)
+            out bool isNewLine)
         {
-            if (lineWidth < 0.0f || text[i] == '\n')
+            isNewLine = text[i] == '\n';
+            if (lineWidth < 0.0f || isNewLine)
             {
                 // Use bitwise operations instead of HasFlag or HasAnyFlag to avoid boxing, as this is performance-sensitive code.
                 bool isHorizontallyCentered = (alignment & Alignment.CenterX) == Alignment.CenterX;
@@ -448,8 +520,16 @@ namespace Barotrauma
                         if (text[j] == '\n') { break; }
                         uint chrIndex = text[j];
 
-                        var gd2 = GetGlyphData(chrIndex);
-                        lineWidth += gd2.Advance;
+                        if (TextManager.IconRange.Contains(chrIndex) && iconFont != null)
+                        {
+                            GlyphData gd = iconFont.GetGlyphData(chrIndex);
+                            lineWidth += gd.Advance * (LineHeight / iconFont.LineHeight);
+                        }
+                        else
+                        {
+                            var gd2 = GetGlyphData(chrIndex);
+                            lineWidth += gd2.Advance;
+                        }
                     }
                     currentLineOffset = -lineWidth * advanceUnit * scale.X;
                     if (isHorizontallyCentered) { currentLineOffset *= 0.5f; }
@@ -458,16 +538,20 @@ namespace Barotrauma
                     currentLineOffset.Y = MathF.Round(currentLineOffset.Y);
                 }
             }
-            if (text[i] == '\n')
+            if (isNewLine)
             {
                 lineNum++;
                 currentPos = position;
                 currentPos.X -= LineHeight * lineNum * advanceUnit.Y * scale.Y;
-                currentPos.Y += LineHeight * lineNum * advanceUnit.X * scale.Y;
-                shouldContinue = true; charIndex = 0; return;
+                // Smaller resolutions might cause a terrible subpixel position
+                // causing the text to be blurry, round it up towards the nearest integer to
+                // ensure a good position. I think this will be fine as UI elements use whole
+                // pixels for positions anyway
+                currentPos.Y += MathF.Ceiling(LineHeight * lineNum * advanceUnit.X * scale.Y);
+                charIndex = 0;
+                return;
             }
 
-            shouldContinue = false;
             charIndex = text[i];
         }
 
@@ -484,7 +568,7 @@ namespace Barotrauma
             return new GlyphData(TexIndex: -1);
         }
 
-        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit)
+        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, Strikethrough? strikethrough = null)
         {
             if (textures.Count == 0 && !DynamicLoading) { return; }
             text = ApplyUpperCase(text, forceUpperCase);
@@ -495,7 +579,9 @@ namespace Barotrauma
 
             float lineWidth = -1.0f;
             Vector2 currentLineOffset = Vector2.Zero;
-            
+            Vector2 strikeStart = Vector2.Zero;
+            Vector2 strikeEnd = Vector2.Zero;
+
             int lineNum = 0;
             Vector2 currentPos = position;
             Vector2 advanceUnit = rotation == 0.0f ? Vector2.UnitX : new Vector2(MathF.Cos(rotation), MathF.Sin(rotation));
@@ -503,31 +589,48 @@ namespace Barotrauma
             {
                 HandleNewLineAndAlignment(text, advanceUnit, position, scale, alignment, i,
                     ref lineWidth, ref currentLineOffset, ref lineNum, ref currentPos,
-                    out uint charIndex, out bool shouldContinue);
-                if (shouldContinue) { continue; }
-
-                GlyphData gd = GetGlyphData(charIndex);
-                if (gd.TexIndex >= 0)
+                    out uint charIndex, out bool isNewLine);
+                if (strikethrough.HasValue && i == 0) { strikeStart = currentPos + currentLineOffset - origin * scale; }
+                if (!isNewLine)
                 {
-                    if (gd.TexIndex >= textures.Count)
+                    GlyphData gd = GetGlyphData(charIndex);
+                    float advance = gd.Advance;
+                    if (gd.TexIndex >= 0)
                     {
-                        throw new ArgumentOutOfRangeException($"Error while rendering text. Texture index was out of range. Text: {text}, char: {charIndex} index: {gd.TexIndex}, texture count: {textures.Count}");
+                        if (gd.TexIndex >= textures.Count)
+                        {
+                            throw new ArgumentOutOfRangeException($"Error while rendering text. Texture index was out of range. Text: {text}, char: {charIndex} index: {gd.TexIndex}, texture count: {textures.Count}");
+                        }
+                        DrawGlyph(gd, textures[gd.TexIndex], glyphScale: 1f);
                     }
-                    Texture2D tex = textures[gd.TexIndex];
-                    Vector2 drawOffset;
-                    drawOffset.X = gd.DrawOffset.X * advanceUnit.X * scale.X - gd.DrawOffset.Y * advanceUnit.Y * scale.Y;
-                    drawOffset.Y = gd.DrawOffset.X * advanceUnit.Y * scale.Y + gd.DrawOffset.Y * advanceUnit.X * scale.X;
+                    else if (TextManager.IconRange.Contains(charIndex) && iconFont != null)
+                    {
+                        var glyphAndTex = iconFont.GetGlyphDataAndTextureForChar((char)charIndex);
+                        float glyphScale = LineHeight / iconFont.LineHeight;
+                        DrawGlyph(glyphAndTex.GlyphData, glyphAndTex.Texture, glyphScale);
+                        advance = glyphAndTex.GlyphData.Advance * glyphScale;
+                    }
+                    currentPos += advance * advanceUnit * scale.X;
 
-                    sb.Draw(tex, currentPos + currentLineOffset + drawOffset, gd.TexCoords, color, rotation, origin, scale, se, layerDepth);
+                    void DrawGlyph(GlyphData glyphData, Texture2D tex, float glyphScale)
+                    {
+                        if (tex is null) { return; }
+                        Vector2 drawOffset;
+                        drawOffset.X = glyphData.DrawOffset.X * advanceUnit.X * (scale.X * glyphScale) - glyphData.DrawOffset.Y * advanceUnit.Y * (scale.Y * glyphScale);
+                        drawOffset.Y = glyphData.DrawOffset.X * advanceUnit.Y * (scale.Y * glyphScale) + glyphData.DrawOffset.Y * advanceUnit.X * (scale.X * glyphScale);
+
+                        sb.Draw(tex, currentPos + currentLineOffset + drawOffset, glyphData.TexCoords, color, rotation, origin / glyphScale, scale * glyphScale, se, layerDepth);
+                    }
                 }
-                currentPos += gd.Advance * advanceUnit * scale.X;
+                if (!strikethrough.HasValue) { continue; }
+                if (!isNewLine) { strikeEnd = currentPos + currentLineOffset - origin * scale; }
+                if (isNewLine || i == text.Length - 1) { strikethrough.Value.Draw(sb, LineHeight * scale.Y, color, advanceUnit, strikeStart, strikeEnd); }
+                if (isNewLine) { strikeStart = strikeEnd = currentPos + currentLineOffset - origin * scale; }
             }
         }
 
-        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects se, float layerDepth, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit)
-        {
-            DrawString(sb, text, position, color, rotation, origin, new Vector2(scale), se, layerDepth, alignment, forceUpperCase);
-        }
+        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects se, float layerDepth, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, Strikethrough? strikethrough = null)
+            => DrawString(sb, text, position, color, rotation, origin, new Vector2(scale), se, layerDepth, alignment, forceUpperCase, strikethrough);
 
         private string ApplyUpperCase(string text, ForceUpperCase forceUpperCase)
             => forceUpperCase switch
@@ -538,7 +641,7 @@ namespace Barotrauma
             };
         
         private readonly static VertexPositionColorTexture[] quadVertices = new VertexPositionColorTexture[4];
-        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, bool italics = false)
+        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, bool italics = false, Strikethrough? strikethrough = null)
         {
             if (textures.Count == 0 && !DynamicLoading) { return; }
             text = ApplyUpperCase(text, forceUpperCase);
@@ -552,70 +655,95 @@ namespace Barotrauma
             quadVertices[2].Color = color;
             quadVertices[3].Color = color;
 
+            Vector2 strikeStart = position;
+            Vector2 strikeEnd = position;
+
             Vector2 currentPos = position;
             for (int i = 0; i < text.Length; i++)
             {
-                if (text[i] == '\n')
+                bool isNewLine = text[i] == '\n';
+                if (isNewLine)
                 {
                     currentPos.X = position.X;
                     currentPos.Y += LineHeight;
-                    continue;
                 }
-
-                uint charIndex = text[i];
-
-                GlyphData gd = GetGlyphData(charIndex);
-                if (gd.TexIndex >= 0)
+                else
                 {
-                    float halfCharHeight = gd.TexCoords.Height * 0.5f;
-                    const float slantStrength = 0.35f;
-                    float topItalicOffset = 0.0f;
-                    float bottomItalicOffset = 0.0f;
-                    if (italics)
+                    uint charIndex = text[i];
+
+                    GlyphData gd = GetGlyphData(charIndex);
+                    float advance = gd.Advance;
+                    if (gd.TexIndex >= 0)
                     {
-                        topItalicOffset = ((halfCharHeight - gd.DrawOffset.Y) * slantStrength) + baseHeight * 0.18f;
-                        bottomItalicOffset = ((-halfCharHeight - gd.DrawOffset.Y) * slantStrength) + baseHeight * 0.18f;
+                        DrawChar(sb, italics, gd, currentPos);
+                    }
+                    else if (TextManager.IconRange.Contains(charIndex) && iconFont != null)
+                    {
+                        GlyphData iconGlyph = iconFont.GetGlyphData(charIndex);
+                        float scale =  LineHeight / iconFont.LineHeight;
+                        iconFont.DrawChar(sb, italics, iconGlyph, currentPos, scale);
+                        advance = iconGlyph.Advance * scale;
                     }
 
-                    Texture2D tex = textures[gd.TexIndex];
-
-                    float left = (float)gd.TexCoords.Left / tex.Width;
-                    float bottom = (float)gd.TexCoords.Bottom / tex.Height;
-                    float top = (float)gd.TexCoords.Top / tex.Height;
-                    float right = (float)gd.TexCoords.Right / tex.Width;
-
-                    quadVertices[0].Position = new Vector3(currentPos + gd.DrawOffset + (bottomItalicOffset, gd.TexCoords.Height), 0.0f);
-                    quadVertices[0].TextureCoordinate = new Vector2(left, bottom);
-
-                    quadVertices[1].Position = new Vector3(currentPos + gd.DrawOffset + (topItalicOffset, 0.0f), 0.0f);
-                    quadVertices[1].TextureCoordinate = new Vector2(left, top);
-
-                    quadVertices[2].Position = new Vector3(currentPos + gd.DrawOffset + (gd.TexCoords.Width + bottomItalicOffset, gd.TexCoords.Height), 0.0f);
-                    quadVertices[2].TextureCoordinate = new Vector2(right, bottom);
-
-                    quadVertices[3].Position = new Vector3(currentPos + gd.DrawOffset + (gd.TexCoords.Width + topItalicOffset, 0.0f), 0.0f);
-                    quadVertices[3].TextureCoordinate = new Vector2(right, top);
-
-                    sb.Draw(tex, quadVertices, 0.0f);
+                    currentPos.X += advance;
                 }
-                currentPos.X += gd.Advance;
+                if (!strikethrough.HasValue) { continue; }
+                if (!isNewLine) { strikeEnd = currentPos; }
+                if (isNewLine || i == text.Length - 1) { strikethrough.Value.Draw(sb, LineHeight, color, strikeStart, strikeEnd); }
+                if (isNewLine) { strikeStart = strikeEnd = currentPos; }
             }
         }
 
-        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects se, float layerDepth, in ImmutableArray<RichTextData>? richTextData, int rtdOffset = 0, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit)
+        public void DrawChar(SpriteBatch sb, bool italics, GlyphData gd, Vector2 currentPos, float scale = 1f)
         {
-            DrawStringWithColors(sb, text, position, color, rotation, origin, new Vector2(scale), se, layerDepth, richTextData, rtdOffset, alignment, forceUpperCase);
+            if (gd.TexIndex < 0) { return; }
+
+            float halfCharHeight = gd.TexCoords.Height * 0.5f;
+            const float slantStrength = 0.35f;
+            float topItalicOffset = 0.0f;
+            float bottomItalicOffset = 0.0f;
+            if (italics)
+            {
+                topItalicOffset = ((halfCharHeight - gd.DrawOffset.Y) * slantStrength) + baseHeight * 0.18f;
+                bottomItalicOffset = ((-halfCharHeight - gd.DrawOffset.Y) * slantStrength) + baseHeight * 0.18f;
+            }
+
+            Texture2D tex = textures[gd.TexIndex];
+
+            float left = (float)gd.TexCoords.Left / tex.Width;
+            float bottom = (float)gd.TexCoords.Bottom / tex.Height;
+            float top = (float)gd.TexCoords.Top / tex.Height;
+            float right = (float)gd.TexCoords.Right / tex.Width;
+
+            quadVertices[0].Position = new Vector3(currentPos + gd.DrawOffset * scale + (bottomItalicOffset, gd.TexCoords.Height * scale ), 0.0f);
+            quadVertices[0].TextureCoordinate = new Vector2(left, bottom);
+
+            quadVertices[1].Position = new Vector3(currentPos + gd.DrawOffset * scale + (topItalicOffset, 0.0f), 0.0f);
+            quadVertices[1].TextureCoordinate = new Vector2(left, top);
+
+            quadVertices[2].Position = new Vector3(currentPos + gd.DrawOffset * scale + ((gd.TexCoords.Width + bottomItalicOffset) * scale, gd.TexCoords.Height * scale), 0.0f);
+            quadVertices[2].TextureCoordinate = new Vector2(right, bottom);
+
+            quadVertices[3].Position = new Vector3(currentPos + gd.DrawOffset * scale + ((gd.TexCoords.Width + topItalicOffset) * scale, 0.0f), 0.0f);
+            quadVertices[3].TextureCoordinate = new Vector2(right, top);
+
+            sb.Draw(tex, quadVertices, 0.0f);
         }
 
-        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth, in ImmutableArray<RichTextData>? richTextData, int rtdOffset = 0, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit)
+        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects se, float layerDepth, in ImmutableArray<RichTextData>? richTextData, int rtdOffset = 0, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, Strikethrough? strikethrough = null)
+            => DrawStringWithColors(sb, text, position, color, rotation, origin, new Vector2(scale), se, layerDepth, richTextData, rtdOffset, alignment, forceUpperCase, strikethrough);
+
+        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth, in ImmutableArray<RichTextData>? richTextData, int rtdOffset = 0, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, Strikethrough? strikethrough = null)
         {
             if (textures.Count == 0 && !DynamicLoading) { return; }
-            if (!richTextData.HasValue || richTextData.Value.Length <= 0) { DrawString(sb, text, position, color, rotation, origin, scale, se, layerDepth, forceUpperCase: forceUpperCase); return; }
+            if (!richTextData.HasValue || richTextData.Value.Length <= 0) { DrawString(sb, text, position, color, rotation, origin, scale, se, layerDepth, forceUpperCase: forceUpperCase, strikethrough: strikethrough, alignment: alignment); return; }
 
             text = ApplyUpperCase(text, forceUpperCase);
             
             float lineWidth = -1.0f;
             Vector2 currentLineOffset = Vector2.Zero;
+            Vector2 strikeStart = Vector2.Zero;
+            Vector2 strikeEnd = Vector2.Zero;
             if (DynamicLoading)
             {
                 DynamicRenderAtlas(graphicsDevice, text);
@@ -632,41 +760,60 @@ namespace Barotrauma
             {
                 HandleNewLineAndAlignment(text, advanceUnit, position, scale, alignment, i,
                     ref lineWidth, ref currentLineOffset, ref lineNum, ref currentPos,
-                    out uint charIndex, out bool shouldContinue);
-                if (shouldContinue) { continue; }
-
-                Color currentTextColor;
-
-                while (currentRichTextData != null && i + rtdOffset > currentRichTextData.EndIndex + lineNum)
+                    out uint charIndex, out bool isNewLine);
+                if (strikethrough.HasValue && i == 0) { strikeStart = currentPos + currentLineOffset - origin * scale; }
+                if (!isNewLine)
                 {
-                    richTextDataIndex++;
-                    currentRichTextData = richTextDataIndex < richTextData.Value.Length ? richTextData.Value[richTextDataIndex] : null;
-                }
+                    Color currentTextColor;
 
-                if (currentRichTextData != null && currentRichTextData.StartIndex + lineNum <= i + rtdOffset && i + rtdOffset <= currentRichTextData.EndIndex + lineNum)
-                {
-                    currentTextColor = currentRichTextData.Color * currentRichTextData.Alpha ?? color;
-                    if (!string.IsNullOrEmpty(currentRichTextData.Metadata))
+                    while (currentRichTextData != null && i + rtdOffset > currentRichTextData.EndIndex + lineNum)
                     {
-                        currentTextColor = Color.Lerp(currentTextColor, Color.White, 0.5f);
+                        richTextDataIndex++;
+                        currentRichTextData = richTextDataIndex < richTextData.Value.Length ? richTextData.Value[richTextDataIndex] : null;
+                    }
+
+                    if (currentRichTextData != null && currentRichTextData.StartIndex + lineNum <= i + rtdOffset && i + rtdOffset <= currentRichTextData.EndIndex + lineNum)
+                    {
+                        currentTextColor = currentRichTextData.Color * currentRichTextData.Alpha ?? color;
+                        if (!string.IsNullOrEmpty(currentRichTextData.Metadata))
+                        {
+                            currentTextColor = Color.Lerp(currentTextColor, Color.White, 0.5f);
+                        }
+                    }
+                    else
+                    {
+                        currentTextColor = color;
+                    }
+
+                    GlyphData gd = GetGlyphData(charIndex);
+                    float advance = gd.Advance;
+                    if (gd.TexIndex >= 0)
+                    {
+                        DrawGlyph(gd, textures[gd.TexIndex], glyphScale: 1f);
+                    }
+                    else if (TextManager.IconRange.Contains(charIndex) && iconFont != null)
+                    {
+                        var glyphAndTex = iconFont.GetGlyphDataAndTextureForChar((char)charIndex);
+                        float glyphScale = LineHeight / iconFont.LineHeight;
+                        DrawGlyph(glyphAndTex.GlyphData, glyphAndTex.Texture, glyphScale);
+                        advance = glyphAndTex.GlyphData.Advance * glyphScale;
+                    }
+                    currentPos += advance * advanceUnit * scale.X;
+
+                    void DrawGlyph(GlyphData glyphData, Texture2D tex, float glyphScale)
+                    {
+                        if (tex is null) { return; }
+                        Vector2 drawOffset;
+                        drawOffset.X = glyphData.DrawOffset.X * advanceUnit.X * (scale.X * glyphScale) - glyphData.DrawOffset.Y * advanceUnit.Y * (scale.Y * glyphScale);
+                        drawOffset.Y = glyphData.DrawOffset.X * advanceUnit.Y * (scale.Y * glyphScale) + glyphData.DrawOffset.Y * advanceUnit.X * (scale.X * glyphScale);
+
+                        sb.Draw(tex, currentPos + currentLineOffset + drawOffset, glyphData.TexCoords, currentTextColor, rotation, origin / glyphScale, scale * glyphScale, se, layerDepth);
                     }
                 }
-                else
-                {
-                    currentTextColor = color;
-                }
-
-                GlyphData gd = GetGlyphData(charIndex);
-                if (gd.TexIndex >= 0)
-                {
-                    Texture2D tex = textures[gd.TexIndex];
-                    Vector2 drawOffset;
-                    drawOffset.X = gd.DrawOffset.X * advanceUnit.X * scale.X - gd.DrawOffset.Y * advanceUnit.Y * scale.Y;
-                    drawOffset.Y = gd.DrawOffset.X * advanceUnit.Y * scale.Y + gd.DrawOffset.Y * advanceUnit.X * scale.X;
-
-                    sb.Draw(tex, currentPos + currentLineOffset + drawOffset, gd.TexCoords, currentTextColor, rotation, origin, scale, se, layerDepth);
-                }
-                currentPos += gd.Advance * advanceUnit * scale.X;
+                if (!strikethrough.HasValue) { continue; }
+                if (!isNewLine) { strikeEnd = currentPos + currentLineOffset - origin * scale; }
+                if (isNewLine || i == text.Length - 1) { strikethrough.Value.Draw(sb, LineHeight * scale.Y, color, advanceUnit, strikeStart, strikeEnd); }
+                if (isNewLine) { strikeStart = strikeEnd = currentPos + currentLineOffset - origin * scale; }
             }
         }
 
@@ -726,8 +873,8 @@ namespace Barotrauma
                 }
 
                 //Otherwise, advance based on the width of the current character
-                GlyphData gd = GetGlyphData(text[i]);
-                float advance = gd.Advance;
+                float gdAdvance = GetGlyphAdvance(text[i]);
+                float advance = gdAdvance;
                 if (currentPos.X + advance >= width)
                 {
                     //Advancing based on the last character
@@ -745,8 +892,7 @@ namespace Barotrauma
                             //A breaker (whitespace or CJK) was found earlier
                             //in this line, so let's break the line there
                             i = lastBreakerIndex.Value + 1;
-                            gd = GetGlyphData(text[i]);
-                            advance = gd.Advance;
+                            advance = GetGlyphAdvance(text[i]);
                         }
 
                         nextLine();
@@ -766,6 +912,17 @@ namespace Barotrauma
             result += text[currLineStart..].Remove("\n");
             requestedCharPos = foundCharPos;
             return result;
+
+            float GetGlyphAdvance(char c)
+            {
+                if (TextManager.IconRange.Contains(c) && iconFont != null)
+                {
+                    float scale = LineHeight / iconFont.LineHeight;
+                    return iconFont.GetGlyphData(c).Advance * scale;
+                }
+
+                return GetGlyphData(c).Advance;
+            }
         }
 
         public Vector2 MeasureString(LocalizedString str, bool removeExtraSpacing = false)
@@ -806,8 +963,17 @@ namespace Barotrauma
                 }
                 uint charIndex = text[i];
 
-                GlyphData gd = GetGlyphData(charIndex);
-                currentLineX += gd.Advance;
+                if (TextManager.IconRange.Contains(charIndex) && iconFont != null)
+                {
+                    GlyphData gd = iconFont.GetGlyphData(charIndex);
+                    float scale = LineHeight / iconFont.LineHeight;
+                    currentLineX += gd.Advance * scale;
+                }
+                else
+                {
+                    currentLineX += GetGlyphData(charIndex).Advance;
+                }
+
                 retVal.X = Math.Max(retVal.X, currentLineX);
             }
             return retVal;

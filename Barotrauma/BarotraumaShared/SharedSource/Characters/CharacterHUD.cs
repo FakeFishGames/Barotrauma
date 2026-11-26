@@ -1,6 +1,6 @@
-namespace Barotrauma;
+﻿namespace Barotrauma;
 
-partial class CharacterHUD
+public partial class CharacterHUD
 {
     static partial void RecreateHudTextsIfControllingProjSpecific(Character character);
 

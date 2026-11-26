@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class ChatBox
+    public class ChatBox
     {
         public const string RadioChatString = "r; ";
 
@@ -547,7 +547,7 @@ namespace Barotrauma
 
             if (!ToggleOpen)
             {
-                var popupMsg = new GUIFrame(new RectTransform(Vector2.One, GUIFrame.RectTransform), style: "GUIToolTip")
+                var popupMsg = new GUIFrame(new RectTransform(Vector2.One, GUIFrame.RectTransform), style: "GUIChatMessage")
                 {
                     UserData = 0.0f,
                     CanBeFocused = false

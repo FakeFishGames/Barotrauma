@@ -50,6 +50,7 @@ namespace Barotrauma
 
             Color clr = (open == 0.0f) ? GUIStyle.Red : Color.Cyan;
             if (IsHighlighted) { clr = Color.Gold; }
+            if (IsHidden) { clr = Color.Lerp(clr, Color.TransparentBlack, 0.25f); }
 
             GUI.DrawRectangle(
                 sb, new Rectangle(WorldRect.X, -WorldRect.Y, rect.Width, rect.Height),

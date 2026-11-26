@@ -139,6 +139,27 @@ namespace Barotrauma.Steam
         protected static void CreateModErrorInfo(ContentPackage mod, GUIComponent uiElement, GUITextBlock nameText)
         {
             uiElement.ToolTip = "";
+
+            // Warn the user if the content package doesn't satisfy the dependency order requirements.
+            foreach (var dep in mod.DependenciesPresent)
+            {
+                if (dep.TryResolve(ContentPackageManager.EnabledPackages.Regular, out var package))
+                {
+                    if (dep.Order == ContentPackage.Dependency.RelativeOrder.Above && package.Index < mod.Index)
+                    {
+                        nameText.TextColor = GUIStyle.Yellow;
+                        if (!uiElement.ToolTip.IsNullOrWhiteSpace()) { uiElement.ToolTip += "\n"; }
+                        uiElement.ToolTip += TextManager.GetWithVariable("workshop.orderabove.tip", "[PackageName]", package.Name);
+                    }
+                    else if (dep.Order == ContentPackage.Dependency.RelativeOrder.Below && package.Index > mod.Index)
+                    {
+                        nameText.TextColor = GUIStyle.Yellow;
+                        if (!uiElement.ToolTip.IsNullOrWhiteSpace()) { uiElement.ToolTip += "\n"; }
+                        uiElement.ToolTip += TextManager.GetWithVariable("workshop.orderbelow.tip", "[PackageName]", package.Name);
+                    }
+                }
+            }
+
             if (mod.FatalLoadErrors.Any())
             {
                 const int maxErrorsToShow = 5;
@@ -162,12 +183,12 @@ namespace Barotrauma.Steam
 
             if (mod.MissingDependencies.Any())
             {
-                nameText.TextColor = GUIStyle.Orange;
+                nameText.TextColor = GUIStyle.Red;
                 if (!uiElement.ToolTip.IsNullOrWhiteSpace()) { uiElement.ToolTip += "\n"; }
                 uiElement.ToolTip += 
                     TextManager.GetWithVariables("workshop.dependencynotfound",
                         ("[name]", mod.Name),
-                        ("[required]", string.Join(", ", mod.MissingDependencies.Select(c => c.ToString())))) + '\n' + TextManager.Get("workshop.dependencynotfound.moreinfo");
+                        ("[required]", string.Join(", ", mod.MissingDependencies.Select(static c => c.ToString())))) + '\n' + TextManager.Get("workshop.dependencyinfo.moreinfo");
             }
         }
     }

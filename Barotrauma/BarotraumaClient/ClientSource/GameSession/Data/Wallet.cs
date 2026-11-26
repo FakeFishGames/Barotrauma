@@ -1,6 +1,6 @@
 namespace Barotrauma
 {
-    internal partial class Wallet
+    public partial class Wallet
     {
         public bool IsOwnWallet =>
             GameMain.GameSession?.Campaign switch

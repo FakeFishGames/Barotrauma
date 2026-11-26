@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class BackgroundCreaturePrefab : Prefab, ISerializableEntity
+    public class BackgroundCreaturePrefab : Prefab, ISerializableEntity
     {
         public readonly static PrefabCollection<BackgroundCreaturePrefab> Prefabs = new PrefabCollection<BackgroundCreaturePrefab>();
 

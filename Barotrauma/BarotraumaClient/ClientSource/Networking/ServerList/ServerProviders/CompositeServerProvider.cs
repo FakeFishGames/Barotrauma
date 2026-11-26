@@ -9,13 +9,13 @@ namespace Barotrauma
     class CompositeServerProvider : ServerProvider
     {
         private readonly ImmutableArray<ServerProvider> providers;
-        
+
         public CompositeServerProvider(params ServerProvider[] providers)
         {
             this.providers = providers.ToImmutableArray();
         }
-        
-        protected override void RetrieveServersImpl(Action<ServerInfo, ServerProvider> onServerDataReceived, Action onQueryCompleted)
+
+        protected override void RetrieveServersImpl(Action<ServerInfo> onServerDataReceived, Action onQueryCompleted)
         {
             int providersFinished = 0;
             void ackFinishedProvider()

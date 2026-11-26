@@ -6,14 +6,14 @@ using System.Collections.Immutable;
 
 namespace Barotrauma
 {
-    class AIObjectivePrepare : AIObjective
+    public class AIObjectivePrepare : AIObjective
     {
         public override Identifier Identifier { get; set; } = "prepare".ToIdentifier();
         public override string DebugTag => $"{Identifier}";
         public override bool KeepDivingGearOn => true;
         public override bool KeepDivingGearOnAlsoWhenInactive => true;
         public override bool PrioritizeIfSubObjectivesActive => true;
-        protected override bool AllowWhileHandcuffed => false;
+        protected override bool RequireOneHandAvailable => true;
 
         private AIObjectiveGetItem getSingleItemObjective;
         private AIObjectiveGetItems getAllItemsObjective;
@@ -24,10 +24,22 @@ namespace Barotrauma
         private readonly ImmutableArray<Identifier> optionalItems;
         public bool KeepActiveWhenReady { get; set; }
         public bool CheckInventory { get; set; }
+
+        /// <summary>
+        /// Should the objective try to find items matching all of the specified tags, or one item that matches them?
+        /// </summary>
         public bool FindAllItems { get; set; }
         public bool Equip { get; set; }
+        public bool Wear { get; set; }
         public bool EvaluateCombatPriority { get; set; }
+        /// <summary>
+        /// When enabled, the bot will try to evaluate the suitability of all the items it has access to and fetch the best one.
+        /// Can be used in conjunction with <see cref="EvaluateCombatPriority"/> to make the bot get the best weapon they have access to. 
+        /// The bot will also consider items in their inventory, and not try to fetch a weapon if they can't find anything better than their current one.
+        /// </summary>
+        public bool EvaluateAllItems { get; set; }
         public bool RequireNonEmpty { get; set; }
+        public bool SpeakIfFails { get; set; }
 
         private AIObjective GetSubObjective()
         {
@@ -92,9 +104,10 @@ namespace Barotrauma
                             {
                                 CheckInventory = CheckInventory,
                                 Equip = Equip,
+                                Wear = Wear,
                                 EvaluateCombatPriority = EvaluateCombatPriority,
                                 RequireNonEmpty = RequireNonEmpty,
-                                RequireAllItems = requireAll
+                                RequireAllItems = requireAll,
                             };
 
                             if (itemTags.Contains(Tags.HeavyDivingGear))
@@ -112,7 +125,10 @@ namespace Barotrauma
                         },
                         onCompleted: () =>
                         {
-                            if (!KeepActiveWhenReady)
+                            if (!KeepActiveWhenReady &&
+                                //both the optional and mandatory items must be retrieved to consider this objective completed
+                                getMultipleItemsObjective is { IsCompleted: true } && 
+                                getAllItemsObjective is { IsCompleted: true })
                             {
                                 IsCompleted = true;
                             }
@@ -131,7 +147,7 @@ namespace Barotrauma
                     {
                         getItemConstructor = () => new AIObjectiveGetItem(character, targetItem, objectiveManager, equip: Equip)
                         {
-                            SpeakIfFails = true
+                            SpeakIfFails = SpeakIfFails
                         };
                     }
                     else
@@ -144,7 +160,8 @@ namespace Barotrauma
                         getItemConstructor = () => new AIObjectiveGetItem(character, allItems, objectiveManager, equip: Equip, checkInventory: CheckInventory)
                         {
                             EvaluateCombatPriority = EvaluateCombatPriority,
-                            SpeakIfFails = true,
+                            EvaluateAllItems = EvaluateAllItems,
+                            SpeakIfFails = SpeakIfFails,
                             RequireNonEmpty = RequireNonEmpty
                         };
                     }
@@ -159,6 +176,20 @@ namespace Barotrauma
                         onAbandon: () => Abandon = true))
                     {
                         Abandon = true;
+                    }
+                    if (getSingleItemObjective != null && EvaluateCombatPriority && EvaluateAllItems)
+                    {
+                        getSingleItemObjective.EvaluateAllItems = true;
+                        float bestInventoryItemPriority = character.Inventory.AllItems.Select(getItemCombatPriority).DefaultIfEmpty(0f).Max();
+                        getSingleItemObjective.ItemFilter = (Item it) =>
+                        {
+                            //disregard any items that are worse than the best weapon in the character's inventory
+                            return getItemCombatPriority(it) > bestInventoryItemPriority;
+                        };
+                        float getItemCombatPriority(Item it)
+                        {
+                            return it.Components.Max(c => c.IsEmpty(character) ? 0 : c.CombatPriority);
+                        }
                     }
                 }
                 subObjectivesCreated = true;

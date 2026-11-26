@@ -8,7 +8,7 @@ namespace Barotrauma.Extensions
         /// <summary>
         /// Unity's Angle implementation without the conversion to degrees.
         /// Returns the angle in radians between two vectors.
-        /// 0 - Pi.
+        /// 0 - Pi. Cannot be negative. The direction (CW or CCW) doesn't matter either.
         /// </summary>
         public static float Angle(this Vector2 from, Vector2 to)
         {
@@ -88,9 +88,9 @@ namespace Barotrauma.Extensions
             return Vector2.Clamp(v, min, max);
         }
 
-        public static bool NearlyEquals(this Vector2 v, Vector2 other)
+        public static bool NearlyEquals(this Vector2 v, Vector2 other, float epsilon = 0.0001f)
         {
-            return MathUtils.NearlyEqual(v.X, other.X) && MathUtils.NearlyEqual(v.Y, other.Y);
+            return MathUtils.NearlyEqual(v.X, other.X, epsilon) && MathUtils.NearlyEqual(v.Y, other.Y, epsilon);
         }
 
         public static Vector2 Pad(this Vector2 v, Vector4 padding)
@@ -99,5 +99,8 @@ namespace Barotrauma.Extensions
             v.Y += padding.Y + padding.W;
             return v;
         }
+
+        public static Vector2 XY(this Vector4 vector) => new Vector2(vector.X, vector.Y);
+        public static Vector2 ZW(this Vector4 vector) => new Vector2(vector.Z, vector.W);
     }
 }

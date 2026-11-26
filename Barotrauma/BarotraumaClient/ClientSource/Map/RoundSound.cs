@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using Barotrauma.Items.Components;
 using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using System;
@@ -7,7 +8,7 @@ using System.Globalization;
 
 namespace Barotrauma
 {
-    class RoundSound
+    public class RoundSound
     {
         public Sound? Sound;
         public readonly float Volume;
@@ -15,6 +16,14 @@ namespace Barotrauma
         public readonly Vector2 FrequencyMultiplierRange;
         public readonly bool Stream;
         public readonly bool IgnoreMuffling;
+
+        public Identifier VolumeProperty;
+
+        /// <summary>
+        /// Determines which of the item's components the <see cref="VolumeProperty"/> is checked on. Only relevant if <see cref="VolumeProperty"/> is set.
+        /// </summary>
+        public string TargetItemComponent;
+
 
         public int LastStreamSeekPos;
 
@@ -31,6 +40,9 @@ namespace Barotrauma
             Volume = element.GetAttributeFloat("volume", 1.0f);
             IgnoreMuffling = element.GetAttributeBool("dontmuffle", false);
             MuteBackgroundMusic = element.GetAttributeBool("MuteBackgroundMusic", false);
+
+            VolumeProperty = element.GetAttributeIdentifier("volumeproperty", "");
+            TargetItemComponent = element.GetAttributeString("targetitemcomponent", "");
 
             if (!Stream && Sound.DurationSeconds > 60.0f)
             {
@@ -69,6 +81,71 @@ namespace Barotrauma
         {
             return Rand.Range(FrequencyMultiplierRange.X, FrequencyMultiplierRange.Y);
         }
+
+        public float GetSoundVolume(ISerializableEntity targetEntity)
+        {
+            if (VolumeProperty == "" || targetEntity == null) { return Volume; }
+
+            SerializableProperty? property = null;
+            if (TargetItemComponent.IsNullOrEmpty())
+            {
+                //try to find the property from the specified entity (can be e.g. a Character, Item, ItemComponent)
+                if (!targetEntity.SerializableProperties.TryGetValue(VolumeProperty, out property) &&
+                    //if that fails, check if the entity is an ItemComponent and try to find the property from the item it belongs to
+                    targetEntity is ItemComponent itemComponent && itemComponent.Item.SerializableProperties.TryGetValue(VolumeProperty, out property))
+                {
+                    targetEntity = itemComponent.Item;
+                }
+            }
+            else if ((targetEntity as Item ?? (targetEntity as ItemComponent)?.Item) is Item targetItem)
+            {
+                foreach (var itemComponent in targetItem.Components)
+                {
+                    if (itemComponent.Name == TargetItemComponent &&
+                        itemComponent.SerializableProperties.TryGetValue(VolumeProperty, out property))
+                    {
+                        targetEntity = itemComponent;
+                        break;
+                    }
+                }
+            }
+
+            if (property != null)
+            {
+                float newVolume;
+                try
+                {
+                    newVolume = property.GetFloatValue(targetEntity);
+                }
+                catch
+                {
+                    return 0.0f;
+                }
+                newVolume = Math.Min(newVolume * Volume, 1.0f);
+
+                if (!MathUtils.IsValid(newVolume))
+                {
+                    DebugConsole.Log("Invalid sound volume (entity " + targetEntity.Name + ", " + GetType().ToString() + "): " + newVolume);
+                    return 0.0f;
+                }
+
+                return MathHelper.Clamp(newVolume, 0.0f, 1.0f);
+            }
+            else
+            {
+#if DEBUG
+                DebugConsole.ThrowError(
+                    $"[DEBUG-ONLY error added in #7929] Failed to find the property {VolumeProperty} in entity {targetEntity?.ToString() ?? "null"} for determining the volume of a sound."+
+                    " This may either be a sign that the PR caused issues, or that there are some incorrectly configured sounds or sounds that try to fetch the volume from something that sometimes exists, sometimes not."+
+                    " If you see this error, please show it to Joonas so we can investigate.");
+                //if you're stumbing on this code in 2027 or later and you've never seen or heard of the error above popping up, feel free to remove it
+#endif
+            }
+
+            return 0.0f;
+        }
+
+        public void Play(Vector2 worldPos, float? volume = null, Hull? hullGuess = null) => SoundPlayer.PlaySound(this, worldPos, volume, hullGuess);
         
         private static readonly List<RoundSound> roundSounds = new List<RoundSound>();
         private static readonly Dictionary<string, RoundSound> roundSoundByPath = new Dictionary<string, RoundSound>();

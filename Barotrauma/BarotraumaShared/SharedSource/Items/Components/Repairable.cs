@@ -16,7 +16,7 @@ namespace Barotrauma.Items.Components
         public float CurrentStress { get; }
     }
 
-    partial class Repairable : ItemComponent, IServerSerializable, IClientSerializable
+    public partial class Repairable : ItemComponent, IServerSerializable, IClientSerializable
     {
         private readonly LocalizedString header;
 
@@ -37,6 +37,20 @@ namespace Barotrauma.Items.Components
         bool wasGoodCondition;
 
         public float LastActiveTime;
+
+        /// <summary>
+        /// Setting this to true (e.g. continuously with a status effect) makes the item deteriorate for a short while, like it would when actively used.
+        /// Useful for items that don't have any component that causes deterioration by itself (see <see cref="ItemComponent.ShouldCauseDeterioration"/>).
+        /// </summary>
+        [Serialize(false, IsPropertySaveable.No, description: "Setting this to true (e.g. continuously with a status effect) makes the item deteriorate for a short while, like it would when actively used.")]
+        public bool CauseDeterioration
+        {
+            get => LastActiveTime > Timing.TotalTime;
+            set
+            {
+                if (value) { LastActiveTime = (float)Timing.TotalTime + 1.0f; }
+            }
+        }
 
         [Serialize(0.0f, IsPropertySaveable.Yes, description: "How fast the condition of the item deteriorates per second."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2)]
         public float DeteriorationSpeed
@@ -225,13 +239,11 @@ namespace Barotrauma.Items.Components
             }
 
             // Modify damage (not stun) caused by repair failure based on campaign settings
-            if (GameMain.GameSession?.Campaign is CampaignMode campaign
-                && statusEffectLists != null
-                && statusEffectLists.TryGetValue(ActionType.OnFailure, out var onFailureEffects))
+            if (GameMain.GameSession?.Campaign is CampaignMode campaign)
             {
-                foreach (var effect in onFailureEffects)
+                foreach (StatusEffect statusEffect in GetStatusEffectsOfType(ActionType.OnFailure))
                 {
-                    foreach (Affliction affliction in effect.Afflictions)
+                    foreach (Affliction affliction in statusEffect.Afflictions)
                     {
                         if (affliction.Prefab.AfflictionType == Tags.Stun) { continue; }
                         affliction.Strength *= campaign.Settings.RepairFailMultiplier;
@@ -250,13 +262,13 @@ namespace Barotrauma.Items.Components
         partial void InitProjSpecific(ContentXElement element);
 
         /// <summary>
-        /// Check if the character manages to succesfully repair the item
+        /// Check if the character manages to succesfully repair the item. Also applies the success/failure status effects if necessary.
         /// </summary>
         public bool CheckCharacterSuccess(Character character, Item bestRepairItem)
         {
             if (character == null) { return false; }
 
-            if (statusEffectLists == null) { return true; }
+            if (!HasAnyStatusEffects) { return true; }
 
             if (bestRepairItem != null && bestRepairItem.Prefab.CannotRepairFail) { return true; }
 
@@ -286,7 +298,7 @@ namespace Barotrauma.Items.Components
             static void ApplyStatusEffectsAndCreateEntityEvent(ItemComponent ic, ActionType actionType, Character character)
             {
                 ic.ApplyStatusEffects(actionType, 1.0f, character);
-                if (GameMain.NetworkMember is { IsServer: true } && ic.statusEffectLists != null && ic.statusEffectLists.ContainsKey(actionType))
+                if (GameMain.NetworkMember is { IsServer: true } && ic.HasStatusEffectsOfType(actionType))
                 {
                     GameMain.NetworkMember.CreateEntityEvent(ic.Item, new Item.ApplyStatusEffectEventData(actionType, ic, character));
                 }
@@ -380,13 +392,18 @@ namespace Barotrauma.Items.Components
                     }
                 }
                 return true;
-
-                static Item GetBestRepairItem(Character character)
-                {
-                    return character.HeldItems.OrderByDescending(i => i.Prefab.AddedRepairSpeedMultiplier).FirstOrDefault();
-                }
-
             }
+        }
+
+        private Item GetBestRepairItem(Character character)
+        {
+            return
+                character.HeldItems
+                    //items required to do the repair are clearly the best
+                    .OrderByDescending(it => RequiredItems.Values.Any(requiredItemList => requiredItemList.Any(r => r.MatchesItem(it))))
+                    //ones that added the most repair speed are the best of those
+                    .ThenByDescending(it => it.Prefab.AddedRepairSpeedMultiplier)
+                    .FirstOrDefault();
         }
 
         public bool StopRepairing(Character character)
@@ -496,12 +513,25 @@ namespace Barotrauma.Items.Components
 
             UpdateFixAnimation(CurrentFixer);
 
+            //deselect the item if the user no longer has the required items to fix it
+            if (CurrentFixer.SelectedItem == item && 
+                !HasRequiredItems(CurrentFixer, addMessage: false))
+            {
+                CurrentFixer.SelectedItem = null;
+            }
+
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
             if (CurrentFixer != null && (CurrentFixer.SelectedItem != item || !CurrentFixer.CanInteractWith(item) || CurrentFixer.IsDead))
             {
                 StopRepairing(CurrentFixer);
                 return;
+            }
+
+            if (currentRepairItem != null && !CurrentFixer.HeldItems.Contains(currentRepairItem))
+            {
+                //still has the required items, but not the one we started with: switch to the best one still held (so we don't keep the repair speed bonus of an unequipped item)
+                currentRepairItem = GetBestRepairItem(CurrentFixer);
             }
 
             if (currentFixerAction == FixActions.Tinker)
@@ -716,45 +746,7 @@ namespace Barotrauma.Items.Components
             if (LastActiveTime > Timing.TotalTime) { return true; }
             foreach (ItemComponent ic in item.Components)
             {
-                if (ic is Fabricator || ic is Deconstructor)
-                {
-                    //fabricators and deconstructors rely on LastActiveTime
-                    return false;
-                }
-                else if (ic is PowerTransfer pt)
-                {
-                    //power transfer items (junction boxes, relays) don't deteriorate if they're no carrying any power
-                    if (pt.Voltage > 0.1f) { return true; }
-                }
-                else if (ic is PowerContainer pc)
-                {
-                    //batteries don't deteriorate if they're not charging/discharging
-                    if (Math.Abs(pc.CurrPowerConsumption) > 0.1f || Math.Abs(pc.CurrPowerOutput) > 0.1f) { return true; }
-                }
-                else if (ic is Engine engine)
-                {
-                    //engines don't deteriorate if they're not running
-                    if (Math.Abs(engine.Force) > 1.0f) { return true; }
-                }
-                else if (ic is Pump pump)
-                {
-                    //pumps don't deteriorate if they're not running
-                    if (Math.Abs(pump.FlowPercentage) > 1.0f && pump.IsActive && pump.HasPower) { return true; }
-                }
-                else if (ic is Reactor reactor)
-                {
-                    //reactors don't deteriorate if they're not powered up
-                    if (reactor.Temperature > 0.1f) { return true; }
-                }
-                else if (ic is OxygenGenerator oxyGenerator)
-                {
-                    //oxygen generators don't deteriorate if they're not running
-                    if (oxyGenerator.CurrFlow > 0.1f) { return true; }
-                }
-                else if (ic is Powered powered && powered is not LightComponent)
-                {
-                    if (powered.HasPower) { return true; }
-                }
+                if (ic.ShouldCauseDeterioration) { return true; }
             }
 
             return false;
@@ -783,7 +775,7 @@ namespace Barotrauma.Items.Components
         private void UpdateFixAnimation(Character character)
         {
             if (character == null || character.IsDead || character.IsIncapacitated) { return; }
-            character.AnimController.UpdateUseItem(false, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((item.Condition / item.MaxCondition) % 0.1f));
+            character.AnimController.UpdateUseItem(false, item.WorldPosition, handMoveAmount: new Vector2(0.0f, 100.0f) * ((item.Condition / item.MaxCondition) % 0.1f));
         }
 
         public override void ReceiveSignal(Signal signal, Connection connection)

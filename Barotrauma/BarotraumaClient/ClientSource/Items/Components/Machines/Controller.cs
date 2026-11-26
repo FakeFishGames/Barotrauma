@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.ComponentModel;
+using System.Reflection;
 
 namespace Barotrauma.Items.Components
 {
@@ -12,15 +13,15 @@ namespace Barotrauma.Items.Components
         {
             if (Character.Controlled == null) { return; }
 
-            if (!string.IsNullOrEmpty(KickOutCharacterMsg) && 
-                SelectingKicksCharacterOut && 
+            if (!string.IsNullOrEmpty(KickOutCharacterMsg) &&
+                SelectingKicksCharacterOut &&
                 User != null && !User.Removed)
             {
                 DisplayMsg = TextManager.ParseInputTypes(TextManager.Get(KickOutCharacterMsg));
             }
-            else if (!string.IsNullOrEmpty(PutOtherCharacterMsg) && 
-                AllowPuttingInOtherCharacters && 
-                CanPutSelectedCharacter(Character.Controlled.SelectedCharacter))
+            else if (!string.IsNullOrEmpty(PutOtherCharacterMsg) &&
+                AllowPuttingInOtherCharacters &&
+                CanPutSelectedCharacterInside(Character.Controlled.SelectedCharacter))
             {
                 DisplayMsg = TextManager.ParseInputTypes(TextManager.Get(PutOtherCharacterMsg));
             }
@@ -43,6 +44,23 @@ namespace Barotrauma.Items.Components
                     {
                         ic.DrawHUD(spriteBatch, character);
                     }
+                }
+
+                bool noSignal = focusTarget?.GetComponent<Turret>() is { } turret &&
+                                (turret.User != character || !turret.IsBeingActivelyUsed);
+
+                if (noSignal)
+                {
+                    LocalizedString text = TextManager.Get("sonarnosignal");
+                    GUIFont font = GUIStyle.LargeFont;
+                    Vector2 textSize = font.MeasureString(text);
+
+                    Vector2 pos = new Vector2(GameMain.GraphicsWidth / 2f, GameMain.GraphicsHeight * 0.3f) - textSize / 2f;
+
+                    GUI.DrawString(spriteBatch, pos, text, GUIStyle.Red,
+                                   backgroundColor: Color.Black * 0.66f,
+                                   backgroundPadding: GUI.IntScale(10),
+                                   font: font);
                 }
             }
         }
@@ -79,9 +97,8 @@ namespace Barotrauma.Items.Components
 
             foreach (LimbPos limbPos in limbPositions)
             {
-                PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(limbPos);
-
-                PropertyDescriptor limbPosProperty = properties.Find("Position", false);
+                PropertyInfo[] properties = limbPos.GetType().GetProperties();
+                PropertyInfo limbPosProperty = properties.Find(nameof(LimbPos.Position), ignoreCase: false);
                 editor.CreateVector2Field(limbPos, new SerializableProperty(limbPosProperty), limbPos.Position, limbPos.LimbType.ToString(), "");
             }
         }

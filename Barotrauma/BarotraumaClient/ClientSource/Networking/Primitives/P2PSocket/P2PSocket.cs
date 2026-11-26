@@ -19,10 +19,6 @@ abstract class P2PSocket : IDisposable
 
     public enum ErrorCode
     {
-        EosNotInitialized,
-        EosNotLoggedIn,
-        FailedToCreateEosP2PSocket,
-
         SteamNotInitialized,
         FailedToCreateSteamP2PSocket
     }

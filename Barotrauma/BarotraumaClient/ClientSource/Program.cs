@@ -53,9 +53,13 @@ namespace Barotrauma
             executableDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             Directory.SetCurrentDirectory(executableDir);
             DebugConsoleCore.Init(
-                newMessage: (s, c) => DebugConsole.NewMessage(s, c),
-                log: DebugConsole.Log);
-            StoreIntegration.Init(ref args);
+                newMessage: (message, color) => DebugConsole.NewMessage(message, color),
+                log: DebugConsole.Log,
+                throwError: (message, exception) => DebugConsole.ThrowError(message, exception));
+            if (SteamManager.SteamworksLibExists)
+            {
+                SteamManager.Initialize();
+            }
             EnableNvOptimus();
             Game = new GameMain(args);
             Game.Run();
@@ -191,10 +195,6 @@ namespace Barotrauma
             {
                 sb.AppendLine("SteamManager initialized");
             }
-            else if (EosInterface.IdQueries.IsLoggedIntoEosConnect)
-            {
-                sb.AppendLine("Logged in to EOS connect");
-            }
 
             if (GameMain.Client != null)
             {
@@ -296,20 +296,75 @@ namespace Barotrauma
                 || GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.SaveLogs(); }
 
             string msg = string.Empty;
-            if (GameAnalyticsManager.SendUserStatistics)
+
+            var possibleCrashingPluginInfo = Plugins.PluginLoader.TryFindCrashingPluginInfo(exception);
+
+            if (possibleCrashingPluginInfo.TryUnwrap(out var info))
+            {
+                msg = $"A crash report (\"{filePath}\") was saved in the root folder of the game. The game has identified the error was caused by a mod ({info.ContentPackage.Name}) and the mod has been disabled to prevent further crashes.";
+            }
+            else if (GameAnalyticsManager.SendUserStatistics)
             {
                 msg = "A crash report (\"" + filePath + "\") was saved in the root folder of the game and sent to the developers.";
             }
             else
             {
                 msg = "A crash report (\"" + filePath + "\") was saved in the root folder of the game. The error was not sent to the developers because user statistics have been disabled, but" +
-                    " if you'd like to help fix this bug, you may post it on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/";
+                    " if you'd like to help fix this bug, you may post it on Barotrauma's GitHub issue tracker: https://github.com/FakeFishGames/Barotrauma/discussions";
             }
             if (string.IsNullOrEmpty(dxgiErrorHelpText))
             {
                 msg += "\n\n" + dxgiErrorHelpText;
             }
+
+            WriteLastCrashData(possibleCrashingPluginInfo, exception, filePath);
+
             CrashMessageBox(msg, filePath);
+        }
+
+        // Writes a file in the game's root folder containing data of the last crash so
+        // the next time the game is started, the user can be informed about it
+        private static void WriteLastCrashData(Option<(ContentPackage ContentPackage, Plugins.PluginMetadata Metadata)> modInfo, Exception exception, string crashLogFilePath)
+        {
+            XElement root = new XElement("CrashData",
+                                         new XAttribute("crashlog", crashLogFilePath),
+                                         new XAttribute("enabledcontentpackages", string.Join(", ", ContentPackageManager.EnabledPackages.All.Select(static c => c.Name))),
+                                         new XElement("Exception",
+                                                      new XAttribute("type", exception.GetType().FullName ?? string.Empty),
+                                                      new XAttribute("message", exception.Message),
+                                                      exception.StackTrace.CleanupStackTrace()));
+
+            if (modInfo.TryUnwrap(out var info))
+            {
+                XElement modElement = new XElement("ContentPackage",
+                                                   new XAttribute("name", info.ContentPackage.Name),
+                                                   new XAttribute("hash", info.ContentPackage.Hash.StringRepresentation));
+
+                XElement pluginElement = new XElement("Plugin",
+                                                      new XAttribute("name", info.Metadata.Name),
+                                                      new XAttribute("version", info.Metadata.Version.ToString()));
+
+                if (info.Metadata.RepositoryUrl.TryUnwrap(out string repo))
+                {
+                    pluginElement.Add(new XAttribute("repository", repo));
+                }
+
+                root.Add(pluginElement);
+                root.Add(modElement);
+            }
+
+            XDocument doc = new XDocument(root);
+            try
+            {
+                System.IO.File.Delete(CrashInfoScreen.CrashDataPath);
+                doc.Save(CrashInfoScreen.CrashDataPath);
+                // set the file to be hidden
+                System.IO.File.SetAttributes(CrashInfoScreen.CrashDataPath, System.IO.File.GetAttributes(CrashInfoScreen.CrashDataPath) | System.IO.FileAttributes.Hidden);
+            }
+            catch (Exception)
+            {
+                // can't do much here really
+            }
         }
 
 #if WINDOWS

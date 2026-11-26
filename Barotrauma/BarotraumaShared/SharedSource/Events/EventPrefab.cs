@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Immutable;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Reflection;
 
 namespace Barotrauma
 {
-    class EventPrefab : Prefab
+    public class EventPrefab : Prefab
     {
         public static readonly PrefabCollection<EventPrefab> Prefabs = new PrefabCollection<EventPrefab>();
 
@@ -69,6 +70,21 @@ namespace Barotrauma
         /// </summary>
         public readonly int UnlockPathReputation;
 
+        /// <summary>
+        /// Only used in the context of <see cref="EventLogAction"/>, determines the amount of skulls to show in the mission event log
+        /// </summary>
+        public readonly int DifficultyIconCount;
+
+        /// <summary>
+        /// Only used in the context of <see cref="EventLogAction"/>, determines the icon in the mission event log
+        /// </summary>
+        public readonly Sprite Icon;
+
+        /// <summary>
+        /// Only used in the context of <see cref="EventLogAction"/>, determines the color of the icon in the mission event log
+        /// </summary>
+        public readonly Color IconColor;
+
         public static EventPrefab Create(ContentXElement element, RandomEventsFile file, Identifier fallbackIdentifier = default)
         {
             if (element.NameAsIdentifier() == nameof(TraitorEvent))
@@ -101,7 +117,8 @@ namespace Barotrauma
                     contentPackage: element.ContentPackage);
             }
 
-            Name = TextManager.Get($"eventname.{Identifier}").Fallback(Identifier.ToString());
+            string name = element.GetAttributeString(nameof(Name), "");
+            Name = TextManager.Get(name).Fallback(TextManager.Get($"eventname.{Identifier}").Fallback(Identifier.ToString()));
 
             tags = ConfigElement.GetAttributeIdentifierImmutableHashSet(nameof(tags), ImmutableHashSet<Identifier>.Empty);
             BiomeIdentifier = ConfigElement.GetAttributeIdentifier("biome", Identifier.Empty);
@@ -116,6 +133,19 @@ namespace Barotrauma
             UnlockPathEvent = element.GetAttributeBool("unlockpathevent", false);
             UnlockPathTooltip = element.GetAttributeString("unlockpathtooltip", "lockedpathtooltip");
             UnlockPathReputation = element.GetAttributeInt("unlockpathreputation", 0);
+
+            DifficultyIconCount = element.GetAttributeInt(nameof(DifficultyIconCount), -1);
+
+            foreach (var subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "icon":
+                        Icon = new Sprite(subElement);
+                        IconColor = subElement.GetAttributeColor("color", new Color(245, 105, 105, 255));
+                        break;
+                }
+            }
         }
 
         public bool TryCreateInstance<T>(int seed, out T instance) where T : Event
@@ -140,7 +170,10 @@ namespace Barotrauma
             return instance;
         }
 
-        public override void Dispose() { }
+        public override void Dispose()
+        {
+            Icon?.Remove();
+        }
 
         public override string ToString()
         {
@@ -160,11 +193,10 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Finds an event prefab with the specified identifier, or if it isn't defined, a random event prefab with the specified tag.
+        /// Finds an event prefab with the specified identifier, or if it isn't defined or a matching event isn't found, a random event prefab with the specified tag.
         /// </summary>
-        /// <param name="source">Which content package is trying to find the event (if any)? Only used for logging error messages.</param>
-        /// <returns></returns>
-        public static EventPrefab FindEventPrefab(Identifier identifier, Identifier tag, ContentPackage source)
+        /// <param name="callingContentPackage">Which content package is trying to find the event (if any)? Only used for logging error messages.</param>
+        public static EventPrefab FindEventPrefab(Identifier identifier, Identifier tag, ContentPackage callingContentPackage = null)
         {
             EventPrefab eventPrefab = null;
             if (!identifier.IsEmpty)
@@ -173,22 +205,23 @@ namespace Barotrauma
                 if (eventPrefab == null)
                 {
                     DebugConsole.ThrowError($"Failed to find an event prefab with the identifier {identifier}.",
-                        contentPackage: source);
+                        contentPackage: callingContentPackage);
                 }
             }
             else if (!tag.IsEmpty)
             {
-                eventPrefab = EventSet.GetAllEventPrefabs().Where(e => e.Tags.Contains(tag)).GetRandomUnsynced();
+                var matchingEvents = EventSet.GetAllEventPrefabs().Where(e => e.Tags.Contains(tag));
+                eventPrefab = ToolBox.SelectWeightedRandom(matchingEvents, e => e.Commonness, Rand.RandSync.Unsynced);
                 if (eventPrefab == null)
                 {
                     DebugConsole.ThrowError($"Failed to find an event prefab with the tag {tag}.",
-                        contentPackage: source);
+                        contentPackage: callingContentPackage);
                 }
             }
             else
             {
                 DebugConsole.ThrowError($"Failed to find an event prefab: neither an identifier or tag were defined.",
-                    contentPackage: source);
+                    contentPackage: callingContentPackage);
             }
             return eventPrefab;
         }

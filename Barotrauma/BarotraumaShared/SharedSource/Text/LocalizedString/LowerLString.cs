@@ -11,6 +11,7 @@ namespace Barotrauma
         }
 
         public override bool Loaded => nestedStr.Loaded;
+        public override bool UsingDefaultLanguageAsFallback => nestedStr.UsingDefaultLanguageAsFallback;
         public override void RetrieveValue()
         {
             cachedValue = nestedStr.Value.ToLowerInvariant();

@@ -7,7 +7,7 @@ namespace Barotrauma
     /// <summary>
     /// GUIComponent that can be used to render custom content on the UI
     /// </summary>
-    class GUICustomComponent : GUIComponent
+    public class GUICustomComponent : GUIComponent
     {
         public Action<SpriteBatch, GUICustomComponent> OnDraw;
         public Action<float, GUICustomComponent> OnUpdate;

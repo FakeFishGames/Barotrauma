@@ -28,7 +28,7 @@ namespace Barotrauma
         }
     }
 
-    internal abstract partial class Command
+    public abstract partial class Command
     {
         public abstract LocalizedString GetDescription();
     }
@@ -445,7 +445,7 @@ namespace Barotrauma
     /// <summary>
     /// A command that sets item properties
     /// </summary>
-    internal class PropertyCommand : Command
+    public class PropertyCommand : Command
     {
         private Dictionary<object, List<ISerializableEntity>> OldProperties;
         private readonly List<ISerializableEntity> Receivers;

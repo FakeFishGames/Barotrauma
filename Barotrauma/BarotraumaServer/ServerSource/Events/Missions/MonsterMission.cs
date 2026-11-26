@@ -5,17 +5,20 @@ namespace Barotrauma
 {
     partial class MonsterMission : Mission
     {
+        private const float EndDelay = 5.0f;
+        private float endTimer;
+
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
             base.ServerWriteInitial(msg, c);
 
-            if (monsters.Count == 0 && monsterPrefabs.Count > 0)
+            if (allMonsters.Count == 0 && monsterWaves.Count > 0)
             {
                 throw new InvalidOperationException("Server attempted to write monster mission data when no monsters had been spawned.");
             }
 
-            msg.WriteByte((byte)monsters.Count);
-            foreach (Character monster in monsters)
+            msg.WriteByte((byte)allMonsters.Count);
+            foreach (Character monster in allMonsters)
             {
                 monster.WriteSpawnData(msg, monster.ID, restrictMessageSize: false);
             }

@@ -13,7 +13,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    partial class StructurePrefab : MapEntityPrefab
+    public partial class StructurePrefab : MapEntityPrefab
     {
         public static readonly PrefabCollection<StructurePrefab> Prefabs = new PrefabCollection<StructurePrefab>();
 
@@ -315,7 +315,7 @@ namespace Barotrauma
 #endif
 
             Tags = tags.ToImmutableHashSet();
-            AllowedLinks = ImmutableHashSet<Identifier>.Empty;
+            AllowedLinks = ConfigElement.GetAttributeIdentifierArray("allowedlinks", Array.Empty<Identifier>()).ToImmutableHashSet();
         }
 
         protected override void CreateInstance(Rectangle rect)

@@ -6,34 +6,13 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class TraitorEvent : ScriptedEvent
+    public partial class TraitorEvent : ScriptedEvent
     {
-        public enum State
-        {
-            Incomplete,
-            Completed,
-            Failed
-        }
-
-        public Action? OnStateChanged;
-
         private new readonly TraitorEventPrefab prefab;
 
         public new TraitorEventPrefab Prefab => prefab;
 
         private LocalizedString codeWord;
-
-        private State currentState;
-        public State CurrentState 
-        {
-            get { return currentState; }
-            set
-            {
-                if (currentState == value) { return; }
-                currentState = value;
-                OnStateChanged?.Invoke();
-            }
-        }
 
         private Client? traitor;
 
@@ -73,6 +52,8 @@ namespace Barotrauma
 
         public override LocalizedString ReplaceVariablesInEventText(LocalizedString str)
         {
+            str = base.ReplaceVariablesInEventText(str);
+
             if (codeWord.IsNullOrEmpty())
             {
                 //store the code word so the same random word is used in all the actions in the event

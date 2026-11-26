@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class UpgradeManager
+    public partial class UpgradeManager
     {
         partial void UpgradeNPCSpeak(string text, bool isSinglePlayer, Character? character)
         {

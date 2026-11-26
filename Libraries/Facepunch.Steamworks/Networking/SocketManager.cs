@@ -38,6 +38,9 @@ namespace Steamworks
 				Socket.Close();
 			}
 
+            // Seems generally safe to do this, I don't know why the library would need
+            // to keep the SocketManager in memory after it's been closed
+            SteamNetworkingSockets.SocketInterfaces.Remove(Socket.Id);
 			pollGroup = 0;
 			Socket = 0;
 			return true;

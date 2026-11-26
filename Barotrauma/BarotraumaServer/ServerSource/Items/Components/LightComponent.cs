@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma.Items.Components
 {
-    partial class LightComponent : Powered, IServerSerializable
+    public partial class LightComponent : Powered, IServerSerializable
     {
         private CoroutineHandle sendStateCoroutine;
         private bool lastSentState;
@@ -40,6 +40,12 @@ namespace Barotrauma.Items.Components
         {
             msg.WriteBoolean(IsActive);
             lastSentState = IsActive;
+        }
+
+        protected override void RemoveComponentSpecific()
+        {
+            base.RemoveComponentSpecific();
+            ActivePlantLightSources.Remove(this);
         }
     }
 }

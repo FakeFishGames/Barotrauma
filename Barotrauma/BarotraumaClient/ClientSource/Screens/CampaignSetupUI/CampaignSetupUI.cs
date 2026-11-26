@@ -1,15 +1,17 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.IO;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Barotrauma.Networking;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    abstract class CampaignSetupUI
+    public abstract class CampaignSetupUI
     {
         protected enum SaveSortingType
         {
@@ -57,60 +59,65 @@ namespace Barotrauma
         }
 
         protected List<CampaignMode.SaveInfo> prevSaveFiles;
-        protected GUIComponent CreateSaveElement(CampaignMode.SaveInfo saveInfo)
+        protected GUIFrame CreateSaveElement(CampaignMode.SaveInfo saveInfo, XElement docRoot = null)
         {
             if (string.IsNullOrEmpty(saveInfo.FilePath))
             {
-                DebugConsole.AddWarning("Error when updating campaign load menu: path to a save file was empty.\n" + Environment.StackTrace);
+                DebugConsole.AddWarning($"Error when updating campaign load menu: path to a save file was empty.\n{Environment.StackTrace}");
                 return null;
             }
 
-            var saveFrame = new GUIFrame(
-                new RectTransform(new Vector2(1.0f, 0.1f), saveList.Content.RectTransform) { MinSize = new Point(0, 45) },
-                style: "ListBoxElement")
+            prevSaveFiles ??= [];
+            prevSaveFiles.Add(saveInfo);
+
+            List<LocalizedString> warnings = [];
+            if (docRoot != null && !SaveUtil.IsSaveFileCompatible(docRoot))
             {
-                UserData = saveInfo
+                warnings.Add(RichString.ColorizeText(TextManager.Get("campaignmode.incompatiblesave"), GUIStyle.Red));
+            }
+            if (!GameSession.IsCompatibleWithEnabledContentPackages(saveInfo.EnabledContentPackageNames, out LocalizedString errorMsg))
+            {
+                warnings.Add(RichString.ColorizeText(errorMsg, GUIStyle.Yellow));
+                warnings.Add(TextManager.Get("campaignmode.contentpackagemismatchwarning"));
+            }
+
+            GUIFrame saveFrame = new(new RectTransform(new Vector2(1f, 0.1f), saveList.Content.RectTransform) { MinSize = new Point(0, 45) }, style: "ListBoxElement")
+            {
+                UserData = saveInfo,
+                ToolTip = RichString.Rich(LocalizedString.Join("\n", warnings))
             };
 
-            var nameText = new GUITextBlock(
-                new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform),
-                Path.GetFileNameWithoutExtension(saveInfo.FilePath), 
-                textColor: GUIStyle.TextColorBright)
+            GUILayoutGroup nameGroup = new(new RectTransform(new Vector2(1f, 0.5f), saveFrame.RectTransform), isHorizontal: true);
+            if (warnings.Count != 0)
             {
+                int iconSize = (int)(GUIStyle.Font.LineHeight * GameSettings.CurrentConfig.Graphics.TextScale);
+                new GUIFrame(new RectTransform(new Point(GUI.IntScale(8f), nameGroup.Rect.Height), nameGroup.RectTransform), style: null)
+                {
+                    CanBeFocused = false
+                };
+                new GUIImage(new RectTransform(new Point(iconSize, nameGroup.Rect.Height), nameGroup.RectTransform), style: "CommandShortcutNode")
+                {
+                    CanBeFocused = false,
+                    Color = GUIStyle.Red
+                };
+            }
+            new GUITextBlock(new RectTransform(new Vector2(0.66f, 1.0f), nameGroup.RectTransform), Path.GetFileNameWithoutExtension(saveInfo.FilePath), saveInfo.AccentColor ?? GUIStyle.TextColorNormal)
+            {
+                OverflowClip = true,
                 CanBeFocused = false
             };
 
-            if (saveInfo.EnabledContentPackageNames != null && saveInfo.EnabledContentPackageNames.Any())
-            {
-                if (!GameSession.IsCompatibleWithEnabledContentPackages(saveInfo.EnabledContentPackageNames, out LocalizedString errorMsg))
-                {
-                    nameText.TextColor = GUIStyle.Red;
-                    saveFrame.ToolTip = string.Join("\n", errorMsg, TextManager.Get("campaignmode.contentpackagemismatchwarning"));
-                }
-            }
-
-            prevSaveFiles ??= new List<CampaignMode.SaveInfo>();
-            prevSaveFiles.Add(saveInfo);
-
             new GUITextBlock(
                 new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform, Anchor.BottomLeft),
-                text: saveInfo.SubmarineName,
+                text: TextManager.Get($"submarine.name.{saveInfo.SubmarineName}").Fallback(saveInfo.SubmarineName),
                 font: GUIStyle.SmallFont)
             {
                 CanBeFocused = false,
                 UserData = saveInfo.FilePath
             };
 
-            string saveTimeStr = string.Empty;
-            if (saveInfo.SaveTime.TryUnwrap(out var time))
-            {
-                saveTimeStr = time.ToLocalUserString();
-            }
-            new GUITextBlock(
-                new RectTransform(new Vector2(1.0f, 1.0f), saveFrame.RectTransform),
-                text: saveTimeStr,
-                textAlignment: Alignment.Right,
-                font: GUIStyle.SmallFont)
+            string saveTimeStr = saveInfo.SaveTime.TryUnwrap(out SerializableDateTime time) ? time.ToLocalUserString() : string.Empty;
+            new GUITextBlock(new RectTransform(Vector2.One, saveFrame.RectTransform), saveTimeStr, font: GUIStyle.SmallFont, textAlignment: Alignment.Right)
             {
                 CanBeFocused = false,
                 UserData = saveInfo.FilePath
@@ -308,14 +315,22 @@ namespace Barotrauma
                     OnValuesChanged)
                 : new SettingValue<bool>(static () => false, static _ => { });
 
+            RichString radiationDisabledToolTip = LocalizedString.EmptyString;
+            bool radiationDisabled = false;
+            foreach (var hook in PluginData.GetHooks<PluginShouldDisableJovianRadiation>())
+            {
+                radiationDisabled = hook(out radiationDisabledToolTip);
+            }
+
             // Jovian radiation
             SettingValue<bool> radiationEnabled = CreateTickbox(
                 settingsList.Content,
                 TextManager.Get("CampaignOption.EnableRadiation"),
-                TextManager.Get("campaignoption.enableradiation.tooltip"),
-                prevSettings.RadiationEnabled,
+                radiationDisabled ? radiationDisabledToolTip : TextManager.Get("campaignoption.enableradiation.tooltip"),
+                prevSettings.RadiationEnabled && !radiationDisabled,
                 verticalSize,
-                OnValuesChanged);
+                OnValuesChanged,
+                disabled: radiationDisabled);
 
             // RESOURCE-RELATED CAMPAIGN SETTINGS:
 
@@ -798,10 +813,11 @@ namespace Barotrauma
             static SettingValue<bool> CreateTickbox(
                 GUIComponent parent,
                 LocalizedString description,
-                LocalizedString tooltip,
+                RichString tooltip,
                 bool defaultValue,
                 float verticalSize,
-                Action onChanged)
+                Action onChanged,
+                bool disabled = false)
             {
                 GUILayoutGroup inputContainer = CreateSettingBase(parent, description, tooltip, 0.625f, verticalSize);
                 GUILayoutGroup tickboxContainer = new GUILayoutGroup(
@@ -814,6 +830,9 @@ namespace Barotrauma
                     Selected = defaultValue,
                     ToolTip = tooltip
                 };
+
+                tickBox.Enabled = !disabled;
+
                 tickBox.Box.IgnoreLayoutGroups = true;
                 tickBox.Box.RectTransform.SetPosition(Anchor.CenterLeft);
                 inputContainer.RectTransform.Parent.MinSize = new Point(0, tickBox.RectTransform.MinSize.Y);
@@ -824,13 +843,13 @@ namespace Barotrauma
                     return true;
                 };
 
-                return new SettingValue<bool>(() => tickBox.Selected, b => tickBox.Selected = b);
+                return new SettingValue<bool>(() => tickBox.Selected, b => tickBox.Selected = b && !disabled);
             }
 
             static GUILayoutGroup CreateSettingBase(
                 GUIComponent parent,
-                LocalizedString description,
-                LocalizedString tooltip,
+                RichString description,
+                RichString tooltip,
                 float horizontalSize,
                 float verticalSize)
             {
@@ -878,6 +897,39 @@ namespace Barotrauma
             });
 
             return true;
+        }
+
+        protected static void PromptMissingFreshSavePackages(string saveFilePath, IEnumerable<ContentPackage> missingPackages, Action onConfirmLoad)
+        {
+            var msgBox = new GUIMessageBox(
+                headerText: TextManager.Get("warning"),
+                text: string.Empty,
+                buttons: [TextManager.Get("loadbutton"), TextManager.Get("cancel")],
+                relativeSize: new Vector2(0.25f, 0.4f),
+                minSize: new Point(480, 430));
+
+            new GUITextBlock(new RectTransform(new Vector2(1f, 0f), msgBox.Content.RectTransform), TextManager.GetWithVariable("promptincompatiblesavefilewarning", "[savefile]", Path.GetFileNameWithoutExtension(saveFilePath)), wrap: true);
+
+            GUIListBox packageList = new GUIListBox(new RectTransform(new Vector2(1f, 0.3f), msgBox.Content.RectTransform));
+            foreach (ContentPackage contentPackage in missingPackages)
+            {
+                GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1f, 0.33f), packageList.Content.RectTransform), style: "ListBoxElement")
+                {
+                    // just to make it so we can't see if the element is selected, as selecting does nothing
+                    SelectedColor = Color.Transparent
+                };
+                new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform), contentPackage.Name, textAlignment: Alignment.CenterLeft);
+            }
+
+            new GUITextBlock(new RectTransform(new Vector2(1f, 0f), msgBox.Content.RectTransform), TextManager.Get("promptincompatiblesavefilewarning.footer"), wrap: true);
+
+            msgBox.Buttons[0].OnClicked = (btn, userData) =>
+            {
+                onConfirmLoad?.Invoke();
+                msgBox.Close();
+                return true;
+            };
+            msgBox.Buttons[1].OnClicked = msgBox.Close;
         }
 
         protected void CreateBackupMenu(IEnumerable<SaveUtil.BackupIndexData> indexData, Action<SaveUtil.BackupIndexData> loadBackup)
@@ -992,6 +1044,36 @@ namespace Barotrauma
                 loadBackup?.Invoke(selectedIndexData);
                 return true;
             };
+        }
+
+        protected static bool TryGetMissingFreshSavePackages(CampaignMode.SaveInfo saveInfo, [NotNullWhen(true)] out HashSet<ContentPackage> missingPackages)
+        {
+            missingPackages = null;
+            foreach (var cp in ContentPackageManager.EnabledPackages.All.Where(static cp => cp.RequiresFreshSave))
+            {
+                if (!saveInfo.EnabledContentPackageNames.Any(name => cp.NameMatches(name)))
+                {
+                    missingPackages ??= [];
+                    missingPackages.Add(cp);
+                }
+            }
+
+            return missingPackages != null;
+        }
+
+        // NOTE: Since when loading backup indices, this is always checked against the latest save,
+        // There is potentially a bug here, where the specific backup index might have different
+        // and either prompt wrongly or not prompt when needed, but both of these require
+        // enabling and disabling the content package between saves, so I do not think this is a problem.
+        protected static void ConfirmLoadIfMissingFreshSavePackages(CampaignMode.SaveInfo saveInfo, Action load)
+        {
+            if (!TryGetMissingFreshSavePackages(saveInfo, out var missingPackages))
+            {
+                load();
+                return;
+            }
+
+            PromptMissingFreshSavePackages(saveInfo.FilePath, missingPackages, load);
         }
     }
 }

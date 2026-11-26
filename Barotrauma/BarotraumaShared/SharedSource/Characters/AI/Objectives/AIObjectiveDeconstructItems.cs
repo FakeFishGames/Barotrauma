@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveDeconstructItems : AIObjectiveLoop<Item>
+    public class AIObjectiveDeconstructItems : AIObjectiveLoop<Item>
     {
         public override Identifier Identifier { get; set; } = "deconstruct items".ToIdentifier();
 
@@ -13,6 +13,7 @@ namespace Barotrauma
         protected override float IgnoreListClearInterval => 30;
 
         protected override bool AllowInFriendlySubs => true;
+        protected override bool RequireBothHandsAvailable => true;
 
         protected override int MaxTargets => 10;
 
@@ -32,8 +33,10 @@ namespace Barotrauma
                     Item.ItemList.None(it => 
                         it.GetComponent<Deconstructor>() != null && 
                         !it.IgnoreByAI(character) &&
-                        it.IsInteractable(character) && 
-                        character.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true, allowDifferentTeam: true, allowDifferentType: true)))
+                        it.IsInteractable(character) &&
+                        character.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true, allowDifferentTeam: true, allowDifferentType: true) &&
+                        //must match the checks in AIObjectiveDeconstructItem.FindDeconstructor (e.g. no deconstructors in hostile outposts)
+                        character.IsOnFriendlyTeam(it.Submarine.TeamID)))
                 {
                     character.Speak(TextManager.Get("orderdialogself.deconstructitem.nodeconstructor").Value, delay: 5.0f, 
                         identifier: "nodeconstructor".ToIdentifier(), minDurationBetweenSimilar: 30.0f);

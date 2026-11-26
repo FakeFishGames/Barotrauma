@@ -9,7 +9,7 @@ using Barotrauma.Extensions;
 namespace Barotrauma
 {
     [Flags]
-    enum MapEntityCategory
+    public enum MapEntityCategory
     {
         None = 0,
         Structure = 1, 
@@ -29,7 +29,7 @@ namespace Barotrauma
         Misc = 32768
     }
 
-    abstract partial class MapEntityPrefab : PrefabWithUintIdentifier
+    public abstract partial class MapEntityPrefab : PrefabWithUintIdentifier
     {
         public static IEnumerable<MapEntityPrefab> List
         {
@@ -236,10 +236,48 @@ namespace Barotrauma
 
         [Serialize(1f, IsPropertySaveable.Yes), Editable(0.1f, 10f, DecimalCount = 3)]
         public float Scale { get; protected set; }
+        
+        private readonly ImmutableArray<Identifier> hideLinkedEntities;
+        
+        public bool ShouldHideLinkedEntity(MapEntity linkedEntity) => hideLinkedEntities != null && linkedEntity.Prefab.Tags.Any(t => hideLinkedEntities.Contains(t));
 
         protected MapEntityPrefab(Identifier identifier) : base(null, identifier) { }
 
-        public MapEntityPrefab(ContentXElement element, ContentFile file) : base(file, element) { }
+        public MapEntityPrefab(ContentXElement element, ContentFile file) : base(file, element)
+        {
+            HashSet<Identifier> hiddenLinkedEntities = null;
+            foreach (ContentXElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "hidelinkedentity":
+                    case "hidelinkedentities":
+                        hiddenLinkedEntities ??= new HashSet<Identifier>();
+                        Identifier linkedEntityTag = subElement.GetAttributeIdentifier("tag", Identifier.Empty);
+                        bool tagsFound = false;
+                        if (!linkedEntityTag.IsEmpty)
+                        {
+                            hiddenLinkedEntities.Add(linkedEntityTag);
+                            tagsFound = true;
+                        }
+                        foreach (Identifier tag in subElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()))
+                        {
+                            hiddenLinkedEntities.Add(tag);
+                            tagsFound = true;
+                        }
+                        if (!tagsFound)
+                        {
+                            DebugConsole.AddWarning($"Error in prefab \"{ToString()}\" - No tags defined for linked entities to hide. A tag is required for referring to the linked entity.",
+                                contentPackage: element.ContentPackage);
+                        }
+                        break;
+                }
+            }
+            if (hiddenLinkedEntities != null)
+            {
+                hideLinkedEntities = hiddenLinkedEntities.ToImmutableArray();   
+            }
+        }
 
         public string GetItemNameTextId()
         {
@@ -294,10 +332,8 @@ namespace Barotrauma
             if (target == null) { return false; }
             if (target is StructurePrefab && AllowedLinks.Contains("structure".ToIdentifier())) { return true; }
             if (target is ItemPrefab && AllowedLinks.Contains("item".ToIdentifier())) { return true; }
-            if (target is LinkedSubmarinePrefab && Tags.Contains("dock".ToIdentifier())) { return true; }
-            if (this is LinkedSubmarinePrefab && target.Tags.Contains("dock".ToIdentifier())) { return true; }
             return AllowedLinks.Contains(target.Identifier) || target.AllowedLinks.Contains(Identifier)
-                   || target.Tags.Any(t => AllowedLinks.Contains(t)) || Tags.Any(t => target.AllowedLinks.Contains(t));
+                   || target.Tags.Any(AllowedLinks.Contains) || Tags.Any(target.AllowedLinks.Contains);
         }
 
         protected void LoadDescription(ContentXElement element)

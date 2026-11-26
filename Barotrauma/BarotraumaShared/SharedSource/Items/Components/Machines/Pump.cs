@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Pump : Powered, IServerSerializable, IClientSerializable, IDeteriorateUnderStress
+    public partial class Pump : Powered, IServerSerializable, IClientSerializable, IDeteriorateUnderStress
     {
         private float flowPercentage;
         private float maxFlow;
@@ -49,7 +49,7 @@ namespace Barotrauma.Items.Components
             get { return flowPercentage; }
             set
             {
-                if (!MathUtils.IsValid(flowPercentage)) { return; }
+                if (!MathUtils.IsValid(value)) { return; }
                 flowPercentage = MathHelper.Clamp(value, -100.0f, 100.0f);
                 flowPercentage = MathF.Round(flowPercentage);
             }
@@ -100,6 +100,11 @@ namespace Barotrauma.Items.Components
         private const float TinkeringSpeedIncrease = 4.0f;
 
         public override bool UpdateWhenInactive => true;
+
+        /// <summary>
+        /// Pumps deteriorate when actively pumping.
+        /// </summary>
+        public override bool ShouldCauseDeterioration => Math.Abs(FlowPercentage) > 1.0f && IsActive && HasPower;
 
         public float CurrentStress => IsActive ? Math.Abs(flowPercentage / 100.0f) : 0.0f;
 

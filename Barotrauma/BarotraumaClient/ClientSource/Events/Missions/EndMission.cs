@@ -65,10 +65,7 @@ namespace Barotrauma
                     {
                         if (!limb.FreezeBlinkState) { continue; }                        
                         limb.FreezeBlinkState = false;
-                        if (limb.LightSource is Lights.LightSource light)
-                        {
-                            light.Enabled = true;
-                        }
+                        limb.DisableLights();
                     }
                 }
             }
@@ -87,10 +84,7 @@ namespace Barotrauma
                     {
                         limb.FreezeBlinkState = true;
                         limb.BlinkPhase = -limb.Params.BlinkHoldTime;
-                        if (limb.LightSource is Lights.LightSource light)
-                        {
-                            light.Enabled = false;
-                        }
+                        limb.EnableLights();
                     }
                 }
             }

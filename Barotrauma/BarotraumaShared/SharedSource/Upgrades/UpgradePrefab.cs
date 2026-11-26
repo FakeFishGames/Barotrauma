@@ -10,7 +10,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    internal readonly struct UpgradePrice
+    public readonly struct UpgradePrice
     {
         public readonly int BasePrice;
 
@@ -75,7 +75,7 @@ namespace Barotrauma
         }
     }
 
-    abstract class UpgradeContentPrefab : Prefab
+    public abstract class UpgradeContentPrefab : Prefab
     {
         public static readonly PrefabCollection<UpgradeContentPrefab> PrefabsAndCategories = new PrefabCollection<UpgradeContentPrefab>(
             onAdd: (prefab, isOverride) =>
@@ -119,7 +119,7 @@ namespace Barotrauma
         public UpgradeContentPrefab(ContentXElement element, UpgradeModulesFile file) : base(file, element) { }
     }
 
-    internal class UpgradeCategory : UpgradeContentPrefab
+    public class UpgradeCategory : UpgradeContentPrefab
     {
         public static readonly PrefabCollection<UpgradeCategory> Categories = new PrefabCollection<UpgradeCategory>();
 
@@ -127,6 +127,8 @@ namespace Barotrauma
         private readonly HashSet<Identifier> prefabsThatAllowUpgrades = new HashSet<Identifier>();
         public readonly bool IsWallUpgrade;
         public readonly LocalizedString Name;
+
+        public readonly bool ShowInCustomizeTab;
 
         private readonly object mutex = new object();
 
@@ -139,6 +141,8 @@ namespace Barotrauma
             IsWallUpgrade = element.GetAttributeBool("wallupgrade", false);
 
             ItemTags = selfItemTags.CollectionConcat(prefabsThatAllowUpgrades);
+
+            ShowInCustomizeTab = element.GetAttributeBool("showincustomizetab", (Identifier == "weapons" || Identifier == "swappablemechanicaldevices"));
 
             Identifier nameIdentifier = element.GetAttributeIdentifier("nameidentifier", Identifier.Empty);
             if (!nameIdentifier.IsEmpty)
@@ -276,7 +280,7 @@ namespace Barotrauma
         }
     }
 
-    internal readonly struct UpgradeResourceCost
+    public readonly struct UpgradeResourceCost
     {
         public readonly int Amount;
         private readonly ImmutableArray<Identifier> targetTags;
@@ -304,9 +308,68 @@ namespace Barotrauma
 
             return false;
         }
+
+        public static bool HasResources(IEnumerable<UpgradeResourceCost> resourceCosts, Character? character, int? currentLevel = null, IEnumerable<Item>? availableResources = null)
+        {
+            if (character is null) { return false; }
+            if (!resourceCosts.Any()) { return true; }
+
+            availableResources ??= CargoManager.FindAllItemsOnPlayerAndAllowedSubs(character);
+
+            return resourceCosts
+                .Where(cost => currentLevel == null || cost.AppliesForLevel(currentLevel.Value))
+                .All(cost => cost.Amount <= availableResources.Count(cost.MatchesItem));
+        }
+
+        public static bool TryTakeResources(IEnumerable<UpgradeResourceCost> resourceCosts, Character character, int? currentLevel = null)
+            => TryTakeResources(resourceCosts, character, out var _, currentLevel);
+        public static bool TryTakeResources(IEnumerable<UpgradeResourceCost> resourceCosts, Character character, out IReadOnlyList<ItemPrefab> resourcesTaken, int? currentLevel = null)
+        {
+            var resourcesTakenList = new List<ItemPrefab>();
+            resourcesTaken = resourcesTakenList;
+
+            var costs = resourceCosts.Where(cost => currentLevel == null || cost.AppliesForLevel(currentLevel.Value));
+            if (!costs.Any()) { return true; }
+
+            var availableResources = CargoManager.FindAllItemsOnPlayerAndAllowedSubs(character);
+            HashSet<Item> itemsToRemove = new HashSet<Item>();
+            foreach (UpgradeResourceCost cost in costs)
+            {
+                int amountNeeded = cost.Amount;
+                foreach (Item item in availableResources.Where(cost.MatchesItem))
+                {
+                    itemsToRemove.Add(item);
+                    resourcesTakenList.Add(item.Prefab);
+                    amountNeeded--;
+                    if (amountNeeded <= 0) { break; }
+                }
+
+                if (amountNeeded > 0) { return false; }
+            }
+
+            foreach (Item item in itemsToRemove)
+            {
+                Entity.Spawner.AddItemToRemoveQueue(item);
+            }
+
+            if (GameMain.IsMultiplayer) { character.Inventory.CreateNetworkEvent(); }
+
+            return true;
+        }
+
+        public static ImmutableArray<ApplicableResourceCollection> GetApplicableResources(IEnumerable<UpgradeResourceCost> resourceCosts, int? level = null)
+        {
+            var applicableCosts = resourceCosts.Where(cost => level == null || cost.AppliesForLevel(level.Value)).ToImmutableHashSet();
+
+            var costs = applicableCosts.Any()
+                ? applicableCosts.Select(ApplicableResourceCollection.CreateFor).ToImmutableArray()
+                : ImmutableArray<ApplicableResourceCollection>.Empty;
+
+            return costs;
+        }
     }
 
-    internal readonly struct ApplicableResourceCollection
+    public readonly struct ApplicableResourceCollection
     {
         public readonly ImmutableArray<ItemPrefab> MatchingItems;
         public readonly UpgradeResourceCost Cost;
@@ -325,7 +388,7 @@ namespace Barotrauma
         }
     }
 
-    internal sealed partial class UpgradePrefab : UpgradeContentPrefab
+    public sealed partial class UpgradePrefab : UpgradeContentPrefab
     {
         public static readonly PrefabCollection<UpgradePrefab> Prefabs = new PrefabCollection<UpgradePrefab>(
             onAdd: static (prefab, isOverride) =>
@@ -581,56 +644,13 @@ namespace Barotrauma
 
         public bool HasResourcesToUpgrade(Character? character, int currentLevel)
         {
-            if (character is null) { return false; }
-            if (!ResourceCosts.Any()) { return true; }
-
-            var allItems = CargoManager.FindAllItemsOnPlayerAndSub(character);
-
-            return ResourceCosts.Where(cost => cost.AppliesForLevel(currentLevel)).All(cost => cost.Amount <= allItems.Count(cost.MatchesItem));
+            return UpgradeResourceCost.HasResources(ResourceCosts, character, currentLevel);
         }
 
         // ReSharper disable PossibleMultipleEnumeration
         public bool TryTakeResources(Character character, int currentLevel)
         {
-            var costs = ResourceCosts.Where(cost => cost.AppliesForLevel(currentLevel));
-
-            if (!costs.Any()) { return true; }
-
-            var inventoryItems = CargoManager.FindAllItemsOnPlayerAndSub(character);
-            HashSet<Item> itemsToRemove = new HashSet<Item>();
-
-            foreach (UpgradeResourceCost cost in costs)
-            {
-                int amountNeeded = cost.Amount;
-                foreach (Item item in inventoryItems.Where(cost.MatchesItem))
-                {
-                    itemsToRemove.Add(item);
-                    amountNeeded--;
-                    if (amountNeeded <= 0) { break; }
-                }
-
-                if (amountNeeded > 0) { return false; }
-            }
-
-            foreach (Item item in itemsToRemove)
-            {
-                Entity.Spawner.AddItemToRemoveQueue(item);
-            }
-
-            if (GameMain.IsMultiplayer) { character.Inventory.CreateNetworkEvent(); }
-
-            return true;
-        }
-
-        public ImmutableArray<ApplicableResourceCollection> GetApplicableResources(int level)
-        {
-            var applicableCosts = ResourceCosts.Where(cost => cost.AppliesForLevel(level)).ToImmutableHashSet();
-
-            var costs = applicableCosts.Any()
-                ? applicableCosts.Select(ApplicableResourceCollection.CreateFor).ToImmutableArray()
-                : ImmutableArray<ApplicableResourceCollection>.Empty;
-
-            return costs;
+            return UpgradeResourceCost.TryTakeResources(ResourceCosts, character, currentLevel);
         }
 
         public bool IsDisallowed(MapEntity item)

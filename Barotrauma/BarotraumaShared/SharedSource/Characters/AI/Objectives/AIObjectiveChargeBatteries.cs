@@ -7,11 +7,14 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    class AIObjectiveChargeBatteries : AIObjectiveLoop<PowerContainer>
+    public class AIObjectiveChargeBatteries : AIObjectiveLoop<PowerContainer>
     {
         public override Identifier Identifier { get; set; } = "charge batteries".ToIdentifier();
         public override bool AllowAutomaticItemUnequipping => true;
+        protected override bool RequireOneHandAvailable => true;
         private IEnumerable<PowerContainer> batteryList;
+
+        protected override bool RequireReports => false;
 
         public AIObjectiveChargeBatteries(Character character, AIObjectiveManager objectiveManager, Identifier option, float priorityModifier) 
             : base(character, objectiveManager, priorityModifier, option) { }

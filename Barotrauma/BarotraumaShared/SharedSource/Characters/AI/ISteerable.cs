@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    interface ISteerable
+    public interface ISteerable
     {
         Vector2 Steering
         {

@@ -245,7 +245,7 @@ namespace Barotrauma
 
                     if (addPendingSectorUpdate)
                     {
-                        RefreshAveragePaintedColor();
+                        RefreshAveragePaintedColorAndDirtiness();
                         //add to pending updates to notify other clients as well
                         pendingSectorUpdates.Add(sectorToUpdate);
                     }

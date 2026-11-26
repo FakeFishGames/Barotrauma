@@ -107,6 +107,13 @@ namespace Barotrauma
             set;
         }
 
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier[] OutpostSkills
+        {
+            get;
+            set;
+        }
+
         public SkillSettings(XElement element, SkillSettingsFile file) : base(file, "SkillSettings".ToIdentifier())
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);

@@ -348,7 +348,7 @@ namespace Barotrauma.Items.Components
         {
             Connection recipient = wire.OtherConnection(connection);
             LocalizedString label;
-            if (wire.Item.IsLayerHidden)
+            if (wire.Item.IsDisabled)
             {
                 label = TextManager.Get("ConnectionLocked");
             }
@@ -501,7 +501,7 @@ namespace Barotrauma.Items.Components
                     ConnectionPanel.HighlightedWire = wire;
 
                     bool allowRewiring = GameMain.NetworkMember?.ServerSettings == null || GameMain.NetworkMember.ServerSettings.AllowRewiring || panel.AlwaysAllowRewiring;
-                    if (allowRewiring && (!wire.Locked && !wire.Item.IsLayerHidden && !panel.Locked && !panel.TemporarilyLocked || Screen.Selected == GameMain.SubEditorScreen))
+                    if (allowRewiring && (!wire.Locked && !wire.Item.IsDisabled && !panel.Locked && !panel.TemporarilyLocked || Screen.Selected == GameMain.SubEditorScreen))
                     {
                         //start dragging the wire
                         if (PlayerInput.PrimaryMouseButtonHeld()) { DraggingConnected = wire; }

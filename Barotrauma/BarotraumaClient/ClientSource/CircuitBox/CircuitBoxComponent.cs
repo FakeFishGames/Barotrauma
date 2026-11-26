@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    internal partial class CircuitBoxComponent
+    public partial class CircuitBoxComponent
     {
         public static Option<GUIComponent> EditingHUD = Option.None;
 

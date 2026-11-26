@@ -12,7 +12,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    readonly struct SkillRequirementHint
+    public readonly struct SkillRequirementHint
     {
         public readonly Identifier Skill;
         public readonly float Level;
@@ -29,7 +29,7 @@ namespace Barotrauma
         }
     }
 
-    readonly struct DeconstructItem
+    public readonly struct DeconstructItem
     {
         public readonly Identifier ItemIdentifier;
         //number of items to output
@@ -81,7 +81,7 @@ namespace Barotrauma
         }
     }
 
-    class FabricationRecipe
+    public class FabricationRecipe
     {
         public abstract class RequiredItem
         {
@@ -397,7 +397,7 @@ namespace Barotrauma
         }
     }
 
-    class PreferredContainer
+    public class PreferredContainer
     {
         public readonly ImmutableHashSet<Identifier> Primary;
         public readonly ImmutableHashSet<Identifier> Secondary;
@@ -453,23 +453,46 @@ namespace Barotrauma
         }
     }
 
-    class SwappableItem
+    public class SwappableItem
     {
         public int BasePrice { get; }
 
         public readonly bool CanBeBought;
 
+        /// <summary>
+        /// When multiple are factions are given, any of them will do. So e.g. requiredfactions="coalition,separatists" would make the item available on both.
+        /// "None" can be used to make the item available in outposts belonging to no faction.
+        /// </summary>
+        public readonly ImmutableHashSet<Identifier> RequiredFactions;
+
         public readonly Identifier ReplacementOnUninstall;
+
+        /// <summary>
+        /// Types of submarines this item cannot be installed in through swapping (e.g. blockedsubmarinetypes="Player").
+        /// Does not affect items that are already placed in the submarine.
+        /// </summary>
+        public readonly ImmutableHashSet<SubmarineType> BlockedSubmarineTypes;
 
         public string SpawnWithId;
 
-        public string SwapIdentifier;
+        public Identifier SwapIdentifier;
 
         public readonly Vector2 SwapOrigin;
 
         public List<(Identifier requiredTag, Identifier swapTo)> ConnectedItemsToSwap = new List<(Identifier requiredTag, Identifier swapTo)>();
 
         public readonly Sprite SchematicSprite;
+
+        /// <summary>
+        /// Overrides the values of the properties of a component of the item, when another item is swapped to this one in a submarine of the given type.
+        /// Not applied to items that are placed in the submarine normally (e.g. the items of the premade outposts), only when swapping.
+        /// </summary>
+        /// <param name="SubmarineType">The type of the submarine the item must be in for the override to apply.</param>
+        /// <param name="TargetComponent">The name of the component type the override applies to, e.g. Fabricator.</param>
+        /// <param name="Values">Serialized property name -> value as a string. Applied to the component when the item is swapped in.</param>
+        public readonly record struct ParameterOverride(SubmarineType SubmarineType, Identifier TargetComponent, ImmutableDictionary<Identifier, string> Values);
+
+        public ImmutableArray<ParameterOverride> ParameterOverrides { get; private set; } = ImmutableArray<ParameterOverride>.Empty;
 
         public int GetPrice(Location location = null)
         {
@@ -481,14 +504,67 @@ namespace Barotrauma
             return price;
         }
 
+        /// <summary>
+        /// Determines if the item is available for swap at the specified location and with the given (optional) parameters.
+        /// </summary>
+        /// <param name="requiredSwapIdentifier">An identifier for optionally filtering for specific category of items with matching SwapIdentifier.</param>
+        /// <param name="itemReplacementOnUninstall">An identifier of the item that we can replace the item when uninstalling. When matched, the method returns true before evaluating the rest of the conditions.</param>
+        /// <param name="location">The location to check for availability. Uses the current location if null (default).</param>
+        /// <returns>True if the item can be replaced (optional), bought, SwapIdentifier matches (optional), and if the item is available for swap at the specified location. Note that if any required factions are defined and the location is null, the method returns false. If no factions are defined, the method returns true.</returns>
+        public bool IsAvailableForSwapping(Identifier? requiredSwapIdentifier = null, Identifier? itemReplacementOnUninstall = null, Location location = null)
+        {
+            if (itemReplacementOnUninstall.HasValue && itemReplacementOnUninstall == ReplacementOnUninstall)
+            {
+                // Matches the replacement on uninstallation (item identifier)
+                return true;
+            }
+            if (!CanBeBought) { return false; }
+            if (requiredSwapIdentifier.HasValue && requiredSwapIdentifier != SwapIdentifier)
+            {
+                // Does not match the required SwapIdentifier (category)
+                return false;
+            }
+            if (RequiredFactions == null || RequiredFactions.None()) { return true; }
+            location ??= GameMain.GameSession?.Campaign?.CurrentLocation;
+            if (location == null) { return false; }
+            Identifier primaryFaction = location.Faction?.Prefab.Identifier ?? Identifier.Empty;
+            Identifier secondaryFaction = location.SecondaryFaction?.Prefab.Identifier ?? Identifier.Empty;
+            // Also accept the original owner to allow faction-specific items to be installed in outposts claimed by a player
+            Identifier originalFaction = location.OriginalFaction?.Prefab.Identifier ?? Identifier.Empty;
+            return RequiredFactions.Contains(primaryFaction) || RequiredFactions.Contains(secondaryFaction) || RequiredFactions.Contains(originalFaction) || 
+                    (location.Faction == null && RequiredFactions.Contains("None".ToIdentifier()));
+        }
+
         public SwappableItem(ContentXElement element)
         {
             BasePrice = Math.Max(element.GetAttributeInt("price", 0), 0);
-            SwapIdentifier = element.GetAttributeString("swapidentifier", string.Empty);
+            SwapIdentifier = element.GetAttributeIdentifier("swapidentifier", Identifier.Empty);
             CanBeBought = element.GetAttributeBool("canbebought", BasePrice != 0);
+            List<Identifier> requiredFactions = element.GetAttributeIdentifierArray("requiredfactions", Array.Empty<Identifier>()).ToList();
+            Identifier requiredFaction = element.GetAttributeIdentifier("requiredfaction", Identifier.Empty);
+            if (!requiredFaction.IsEmpty)
+            {
+                requiredFactions.Add(requiredFaction);
+            }
+            RequiredFactions = requiredFactions.ToImmutableHashSet();
             ReplacementOnUninstall = element.GetAttributeIdentifier("replacementonuninstall", "");
             SwapOrigin = element.GetAttributeVector2("origin", Vector2.One);
             SpawnWithId = element.GetAttributeString("spawnwithid", string.Empty);
+
+            var blockedSubmarineTypes = new HashSet<SubmarineType>();
+            foreach (string typeName in element.GetAttributeStringArray("blockedsubmarinetypes", Array.Empty<string>()))
+            {
+                if (Enum.TryParse(typeName.Trim(), ignoreCase: true, out SubmarineType blockedType))
+                {
+                    blockedSubmarineTypes.Add(blockedType);
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Error in item prefab \"{element.Parent?.GetAttributeString("identifier", string.Empty)}\": invalid submarine type \"{typeName}\" in BlockedSubmarineTypes.",
+                        contentPackage: element.ContentPackage);
+                }
+            }
+            BlockedSubmarineTypes = blockedSubmarineTypes.ToImmutableHashSet();
 
             foreach (var subElement in element.Elements())
             {
@@ -502,12 +578,52 @@ namespace Barotrauma
                             (subElement.GetAttributeIdentifier("tag", ""), 
                             subElement.GetAttributeIdentifier("swapto", "")));
                         break;
+                    case "parameteroverride":
+                        if (TryParseParameterOverride(subElement, out var parameterOverride))
+                        {
+                            ParameterOverrides = ParameterOverrides.Add(parameterOverride);
+                        }
+                        break;
                 }
             }
         }
+
+        private static bool TryParseParameterOverride(ContentXElement element, out ParameterOverride parameterOverride)
+        {
+            parameterOverride = default;
+            string itemIdentifier = element.Parent?.Parent?.GetAttributeString("identifier", string.Empty) ?? string.Empty;
+
+            if (!Enum.TryParse(element.GetAttributeString("submarinetype", string.Empty), ignoreCase: true, out SubmarineType submarineType))
+            {
+                DebugConsole.ThrowError($"Error in item prefab \"{itemIdentifier}\": ParameterOverride has a missing or invalid submarine type. Ignoring the override.",
+                    contentPackage: element.ContentPackage);
+                return false;
+            }
+            Identifier targetComponent = element.GetAttributeIdentifier("targetcomponent", Identifier.Empty);
+            if (targetComponent.IsEmpty)
+            {
+                DebugConsole.ThrowError($"Error in item prefab \"{itemIdentifier}\": ParameterOverride has no target component. Ignoring the override.",
+                    contentPackage: element.ContentPackage);
+                return false;
+            }
+
+            var values = ImmutableDictionary.CreateBuilder<Identifier, string>();
+            foreach (XAttribute attribute in element.Attributes())
+            {
+                string attributeName = attribute.Name.LocalName;
+                if (attributeName.Equals("submarinetype", StringComparison.OrdinalIgnoreCase) ||
+                    attributeName.Equals("targetcomponent", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+                values[attributeName.ToIdentifier()] = attribute.Value;
+            }
+            parameterOverride = new ParameterOverride(submarineType, targetComponent, values.ToImmutable());
+            return true;
+        }
     }
 
-    partial class ItemPrefab : MapEntityPrefab, IImplementsVariants<ItemPrefab>
+    public partial class ItemPrefab : MapEntityPrefab, IImplementsVariants<ItemPrefab>
     {
         public static readonly PrefabCollection<ItemPrefab> Prefabs = new PrefabCollection<ItemPrefab>();
 
@@ -541,6 +657,43 @@ namespace Barotrauma
 
         private readonly ContentXElement originalElement;
         public ContentXElement ConfigElement { get; private set; }
+
+        /// <summary>
+        /// Returns item component elements added to this item by item extensions
+        /// </summary>
+        public IEnumerable<ContentXElement> GetPluginComponentElements()
+        {
+            foreach (ContentXElement element in ItemExtensionPrefab.GetComponentElements(Identifier, Tags
+                        //order the tags to ensure they're in a deterministic order, and that everyone instantiates the components in the same order
+                        .OrderBy(t => t.Value)))
+            {
+                yield return element;
+            }
+
+            foreach (PluginData data in PluginData.LoadedPluginData)
+            {
+                if (data.AdditionalItemComponents.TryGetValue(Identifier, out HashSet<ContentXElement> identifierElements))
+                {
+                    foreach (ContentXElement element in identifierElements) { yield return element; }
+                }
+
+                foreach (Identifier tag in Tags
+                        //order the tags to ensure they're in a deterministic order, and that everyone instantiates the components in the same order
+                        .OrderBy(t => t.Value))
+                {
+                    if (tag == Identifier)
+                    {
+                        // Prevent adding the additional component twice if the item identifier and the tag happen to be the same
+                        continue;
+                    }
+
+                    if (data.AdditionalItemComponents.TryGetValue(tag, out HashSet<ContentXElement> tagElements))
+                    {
+                        foreach (ContentXElement element in tagElements) { yield return element; }
+                    }
+                }
+            }
+        }
 
         public ImmutableArray<DeconstructItem> DeconstructItems { get; private set; }
 
@@ -664,20 +817,24 @@ namespace Barotrauma
         /// </summary>
         private ImmutableDictionary<Identifier, CommonnessInfo> LevelCommonness { get; set; }
 
-        public readonly struct FixedQuantityResourceInfo
+        public readonly struct FixedQuantityResourceInfo(int clusterQuantity, int clusterSize, bool isIslandSpecific, bool allowAtStart, bool allowAtEnd)
         {
-            public readonly int ClusterQuantity;
-            public readonly int ClusterSize;
-            public readonly bool IsIslandSpecific;
-            public readonly bool AllowAtStart;
+            public readonly int ClusterQuantity = clusterQuantity;
+            public readonly int ClusterSize = clusterSize;
+            public readonly bool IsIslandSpecific = isIslandSpecific;
+            public readonly bool AllowAtStart = allowAtStart;
+            public readonly bool AllowAtEnd = allowAtEnd;
 
-            public FixedQuantityResourceInfo(int clusterQuantity, int clusterSize, bool isIslandSpecific, bool allowAtStart)
-            {
-                ClusterQuantity = clusterQuantity;
-                ClusterSize = clusterSize;
-                IsIslandSpecific = isIslandSpecific;
-                AllowAtStart = allowAtStart;
+            public FixedQuantityResourceInfo(ContentXElement element) :
+                this(
+                    clusterQuantity: element.GetAttributeInt(nameof(ClusterQuantity), 0),
+                    clusterSize: element.GetAttributeInt(nameof(ClusterSize), 0),
+                    isIslandSpecific: element.GetAttributeBool(nameof(IsIslandSpecific), false),
+                    allowAtStart: element.GetAttributeBool(nameof(AllowAtStart), true),
+                    allowAtEnd: element.GetAttributeBool(nameof(AllowAtEnd), true))
+            {                
             }
+
         }
 
         public ImmutableDictionary<Identifier, FixedQuantityResourceInfo> LevelQuantity { get; private set; }
@@ -754,11 +911,15 @@ namespace Barotrauma
             private set;
         }
 
-        //should the camera focus on the item when selected
+        /// <summary>
+        /// Should the camera focus on the item when selected.
+        /// </summary>
         [Serialize(false, IsPropertySaveable.No)]
         public bool FocusOnSelected { get; private set; }
 
-        //the amount of "camera offset" when selecting the construction
+        /// <summary>
+        /// The amount of camera offset when the item is selected, i.e. how far the camera can be moved from the item.
+        /// </summary>
         [Serialize(0.0f, IsPropertySaveable.No)]
         public float OffsetOnSelected { get; private set; }
 
@@ -830,6 +991,20 @@ namespace Barotrauma
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool UseInHealthInterface { get; private set; }
+
+        /// <summary>
+        /// Minimum number of functional hands the user needs in order to use this item through the health interface.
+        /// Defaults to 1. Only relevant when <see cref="UseInHealthInterface"/> is true.
+        /// </summary>
+        [Serialize(1, IsPropertySaveable.No)]
+        public int UseInHealthInterfaceMinHandsRequired { get; private set; }
+
+        /// <summary>
+        /// If true, this item can only be applied through the health interface to a limb flagged as <see cref="Limb.IsAmputable"/>.
+        /// Only relevant when <see cref="UseInHealthInterface"/> is true.
+        /// </summary>
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool RequireAmputableLimb { get; private set; }
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool DisableItemUsageWhenSelected { get; private set; }
@@ -967,7 +1142,7 @@ namespace Barotrauma
         [Serialize(true, IsPropertySaveable.No)]
         public bool ShowHealthBar { get; private set; }
 
-        [Serialize(1f, IsPropertySaveable.No, description: "How much the bots prioritize this item when they seek for items. For example, bots prioritize less exosuit than the other diving suits. Defaults to 1. Note that there's also a specific CombatPriority for items that can be used as weapons.")]
+        [Serialize(1f, IsPropertySaveable.No, description: $"How much the bots prioritize this item when they seek for items. For example, bots prioritize less exosuit than the other diving suits. Defaults to 1. Note that there's also a specific {nameof(ItemComponent.CombatPriority)} for items that can be used as handheld weapons.")]
         public float BotPriority { get; private set; }
 
         [Serialize(true, IsPropertySaveable.No)]
@@ -1257,7 +1432,7 @@ namespace Barotrauma
 
                         break;
                     case "levelresource":
-                        foreach (XElement levelCommonnessElement in subElement.GetChildElements("commonness"))
+                        foreach (ContentXElement levelCommonnessElement in subElement.GetChildElements("commonness"))
                         {
                             Identifier levelName = levelCommonnessElement.GetAttributeIdentifier("leveltype", "");
                             if (!levelCommonnessElement.GetAttributeBool("fixedquantity", false))
@@ -1271,11 +1446,7 @@ namespace Barotrauma
                             {
                                 if (!levelQuantity.ContainsKey(levelName))
                                 {
-                                    levelQuantity.Add(levelName, new FixedQuantityResourceInfo(
-                                        levelCommonnessElement.GetAttributeInt("clusterquantity", 0),
-                                        levelCommonnessElement.GetAttributeInt("clustersize", 0),
-                                        levelCommonnessElement.GetAttributeBool("isislandspecific", false),
-                                        levelCommonnessElement.GetAttributeBool("allowatstart", true)));
+                                    levelQuantity.Add(levelName, new FixedQuantityResourceInfo(levelCommonnessElement));
                                 }
                             }
                         }
@@ -1292,7 +1463,7 @@ namespace Barotrauma
                         break;
                 }
             }
-
+            
             Size = ConfigElement.GetAttributeVector2(nameof(Size), Size);
 
 #if CLIENT
@@ -1424,9 +1595,21 @@ namespace Barotrauma
 #endif
                 return null;
             }
-            else if (!store.Identifier.IsEmpty && StorePrices != null && StorePrices.TryGetValue(store.Identifier, out var storePriceInfo))
+            else if (store.TryOverridePriceInfo(this, out PriceInfo overridePriceInfo))
             {
-                return storePriceInfo;
+                return overridePriceInfo;
+            }
+            else if (!store.Identifier.IsEmpty && StorePrices != null)
+            {
+                // Check store identifier pools in left-to-right order, the first match is used
+                foreach (var sourceId in store.StoreIdentifiers)
+                {
+                    if (StorePrices.TryGetValue(sourceId, out var priceInfo))
+                    {
+                        return priceInfo;
+                    }
+                }
+                return DefaultPrice;
             }
             else
             {
@@ -1437,37 +1620,22 @@ namespace Barotrauma
         public bool CanBeBoughtFrom(Location.StoreInfo store, out PriceInfo priceInfo)
         {
             priceInfo = GetPriceInfo(store);
-            Identifier? faction = store?.Location.Faction?.Prefab.Identifier;
-            Identifier? secondaryFaction = store?.Location.SecondaryFaction?.Prefab.Identifier;
+            return priceInfo is { CanBeBought: true } && store.MeetsPurchaseRequirements(priceInfo);
+        }
 
-            return
-                priceInfo is { CanBeBought: true } &&
-                (store?.Location.LevelData?.Difficulty ?? 0) >= priceInfo.MinLevelDifficulty &&
-                (priceInfo.RequiredFaction.IsEmpty || faction == priceInfo.RequiredFaction || secondaryFaction == priceInfo.RequiredFaction) &&
-                (!priceInfo.MinReputation.Any() || priceInfo.MinReputation.Any(p => faction == p.Key || secondaryFaction == p.Key));
+        /// <summary>
+        /// Get the PriceInfo defined for the store identifier, if there is one (doesn't fall back to <see cref="DefaultPrice"/>).
+        /// </summary>
+        public bool TryGetStorePriceInfo(Identifier storeIdentifier, out PriceInfo priceInfo)
+        {
+            priceInfo = null;
+            return StorePrices != null && StorePrices.TryGetValue(storeIdentifier, out priceInfo);
         }
 
         public bool CanBeBoughtFrom(Location location)
         {
             if (location?.Stores == null) { return false; }
-            foreach (var store in location.Stores)
-            {
-                var priceInfo = GetPriceInfo(store.Value);
-                if (priceInfo == null) { continue; }
-                if (!priceInfo.CanBeBought) { continue; }
-                if (location.LevelData.Difficulty < priceInfo.MinLevelDifficulty) { continue; }
-                if (priceInfo.MinReputation.Any())
-                {
-                    if (!priceInfo.MinReputation.Any(p =>
-                        location?.Faction?.Prefab.Identifier == p.Key ||
-                        location?.SecondaryFaction?.Prefab.Identifier == p.Key))
-                    {
-                        continue;
-                    }
-                }
-                return true;
-            }
-            return false;
+            return location.Stores.Values.Any(store => CanBeBoughtFrom(store, out _));
         }
 
         public int? GetMinPrice()
@@ -1539,6 +1707,25 @@ namespace Barotrauma
                 }
             }
             return prices.ToImmutableDictionary();
+        }
+
+        /// <summary>
+        /// Returns the average availability of the item in all stores that sell it.
+        /// </summary>
+        public float GetAverageAvailability(float levelDifficulty)
+        {
+            if (StorePrices == null || StorePrices.IsEmpty)
+            {
+                return 0;
+            }
+            var storePricesAvailableForLevelDifficulty = StorePrices.Values.Where(s => levelDifficulty >= s.MinLevelDifficulty);
+            float availabilitySum =
+                storePricesAvailableForLevelDifficulty.Any() ?
+                storePricesAvailableForLevelDifficulty.Sum(p => (p.MinAvailableAmount + p.MaxAvailableAmount) / 2.0f) :
+                (DefaultPrice.MinAvailableAmount + DefaultPrice.MaxAvailableAmount) / 2.0f;
+            //note that we intentionally divide by the Count of all 'StorePrices' rather than 'storePricesAvailableForLevelDifficulty' below,
+            //since we're interested in the average availability in stores in general, not stores which sell the item in this difficulty
+            return availabilitySum / Math.Max(StorePrices.Count, 1.0f);
         }
 
         #endregion

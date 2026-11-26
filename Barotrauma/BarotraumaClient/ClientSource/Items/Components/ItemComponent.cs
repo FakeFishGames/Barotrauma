@@ -4,9 +4,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Particles;
 
 namespace Barotrauma.Items.Components
 {
@@ -23,8 +23,6 @@ namespace Barotrauma.Items.Components
     {
         public readonly RoundSound RoundSound;
         public readonly ActionType Type;
-
-        public Identifier VolumeProperty;
 
         public float VolumeMultiplier
         {
@@ -61,6 +59,27 @@ namespace Barotrauma.Items.Components
         private readonly bool[] hasSoundsOfType;
         private readonly Dictionary<ActionType, List<ItemSound>> sounds;
         private Dictionary<ActionType, SoundSelectionMode> soundSelectionModes;
+        
+        /// <summary>
+        /// Contains only the emitters that have an <see cref="ParticleEmitterProperties.ID"/> defined.
+        /// </summary>
+        protected Dictionary<Identifier, ParticleEmitter> particleEmittersById;
+        
+        protected bool TryAddParticleEmitterByID(ParticleEmitter particleEmitter)
+        {
+            Identifier id = particleEmitter.Prefab.Properties.ID;
+            if (id.IsEmpty) { return false; }
+            particleEmittersById ??= new Dictionary<Identifier, ParticleEmitter>();
+            return particleEmittersById.TryAdd(id, particleEmitter);   
+        }
+        
+        public bool TryGetParticleEmitter(Identifier id, out ParticleEmitter particleEmitter)
+        {
+            particleEmitter = null;
+            if (particleEmittersById == null) { return false; }
+            if (id.IsEmpty) { return false; }
+            return particleEmittersById.TryGetValue(id, out particleEmitter);
+        }
 
         /// <summary>
         /// Starts the timer for  delayed client-side corrections (<see cref="StartDelayedCorrection(IReadMessage, float, bool)"/>) - in other words,
@@ -205,6 +224,12 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        public virtual LocalizedString InventoryHotkeyTooltip
+        {
+            get;
+            set;
+        }
+
         private bool useAlternativeLayout;
         public bool UseAlternativeLayout
         {
@@ -257,11 +282,13 @@ namespace Barotrauma.Items.Components
             {
                 if (Timing.TotalTime > lastMuffleCheckTime + 0.2f)
                 {
-                    shouldMuffleLooping = SoundPlayer.ShouldMuffleSound(Character.Controlled, item.WorldPosition, loopingSound.Range, Character.Controlled?.CurrentHull);
+                    shouldMuffleLooping =
+                        !loopingSound.RoundSound.IgnoreMuffling &&
+                        SoundPlayer.ShouldMuffleSound(Character.Controlled, item.WorldPosition, loopingSound.Range, Character.Controlled?.CurrentHull);
                     lastMuffleCheckTime = (float)Timing.TotalTime;
                 }
                 loopingSoundChannel.Muffled = shouldMuffleLooping;
-                float targetGain = GetSoundVolume(loopingSound);
+                float targetGain = loopingSound.RoundSound.GetSoundVolume(this);
                 float gainDiff = targetGain - loopingSoundChannel.Gain;
                 loopingSoundChannel.Gain += Math.Abs(gainDiff) < 0.1f ? gainDiff : Math.Sign(gainDiff) * 0.1f;
                 loopingSoundChannel.Position = new Vector3(item.WorldPosition, 0.0f);
@@ -296,7 +323,7 @@ namespace Barotrauma.Items.Components
             if (loopingSound != null)
             {
                 if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(item.WorldPosition, 0.0f)) > loopingSound.Range * loopingSound.Range ||
-                    (GetSoundVolume(loopingSound)) <= 0.0001f)
+                    (loopingSound.RoundSound.GetSoundVolume(this)) <= 0.0001f)
                 {
                     if (loopingSoundChannel != null)
                     {
@@ -400,7 +427,7 @@ namespace Barotrauma.Items.Components
                 }
                 if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
                 {
-                    float volume = GetSoundVolume(itemSound);
+                    float volume = itemSound.RoundSound.GetSoundVolume(this);
                     if (volume <= 0.0001f) { return; }
                     loopingSound = itemSound;
                     loopingSoundChannel = SoundPlayer.PlaySound(loopingSound.RoundSound, position, volume: 0.01f, hullGuess: item.CurrentHull);
@@ -418,7 +445,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                float volume = GetSoundVolume(itemSound);
+                float volume = itemSound.RoundSound.GetSoundVolume(this);
                 if (volume <= 0.0001f) { return; }
                 var channel = SoundPlayer.PlaySound(itemSound.RoundSound, position, volume, hullGuess: item.CurrentHull);
                 if (channel != null) { playingOneshotSoundChannels.Add(channel); }
@@ -442,50 +469,6 @@ namespace Barotrauma.Items.Components
             StopLoopingSound();
         }
 
-        private float GetSoundVolume(ItemSound sound)
-        {
-            if (sound == null) { return 0.0f; }
-            if (sound.VolumeProperty == "") { return sound.VolumeMultiplier; }
-
-            SerializableProperty property = null;
-            ISerializableEntity targetEntity = null;
-            if (SerializableProperties.TryGetValue(sound.VolumeProperty, out property))
-            {
-                targetEntity = this;
-            }
-            else if (Item.SerializableProperties.TryGetValue(sound.VolumeProperty, out property))
-            {
-                targetEntity = Item;
-            }
-
-            if (property != null)
-            {
-                float newVolume;
-                try
-                {
-                    newVolume = property.GetFloatValue(targetEntity);
-                }
-                catch
-                {
-                    return 0.0f;
-                }
-                newVolume = Math.Min(newVolume * sound.VolumeMultiplier, 1.0f);
-
-                if (!MathUtils.IsValid(newVolume))
-                {
-                    DebugConsole.Log("Invalid sound volume (item " + item.Name + ", " + GetType().ToString() + "): " + newVolume);
-                    GameAnalyticsManager.AddErrorEventOnce(
-                        "ItemComponent.PlaySound:" + item.Name + GetType().ToString(),
-                        GameAnalyticsManager.ErrorSeverity.Error,
-                        "Invalid sound volume (item " + item.Name + ", " + GetType().ToString() + "): " + newVolume);
-                    return 0.0f;
-                }
-
-                return MathHelper.Clamp(newVolume, 0.0f, 1.0f);
-            }
-
-            return 0.0f;
-        }
         
         public bool ShouldDrawHUD(Character character)
         {
@@ -571,6 +554,15 @@ namespace Barotrauma.Items.Components
         public virtual void CreateEditingHUD(SerializableEntityEditor editor)
         {
         }
+        /// <summary>
+        /// Returns a collection of items that should be highlighted when this item is equipped
+        /// </summary>
+        public virtual IEnumerable<Item> GetEquippedItemHighlights(Character character) => Enumerable.Empty<Item>();
+
+        /// <summary>
+        /// Allows this item component to be added to the action list if it's currently equipped
+        /// </summary>
+        public virtual bool ShouldAllowEquippedInteraction(Character character) => false;
 
         private bool LoadElemProjSpecific(ContentXElement subElement)
         {
@@ -628,10 +620,7 @@ namespace Barotrauma.Items.Components
                     if (sound == null) { break; }
                     ItemSound itemSound = new ItemSound(sound, type, 
                         subElement.GetAttributeBool("loop", false),
-                        subElement.GetAttributeBool("onlyinsamesub", false))
-                    {
-                        VolumeProperty = subElement.GetAttributeIdentifier("volumeproperty", "")
-                    };
+                        subElement.GetAttributeBool("onlyinsamesub", false));
 
                     if (soundSelectionModes == null)
                     {
@@ -657,7 +646,7 @@ namespace Barotrauma.Items.Components
             return true; //element processed
         }
 
-        private XElement GuiFrameSource;
+        protected XElement GuiFrameSource;
 
         protected void ReleaseGuiFrame()
         {

@@ -9,7 +9,7 @@ using Barotrauma.Networking;
 
 namespace Barotrauma
 {
-    abstract class Entity : ISpatialEntity
+    public abstract class Entity : ISpatialEntity
     {
         public const ushort NullEntityID = 0;
         public const ushort EntitySpawnerID = ushort.MaxValue;
@@ -34,6 +34,10 @@ namespace Barotrauma
 
         public bool Removed { get; private set; }
 
+        /// <summary>
+        /// Means the item no longer has any persistent, unique ID that it can be safely referred by. 
+        /// Normally set after the item has been removed, but may be manually freed for "temporary" entities such as gaps on walls.
+        /// </summary>
         public bool IdFreed { get; private set; }
 
         /// <summary>

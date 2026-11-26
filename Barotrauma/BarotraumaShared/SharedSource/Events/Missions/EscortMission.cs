@@ -156,7 +156,7 @@ namespace Barotrauma
                 }
                 foreach (var statusEffect in statusEffectList)
                 {
-                    statusEffect.Apply(statusEffect.type, 1.0f, spawnedCharacter, spawnedCharacter);
+                    statusEffect.Apply(statusEffect.Type, 1.0f, spawnedCharacter, spawnedCharacter);
                 }                
             }
 

@@ -881,6 +881,9 @@ namespace Barotrauma
             OnTextChanged?.Invoke(this, Text);
         }
 
+        public void InvokeOnTextChanged()
+            => OnTextChanged?.Invoke(this, Text);
+
         private float GetWrapWidth()
             => Wrap ? (textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z) / TextBlock.TextScale : float.PositiveInfinity;
 

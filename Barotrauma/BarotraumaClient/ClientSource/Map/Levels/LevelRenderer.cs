@@ -9,7 +9,7 @@ using Voronoi2;
 
 namespace Barotrauma
 {
-    class LevelWallVertexBuffer : IDisposable
+    public class LevelWallVertexBuffer : IDisposable
     {
         /// <summary>
         /// Buffer for the vertices of the "actual" wall texture.
@@ -92,7 +92,7 @@ namespace Barotrauma
         }
     }
 
-    class LevelRenderer : IDisposable
+    public class LevelRenderer : IDisposable
     {
         private static BasicEffect wallEdgeEffect, wallCenterEffect, wallInnerEffect;
 
@@ -115,6 +115,7 @@ namespace Barotrauma
             get { return chromaticAberrationStrength; }
             set { chromaticAberrationStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
+
         public float CollapseEffectStrength
         {
             get;

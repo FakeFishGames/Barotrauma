@@ -1,6 +1,6 @@
 ﻿namespace Barotrauma
 {
-    partial class ConditionalSprite
+    public partial class ConditionalSprite
     {
         public void Remove()
         {

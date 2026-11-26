@@ -12,7 +12,6 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 
 namespace Barotrauma
 {
@@ -96,9 +95,24 @@ namespace Barotrauma
             }
         }
 
-        public override bool DrawBelowWater => (!(Screen.Selected is SubEditorScreen editor) || !editor.WiringMode || !isWire || !isLogic) && (base.DrawBelowWater || ParentInventory is CharacterInventory);
+        /// <summary>
+        /// Can be used to force the item to render in front of water (in the foreground) rather than behind it, 
+        /// regardless of any of the other conditions in DrawBelowWater/DrawOverWater.
+        /// </summary>
+        public bool ForceDrawOverWater { get; set; }
 
-        public override bool DrawOverWater => base.DrawOverWater || (IsSelected || Screen.Selected is SubEditorScreen editor && editor.WiringMode) && (isWire || isLogic);
+        public override bool DrawBelowWater =>
+            !ForceDrawOverWater &&
+            //wires and logic components are drawn over water (in the foreground) in wiring mode
+            (Screen.Selected is not SubEditorScreen editor || !editor.WiringMode || !isWire || !isLogic) && 
+            //items in character inventories are drawn behind water (the same as the characters)
+            (base.DrawBelowWater || ParentInventory is CharacterInventory);
+
+        public override bool DrawOverWater =>
+            ForceDrawOverWater ||
+            base.DrawOverWater ||
+            //selected wiring mode items are drawn over water (in the foreground)
+            (IsSelected || Screen.Selected is SubEditorScreen editor && editor.WiringMode) && (isWire || isLogic);
 
         private GUITextBlock itemInUseWarning;
         private GUITextBlock ItemInUseWarning
@@ -287,31 +301,15 @@ namespace Barotrauma
             }
             else
             {
-                int padding = 0;
-
-                RectangleF boundingBox = GetTransformedQuad().BoundingAxisAlignedRectangle;
-                Vector2 min = new Vector2(-boundingBox.Width / 2 - padding, -boundingBox.Height / 2 - padding);
-                Vector2 max = -min;
-
-                foreach (IDrawableComponent drawable in drawableComponents)
-                {
-                    min.X = Math.Min(min.X, -drawable.DrawSize.X / 2);
-                    min.Y = Math.Min(min.Y, -drawable.DrawSize.Y / 2);
-                    max.X = Math.Max(max.X, drawable.DrawSize.X / 2);
-                    max.Y = Math.Max(max.Y, drawable.DrawSize.Y / 2);
-                }
-                foreach (DecorativeSprite decorativeSprite in Prefab.DecorativeSprites)
-                {
-                    Vector2 scale = decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale;
-                    min.X = Math.Min(-decorativeSprite.Sprite.size.X * decorativeSprite.Sprite.RelativeOrigin.X * scale.X, min.X);
-                    min.Y = Math.Min(-decorativeSprite.Sprite.size.Y * (1.0f - decorativeSprite.Sprite.RelativeOrigin.Y) * scale.Y, min.Y);
-                    max.X = Math.Max(decorativeSprite.Sprite.size.X * (1.0f - decorativeSprite.Sprite.RelativeOrigin.X) * scale.X, max.X);
-                    max.Y = Math.Max(decorativeSprite.Sprite.size.Y * decorativeSprite.Sprite.RelativeOrigin.Y * scale.Y, max.Y);
-                }
-                cachedVisibleExtents = extents = new Rectangle(min.ToPoint(), max.ToPoint());
+                cachedVisibleExtents = extents = CalculateVisibleExtents();
             }
 
             Vector2 worldPosition = WorldPosition + GetCollapseEffectOffset();
+
+            if (drawableWireComponent != null)
+            {
+                if (drawableWireComponent.IsVisible(worldView)) { return true; }
+            }
 
             if (worldPosition.X + extents.X > worldView.Right || worldPosition.X + extents.Width < worldView.X) { return false; }
             if (worldPosition.Y + extents.Height < worldView.Y - worldView.Height || worldPosition.Y + extents.Y > worldView.Y) { return false; }
@@ -319,12 +317,46 @@ namespace Barotrauma
             return true;
         }
 
+        /// <summary>
+        /// Calculates the extents of everything the item draws, relative to the item's position.
+        /// Note that the rectangle is used to store min/max values: X and Y are the minimum extents, Width and Height the maximum extents.
+        /// </summary>
+        /// <param name="ignoreRangedDrawables">Ignore drawables whose draw size is the range of some effect (light range, editor range indicators) instead of the size of what they actually draw.</param>
+        public Rectangle CalculateVisibleExtents(bool ignoreRangedDrawables = false)
+        {
+            int padding = 0;
+
+            RectangleF boundingBox = GetTransformedQuad().BoundingAxisAlignedRectangle;
+            Vector2 min = new Vector2(-boundingBox.Width / 2 - padding, -boundingBox.Height / 2 - padding);
+            Vector2 max = -min;
+
+            foreach (IDrawableComponent drawable in drawableComponents)
+            {
+                if (drawable == drawableWireComponent) { continue; }
+                if (ignoreRangedDrawables && drawable is LightComponent or WifiComponent or MotionSensor or TriggerComponent) { continue; }
+                min.X = Math.Min(min.X, -drawable.DrawSize.X / 2);
+                min.Y = Math.Min(min.Y, -drawable.DrawSize.Y / 2);
+                max.X = Math.Max(max.X, drawable.DrawSize.X / 2);
+                max.Y = Math.Max(max.Y, drawable.DrawSize.Y / 2);
+            }
+
+            foreach (DecorativeSprite decorativeSprite in Prefab.DecorativeSprites)
+            {
+                Vector2 scale = decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale;
+                min.X = Math.Min(-decorativeSprite.Sprite.size.X * decorativeSprite.Sprite.RelativeOrigin.X * scale.X, min.X);
+                min.Y = Math.Min(-decorativeSprite.Sprite.size.Y * (1.0f - decorativeSprite.Sprite.RelativeOrigin.Y) * scale.Y, min.Y);
+                max.X = Math.Max(decorativeSprite.Sprite.size.X * (1.0f - decorativeSprite.Sprite.RelativeOrigin.X) * scale.X, max.X);
+                max.Y = Math.Max(decorativeSprite.Sprite.size.Y * decorativeSprite.Sprite.RelativeOrigin.Y * scale.Y, max.Y);
+            }
+            return new Rectangle(min.ToPoint(), max.ToPoint());
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             Draw(spriteBatch, editing, back, overrideColor: null);
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Color? overrideColor = null, float? overrideDepth = null)
+        public void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Color? overrideColor = null, float? overrideDepth = null, float? highlightBlurDistance = null)
         {
             if (!Visible || (!editing && IsHidden) || !SubEditorScreen.IsLayerVisible(this)) { return; }
 
@@ -342,6 +374,7 @@ namespace Barotrauma
             bool isWiringMode = editing && SubEditorScreen.TransparentWiringMode && SubEditorScreen.IsWiringMode() && !isWire && parentInventory == null;
             bool renderTransparent = isWiringMode && GetComponent<ConnectionPanel>() == null;
             if (renderTransparent) { color *= 0.15f; }
+            if (IsHidden) { color *= 0.5f; }
 
             if (Character.Controlled != null && Character.DebugDrawInteract)
             {
@@ -424,7 +457,7 @@ namespace Barotrauma
                                     textureScale: Vector2.One * Scale,
                                     depth: d);
                             }
-                            DrawDecorativeSprites(spriteBatch, DrawPosition, FlippedX && Prefab.CanSpriteFlipX, FlippedY && Prefab.CanSpriteFlipY, rotation: 0, depth, overrideColor);
+                            DrawDecorativeSprites(spriteBatch, DrawPosition, FlippedX && Prefab.CanSpriteFlipX, FlippedY && Prefab.CanSpriteFlipY, rotation: 0, depth, overrideColor, highlightBlurDistance);
                         }
                     }
                     else
@@ -445,7 +478,7 @@ namespace Barotrauma
                             Prefab.DamagedInfectedSprite?.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + drawOffset, Infector.HealthColor, Prefab.DamagedInfectedSprite.Origin, RotationRad, Scale, activeSprite.effects, depth - 0.002f);
                         }
 
-                        DrawDecorativeSprites(spriteBatch, DrawPosition, FlippedX && Prefab.CanSpriteFlipX, FlippedY && Prefab.CanSpriteFlipY, -RotationRad, depth, overrideColor);
+                        DrawDecorativeSprites(spriteBatch, DrawPosition, FlippedX && Prefab.CanSpriteFlipX, FlippedY && Prefab.CanSpriteFlipY, -RotationRad, depth, overrideColor, highlightBlurDistance);
                     }
                 }
                 else if (body.Enabled)
@@ -454,8 +487,8 @@ namespace Barotrauma
                     if (holdable != null && holdable.Picker?.AnimController != null)
                     {
                         //don't draw the item on hands if it's also being worn
-                        if (GetComponent<Wearable>() is { IsActive: true }) { return; }
-                        if (!back) { return; }
+                        if (GetComponents<Wearable>().Any(w => w.IsActive)) { return; }
+                        if (!back && !ForceDrawOverWater) { return; }
                         if (holdable.Picker.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand) == this)
                         {
                             depth = GetHeldItemDepth(LimbType.RightHand, holdable, depth);
@@ -479,15 +512,20 @@ namespace Barotrauma
                                     holdLimb.ActiveSprite.Depth 
                                     + depthOffset 
                                     + limbDepthOffset * 2 * (limb == LimbType.RightHand ? 1 : -1);
-                                foreach (WearableSprite wearableSprite in holdLimb.WearingItems)
+                                foreach (WearableSprite wearableSprite in holdLimb.ActiveWearingItems)
                                 {
-                                    if (!wearableSprite.InheritLimbDepth && wearableSprite.Sprite != null) 
-                                    { 
-                                        depth =
-                                            limb == LimbType.RightHand ?
-                                                Math.Max(wearableSprite.Sprite.Depth + limbDepthOffset, depth) : 
-                                                Math.Min(wearableSprite.Sprite.Depth - limbDepthOffset, depth);
-                                    }
+                                    if (wearableSprite.Sprite == null) { continue; }
+
+                                    float wearableDepth = wearableSprite.InheritLimbDepth
+                                        ? holdLimb.ActiveSprite.Depth + wearableSprite.RelativeDepth
+                                        : wearableSprite.Sprite.Depth;
+
+                                    depth =
+                                        limb == LimbType.RightHand ?
+                                            //ensure the item is drawn behind the right arm + whatever is worn on it
+                                            Math.Max(wearableDepth + limbDepthOffset, depth) :
+                                            //same the other way around: ensure the item is drawn in front of the left arm
+                                            Math.Min(wearableDepth - limbDepthOffset, depth);
                                 }
                                 var head = holdable.Picker.AnimController.GetLimb(LimbType.Head);
                                 if (head?.Sprite != null)
@@ -509,7 +547,7 @@ namespace Barotrauma
                         float d = Math.Min(depth + (fadeInBrokenSprite.Sprite.Depth - activeSprite.Depth - 0.000001f), 0.999f);
                         body.Draw(spriteBatch, fadeInBrokenSprite.Sprite, color * fadeInBrokenSpriteAlpha, d, Scale);
                     }
-                    DrawDecorativeSprites(spriteBatch, body.DrawPosition, flipX: body.Dir < 0, flipY: false, rotation: body.Rotation, depth, overrideColor);
+                    DrawDecorativeSprites(spriteBatch, body.DrawPosition, flipX: body.Dir < 0, flipY: false, rotation: body.Rotation, depth, overrideColor, highlightBlurDistance);
                 }
 
                 foreach (var upgrade in Upgrades)
@@ -519,14 +557,24 @@ namespace Barotrauma
                     foreach (var decorativeSprite in upgradeSprites)
                     {
                         if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
+                        if (highlightBlurDistance.HasValue)
+                        {
+                            GameMain.LightManager.SetHighlightBlurDistance(decorativeSprite.Sprite, highlightBlurDistance.Value);
+                        }
                         float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
                         Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, -RotationRad) * Scale;
                         if (FlippedX && Prefab.CanSpriteFlipX) { offset.X = -offset.X; }
                         if (FlippedY && Prefab.CanSpriteFlipY) { offset.Y = -offset.Y; }
                         decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color, decorativeSprite.Sprite.Origin,
-                            rotation, decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, activeSprite.effects,
+                            rotation, decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, 
+                            activeSprite.effects ^ decorativeSprite.SpriteEffects,
                             depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth));
                     }
+                }
+                //restore the blur distance for the rest of the item
+                if (highlightBlurDistance.HasValue)
+                {
+                    GameMain.LightManager.SolidColorEffect.Parameters["blurDistance"].SetValue(highlightBlurDistance.Value);
                 }
 
                 activeSprite.effects = oldEffects;
@@ -597,22 +645,9 @@ namespace Barotrauma
                         (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
                 }
             }
-
-            if (!ShowLinks || GUI.DisableHUD) { return; }
-
-            foreach (MapEntity e in linkedTo)
+            if (editing)
             {
-                bool isLinkAllowed = Prefab.IsLinkAllowed(e.Prefab);
-                Color lineColor = GUIStyle.Red * 0.5f;
-                if (isLinkAllowed)
-                {
-                    lineColor = e is Item i && (DisplaySideBySideWhenLinked || i.DisplaySideBySideWhenLinked) ? Color.Purple * 0.5f : Color.LightGreen * 0.5f;
-                }
-                Vector2 from = new Vector2(WorldPosition.X, -WorldPosition.Y);
-                Vector2 to = new Vector2(e.WorldPosition.X, -e.WorldPosition.Y);
-                GUI.DrawLine(spriteBatch, from, to, lineColor * 0.25f, width: 3);
-                GUI.DrawLine(spriteBatch, from, to, lineColor, width: 1);
-                //GUI.DrawString(spriteBatch, from, $"Linked to {e.Name}", lineColor, Color.Black * 0.5f);
+                DrawLinks(spriteBatch);
             }
 
             Vector2 GetSpriteOrigin(Sprite sprite)
@@ -637,12 +672,17 @@ namespace Barotrauma
             }
         }
 
-        public void DrawDecorativeSprites(SpriteBatch spriteBatch, Vector2 drawPos, bool flipX, bool flipY, float rotation, float depth, Color? overrideColor = null)
+        public void DrawDecorativeSprites(SpriteBatch spriteBatch, Vector2 drawPos, bool flipX, bool flipY, float rotation, float depth, Color? overrideColor = null, float? highlightBlurDistance = null)
         {
             foreach (var decorativeSprite in Prefab.DecorativeSprites)
             {
                 Color decorativeSpriteColor = overrideColor ?? GetSpriteColor(decorativeSprite.Color).Multiply(GetSpriteColor(spriteColor));
                 if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
+
+                if (highlightBlurDistance.HasValue)
+                {
+                    GameMain.LightManager.SetHighlightBlurDistance(decorativeSprite.Sprite, highlightBlurDistance.Value);
+                }
 
                 Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier,
                     flipX ^ flipY ? -rotation : rotation) * Scale;
@@ -674,9 +714,16 @@ namespace Barotrauma
                         spriteEffects |= SpriteEffects.FlipVertically;
                     }
                     decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(drawPos.X + offset.X, -(drawPos.Y + offset.Y)), decorativeSpriteColor, origin,
-                        -rotation + spriteRotation, decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, spriteEffects,
+                        -rotation + spriteRotation, decorativeSprite.GetScale(ref spriteAnimState[decorativeSprite].ScaleState, spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, 
+                        spriteEffects ^ decorativeSprite.SpriteEffects,
                         depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth));
                 }
+            }
+
+            //restore the blur distance for the rest of the item
+            if (highlightBlurDistance.HasValue)
+            {
+                GameMain.LightManager.SolidColorEffect.Parameters["blurDistance"].SetValue(highlightBlurDistance.Value);
             }
         }
 
@@ -798,6 +845,7 @@ namespace Barotrauma
 
         public override void UpdateEditing(Camera cam, float deltaTime)
         {
+            base.UpdateEditing(cam, deltaTime);
             if (editingHUD == null || editingHUD.UserData as Item != this)
             {
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
@@ -828,35 +876,6 @@ namespace Barotrauma
             foreach (ItemComponent ic in components)
             {
                 ic.UpdateEditing(deltaTime);
-            }
-
-            if (!Linkable) { return; }
-
-            if (!PlayerInput.KeyDown(Keys.Space)) { return; }
-            bool lClick = PlayerInput.PrimaryMouseButtonClicked();
-            bool rClick = PlayerInput.SecondaryMouseButtonClicked();
-            if (!lClick && !rClick) { return; }
-
-            Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-            var otherEntity = highlightedEntities.FirstOrDefault(e => e != this && e.IsMouseOn(position));
-            if (otherEntity != null)
-            {
-                if (linkedTo.Contains(otherEntity))
-                {
-                    linkedTo.Remove(otherEntity);
-                    if (otherEntity.linkedTo != null && otherEntity.linkedTo.Contains(this))
-                    {
-                        otherEntity.linkedTo.Remove(this);
-                    }
-                }
-                else
-                {
-                    linkedTo.Add(otherEntity);
-                    if (otherEntity.Linkable && otherEntity.linkedTo != null)
-                    {
-                        otherEntity.linkedTo.Add(this);
-                    }
-                }
             }
         }
 
@@ -985,8 +1004,21 @@ namespace Barotrauma
                     var reloadTextureButton = new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("ReloadSprite"), style: "GUIButtonSmall");
                     reloadTextureButton.OnClicked += (button, data) =>
                     {
-                        Sprite.ReloadXML();
-                        Sprite.ReloadTexture();
+                        ReloadSprite(Sprite);
+                        if (GetComponent<Turret>() is Turret turret)
+                        {
+                            ReloadSprite(turret.BarrelSprite);
+                            ReloadSprite(turret.RailSprite);
+                            turret.ChargeSprites.ForEach(ReloadSprite);
+                            turret.SpinningBarrelSprites.ForEach(ReloadSprite);
+                        }
+                        
+                        void ReloadSprite(Sprite s)
+                        {
+                            if (s == null) { return; }
+                            s.ReloadXML();
+                            s.ReloadTexture();
+                        }
                         return true;
                     };
                 }
@@ -1165,7 +1197,7 @@ namespace Barotrauma
 
         public void CreateContainerTagPicker([MaybeNull] GUITextBox tagTextBox)
         {
-            var msgBox = new GUIMessageBox(string.Empty, string.Empty, new[] { TextManager.Get("Ok") }, new Vector2(0.35f, 0.6f), new Point(400, 400));
+            var msgBox = new GUIMessageBox(string.Empty, string.Empty, new[] { TextManager.Get("Ok") }, new Vector2(0.45f, 0.6f), new Point(500, 400));
             msgBox.Buttons[0].OnClicked = msgBox.Close;
 
             var infoIcon = new GUIImage(new RectTransform(new Vector2(0.066f), msgBox.InnerFrame.RectTransform)
@@ -1199,12 +1231,13 @@ namespace Barotrauma
             // Group the prefabs by category and turn them into a dictionary where the key is the category and value is the list of identifiers of the prefabs.
             // LINQ GroupBy returns GroupedEnumerable where the enumerable is the list of prefabs and key is what we grouped by.
             var tagCategories = ContainerTagPrefab.Prefabs
+                
                 .GroupBy(ct => ct.Category)
                 .ToImmutableDictionary(
                     g => g.Key,
                     g => g.Select(ct => ct.Identifier).ToImmutableArray());
 
-            foreach (var (category, categoryTags) in tagCategories)
+            foreach (var (category, categoryTags) in tagCategories.OrderBy(kvp => kvp.Key.Value))
             {
                 var categoryButton = new GUIButton(new RectTransform(new Vector2(1f, 0.075f), list.Content.RectTransform), style: "GUIButtonSmallFreeScale");
                 categoryButton.Color *= 0.66f;
@@ -1298,7 +1331,7 @@ namespace Barotrauma
                                 continue;
                             }
 
-                            if (ShouldHideItemPrefab(ip, probability))
+                            if (ShouldHideItemPrefabInMenus(ip, probability))
                             {
                                 if (shouldIncrementOnSkip)
                                 {
@@ -1470,7 +1503,7 @@ namespace Barotrauma
             foreach (var itemAndProbability in prefabAndProbabilities.OrderByDescending(p => p.Probability))
             {
                 var (ip, probability, campaignOnlyProbability) = itemAndProbability;
-                if (ShouldHideItemPrefab(ip, probability)) { continue; }
+                if (ShouldHideItemPrefabInMenus(ip, probability)) { continue; }
 
                 var itemLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f), tooltipList.Content.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
                 {
@@ -1543,13 +1576,13 @@ namespace Barotrauma
 
         }
 
-        private static bool ShouldHideItemPrefab(ItemPrefab ip, float probability)
+        private static bool ShouldHideItemPrefabInMenus(ItemPrefab ip, float probability)
             => ip.HideInMenus && MathUtils.NearlyEqual(probability, 0f);
 
         /// <summary>
         /// Reposition currently active item interfaces to make sure they don't overlap with each other
         /// </summary>
-        private void SetHUDLayout(bool ignoreLocking = false)
+        public void SetHUDLayout(bool ignoreLocking = false)
         {
             //reset positions first
             List<GUIComponent> elementsToMove = new List<GUIComponent>();
@@ -1741,11 +1774,6 @@ namespace Barotrauma
 
         public void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
         {
-            if (HasInGameEditableProperties && (character.SelectedItem == this || EditableWhenEquipped))
-            {
-                DrawEditing(spriteBatch, cam);
-            }
-
             foreach (ItemComponent ic in activeHUDs)
             {
                 if (ic.CanBeSelected)
@@ -1821,9 +1849,23 @@ namespace Barotrauma
                     var interactionVisibility = GetComponentInteractionVisibility(character, itemComponent);
                     if (interactionVisibility == InteractionVisibility.None) { continue; }
                     if (itemComponent.DisplayMsg.IsNullOrEmpty()) { continue; }
-                    
+                    if (texts.Any(t => t.Text == itemComponent.DisplayMsg.Value)) { continue; }
                     Color color = interactionVisibility == InteractionVisibility.MissingRequirement ? Color.Gray : Color.Cyan;
                     texts.Add(new ColoredText(itemComponent.DisplayMsg.Value, color, isCommand: false, isError: false));
+                }
+
+                foreach (Item equippedItem in character.HeldItems)
+                {
+                    foreach (ItemComponent itemComponent in equippedItem.components)
+                    {
+                        if (!itemComponent.ShouldAllowEquippedInteraction(character)) { continue; }
+                        var interactionVisibility = GetComponentInteractionVisibility(character, itemComponent);
+                        if (interactionVisibility == InteractionVisibility.None) { continue; }
+                        if (itemComponent.DisplayMsg.IsNullOrEmpty()) { continue; }
+                        if (texts.Any(t => t.Text == itemComponent.DisplayMsg.Value)) { continue; }
+                        Color color = interactionVisibility == InteractionVisibility.MissingRequirement ? Color.Gray : Color.Cyan;
+                        texts.Add(new ColoredText(itemComponent.DisplayMsg.Value, color, isCommand: false, isError: false));
+                    }
                 }
             }
             if (PlayerInput.KeyDown(InputType.ContextualCommand))
@@ -1857,7 +1899,7 @@ namespace Barotrauma
         /// <returns>The interaction visibility state for this component.</returns>
         private static InteractionVisibility GetComponentInteractionVisibility(Character character, ItemComponent itemComponent)
         {
-            if (!itemComponent.CanBePicked && !itemComponent.CanBeSelected) { return InteractionVisibility.None; }
+            if (!itemComponent.CanBePicked && !itemComponent.CanBeSelected && !itemComponent.ShouldAllowEquippedInteraction(character)) { return InteractionVisibility.None; }
             if (itemComponent is Holdable holdable && !holdable.CanBeDeattached()) { return InteractionVisibility.None; }
             if (itemComponent is ConnectionPanel connectionPanel && !connectionPanel.CanRewire()) { return InteractionVisibility.None; }
             
@@ -2052,6 +2094,20 @@ namespace Barotrauma
                         StatManager.ApplyStatDirect(statIdentifier, statValue);
                     }
                     break;
+                case EventType.FlipItem:
+                    FlippedX = msg.ReadBoolean();
+                    FlippedY = msg.ReadBoolean();
+                    break;
+                case EventType.SayMessage:
+                    string message = msg.ReadString();
+                    bool sayInRadio = msg.ReadBoolean();
+                    byte ignoredClient = msg.ReadByte();
+
+                    if (GameMain.Client.SessionId != ignoredClient)
+                    {
+                        ForceSay(message, sayInRadio);
+                    }
+                    break;
                 case EventType.Upgrade:
                     Identifier identifier = msg.ReadIdentifier();
                     byte level = msg.ReadByte();
@@ -2180,6 +2236,13 @@ namespace Barotrauma
                 case CombineEventData combineEventData:
                     Item combineTarget = combineEventData.CombineTarget;
                     msg.WriteUInt16(combineTarget.ID);
+                    break;
+                case SetTagsEventData setTagsEventData:
+                    msg.WriteByte((byte)setTagsEventData.Tags.Length);
+                    foreach (Identifier tag in setTagsEventData.Tags)
+                    {
+                        msg.WriteIdentifier(tag);
+                    }
                     break;
                 default:
                     throw error($"Unsupported event type {eventData.GetType().Name}");
@@ -2368,6 +2431,7 @@ namespace Barotrauma
             byte bodyType           = msg.ReadByte();
             bool spawnedInOutpost   = msg.ReadBoolean();
             bool allowStealing      = msg.ReadBoolean();
+            bool allowSelling       = msg.ReadBoolean();
             int quality             = msg.ReadRangedInteger(0, Items.Components.Quality.MaxQuality);
             byte teamID             = msg.ReadByte();
 
@@ -2380,9 +2444,11 @@ namespace Barotrauma
             Identifier ownerJobId = Identifier.Empty;
             Vector2 ownerSheetIndex = Vector2.Zero;
             int submarineSpecificId = 0;
+            bool restrictToSpecificSubmarine = true;
             if (hasIdCard)
             {
                 submarineSpecificId = msg.ReadInt32();
+                restrictToSpecificSubmarine = msg.ReadBoolean();
                 ownerName = msg.ReadString();
                 ownerTags = msg.ReadString();                
                 ownerBeardIndex = msg.ReadByte() - 1;
@@ -2473,8 +2539,9 @@ namespace Barotrauma
             {
                 item = new Item(itemPrefab, pos, sub, id: itemId)
                 {
-                    SpawnedInCurrentOutpost = spawnedInOutpost,
+                    SpawnedInNonPlayerOutpostOrSubmarine = spawnedInOutpost,
                     AllowStealing = allowStealing,
+                    AllowSellingIfSpawnedInCurrentOutpost = allowSelling,
                     Quality = quality
                 };
                 if (onInsertedEffectsAppliedOnPreviousRound)
@@ -2500,6 +2567,7 @@ namespace Barotrauma
             foreach (IdCard idCard in item.GetComponents<IdCard>())
             {
                 idCard.SubmarineSpecificID = submarineSpecificId;
+                idCard.RestrictToSpecificSubmarine = restrictToSpecificSubmarine;
                 idCard.TeamID = (CharacterTeamType)teamID;
                 idCard.OwnerName = ownerName;
                 idCard.OwnerTags = ownerTags;
@@ -2523,8 +2591,8 @@ namespace Barotrauma
 
             if (sub != null)
             {
-                item.CurrentHull = Hull.FindHull(pos + sub.Position, null, true);
-                item.Submarine = item.CurrentHull?.Submarine;
+                item.CurrentHull = Hull.FindHull(pos + sub.Position, useWorldCoordinates: true);
+                item.Submarine = sub;
             }
 
             if (inventory != null)
@@ -2536,6 +2604,12 @@ namespace Barotrauma
                     //If the item won't go nicely, force it to the slot. If the server says the item is in the slot, it should go in the slot.
                     //May happen e.g. when a character is configured to spawn with an item that won't normally go in its inventory slots.
                     inventory.ForceToSlot(item, index: inventorySlotIndex);
+                    if (inventory is CharacterInventory characterInventory &&
+                        characterInventory.SlotTypes[inventorySlotIndex] != InvSlotType.Any)
+                    {
+                        // We're just reconstructing pre-existing state, so don't repeat the equip effects
+                        item.Equip(characterInventory.Owner as Character, disableEquipEffects: true);
+                    }
                 }
                 else
                 {
@@ -2545,7 +2619,7 @@ namespace Barotrauma
                 if (inventory.Owner is Character { Enabled: false } && item.body != null)
                 {
                     item.body.Enabled = false;
-                }                
+                }
             }
 
             return item;
@@ -2567,5 +2641,7 @@ namespace Barotrauma
                 ic.OnPlayerSkillsChanged();
             }
         }
+
+        public void PlaySound(RoundSound sound, float? volume = null) => sound.Play(WorldPosition, volume, CurrentHull);
     }
 }

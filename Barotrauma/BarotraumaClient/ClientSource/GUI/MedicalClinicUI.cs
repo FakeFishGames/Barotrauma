@@ -12,7 +12,7 @@ using PlayerBalanceElement = Barotrauma.CampaignUI.PlayerBalanceElement;
 namespace Barotrauma
 {
     [SuppressMessage("ReSharper", "UnusedVariable")]
-    internal sealed class MedicalClinicUI
+    public sealed class MedicalClinicUI
     {
         private enum ElementState
         {
@@ -312,6 +312,12 @@ namespace Barotrauma
             if (crewHealList is not { } healList) { return; }
 
             ImmutableArray<CharacterInfo> crew = MedicalClinic.GetCrewCharacters();
+
+            // If the open popup's target character is no longer among the living crew, close it
+            if (selectedCrewAfflictionList is { } openPopup && openPopup.Target.FindCharacterInfo(crew) is null)
+            {
+                ClosePopup();
+            }
 
             // check if there are crew members that are not in the UI
             foreach (CharacterInfo info in crew)

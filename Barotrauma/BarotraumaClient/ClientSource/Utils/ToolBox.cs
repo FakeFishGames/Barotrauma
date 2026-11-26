@@ -6,12 +6,11 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using Barotrauma.Networking;
 using Color = Microsoft.Xna.Framework.Color;
 
 namespace Barotrauma
 {
-    static partial class ToolBox
+    public static partial class ToolBox
     {
         /// <summary>
         /// Checks if point is inside of a polygon
@@ -427,33 +426,67 @@ namespace Barotrauma
         /// Removes lines on a multi-line string until it fits within the specified height and adds "..." to the end if the string is too long.
         /// Doesn't really do anything if the string is only one line, should mostly be used with <see cref="GUITextBlock.WrappedText"/>.
         /// </summary>
-        public static string LimitStringHeight(string str, ScalableFont font, int maxHeight)
+        public static void LimitStringHeight(GUITextBlock block, int maxHeight, bool setTooltip)
         {
-            if (maxHeight <= 0 || string.IsNullOrWhiteSpace(str)) { return string.Empty; }
+            GUIFont font = block.Font;
+            string str = block.WrappedText.Value;
+            if (maxHeight <= 0 || string.IsNullOrWhiteSpace(str)) { return; }
 
-            float currHeight = font.MeasureString("...").Y;
-            var lines = str.Split('\n');
+            float currHeight = 0f;
+            string[] lines = str.Split('\n');
 
             var sb = new StringBuilder();
-            foreach (string line in lines)
+            for (int i = 0; i < lines.Length; i++)
             {
+                string line = lines[i];
                 var (lineX, lineY) = font.MeasureString(line);
                 currHeight += lineY;
-                if (currHeight > maxHeight)
+                // Truncate this line if the next one wouldn't fit anymore
+                bool isLastLine = i == lines.Length - 1;
+                if (!isLastLine && currHeight + font.MeasureString(lines[i + 1]).Y > maxHeight)
                 {
-                    var modifiedLine = line;
+                    string modifiedLine = line;
                     while (font.MeasureString($"{modifiedLine}...").X > lineX)
                     {
                         if (modifiedLine.Length == 0) { break; }
                         modifiedLine = modifiedLine[..^1];
                     }
-                    sb.AppendLine($"{modifiedLine}...");
-                    return sb.ToString();
+                    sb.Append($"{modifiedLine}...");
+
+                    if (setTooltip)
+                    {
+                        block.ToolTip = block.Text;
+                    }
+
+                    block.Wrap = false;
+                    block.Text = sb.ToString();
+                    return;
                 }
                 sb.AppendLine(line);
             }
+        }
 
-            return str;
+        /// <summary>
+        /// Width of the widest part of the text that can't be wrapped, ie. the longest word.
+        /// Considers both whitespace and CJK characters for break points.
+        /// </summary>
+        public static float GetLongestWordWidth(string text, GUIFont font)
+        {
+            float longestWordWidth = 0.0f;
+            int wordStart = 0;
+            for (int i = 0; i <= text.Length; i++)
+            {
+                // A single CJK character is always narrow enough, so it's not measured
+                if (i == text.Length || char.IsWhiteSpace(text[i]) || TextManager.IsCJK($"{text[i]}"))
+                {
+                    if (i > wordStart)
+                    {
+                        longestWordWidth = Math.Max(longestWordWidth, font.MeasureString(text[wordStart..i]).X);
+                    }
+                    wordStart = i + 1;
+                }
+            }
+            return longestWordWidth;
         }
 
         public static Color GradientLerp(float t, params Color[] gradient)

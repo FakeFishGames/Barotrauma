@@ -6,7 +6,7 @@ namespace Barotrauma
     /// <summary>
     /// Displays an objective in the top-right corner of the screen, or modifies an existing objective in some way.
     /// </summary>
-    partial class EventObjectiveAction : EventAction
+    public partial class EventObjectiveAction : EventAction
     {
         public enum SegmentActionType 
         {
@@ -113,6 +113,6 @@ namespace Barotrauma
 
         public override bool IsFinished(ref string goToLabel) => isFinished;
 
-        public override void Reset() => isFinished = false;
+        public override void Reset(bool shouldEndConversations = true) => isFinished = false;
     }
 }

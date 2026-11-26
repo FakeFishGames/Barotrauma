@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class DamageModifier : ISerializableEntity
+    public partial class DamageModifier : ISerializableEntity
     {
         public string Name => "Damage Modifier";
 

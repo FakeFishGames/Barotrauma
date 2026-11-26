@@ -74,12 +74,15 @@ namespace Barotrauma
                     int index = replacement.Elements().ToList().FindAll(e => e.Name.ToString().Equals(replacementSubElement.Name.ToString(), StringComparison.OrdinalIgnoreCase)).IndexOf(replacementSubElement);
                     System.Diagnostics.Debug.Assert(index > -1);
 
+                    bool isClearAllElement = replacementSubElement.Name.ToString().Equals("clearall", StringComparison.OrdinalIgnoreCase);
+                    bool isClearElement = replacementSubElement.Name.ToString().Equals("clear", StringComparison.OrdinalIgnoreCase);
+
                     int i = 0;
                     bool matchingElementFound = false;
                     bool cleared = false;
                     foreach (var subElement in element.Elements())
                     {
-                        if (replacementSubElement.Name.ToString().Equals("clearall", StringComparison.OrdinalIgnoreCase))
+                        if (isClearAllElement)
                         {
                             if (elementNamesToRemove.Contains(subElement.NameAsIdentifier())) 
                             {
@@ -88,7 +91,7 @@ namespace Barotrauma
                             }
                             continue;
                         }
-                        else if (replacementSubElement.Name.ToString().Equals("clear", StringComparison.OrdinalIgnoreCase))
+                        else if (isClearElement)
                         {
                             matchingElementFound = true;
                             newElementsFromBase.Clear();
@@ -120,7 +123,8 @@ namespace Barotrauma
                         }
                         i++;
                     }
-                    if (!matchingElementFound)
+                    //no matching element found = we must be adding a new element rather than modifying an existing one
+                    if (!matchingElementFound && !isClearElement && !isClearAllElement)
                     {
                         element.Add(replacementSubElement);
                     }

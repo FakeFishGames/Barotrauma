@@ -1,5 +1,4 @@
 ﻿#nullable enable
-using Barotrauma.Eos;
 using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Barotrauma.Steam;
@@ -104,7 +103,6 @@ sealed class SocialOverlay : IDisposable
 
         private readonly List<Invite> invites = new List<Invite>();
         private static readonly TimeSpan inviteDuration = TimeSpan.FromMinutes(5);
-        private readonly Identifier inviteReceivedEventIdentifier;
 
         public InviteHandler(
             SocialOverlay inSocialOverlay,
@@ -115,10 +113,6 @@ sealed class SocialOverlay : IDisposable
             friendProvider = inFriendProvider;
             notificationHandler = inNotificationHandler;
 
-            inviteReceivedEventIdentifier = GetHashCode().ToIdentifier();
-            EosInterface.Presence.OnInviteReceived.Register(
-                identifier: inviteReceivedEventIdentifier,
-                OnEosInviteReceived);
             Steamworks.SteamFriends.OnChatMessage += OnSteamChatMsgReceived;
         }
 
@@ -138,19 +132,6 @@ sealed class SocialOverlay : IDisposable
                 });
         }
 
-        private void OnEosInviteReceived(EosInterface.Presence.ReceiveInviteInfo info)
-        {
-            TaskPool.Add(
-                $"ReceivedInviteFrom{info.SenderId}",
-                friendProvider.RetrieveFriendWithAvatar(info.SenderId, notificationHandler.NotificationContainer.Rect.Height),
-                t =>
-                {
-                    if (!t.TryGetResult(out Option<FriendInfo> friendInfoOption)) { return; }
-                    if (!friendInfoOption.TryUnwrap(out var friendInfo)) { return; }
-                    RegisterInvite(friendInfo, showNotification: true);
-                });
-        }
-
         public bool HasInviteFrom(AccountId sender)
             => invites.Any(invite => invite.Sender.Id == sender);
 
@@ -164,14 +145,6 @@ sealed class SocialOverlay : IDisposable
                 }
             }
             invites.RemoveAll(invite => invite.Sender.Id == sender);
-
-            if (sender is not EpicAccountId friendEpicId) { return; }
-
-            var selfEpicIds = EosInterface.IdQueries.GetLoggedInEpicIds();
-            if (selfEpicIds.Length == 0) { return; }
-
-            var selfEpicId = selfEpicIds[0];
-            EosInterface.Presence.DeclineInvite(selfEpicId, friendEpicId);
         }
 
         public void Update()
@@ -277,7 +250,6 @@ sealed class SocialOverlay : IDisposable
 
         public void Dispose()
         {
-            EosInterface.Presence.OnInviteReceived.Deregister(inviteReceivedEventIdentifier);
             Steamworks.SteamFriends.OnChatMessage -= OnSteamChatMsgReceived;
         }
     }
@@ -409,9 +381,7 @@ sealed class SocialOverlay : IDisposable
 
     private readonly GUILayoutGroup selfPlayerRowLayout;
 
-    private readonly GUIButton? eosConfigButton;
     private readonly GUILayoutGroup? eosStatusTextContainer;
-    private EosInterface.Core.Status eosLastKnownStatus;
 
     private readonly GUIListBox friendPlayerListBox;
     private readonly List<PlayerRow> friendPlayerRows = new List<PlayerRow>();
@@ -432,49 +402,6 @@ sealed class SocialOverlay : IDisposable
                 selfPlayerRowLayout,
                 invitedYou: false);
         }
-        else if (EosInterface.IdQueries.IsLoggedIntoEosConnect)
-        {
-            static async Task<Option<EosInterface.EgsFriend>> GetEpicAccountInfo()
-            {
-                if (!EosAccount.SelfAccountIds.OfType<EpicAccountId>().FirstOrNone().TryUnwrap(out var epicAccountId))
-                {
-                    return Option.None;
-                }
-
-                var selfUserInfoResult = await EosInterface.Friends.GetSelfUserInfo(epicAccountId);
-
-                if (!selfUserInfoResult.TryUnwrapSuccess(out var selfUserInfo))
-                {
-                    return Option.None;
-                }
-
-                return Option.Some(selfUserInfo);
-            }
-
-            TaskPool.Add(
-                "GetEpicAccountIdForSelfPlayerRow",
-                GetEpicAccountInfo(),
-                t =>
-                {
-                    if (!t.TryGetResult(out Option<EosInterface.EgsFriend> userInfoOption)
-                        || !userInfoOption.TryUnwrap(out var userInfo))
-                    {
-                        return;
-                    }
-
-                    selfPlayerRowLayout.ClearChildren();
-                    _ = new PlayerRow(
-                        new FriendInfo(
-                            name: userInfo.DisplayName,
-                            id: userInfo.EpicAccountId,
-                            status: FriendStatus.PlayingBarotrauma,
-                            serverName: "",
-                            connectCommand: Option.None,
-                            provider: friendProvider),
-                        selfPlayerRowLayout,
-                        invitedYou: false);
-                });
-        }
     }
 
     private SocialOverlay()
@@ -490,8 +417,6 @@ sealed class SocialOverlay : IDisposable
         {
             OnClicked = (btn, _) =>
             {
-                eosConfigButton?.Flash(GUIStyle.Green);
-                EosSteamPrimaryLogin.IsNewEosPlayer = false;
                 btn.Visible = false;
                 return false;
             },
@@ -521,7 +446,7 @@ sealed class SocialOverlay : IDisposable
             }
         };
 
-        friendProvider = new CompositeFriendProvider(new SteamFriendProvider(), new EpicFriendProvider());
+        friendProvider = new CompositeFriendProvider(new SteamFriendProvider());
 
         notificationHandler = new NotificationHandler();
         inviteHandler = new InviteHandler(
@@ -599,160 +524,6 @@ sealed class SocialOverlay : IDisposable
         };
 
         notificationHandler.AddNotification(notification);
-    }
-
-    private void ShowEosSettingsMenu()
-    {
-        bool hasEpicAccount = EosAccount.SelfAccountIds.OfType<EpicAccountId>().Any();
-        string manageAccountsText = hasEpicAccount
-            ? "EosSettings.ManageConnectedAccounts"
-            : "EosSettings.LinkToEpicAccount";
-
-        bool eosEnabled = EosInterface.Core.IsInitialized;
-        string enableButtonText = eosEnabled ? "EosSettings.DisableEos" : "EosSettings.EnableEos";
-
-        var msgBox = new GUIMessageBox(TextManager.Get("EosSettings"), string.Empty,
-            new LocalizedString[]
-            {
-                TextManager.Get(manageAccountsText),
-                TextManager.Get(enableButtonText),
-                TextManager.Get("EosSettings.RequestDeletion")
-            }, minSize: new Point(GUI.IntScale(550), 0))
-        {
-            DrawOnTop = true
-        };
-        msgBox.Buttons[0].Enabled = eosEnabled;
-        msgBox.Buttons[0].ToolTip = TextManager.Get($"{manageAccountsText}.Tooltip");
-        msgBox.Buttons[1].ToolTip = TextManager.Get($"{enableButtonText}.Tooltip");
-        msgBox.Buttons[2].ToolTip = TextManager.Get("EosSettings.RequestDeletion.Tooltip");
-
-        var closeButton = new GUIButton(new RectTransform(new Point(GUI.IntScale(35)), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(GUI.IntScale(8)) },
-            style: "SocialOverlayCloseButton")
-        {
-            OnClicked = closeMsgBox(msgBox)
-        };
-
-        msgBox.Buttons[0].OnClicked += (_, _) =>
-        {
-            if (!hasEpicAccount)
-            {
-                //attempt to create an epic account and link it with the Steam account
-                var loadingBox = GUIMessageBox.CreateLoadingBox(
-                    text: TextManager.Get("EosLinkSteamToEpicLoadingText"),
-                    new[] { (TextManager.Get("Cancel"), new Action<GUIMessageBox>(msgBox => msgBox.Close())) },
-                    relativeSize: (0.35f, 0.25f));
-                loadingBox.DrawOnTop = true;
-                TaskPool.Add(
-                    $"LoginToEpicAccountAsSecondary",
-                    EosEpicSecondaryLogin.LoginToLinkedEpicAccount(),
-                    t =>
-                    {
-                        if (t.TryGetResult(out Result<Unit, EosEpicSecondaryLogin.LoginError>? result))
-                        {
-                            LocalizedString taskResultMsg;                            
-                            if (result.IsSuccess)
-                            {
-                                taskResultMsg = TextManager.Get("EosLinkSuccess");
-                            }
-                            else if (result.TryUnwrapFailure(out var failure))
-                            {
-                                taskResultMsg = TextManager.GetWithVariable("EosLinkError", "[error]", failure.ToString());
-                            }
-                            else
-                            {
-                                taskResultMsg = TextManager.GetWithVariable("EosLinkError", "[error]", result.ToString());
-                            }
-
-                            var msgBox = new GUIMessageBox(
-                                TextManager.Get("EosSettings.LinkToEpicAccount"),
-                                taskResultMsg,
-                                new[]
-                                {
-                                    TextManager.Get("OK"),
-                                })
-                            {
-                                DrawOnTop = true
-                            };
-                            msgBox.Buttons[0].OnClicked = closeMsgBox(msgBox);
-                        }
-                        loadingBox.Close();
-                    });
-                msgBox.Close();
-            }
-            else
-            {
-                //if the user has an epic account, we can just go and link it in the browser
-                const string url = "https://www.epicgames.com/account/connections";
-                var prompt = GameMain.ShowOpenUriPrompt(url);
-                prompt.DrawOnTop = true;
-                msgBox.Close();
-            }
-            return true;
-        };
-        msgBox.Buttons[1].OnClicked += (btn, obj) =>
-        {
-            var crossplayChoice = eosEnabled
-                ? EosSteamPrimaryLogin.CrossplayChoice.Disabled
-                : EosSteamPrimaryLogin.CrossplayChoice.Enabled;
-            EosSteamPrimaryLogin.HandleCrossplayChoiceChange(crossplayChoice);
-            GameSettings.SetCurrentConfig(GameSettings.CurrentConfig with { CrossplayChoice = crossplayChoice });
-            GameSettings.SaveCurrentConfig();
-            closeMsgBox(msgBox)(btn, obj);
-            return true;
-        };
-        msgBox.Buttons[2].OnClicked += (btn, obj) =>
-        {
-            const string emailAddress = "contact@barotraumagame.com";
-            const string subject = "Requesting account information deletion";
-            string bodyText = "I would like to delete all of my account information stored by Epic Games.";
-
-            bool epicAccountIdAvailable = EosAccount.SelfAccountIds.OfType<EpicAccountId>().Any();
-            bool steamIdAvailable = SteamManager.GetSteamId().TryUnwrap(out SteamId? steamId);
-            if (!steamIdAvailable && !epicAccountIdAvailable)
-            {
-                new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariable(
-                    "EosSettings.RequestDeletion.NoAccountId",
-                    "[emailAddress]",
-                    emailAddress));
-                return false;
-            }
-
-            if (epicAccountIdAvailable)
-            {
-                bodyText += $"\n\nMy Epic Account ID(s): {string.Join(", ", EosAccount.SelfAccountIds.OfType<EpicAccountId>().Select(id => id.StringRepresentation))}";
-            }
-            if (steamIdAvailable)
-            {
-                bodyText += $"\n\nMy Steam ID: {steamId!.StringRepresentation}";
-            }
-
-            string uri =
-                   $"mailto:{emailAddress}?" +
-                    $"subject={Uri.EscapeDataString(subject)}" +
-                    $"&body={Uri.EscapeDataString(bodyText)}";
-            var prompt = GameMain.ShowOpenUriPrompt(uri,
-                TextManager.GetWithVariables("OpenLinkInEmailClient",
-                    ("[recipient]", emailAddress),
-                    ("[message]", bodyText)));
-
-            if (prompt != null)
-            {
-                prompt.DrawOnTop = true;
-            }
-
-            closeMsgBox(msgBox)(btn, obj);
-            return true;
-        };
-        return;
-
-        GUIButton.OnClickedHandler closeMsgBox(GUIMessageBox msgBox)
-        {
-            return (button, obj) =>
-            {
-                RefreshEosStatusText();
-                return msgBox.Close(button, obj);
-            };
-        }
     }
 
     private void PopulateSelectedFriendInfoFrame(FriendInfo friendInfo)
@@ -838,22 +609,6 @@ sealed class SocialOverlay : IDisposable
                     var steamFriend = new Steamworks.Friend(friendSteamId.Value);
                     steamFriend.InviteToGame(connectCommand.ToString());
                 }
-                else if (friendInfo.Id is EpicAccountId friendEpicId && EosInterface.Core.IsInitialized)
-                {
-                    async Task sendEpicInvite()
-                    {
-                        var selfEpicIds = EosInterface.IdQueries.GetLoggedInEpicIds();
-                        if (selfEpicIds.Length == 0) { return; }
-
-                        var selfEpicId = selfEpicIds[0];
-                        await EosInterface.Presence.SendInvite(selfEpicId, friendEpicId);
-                    }
-
-                    TaskPool.Add(
-                        $"Invite{friendEpicId}",
-                        sendEpicInvite(),
-                        _ => { });
-                }
                 return false;
             };
         }
@@ -866,42 +621,22 @@ sealed class SocialOverlay : IDisposable
             => new GUIButton(new RectTransform((1.0f, 0.08f), layout.RectTransform), label, style: "SocialOverlayButton");
     }
 
-    private void RefreshEosStatusText()
-    {
-        if (eosStatusTextContainer is null) { return; }
 
-        eosStatusTextContainer.ClearChildren();
-        bool linkedToEpicAccount = EosAccount.SelfAccountIds.OfType<EpicAccountId>().Any();
-        _ = new GUITextBlock(new RectTransform(Vector2.One, eosStatusTextContainer.RectTransform),
-            textAlignment: Alignment.CenterLeft,
-            wrap: true,
-            text: TextManager.Get($"EosStatus.{EosInterface.Core.CurrentStatus}")
-                + "\n"
-                + TextManager.Get(linkedToEpicAccount
-                    ? "EosSettings.LinkedToAccount"
-                    : "EosSettings.NotLinkedToAccount"));
-
-        linkHint.Visible = !linkedToEpicAccount && EosSteamPrimaryLogin.IsNewEosPlayer;
-    }
 
     public void RefreshFriendList()
     {
-        EosAccount.RefreshSelfAccountIds(onRefreshComplete: () =>
+        lastRefreshTime = DateTime.Now;
+
+        if (!SteamManager.IsInitialized)
         {
-            RefreshEosStatusText();
-            lastRefreshTime = DateTime.Now;
+            friendPlayerListBox.ClearChildren();
+            var offlineLabel = insertLabel(TextManager.Get("SocialOverlayOffline"), heightScale: 4.0f);
+            offlineLabel.Wrap = true;
 
-            if (EosInterface.Core.CurrentStatus != EosInterface.Core.Status.Online
-                && !SteamManager.IsInitialized)
-            {
-                friendPlayerListBox.ClearChildren();
-                var offlineLabel = insertLabel(TextManager.Get("SocialOverlayOffline"), heightScale: 4.0f);
-                offlineLabel.Wrap = true;
+            return;
+        }
 
-                return;
-            }
-
-            TaskPool.Add(
+        TaskPool.Add(
                 "RefreshFriendList",
                 friendProvider.RetrieveFriends(),
                 t =>
@@ -957,7 +692,6 @@ sealed class SocialOverlay : IDisposable
                     contentLayout.Recalculate();
                     friendPlayerListBox.UpdateScrollBarSize();
                 });
-        });
 
         GUITextBlock insertLabel(LocalizedString text, float heightScale = 0.5f)
         {
@@ -1010,24 +744,6 @@ sealed class SocialOverlay : IDisposable
             { 
                 selectedFriendInfoFrame.Visible = false;
             }
-        }
-
-        if (eosConfigButton != null)
-        {
-            bool eosConfigAccessible = GameMain.NetworkMember == null;
-            if (eosConfigAccessible != eosConfigButton.Enabled)
-            {
-                eosConfigButton.Enabled = eosConfigAccessible;
-                eosConfigButton.Children.ForEach(c => c.Enabled = eosConfigAccessible);
-                eosConfigButton.ToolTip = eosConfigAccessible ? string.Empty : TextManager.Get("CantAccessEOSSettingsInMP");
-            }
-        }
-
-        var currentEosStatus = EosInterface.Core.CurrentStatus;
-        if (currentEosStatus != eosLastKnownStatus)
-        {
-            eosLastKnownStatus = currentEosStatus;
-            RefreshEosStatusText();
         }
 
         if (DateTime.Now < lastRefreshTime + refreshInterval) { return; }

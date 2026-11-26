@@ -5,7 +5,7 @@ using System.Linq;
 namespace Barotrauma.Networking
 {
     [NetworkSerialize]
-    readonly struct AccountInfo : INetSerializableStruct
+    public readonly struct AccountInfo : INetSerializableStruct
     {
         public static readonly AccountInfo None = new AccountInfo(Option<AccountId>.None());
         

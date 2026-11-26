@@ -254,15 +254,30 @@ namespace Barotrauma.Networking
 
             if (buf.Length < byteLen)
             {
-                Array.Resize(ref buf, byteLen + MsgConstants.BufferOverAllocateAmount);
+                // grow by at least a factor of 2 (same as List) to avoid many small reallocations
+                Array.Resize(ref buf, Math.Max(byteLen + MsgConstants.BufferOverAllocateAmount, buf.Length * 2));
             }
         }
     }
 
     internal static class MsgReader
     {
+        /// <summary>
+        /// Throws a <see cref="MalformedDataException"/> if the buffer doesn't contain enough bits to read the requested amount from the given position.
+        /// Without this, reading past the end of a message (e.g. a malicious message that's shorter than expected) would cause an
+        /// IndexOutOfRangeException, which isn't treated as malformed data, letting the sender spam such messages without getting kicked.
+        /// </summary>
+        private static void EnsureCanRead(byte[] buf, int bitPos, int numberOfBits)
+        {
+            if (bitPos < 0 || bitPos + (long)numberOfBits > (long)buf.Length * 8)
+            {
+                throw new MalformedDataException($"Tried to read {numberOfBits} bits at bit position {bitPos}, but the buffer is only {buf.Length} bytes long.");
+            }
+        }
+
         internal static bool ReadBoolean(byte[] buf, ref int bitPos)
         {
+            EnsureCanRead(buf, bitPos, 1);
             byte retval = NetBitWriter.ReadByte(buf, 1, bitPos);
             bitPos++;
             return retval > 0;
@@ -276,6 +291,7 @@ namespace Barotrauma.Networking
 
         internal static byte ReadByte(byte[] buf, ref int bitPos)
         {
+            EnsureCanRead(buf, bitPos, 8);
             byte retval = NetBitWriter.ReadByte(buf, 8, bitPos);
             bitPos += 8;
             return retval;
@@ -283,12 +299,14 @@ namespace Barotrauma.Networking
 
         internal static byte PeekByte(byte[] buf, ref int bitPos)
         {
+            EnsureCanRead(buf, bitPos, 8);
             byte retval = NetBitWriter.ReadByte(buf, 8, bitPos);
             return retval;
         }
 
         internal static UInt16 ReadUInt16(byte[] buf, ref int bitPos)
         {
+            EnsureCanRead(buf, bitPos, 16);
             uint retval = NetBitWriter.ReadUInt16(buf, 16, bitPos);
             bitPos += 16;
             return (ushort)retval;
@@ -301,6 +319,7 @@ namespace Barotrauma.Networking
 
         internal static UInt32 ReadUInt32(byte[] buf, ref int bitPos)
         {
+            EnsureCanRead(buf, bitPos, 32);
             uint retval = NetBitWriter.ReadUInt32(buf, 32, bitPos);
             bitPos += 32;
             return retval;
@@ -313,6 +332,7 @@ namespace Barotrauma.Networking
 
         internal static UInt64 ReadUInt64(byte[] buf, ref int bitPos)
         {
+            EnsureCanRead(buf, bitPos, 64);
             ulong low = NetBitWriter.ReadUInt32(buf, 32, bitPos);
             bitPos += 32;
             ulong high = NetBitWriter.ReadUInt32(buf, 32, bitPos);
@@ -330,6 +350,7 @@ namespace Barotrauma.Networking
         {
             if ((bitPos & 7) == 0) // read directly
             {
+                EnsureCanRead(buf, bitPos, 32);
                 float retval = BitConverter.ToSingle(buf, bitPos >> 3);
                 bitPos += 32;
                 return retval;
@@ -344,6 +365,7 @@ namespace Barotrauma.Networking
             if ((bitPos & 7) == 0) // read directly
             {
                 // read directly
+                EnsureCanRead(buf, bitPos, 64);
                 double retval = BitConverter.ToDouble(buf, bitPos >> 3);
                 bitPos += 64;
                 return retval;
@@ -417,6 +439,7 @@ namespace Barotrauma.Networking
         {
             uint range = (uint)(max - min);
             int numBits = NetUtility.BitsToHoldUInt(range);
+            EnsureCanRead(buf, bitPos, numBits);
 
             uint rvalue = NetBitWriter.ReadUInt32(buf, numBits, bitPos);
             bitPos += numBits;
@@ -434,6 +457,10 @@ namespace Barotrauma.Networking
 
         internal static byte[] ReadBytes(byte[] buf, ref int bitPos, int numberOfBytes)
         {
+            if (numberOfBytes < 0 || bitPos + (long)numberOfBytes * 8 > (long)buf.Length * 8)
+            {
+                throw new MalformedDataException($"Tried to read {numberOfBytes} bytes at bit position {bitPos}, but the buffer is only {buf.Length} bytes long.");
+            }
             byte[] retval = new byte[numberOfBytes];
             NetBitWriter.ReadBytes(buf, numberOfBytes, bitPos, retval, 0);
             bitPos += 8 * numberOfBytes;
@@ -441,7 +468,7 @@ namespace Barotrauma.Networking
         }
     }
 
-    internal sealed class WriteOnlyMessage : IWriteMessage
+    public sealed class WriteOnlyMessage : IWriteMessage
     {
         private byte[] buf = new byte[MsgConstants.InitialBufferSize];
         private int seekPos;
@@ -644,11 +671,18 @@ namespace Barotrauma.Networking
 
         public NetworkConnection Sender { get; }
 
+        /// <summary>
+        /// How long it took to decompress the message (zero if it wasn't compressed).
+        /// Decompression happens before the message is passed on to be processed, so the server uses this to include it in the DoS protection measurements.
+        /// </summary>
+        public TimeSpan DecompressionTime { get; }
+
         public ReadOnlyMessage(byte[] inBuf, bool isCompressed, int startPos, int byteLength, NetworkConnection sender)
         {
             Sender = sender;
             if (isCompressed)
             {
+                long decompressionStartTimestamp = System.Diagnostics.Stopwatch.GetTimestamp();
                 byte[] decompressedData;
                 using (MemoryStream input = new MemoryStream(inBuf, startPos, byteLength))
                 {
@@ -661,13 +695,25 @@ namespace Barotrauma.Networking
                             //Bail out if the output exceeds the maximum allowed size so a malicious client
                             //can't send "decompression bombs" and hang the server/host.
                             byte[] chunk = new byte[MsgConstants.DecompressionChunkSize];
-                            int bytesRead;
-                            while ((bytesRead = dstream.Read(chunk, 0, chunk.Length)) > 0)
+                            while (true)
                             {
+                                int bytesRead;
+                                try
+                                {
+                                    bytesRead = dstream.Read(chunk, 0, chunk.Length);
+                                }
+                                catch (InvalidDataException e)
+                                {
+                                    throw new MalformedDataException(
+                                        "Failed to decompress the incoming message: the compressed data is malformed.", e);
+                                }
+
+                                if (bytesRead <= 0) { break; }
+
                                 if (output.Length + bytesRead > MsgConstants.MaxDecompressedSize)
                                 {
                                     //this exception should be caught higher up and the sender kicked (see P2PServerPeer and P2POwnerPeer)
-                                    throw new NetStructReadException(
+                                    throw new MalformedDataException(
                                         $"Failed to decompress the incoming message: the decompressed size exceeds the maximum allowed ({MsgConstants.MaxDecompressedSize} bytes). " +
                                         "The message is malformed or a malicious \"decompression bomb\".");
                                 }
@@ -681,6 +727,7 @@ namespace Barotrauma.Networking
 
                 Buffer = decompressedData;
                 lengthBits = decompressedData.Length * 8;
+                DecompressionTime = System.Diagnostics.Stopwatch.GetElapsedTime(decompressionStartTimestamp);
                 DebugConsole.Log("Decompressing message: " + byteLength + " to " + LengthBytes);
             }
             else
@@ -799,7 +846,7 @@ namespace Barotrauma.Networking
         }
     }
 
-    internal sealed class ReadWriteMessage : IWriteMessage, IReadMessage
+    public sealed class ReadWriteMessage : IWriteMessage, IReadMessage
     {
         private byte[] buf;
         private int seekPos;

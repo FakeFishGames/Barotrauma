@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -6,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class DecorativeSprite : ISerializableEntity
+    public class DecorativeSprite : ISerializableEntity
     {
         public class State
         {
@@ -57,6 +58,23 @@ namespace Barotrauma
 
         [Serialize(0.0f, IsPropertySaveable.Yes), Editable]
         public float ScaleAnimSpeed { get; private set; }
+
+        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        public bool FlipHorizontally { get; private set; }
+
+        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        public bool FlipVertically { get; private set; }
+
+        public SpriteEffects SpriteEffects
+        {
+            get
+            {
+                SpriteEffects spriteEffects = SpriteEffects.None; 
+                if (FlipHorizontally) { spriteEffects |= SpriteEffects.FlipHorizontally; }
+                if (FlipVertically) { spriteEffects |= SpriteEffects.FlipVertically; }
+                return spriteEffects;
+            }
+        }
 
         private float rotationSpeedRadians;
         private float absRotationSpeedRadians;

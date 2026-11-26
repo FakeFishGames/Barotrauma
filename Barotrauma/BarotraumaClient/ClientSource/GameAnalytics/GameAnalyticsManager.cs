@@ -21,10 +21,6 @@ namespace Barotrauma
                 };
 
                 string consentTextTag = "statisticsconsenttext";
-                if (EosInterface.IdQueries.IsLoggedIntoEosConnect)
-                {
-                    consentTextTag = "statisticsconsenteostext";
-                }
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.Get("statisticsconsentheader"), font: GUIStyle.SubHeadingFont, textColor: Color.White);
                 var mainText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), RichString.Rich(TextManager.Get(consentTextTag)), wrap: true);
 

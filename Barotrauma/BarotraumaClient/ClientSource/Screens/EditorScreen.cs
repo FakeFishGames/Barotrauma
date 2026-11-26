@@ -2,7 +2,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    class EditorScreen : Screen
+    public class EditorScreen : Screen
     {
         public static Color BackgroundColor = GameSettings.CurrentConfig.SubEditorBackground;
         public override bool IsEditor => true;

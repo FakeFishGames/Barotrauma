@@ -3,7 +3,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
     [RequiredByCorePackage]
-    sealed class CaveGenerationParametersFile : GenericPrefabFile<CaveGenerationParams>
+    public sealed class CaveGenerationParametersFile : GenericPrefabFile<CaveGenerationParams>
     {
         public CaveGenerationParametersFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

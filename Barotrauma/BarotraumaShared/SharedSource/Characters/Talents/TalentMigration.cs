@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    internal abstract class TalentMigration
+    public abstract class TalentMigration
     {
         private readonly Version version;
 

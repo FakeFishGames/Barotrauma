@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma.RuinGeneration
 {
-    partial class Ruin
+    public partial class Ruin
     {
         public void DebugDraw(SpriteBatch spriteBatch)
         {

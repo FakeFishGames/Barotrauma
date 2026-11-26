@@ -3,7 +3,7 @@ using System;
 
 namespace Barotrauma
 {
-    partial class DummyFireSource : FireSource
+    public partial class DummyFireSource : FireSource
     {
         private Vector2 maxSize;
 

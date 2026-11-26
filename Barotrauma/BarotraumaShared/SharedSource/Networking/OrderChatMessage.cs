@@ -3,7 +3,7 @@ using System;
 
 namespace Barotrauma.Networking
 {
-    partial class OrderChatMessage : ChatMessage
+    public partial class OrderChatMessage : ChatMessage
     {
         public readonly Order Order;
 
@@ -60,7 +60,15 @@ namespace Barotrauma.Networking
         {
             msg.WriteIdentifier(order.Prefab.Identifier);
             msg.WriteUInt16(targetCharacter == null ? (UInt16)0 : targetCharacter.ID);
-            msg.WriteUInt16(order.TargetSpatialEntity is Entity ? (order.TargetEntity as Entity).ID : (UInt16)0);
+
+            if (order.TargetSpatialEntity is WallSection wallSection)
+            {
+                msg.WriteUInt16(wallSection.Wall.ID);
+            }
+            else
+            {
+                msg.WriteUInt16(order.TargetSpatialEntity is Entity ? (order.TargetEntity as Entity).ID : (UInt16)0);
+            }
 
             // The option of a Dismiss order is written differently so we know what order we target
             // now that the game supports multiple current orders simultaneously

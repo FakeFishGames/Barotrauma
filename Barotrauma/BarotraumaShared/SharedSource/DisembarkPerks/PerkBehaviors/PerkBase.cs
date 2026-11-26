@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Barotrauma.PerkBehaviors
 {
-    internal enum PerkSimulation
+    public enum PerkSimulation
     {
         /// <summary>
         /// Perk is only run on the server,
@@ -19,12 +19,18 @@ namespace Barotrauma.PerkBehaviors
         ServerAndClients
     }
 
-    internal abstract class PerkBase : ISerializableEntity
+    public abstract class PerkBase : ISerializableEntity
     {
         public string Name { get; }
         public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; }
 
         public virtual PerkSimulation Simulation => PerkSimulation.ServerOnly;
+
+        /// <summary>
+        /// Should the perk be applied to the place the team spawns in (e.g. the outpost in outpost combat missions) instead of the team's submarine?
+        /// Makes sense for perks that give the crew something (like spawning items), but not for perks that modify the submarine (like item swaps or upgrades).
+        /// </summary>
+        public virtual bool AppliesToSpawnLocation => false;
 
         public readonly DisembarkPerkPrefab Prefab;
 

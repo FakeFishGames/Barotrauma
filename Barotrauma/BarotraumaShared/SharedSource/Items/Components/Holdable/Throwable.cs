@@ -1,6 +1,9 @@
 ﻿using Barotrauma.Networking;
+using FarseerPhysics.Dynamics;
+using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma.Items.Components
@@ -21,6 +24,7 @@ namespace Barotrauma.Items.Components
 
         private ThrowState throwState;
 
+        private readonly List<Body> ignoredBodies = new List<Body>();
 
         //continuous collision detection is used while the item is moving faster than this
         const float ContinuousCollisionThreshold = 5.0f;
@@ -84,22 +88,9 @@ namespace Barotrauma.Items.Components
                 }
                 if (item.body.LinearVelocity.LengthSquared() < 0.01f)
                 {
-                    CurrentThrower = null;
-                    if (statusEffectLists?.ContainsKey(ActionType.OnImpact) ?? false)
-                    {
-                        foreach (var statusEffect in statusEffectLists[ActionType.OnImpact])
-                        {
-                            statusEffect.SetUser(null);
-                        }
-                    }
-                    if (statusEffectLists?.ContainsKey(ActionType.OnBroken) ?? false)
-                    {
-                        foreach (var statusEffect in statusEffectLists[ActionType.OnBroken])
-                        {
-                            statusEffect.SetUser(null);
-                        }
-                    }
                     item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform;
+                    item.body.FarseerBody.OnCollision -= OnCollision;
+                    ignoredBodies.Clear();
                     midAir = false;
                     Item.ResetWaterDragCoefficient();
                 }
@@ -181,19 +172,25 @@ namespace Barotrauma.Items.Components
                     GameServer.Log(GameServer.CharacterLogName(picker) + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
 #endif
                     CurrentThrower = picker;
-                    if (statusEffectLists?.ContainsKey(ActionType.OnImpact) ?? false)
+                    foreach (StatusEffect statusEffect in GetStatusEffectsOfType(ActionType.OnImpact))
                     {
-                        foreach (var statusEffect in statusEffectLists[ActionType.OnImpact])
-                        {
-                            statusEffect.SetUser(CurrentThrower);
-                        }
+                        statusEffect.SetUser(CurrentThrower);
                     }
-                    if (statusEffectLists?.ContainsKey(ActionType.OnBroken) ?? false)
+                    foreach (StatusEffect statusEffect in GetStatusEffectsOfType(ActionType.OnBroken))
                     {
-                        foreach (var statusEffect in statusEffectLists[ActionType.OnBroken])
-                        {
-                            statusEffect.SetUser(CurrentThrower);
-                        }
+                        statusEffect.SetUser(CurrentThrower);
+                    }
+
+                    ignoredBodies.AddRange(picker.AnimController.GetAllPhysicsBodies());
+
+                    Limb heldOnHand = null;
+                    if (CurrentThrower.Inventory.IsInLimbSlot(item, InvSlotType.RightHand))
+                    {
+                        heldOnHand = ac.GetLimb(LimbType.RightHand);
+                    }
+                    else if (CurrentThrower.Inventory.IsInLimbSlot(item, InvSlotType.LeftHand))
+                    {
+                        heldOnHand = ac.GetLimb(LimbType.LeftHand);
                     }
 
                     item.Drop(CurrentThrower, createNetworkEvent: GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer);
@@ -211,14 +208,14 @@ namespace Barotrauma.Items.Components
 
                     //disable platform collisions until the item comes back to rest again
                     item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+                    item.body.FarseerBody.OnCollision += OnCollision;
                     item.body.FarseerBody.IsBullet = true;
                     midAir = true;
 
                     ac.GetLimb(LimbType.Head)?.body.ApplyLinearImpulse(throwVector * 10.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                     ac.GetLimb(LimbType.Torso)?.body.ApplyLinearImpulse(throwVector * 10.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
 
-                    Limb rightHand = ac.GetLimb(LimbType.RightHand);
-                    item.body.AngularVelocity = rightHand.body.AngularVelocity;
+                    item.body.AngularVelocity = heldOnHand?.body.AngularVelocity ?? 0.0f;
                     throwAngle = ThrowAngleStart;
                     IsActive = true;
 
@@ -234,6 +231,11 @@ namespace Barotrauma.Items.Components
                     throwState = ThrowState.None;
                 }
             }
-        }    
+        }
+
+        private bool OnCollision(Fixture fixtureA, Fixture fixtureB, Contact contact)
+        {
+            return !ignoredBodies.Contains(fixtureB.Body);
+        }
     }
 }

@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class Affliction : ISerializableEntity
+    public class Affliction : ISerializableEntity
     {
         public readonly AfflictionPrefab Prefab;
 
@@ -93,6 +93,12 @@ namespace Barotrauma
         /// Which character gave this affliction
         /// </summary>
         public Character Source;
+
+        /// <summary>
+        /// Has the strength of the affliction reached <see cref="AfflictionPrefab.FlatKarmaChangeThreshold"/> (and the karma change been applied to the source)?
+        /// Reset when the strength drops below the threshold.
+        /// </summary>
+        public bool KarmaThresholdReached;
 
         private readonly static LocalizedString[] strengthTexts = new LocalizedString[]
         {

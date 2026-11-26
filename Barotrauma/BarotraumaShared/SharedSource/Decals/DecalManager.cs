@@ -84,18 +84,14 @@ namespace Barotrauma
             GrimeSprites.SortAll();
         }
 
-        public static Decal CreateDecal(string decalName, float scale, Vector2 worldPosition, Hull hull, int? spriteIndex = null)
+        public static Decal CreateDecal(Identifier decalIdentifier, float scale, Vector2 worldPosition, Hull hull, bool multiplyByPrefabScale, int? spriteIndex = null)
         {
-            string lowerCaseDecalName = decalName.ToLowerInvariant();
-            if (!Prefabs.ContainsKey(lowerCaseDecalName))
+            if (!Prefabs.TryGet(decalIdentifier, out DecalPrefab decalPrefab))
             {
-                DebugConsole.ThrowError("Decal prefab " + decalName + " not found!");
+                DebugConsole.ThrowError("Decal prefab " + decalIdentifier + " not found!");
                 return null;
             }
-
-            DecalPrefab prefab = Prefabs[lowerCaseDecalName];
-
-            return new Decal(prefab, scale, worldPosition, hull, spriteIndex);
+            return new Decal(decalPrefab, scale, worldPosition, hull, multiplyByPrefabScale, spriteIndex);
         }
     }
 }

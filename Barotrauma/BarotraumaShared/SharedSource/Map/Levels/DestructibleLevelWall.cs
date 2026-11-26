@@ -7,7 +7,7 @@ using Voronoi2;
 
 namespace Barotrauma
 {
-    partial class DestructibleLevelWall : LevelWall, IDamageable 
+    public partial class DestructibleLevelWall : LevelWall, IDamageable 
     {
         public bool NetworkUpdatePending;
 
@@ -69,7 +69,8 @@ namespace Barotrauma
             if (FadeOutDuration > 0.0f)
             {
                 FadeOutTimer += deltaTime;
-                if (FadeOutTimer > FadeOutDuration && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsClient)) { Destroy(); }
+                //fading fragments are unsynced (UnsyncedExtraWalls), each side creates and removes its own
+                if (FadeOutTimer > FadeOutDuration) { Destroy(); }
             }
         }
 

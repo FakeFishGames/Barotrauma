@@ -6,6 +6,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Barotrauma
@@ -18,7 +19,7 @@ namespace Barotrauma
     ///     Used to enable all particle effects without having to specify them one by one.
     /// </Field>
     /// </doc>
-    partial class Explosion
+    public partial class Explosion
     {
         public readonly Attack Attack;
 
@@ -156,7 +157,7 @@ namespace Barotrauma
         /// Identifier of the decal the explosion creates on the background structure it explodes over.
         /// Set to empty string to disable.
         /// </summary>
-        private readonly string decal;
+        private readonly Identifier decal;
 
         /// <summary>
         /// Relative size of the decal created by the explosion.
@@ -186,6 +187,11 @@ namespace Barotrauma
         public readonly HashSet<Submarine> IgnoredSubmarines = new HashSet<Submarine>();
 
         public readonly HashSet<Character> IgnoredCharacters = new HashSet<Character>();
+
+        /// <summary>
+        /// If enabled, the character that caused the explosion (e.g. the user of the item) is not damaged by it.
+        /// </summary>
+        public bool IgnoreUser;
 
         /// <summary>
         /// Strength of the EMP effect created by the explosion.
@@ -238,6 +244,7 @@ namespace Barotrauma
             IgnoreCover = element.GetAttributeBool("ignorecover", false);
             OnlyInside = element.GetAttributeBool("onlyinside", false);
             OnlyOutside = element.GetAttributeBool("onlyoutside", false);
+            IgnoreUser = element.GetAttributeBool("ignoreuser", false);
 
             DistanceFalloff = element.GetAttributeBool(nameof(DistanceFalloff), true);
 
@@ -253,7 +260,7 @@ namespace Barotrauma
 
             itemRepairStrength = element.GetAttributeFloat("itemrepairstrength", 0.0f);
 
-            decal = element.GetAttributeString("decal", "");
+            decal = element.GetAttributeIdentifier("decal", Identifier.Empty);
             decalSize   = element.GetAttributeFloat(1.0f, "decalSize", "decalsize");
 
             CameraShake = element.GetAttributeFloat("camerashake", showEffects ? Attack.Range * 0.1f : 0f);
@@ -281,7 +288,7 @@ namespace Barotrauma
             Hull hull = Hull.FindHull(worldPosition);
             ExplodeProjSpecific(worldPosition, hull);
 
-            if (hull != null && !string.IsNullOrWhiteSpace(decal) && decalSize > 0.0f)
+            if (hull != null && !decal.IsEmpty && decalSize > 0.0f)
             {
                 hull.AddDecal(decal, worldPosition, decalSize, isNetworkEvent: false);
             }
@@ -315,7 +322,7 @@ namespace Barotrauma
             if (screenColor != Color.Transparent)
             {
                 Color flashColor = Color.Lerp(Color.Transparent, screenColor, Math.Max((screenColorRange - cameraDist) / screenColorRange, 0.0f));
-                Screen.Selected.ColorFade(flashColor, Color.Transparent, screenColorDuration);
+                Screen.Selected.ColorFade(flashColor, Color.Transparent, screenColorDuration, ignorePausing: false);
             }
             foreach (Sonar sonar in Sonar.SonarList)
             {
@@ -397,7 +404,7 @@ namespace Barotrauma
             }
 
             if (Attack.Afflictions.None() &&
-                MathUtils.NearlyEqual(force, 0.0f) && MathUtils.NearlyEqual(Attack.Stun, 0.0f) &&
+                Math.Abs(force) <= 0.01f && MathUtils.NearlyEqual(Attack.Stun, 0.0f) &&
                 MathUtils.NearlyEqual(Attack.ItemDamage, 0.0f) && 
                 MathUtils.NearlyEqual(Attack.StructureDamage, 0.0f))
             {
@@ -443,13 +450,13 @@ namespace Barotrauma
 
                     if (!item.Indestructible)
                     {
+                        float distFactor = 
+                            DistanceFalloff ? 
+                            1.0f - dist / displayRange : 
+                            1.0f;
                         if (item.Prefab.DamagedByExplosions ||
                             (item.Prefab.DamagedByContainedItemExplosions && item.ContainedItems.Contains(damageSource)))
                         {
-                            float distFactor = 
-                                DistanceFalloff ? 
-                                1.0f - dist / displayRange : 
-                                1.0f;
                             float damageAmount = Attack.GetItemDamage(1.0f, item.Prefab.ExplosionDamageMultiplier);
 
                             Vector2 explosionPos = worldPosition;
@@ -458,6 +465,21 @@ namespace Barotrauma
                             damageAmount *= GetObstacleDamageMultiplier(ConvertUnits.ToSimUnits(explosionPos), worldPosition, item.SimPosition, IgnoredCover);
                             item.Condition -= damageAmount * distFactor;
                         }
+
+                        //don't apply a force to active projectiles, that can cause the "recoil explosion" many weapons use to throw off the just-launched projectile
+                        if (item.GetComponent<Projectile>() is { IsActive: true })
+                        {
+                            continue;
+                        }
+
+                        if (item.body is { PhysEnabled: true } && !MathUtils.NearlyEqual(force, 0.0f))
+                        {
+                            Vector2 itemDiff = Vector2.Normalize(item.WorldPosition - worldPosition);
+                            if (!MathUtils.IsValid(itemDiff)) { itemDiff = Rand.Vector(1.0f); }
+                            Vector2 impulse = itemDiff * distFactor * force;
+                            Vector2 impulsePoint = item.SimPosition - itemDiff * item.body.GetMaxExtent();
+                            item.body.ApplyLinearImpulse(impulse, impulsePoint, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.2f);
+                        }
                     }
                 }
             }
@@ -465,190 +487,219 @@ namespace Barotrauma
 
         partial void ExplodeProjSpecific(Vector2 worldPosition, Hull hull);
 
+        private static int currentlyProcessingExplosionCount;
+        private static readonly Dictionary<Limb, float> distFactors = new Dictionary<Limb, float>();
+        private static readonly Dictionary<Limb, float> damages = new Dictionary<Limb, float>();
+        private static readonly List<Affliction> modifiedAfflictions = new List<Affliction>();
+        
         private void DamageCharacters(Vector2 worldPosition, Attack attack, float force, Entity damageSource, Character attacker, float range)
         {
             if (range <= 0.0f) { return; }
 
-            //long range for the broad distance check, because large characters may still be in range even if their collider isn't
-            float broadRange = Math.Max(range * 10.0f, 10000.0f);
+            bool isProcessingExplosion = currentlyProcessingExplosionCount > 0;
 
-            foreach (Character c in Character.CharacterList)
+            //if we are already processing an explosion (i.e. if an explosion caused another explosion, for example a defense bot's "death explosion" killing another defense bot)
+            //use new collections instead of the static ones so the 2nd explosion doesn't modify them while the 1st one is enumerating it
+            Dictionary<Limb, float> distFactors = isProcessingExplosion ? [] : Explosion.distFactors;
+            Dictionary<Limb, float> damages = isProcessingExplosion ? [] : Explosion.damages;
+            List<Affliction> modifiedAfflictions = isProcessingExplosion ? [] : Explosion.modifiedAfflictions;
+
+            currentlyProcessingExplosionCount++;
+
+            //if the attacker is not known, use the user of the projectile/melee weapon the explosion came from
+            if (attacker == null && damageSource is Item sourceItem)
             {
-                if (attack.OnlyHumans && !c.IsHuman) { continue; }
-                if (IgnoredCharacters.Contains(c)) { continue; }
+                attacker = sourceItem.GetComponent<Projectile>()?.User;
+                attacker ??= sourceItem.GetComponent<MeleeWeapon>()?.User;
+            }
 
-                if (!c.Enabled || 
-                    Math.Abs(c.WorldPosition.X - worldPosition.X) > broadRange ||
-                    Math.Abs(c.WorldPosition.Y - worldPosition.Y) > broadRange)
+            try
+            {
+                //long range for the broad distance check, because large characters may still be in range even if their collider isn't
+                float broadRange = Math.Max(range * 10.0f, 10000.0f);
+
+                foreach (Character c in Character.CharacterList)
                 {
-                    continue;
-                }
+                    if (attack.OnlyHumans && !c.IsHuman) { continue; }
+                    if (IgnoredCharacters.Contains(c)) { continue; }
+                    if (IgnoreUser && attacker != null && c == attacker) { continue; }
 
-                if (OnlyInside && c.Submarine == null) 
-                { 
-                    continue; 
-                }
-                else if (OnlyOutside && c.Submarine != null) 
-                { 
-                    continue; 
-                }
-
-                Vector2 explosionPos = worldPosition;
-                if (c.Submarine != null) { explosionPos -= c.Submarine.Position; }
-
-                Hull hull = Hull.FindHull(explosionPos, null, false);
-                bool underWater = hull == null || explosionPos.Y < hull.Surface;
-
-                explosionPos = ConvertUnits.ToSimUnits(explosionPos);
-
-                Dictionary<Limb, float> distFactors = new Dictionary<Limb, float>();
-                Dictionary<Limb, float> damages = new Dictionary<Limb, float>();
-                List<Affliction> modifiedAfflictions = new List<Affliction>();
-
-                Limb closestLimb = null;
-                float closestDistFactor = 0;
-                foreach (Limb limb in c.AnimController.Limbs)
-                {
-                    if (limb.IsSevered || limb.IgnoreCollisions || !limb.body.Enabled) { continue; }
-
-                    float dist = Vector2.Distance(limb.WorldPosition, worldPosition);
-
-                    //calculate distance from the "outer surface" of the physics body
-                    //doesn't take the rotation of the limb into account, but should be accurate enough for this purpose
-                    float limbRadius = limb.body.GetMaxExtent();
-                    dist = Math.Max(0.0f, dist - ConvertUnits.ToDisplayUnits(limbRadius));
-
-                    if (dist > range) { continue; }
-
-                    float distFactor = 
-                        DistanceFalloff ? 
-                        1.0f - dist / attack.Range : 
-                        1.0f;
-
-                    //solid obstacles between the explosion and the limb reduce the effect of the explosion
-                    if (!IgnoreCover)
+                    if (!c.Enabled ||
+                        Math.Abs(c.WorldPosition.X - worldPosition.X) > broadRange ||
+                        Math.Abs(c.WorldPosition.Y - worldPosition.Y) > broadRange)
                     {
-                        distFactor *= GetObstacleDamageMultiplier(explosionPos, worldPosition, limb.SimPosition, IgnoredCover);
+                        continue;
                     }
-                    if (distFactor > 0)
-                    {
-                        distFactors.Add(limb, distFactor);
-                        if (distFactor > closestDistFactor)
-                        {
-                            closestLimb = limb;
-                            closestDistFactor = distFactor;
-                        }
-                    }
-                }
 
-                foreach (Limb limb in distFactors.Keys)
-                {
-                    if (!distFactors.TryGetValue(limb, out float distFactor)) { continue; }
+                    if (OnlyInside && c.Submarine == null)
+                    {
+                        continue;
+                    }
+                    else if (OnlyOutside && c.Submarine != null)
+                    {
+                        continue;
+                    }
+
+                    Vector2 explosionPos = worldPosition;
+                    if (c.Submarine != null) { explosionPos -= c.Submarine.Position; }
+
+                    Hull hull = Hull.FindHull(explosionPos, null, false);
+                    bool underWater = hull == null || explosionPos.Y < hull.Surface;
+
+                    explosionPos = ConvertUnits.ToSimUnits(explosionPos);
+
+                    distFactors.Clear();
+                    damages.Clear();
                     modifiedAfflictions.Clear();
-                    foreach (Affliction affliction in attack.Afflictions.Keys)
-                    {
-                        float dmgMultiplier = distFactor;
-                        if (affliction.DivideByLimbCount)
-                        {
-                            float limbCountFactor = distFactors.Count;
-                            if (affliction.Prefab.LimbSpecific && affliction.Prefab.AfflictionType == AfflictionPrefab.DamageType)
-                            {
-                                // Shouldn't go above 15, or the damage can be unexpectedly low -> doesn't break armor
-                                // Effectively this makes large explosions more effective against large creatures (because more limbs are affected), but I don't think that's necessarily a bad thing.
-                                limbCountFactor = Math.Min(distFactors.Count, 15);
-                            }
-                            dmgMultiplier /= limbCountFactor;
-                        }
-                        modifiedAfflictions.Add(affliction.CreateMultiplied(dmgMultiplier, affliction));
-                    }
-                    c.LastDamageSource = damageSource;
-                    if (attacker == null)
-                    {
-                        if (damageSource is Item item)
-                        {
-                            attacker = item.GetComponent<Projectile>()?.User;
-                            attacker ??= item.GetComponent<MeleeWeapon>()?.User;
-                        }
-                    }
 
-                    if (attack.Afflictions.Any() || attack.Stun > 0.0f)
-                    {
-                        if (!attack.OnlyHumans || c.IsHuman)
-                        {
-                            AbilityAttackData attackData = new AbilityAttackData(Attack, c, attacker);
-                            if (attackData.Afflictions != null)
-                            {
-                                modifiedAfflictions.AddRange(attackData.Afflictions);
-                            }
-
-                            //use a position slightly from the limb's position towards the explosion
-                            //ensures that the attack hits the correct limb and that the direction of the hit can be determined correctly in the AddDamage methods
-                            Vector2 dir = worldPosition - limb.WorldPosition;
-                            Vector2 hitPos = limb.WorldPosition + (dir.LengthSquared() <= 0.001f ? Rand.Vector(1.0f) : Vector2.Normalize(dir)) * 0.01f;
-
-                            //only play the damage sound on the closest limb (playing it on all just sounds like a mess)
-                            bool playSound = PlayDamageSounds && limb == closestLimb;
-
-                            AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, playSound: playSound, attacker: attacker, damageMultiplier: attack.DamageMultiplier * attackData.DamageMultiplier);
-                            damages.Add(limb, attackResult.Damage);
-                        }
-                    }
-
-                    if (attack.StatusEffects != null && attack.StatusEffects.Any())
-                    {
-                        attack.SetUser(attacker);
-                        var statusEffectTargets = new List<ISerializableEntity>();
-                        foreach (StatusEffect statusEffect in attack.StatusEffects)
-                        {
-                            statusEffectTargets.Clear();
-                            if (statusEffect.HasTargetType(StatusEffect.TargetType.Character)) { statusEffectTargets.Add(c); }
-                            if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb)) { statusEffectTargets.Add(limb); }
-                            statusEffect.Apply(ActionType.OnUse, 1.0f, damageSource, statusEffectTargets);
-                            statusEffect.Apply(ActionType.Always, 1.0f, damageSource, statusEffectTargets);
-                            statusEffect.Apply(underWater ? ActionType.InWater : ActionType.NotInWater, 1.0f, damageSource, statusEffectTargets);
-                        }
-                    }
-                    
-                    if (limb.WorldPosition != worldPosition && !MathUtils.NearlyEqual(force, 0.0f))
-                    {
-                        Vector2 limbDiff = Vector2.Normalize(limb.WorldPosition - worldPosition);
-                        if (!MathUtils.IsValid(limbDiff)) { limbDiff = Rand.Vector(1.0f); }
-                        Vector2 impulse = limbDiff * distFactor * force;
-                        Vector2 impulsePoint = limb.SimPosition - limbDiff * limb.body.GetMaxExtent();
-                        limb.body.ApplyLinearImpulse(impulse, impulsePoint, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.2f);
-                    }
-                }
-
-                if (c == Character.Controlled && !c.IsDead && playTinnitus)
-                {
-                    Limb head = c.AnimController.GetLimb(LimbType.Head);
-                    if (head != null && damages.TryGetValue(head, out float headDamage) && headDamage > 0.0f && distFactors.TryGetValue(head, out float headFactor))
-                    {
-                        PlayTinnitusProjSpecific(headFactor);
-                    }
-                }
-
-                //sever joints 
-                if (attack.SeverLimbsProbability > 0.0f)
-                {
+                    Limb closestLimb = null;
+                    float closestDistFactor = 0;
                     foreach (Limb limb in c.AnimController.Limbs)
                     {
-                        if (limb.character.Removed || limb.Removed) { continue; }
-                        if (limb.IsSevered) { continue; }
-                        if (!c.IsDead && !limb.CanBeSeveredAlive) { continue; }
-                        if (distFactors.TryGetValue(limb, out float distFactor))
+                        if (limb.IsSevered || limb.IgnoreCollisions) { continue; }
+                        if (!c.AnimController.SimplePhysicsEnabled)
                         {
-                            if (damages.TryGetValue(limb, out float damage))
+                            // in simple physics mode, all limbs are disabled
+                            if (!limb.body.Enabled) { continue; }
+                        }
+
+                        float dist = Vector2.Distance(limb.WorldPosition, worldPosition);
+
+                        //calculate distance from the "outer surface" of the physics body
+                        //doesn't take the rotation of the limb into account, but should be accurate enough for this purpose
+                        float limbRadius = limb.body.GetMaxExtent();
+                        dist = Math.Max(0.0f, dist - ConvertUnits.ToDisplayUnits(limbRadius));
+
+                        if (dist > range) { continue; }
+
+                        float distFactor =
+                            DistanceFalloff ?
+                            1.0f - dist / range :
+                            1.0f;
+
+                        //solid obstacles between the explosion and the limb reduce the effect of the explosion
+                        if (!IgnoreCover)
+                        {
+                            distFactor *= GetObstacleDamageMultiplier(explosionPos, worldPosition, limb.SimPosition, IgnoredCover);
+                        }
+                        if (distFactor > 0)
+                        {
+                            distFactors.Add(limb, distFactor);
+                            if (distFactor > closestDistFactor)
                             {
-                                c.TrySeverLimbJoints(limb, attack.SeverLimbsProbability * distFactor, damage, allowBeheading: true, attacker: attacker);
+                                closestLimb = limb;
+                                closestDistFactor = distFactor;
+                            }
+                        }
+                    }
+
+                    foreach (Limb limb in distFactors.Keys)
+                    {
+                        if (!distFactors.TryGetValue(limb, out float distFactor)) { continue; }
+                        modifiedAfflictions.Clear();
+                        foreach (Affliction affliction in attack.Afflictions.Keys)
+                        {
+                            float dmgMultiplier = distFactor;
+                            if (affliction.DivideByLimbCount)
+                            {
+                                float limbCountFactor = distFactors.Count;
+                                if (affliction.Prefab.LimbSpecific && affliction.Prefab.AfflictionType == AfflictionPrefab.DamageType)
+                                {
+                                    // Shouldn't go above 15, or the damage can be unexpectedly low -> doesn't break armor
+                                    // Effectively this makes large explosions more effective against large creatures (because more limbs are affected), but I don't think that's necessarily a bad thing.
+                                    limbCountFactor = Math.Min(distFactors.Count, 15);
+                                }
+                                dmgMultiplier /= limbCountFactor;
+                            }
+                            modifiedAfflictions.Add(affliction.CreateMultiplied(dmgMultiplier, affliction));
+                        }
+                        c.LastDamageSource = damageSource;
+                        if (attack.Afflictions.Any() || attack.Stun > 0.0f)
+                        {
+                            if (!attack.OnlyHumans || c.IsHuman)
+                            {
+                                AbilityAttackData attackData = new AbilityAttackData(Attack, c, attacker);
+                                if (attackData.Afflictions != null)
+                                {
+                                    modifiedAfflictions.AddRange(attackData.Afflictions);
+                                }
+
+                                //use a position slightly from the limb's position towards the explosion
+                                //ensures that the attack hits the correct limb and that the direction of the hit can be determined correctly in the AddDamage methods
+                                Vector2 dir = worldPosition - limb.WorldPosition;
+                                Vector2 hitPos = limb.WorldPosition + (dir.LengthSquared() <= 0.001f ? Rand.Vector(1.0f) : Vector2.Normalize(dir)) * 0.01f;
+
+                                //only play the damage sound on the closest limb (playing it on all just sounds like a mess)
+                                bool playSound = PlayDamageSounds && limb == closestLimb;
+
+                                AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, playSound: playSound, attacker: attacker, damageMultiplier: attack.DamageMultiplier * attackData.DamageMultiplier);
+                                damages.Add(limb, attackResult.Damage);
+                            }
+                        }
+
+                        if (attack.StatusEffects != null && attack.StatusEffects.Any())
+                        {
+                            attack.SetUser(attacker);
+                            var statusEffectTargets = new List<ISerializableEntity>();
+                            foreach (StatusEffect statusEffect in attack.StatusEffects)
+                            {
+                                statusEffectTargets.Clear();
+                                if (statusEffect.HasTargetType(StatusEffect.TargetType.Character)) { statusEffectTargets.Add(c); }
+                                if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb)) { statusEffectTargets.Add(limb); }
+                                statusEffect.Apply(ActionType.OnUse, 1.0f, damageSource, statusEffectTargets);
+                                statusEffect.Apply(ActionType.Always, 1.0f, damageSource, statusEffectTargets);
+                                statusEffect.Apply(underWater ? ActionType.InWater : ActionType.NotInWater, 1.0f, damageSource, statusEffectTargets);
+                            }
+                        }
+
+                        if (limb.WorldPosition != worldPosition && !MathUtils.NearlyEqual(force, 0.0f))
+                        {
+                            Vector2 limbDiff = Vector2.Normalize(limb.WorldPosition - worldPosition);
+                            if (!MathUtils.IsValid(limbDiff)) { limbDiff = Rand.Vector(1.0f); }
+                            Vector2 impulse = limbDiff * distFactor * force;
+                            Vector2 impulsePoint = limb.SimPosition - limbDiff * limb.body.GetMaxExtent();
+                            limb.body.ApplyLinearImpulse(impulse, impulsePoint, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.2f);
+                        }
+                    }
+
+                    if (c == Character.Controlled && !c.IsDead && playTinnitus)
+                    {
+                        Limb head = c.AnimController.GetLimb(LimbType.Head);
+                        if (head != null && damages.TryGetValue(head, out float headDamage) && headDamage > 0.0f && distFactors.TryGetValue(head, out float headFactor))
+                        {
+                            PlayTinnitusProjSpecific(headFactor);
+                        }
+                    }
+
+                    //sever joints 
+                    if (attack.SeverLimbsProbability > 0.0f)
+                    {
+                        foreach (Limb limb in c.AnimController.Limbs)
+                        {
+                            if (limb.character.Removed || limb.Removed) { continue; }
+                            if (limb.IsSevered) { continue; }
+                            if (!c.IsDead && !limb.CanBeSeveredAlive) { continue; }
+                            if (distFactors.TryGetValue(limb, out float distFactor))
+                            {
+                                if (damages.TryGetValue(limb, out float damage))
+                                {
+                                    c.TrySeverLimbJoints(limb, attack.SeverLimbsProbability * distFactor, damage, allowBeheading: true, attacker: attacker);
+                                }
                             }
                         }
                     }
                 }
             }
+            
+            finally
+            {
+                currentlyProcessingExplosionCount--;
+                Debug.Assert(currentlyProcessingExplosionCount >= 0);
+            }
         }
 
-        private static readonly Dictionary<Structure, float> damagedStructures = new Dictionary<Structure, float>();
+        private static readonly Dictionary<Structure, float> damagedStructures = [];
+
         /// <summary>
         /// Returns a dictionary where the keys are the structures that took damage and the values are the amount of damage taken
         /// </summary>
@@ -657,7 +708,7 @@ namespace Barotrauma
             bool createWallDamageProjectiles = false, 
             bool distanceFalloff = true)
         {
-            float dist = 600.0f;
+            float broadRangeDistance = worldRange * 3;
             damagedStructures.Clear();
             foreach (Structure structure in Structure.WallList)
             {
@@ -665,7 +716,7 @@ namespace Barotrauma
 
                 if (structure.HasBody &&
                     !structure.IsPlatform &&
-                    Vector2.Distance(structure.WorldPosition, worldPosition) < dist * 3.0f)
+                    Vector2.Distance(structure.WorldPosition, worldPosition) < broadRangeDistance)
                 {
                     for (int i = 0; i < structure.SectionCount; i++)
                     {
@@ -814,5 +865,13 @@ namespace Barotrauma
         }
 
         static partial void PlayTinnitusProjSpecific(float volume);
+
+        public static void CleanUpStaticReferences()
+        {
+            damagedStructures.Clear();
+            distFactors.Clear();
+            damages.Clear();
+            modifiedAfflictions.Clear();
+        }
     }
 }

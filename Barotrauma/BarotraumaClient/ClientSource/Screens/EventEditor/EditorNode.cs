@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    internal class EditorNode
+    public class EditorNode
     {
         public Vector2 Position { get; set; }
 

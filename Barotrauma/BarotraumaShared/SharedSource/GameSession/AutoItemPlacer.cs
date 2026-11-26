@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    static class AutoItemPlacer
+    public static class AutoItemPlacer
     {
         public static bool OutputDebugInfo = false;
 
@@ -18,9 +18,8 @@ namespace Barotrauma
             bool startItemsGiven = GameMain.GameSession?.OwnedSubmarines != null && GameMain.GameSession.OwnedSubmarines.Count > 1;
             if (!startItemsGiven)
             {
-                for (int i = 0; i < Submarine.MainSubs.Length; i++)
+                foreach (Submarine sub in Submarine.MainSubs)
                 {
-                    var sub = Submarine.MainSubs[i];
                     if (sub == null || sub.Info.InitialSuppliesSpawned || sub.Info.IsManuallyOutfitted || !sub.Info.IsPlayer) { continue; }
                     //1st pass: items defined in the start item set, only spawned in the main sub (not drones/shuttles or other linked subs)
                     SpawnStartItems(sub, startItemSet);
@@ -129,7 +128,7 @@ namespace Barotrauma
                 var container = sub.FindContainerFor(item, onlyPrimary: true);
                 if (container == null)
                 {
-                    var cargoContainer = CargoManager.GetOrCreateCargoContainerFor(item.Prefab, initialSpawnPos, ref cargoContainers);
+                    var cargoContainer = CargoManager.GetOrCreateCargoContainerFor(item.Prefab, initialSpawnPos, ref cargoContainers, out _);
                     container = cargoContainer?.Item;
                 }
                 container?.OwnInventory.TryPutItem(item, user: null);
@@ -336,7 +335,7 @@ namespace Barotrauma
                 if (!validContainer.Key.Inventory.CanProbablyBePut(itemPrefab, quality: quality)) { break; }
                 var item = new Item(itemPrefab, validContainer.Key.Item.Position, validContainer.Key.Item.Submarine, callOnItemLoaded: false)
                 {
-                    SpawnedInCurrentOutpost = validContainer.Key.Item.SpawnedInCurrentOutpost,
+                    SpawnedInNonPlayerOutpostOrSubmarine = validContainer.Key.Item.SpawnedInNonPlayerOutpostOrSubmarine,
                     AllowStealing = validContainer.Key.Item.AllowStealing || validContainer.Key.Item.Prefab.AllowStealingContainedItems,
                     Quality = quality,
                     OriginalModuleIndex = validContainer.Key.Item.OriginalModuleIndex,

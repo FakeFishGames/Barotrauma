@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using Barotrauma.Networking;
 using Barotrauma.Extensions;
 #if CLIENT
@@ -9,8 +10,14 @@ using Barotrauma.Lights;
 
 namespace Barotrauma.Items.Components
 {
-    partial class LightComponent : Powered, IServerSerializable, IDrawableComponent
+    public partial class LightComponent : Powered, IServerSerializable, IDrawableComponent
     {
+        /// <summary>
+        /// All light sources that emit plant light (PlantLight > 0 and currently on).
+        /// Used for raycast-based plant light calculations.
+        /// </summary>
+        public static readonly HashSet<LightComponent> ActivePlantLightSources = new HashSet<LightComponent>();
+
         private Color lightColor;
         /// <summary>
         /// The current brightness of the light source, affected by powerconsumption/voltage
@@ -85,6 +92,13 @@ namespace Barotrauma.Items.Components
                 if (Light != null) Light.IsBackground = drawBehindSubs;
 #endif
             }
+        }
+
+        [Serialize("zap", IsPropertySaveable.No, description: "Tag of the sound (defined in sounds.xml) played when the light flickers due to low voltage.")]
+        public string ZapSoundTag
+        {
+            get;
+            set;
         }
 
         [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Is the light currently on.", alwaysUseInstanceValues: true)]
@@ -178,7 +192,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 if (Light != null)
                 {
-                    Light.Color = IsOn ? lightColor.Multiply(lightColorMultiplier) : Color.Transparent;
+                    Light.Color = IsOn ? CurrentLightColor.Multiply(lightColorMultiplier) : Color.Transparent;
                 }
 #endif
             }
@@ -205,6 +219,51 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        private float plantLight;
+
+        /// <summary>
+        /// How much "plant light" this light emits for growing plants.
+        /// When set to a value > 0, the light will be registered as a plant light source
+        /// and planters will check line of sight to determine if they receive this light.
+        /// </summary>
+        [Serialize(0f, IsPropertySaveable.Yes, description: "Amount of plant light emitted by this light source. 0 = none.")]
+        public float PlantLight
+        {
+            get => plantLight;
+            set
+            {
+                if (plantLight == value) { return; }
+                plantLight = Math.Max(0f, value);
+                if (plantLight > 0f)
+                {
+                    ActivePlantLightSources.Add(this);
+                }
+                else
+                {
+                    ActivePlantLightSources.Remove(this);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the world position of the light source, accounting for LightOffset.
+        /// </summary>
+        public Vector2 LightWorldPosition
+        {
+            get
+            {
+                Vector2 offset = LightOffset;
+                if (item.FlippedX) { offset.X = -offset.X; }
+                if (item.FlippedY) { offset.Y = -offset.Y; }
+                return item.WorldPosition + offset;
+            }
+        }
+
+        /// <summary>
+        /// Returns true if this light is currently emitting plant light (brightness of normal light checked only because it implicitly checks voltage etc).
+        /// </summary>
+        public bool IsEmittingPlantLight => plantLight > 0f && IsOn && lightBrightness > 0f;
+
         /// <summary>
         /// Returns true if the red component of the light is twice as bright as the blue and green. Can be used by StatusEffects.
         /// </summary>
@@ -219,6 +278,8 @@ namespace Barotrauma.Items.Components
         /// Returns true if the blue component of the light is twice as bright as the red and green. Can be used by StatusEffects.
         /// </summary>
         public bool IsBlue => ColorExtensions.IsBlueDominant(LightColor);
+
+        public override bool ShouldCauseDeterioration => false;
 
 
         public float TemporaryFlickerTimer;
@@ -309,7 +370,7 @@ namespace Barotrauma.Items.Components
 
             if ((item.body == null || !item.body.Enabled) && 
                 powerConsumption <= 0.0f && Parent == null && turret == null &&
-                (statusEffectLists == null || !statusEffectLists.ContainsKey(ActionType.OnActive)) &&
+                !HasStatusEffectsOfType(ActionType.OnActive) &&
                 (IsActiveConditionals == null || IsActiveConditionals.Count == 0))
             {
                 PhysicsBody body = ParentBody ?? item.body;
@@ -397,7 +458,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 if (Voltage > 0.1f)
                 {
-                    SoundPlayer.PlaySound("zap", item.WorldPosition, hullGuess: item.CurrentHull);
+                    SoundPlayer.PlaySound(ZapSoundTag, item.WorldPosition, hullGuess: item.CurrentHull);
                 }
 #endif
                 lightBrightness = 0.0f;

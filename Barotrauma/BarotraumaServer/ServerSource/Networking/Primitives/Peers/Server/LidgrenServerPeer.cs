@@ -18,6 +18,14 @@ namespace Barotrauma.Networking
 
         private readonly List<NetIncomingMessage> incomingLidgrenMessages;
 
+        /// <summary>
+        /// Connections we've disconnected, but which Lidgren hasn't reported as disconnected yet.
+        /// NetConnection.Status only changes when the status change message is read, so messages that were received
+        /// before that (e.g. the rest of the same batch) would otherwise be handled as coming from an unauthenticated connection,
+        /// and the disconnect reason would get overridden with <see cref="DisconnectReason.AuthenticationRequired"/>.
+        /// </summary>
+        private readonly HashSet<NetConnection> disconnectingConnections = new HashSet<NetConnection>();
+
         public LidgrenServerPeer(Option<int> ownKey, ServerSettings settings, Callbacks callbacks) : base(callbacks, settings)
         {
             authenticators = null;
@@ -95,6 +103,7 @@ namespace Barotrauma.Networking
 
             pendingClients.Clear();
             connectedClients.Clear();
+            disconnectingConnections.Clear();
 
             netServer = null;
 
@@ -115,10 +124,10 @@ namespace Barotrauma.Networking
                 HandleConnection(inc);
             }
 
-            try
+            //after processing connections, go ahead with the rest of the messages
+            foreach (NetIncomingMessage inc in incomingLidgrenMessages.Where(m => m.MessageType != NetIncomingMessageType.ConnectionApproval))
             {
-                //after processing connections, go ahead with the rest of the messages
-                foreach (NetIncomingMessage inc in incomingLidgrenMessages.Where(m => m.MessageType != NetIncomingMessageType.ConnectionApproval))
+                try
                 {
                     switch (inc.MessageType)
                     {
@@ -130,17 +139,16 @@ namespace Barotrauma.Networking
                             break;
                     }
                 }
-            }
-
-            catch (Exception e)
-            {
-                string errorMsg = "Server failed to read an incoming message. {" + e + "}\n" + e.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce($"LidgrenServerPeer.Update:ClientReadException{e.TargetSite}", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                catch (Exception e)
+                {
+                    string errorMsg = "Server failed to read an incoming message. {" + e + "}\n" + e.StackTrace.CleanupStackTrace();
+                    GameAnalyticsManager.AddErrorEventOnce($"LidgrenServerPeer.Update:ClientReadException{e.TargetSite}", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
-                DebugConsole.ThrowError(errorMsg);
+                    DebugConsole.ThrowError(errorMsg);
 #else
                 if (GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
 #endif
+                }
             }
 
             for (int i = 0; i < pendingClients.Count; i++)
@@ -221,6 +229,9 @@ namespace Barotrauma.Networking
         {
             if (netServer == null) { return; }
 
+            //already disconnected the sender (e.g. kicked by an earlier message in the same batch), ignore the rest of their messages
+            if (disconnectingConnections.Contains(lidgrenMsg.SenderConnection)) { return; }
+
             PendingClient? pendingClient = pendingClients.Find(c => c.Connection.NetConnection == lidgrenMsg.SenderConnection);
 
             IReadMessage inc = lidgrenMsg.ToReadMessage();
@@ -237,6 +248,19 @@ namespace Barotrauma.Networking
                     //pending (= not yet authenticated) client sent malformed data, immediately ban them so they can't use this for spamming
                     GameServer.Log($"Received an invalid connection attempt from {pendingClient.Connection.NetConnection?.RemoteEndPoint?.ToString() ?? "null"}. Banning the IP.", ServerLog.MessageType.DoSProtection);
                     serverSettings.BanList.BanPlayer(name: "Unknown", endpoint: pendingClient.Connection.Endpoint, reason: "Invalid connection attempt", duration: null);
+                    //remove the pending client immediately, so the rest of their packets get ignored
+                    //(instead of e.g. banning them again for every packet they send)
+                    RemovePendingClient(pendingClient, PeerDisconnectPacket.Banned("Invalid connection attempt"));
+                    return;
+                }
+                else if (FindConnection(lidgrenMsg.SenderConnection) is { } malformedSenderConn && malformedSenderConn != OwnerConnection)
+                {
+                    // A connected client sent a packet without valid peer headers (e.g. raw packets sent bypassing the client peer), let's kick them.
+                    // Rethrowing here would just log the error without kicking, and the packet would never reach the DoS protection,
+                    // letting the client flood the server with packets that each cost an exception to handle.
+                    GameServer.Log($"Received a malformed packet from {malformedSenderConn.NetConnection?.RemoteEndPoint?.ToString() ?? "null"}. Disconnecting the client.", ServerLog.MessageType.DoSProtection);
+                    Disconnect(malformedSenderConn, PeerDisconnectPacket.WithReason(DisconnectReason.MalformedData));
+                    return;
                 }
                 else
                 {
@@ -260,6 +284,7 @@ namespace Barotrauma.Networking
                     else if (lidgrenMsg.SenderConnection.Status != NetConnectionStatus.Disconnected &&
                              lidgrenMsg.SenderConnection.Status != NetConnectionStatus.Disconnecting)
                     {
+                        disconnectingConnections.Add(lidgrenMsg.SenderConnection);
                         lidgrenMsg.SenderConnection.Disconnect(PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationRequired).ToLidgrenStringRepresentation());
                     }
 
@@ -282,7 +307,7 @@ namespace Barotrauma.Networking
                     callbacks.OnMessageReceived.Invoke(conn, packet.GetReadMessage(packetHeader.IsCompressed(), conn));
                 }
 
-                catch (NetStructReadException)
+                catch (MalformedDataException)
                 {
                     //kick the client if we fail to parse their message
                     if (conn != OwnerConnection)
@@ -344,6 +369,8 @@ namespace Barotrauma.Networking
                         }
                     }
 
+                    //Lidgren has finished disconnecting, no more messages will be received from this connection
+                    disconnectingConnections.Remove(inc.SenderConnection);
                     break;
             }
         }
@@ -448,6 +475,11 @@ namespace Barotrauma.Networking
                 }
             }
 
+            //if the status is already Disconnected, the status change has already been handled and there's nothing left to ignore
+            if (lidgrenConn.NetConnection.Status != NetConnectionStatus.Disconnected)
+            {
+                disconnectingConnections.Add(lidgrenConn.NetConnection);
+            }
             lidgrenConn.NetConnection.Disconnect(peerDisconnectPacket.ToLidgrenStringRepresentation());
         }
 
@@ -491,7 +523,7 @@ namespace Barotrauma.Networking
             {
                 if (pendingClient.AccountInfo.AccountId != packet.AccountId)
                 {
-                    rejectClient();
+                    rejectClient(DisconnectReason.AuthenticationFailed);
                 }
                 return;
             }
@@ -506,9 +538,9 @@ namespace Barotrauma.Networking
                                                        : ConnectionInitialization.ContentPackageOrder;
             }
 
-            void rejectClient()
+            void rejectClient(DisconnectReason reason)
             {
-                RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationFailed));
+                RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(reason));
             }
 
             if (authenticators is null && 
@@ -534,7 +566,7 @@ namespace Barotrauma.Networking
                         "A client attempted to join without an authentication ticket, but the server is configured to require authentication. " +
                         $"If you're for example trying to host a server in a local network without being connected to Steam or Epic Online Services, please set {nameof(GameMain.Server.ServerSettings.RequireAuthentication)} to false in the server settings.",
                         Microsoft.Xna.Framework.Color.Yellow);
-                    rejectClient();
+                    rejectClient(DisconnectReason.AuthenticationFailed);
                 }
                 else
                 {
@@ -547,11 +579,13 @@ namespace Barotrauma.Networking
             pendingClient.AuthSessionStarted = true;
             TaskPool.Add($"{nameof(LidgrenServerPeer)}.ProcessAuth", authenticator.VerifyTicket(authTicket), t =>
             {
+                bool requireAuth = GameMain.Server.ServerSettings.RequireAuthentication;
+
                 if (!t.TryGetResult(out AccountInfo accountInfo) || accountInfo.IsNone)
                 {
-                    if (GameMain.Server.ServerSettings.RequireAuthentication)
+                    if (requireAuth)
                     {
-                        rejectClient();
+                        rejectClient(DisconnectReason.AuthenticationFailed);
                     }
                     else
                     {
@@ -559,8 +593,24 @@ namespace Barotrauma.Networking
                     }
                     return;
                 }
+                else if (requireAuth)
+                {
+                    if (!authenticator.CheckContentPackageAppLicenseOwnership(accountInfo))
+                    {
+                        rejectClient(DisconnectReason.DLCAuthenticationFailed);
+                        endAuthSession(accountInfo);
+                        return;
+                    }
+                }
 
                 acceptClient(accountInfo);
+                return;
+
+                void endAuthSession(AccountInfo info)
+                {
+                    if (!info.AccountId.TryUnwrap(out AccountId? id)) { return; }
+                    authenticator.EndAuthSession(id);
+                }
             });
         }
 

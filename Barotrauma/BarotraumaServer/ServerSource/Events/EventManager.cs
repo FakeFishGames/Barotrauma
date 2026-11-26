@@ -16,6 +16,24 @@ namespace Barotrauma
             GameMain.Server?.ServerPeer?.Send(outmsg, client.Connection, DeliveryMethod.Reliable);
         }
 
+        public static void ServerWriteEventState(Client client, NetEventLogState logState)
+        {
+            IWriteMessage outmsg = new WriteOnlyMessage();
+            outmsg.WriteByte((byte)ServerPacketHeader.EVENTACTION);
+            outmsg.WriteByte((byte)NetworkEventType.EVENTLOGSTATE);
+            outmsg.WriteNetSerializableStruct(logState);
+            GameMain.Server?.ServerPeer?.Send(outmsg, client.Connection, DeliveryMethod.Reliable);
+        }
+
+        public static void ServerWriteEventLogRemoval(Client client, NetEventLogRemoval removal)
+        {
+            IWriteMessage outmsg = new WriteOnlyMessage();
+            outmsg.WriteByte((byte)ServerPacketHeader.EVENTACTION);
+            outmsg.WriteByte((byte)NetworkEventType.EVENTLOGREMOVE);
+            outmsg.WriteNetSerializableStruct(removal);
+            GameMain.Server?.ServerPeer?.Send(outmsg, client.Connection, DeliveryMethod.Reliable);
+        }
+
         public static void ServerWriteObjective(Client client, NetEventObjective entry)
         {
             IWriteMessage outmsg = new WriteOnlyMessage();
@@ -53,7 +71,15 @@ namespace Barotrauma
                         continue;
                     }
 
-                    if (convAction.SelectedOption > -1)
+                    if (!convAction.DialogOpened)
+                    {
+                        //the dialog isn't open on the server (e.g. some other client already answered the prompt and made the event jump to some other point):
+                        //ignore the response and interrupt for the client. Otherwise the conversation will get stuck on that client: they'd keep waiting for a followup that never comes.
+                        //A similar case as the one below, but this can happen if there are GoTo actions involved which reset the selected option.
+                        DebugConsole.Log($"Client replied to {ev.Prefab.Identifier}, but the dialog is not open, ignoring the response and interrupting for the client.");
+                        convAction.ServerWrite(convAction.Speaker, sender, interrupt: true);
+                    }
+                    else if (convAction.SelectedOption > -1)
                     {
                         //someone else already chose an option for this conversation: interrupt for this client
                         DebugConsole.Log($"Client replied to {ev.Prefab.Identifier}, but option already selected for conversation, interrupt for the client");
@@ -73,19 +99,25 @@ namespace Barotrauma
                                 convAction.RetriggerAfter(IgnoreTime + 1.0f);
                             }
                         }
+                        else if (convAction.Options.Any() && selectedOption >= convAction.Options.Count)
+                        {
+                            DebugConsole.Log($"Client \"{sender.Name}\" selected an invalid option {selectedOption} for ConversationAction in event {ev.Prefab.Identifier} (option count: {convAction.Options.Count}). Ignoring the response.");
+                        }
                         else
                         {
                             DebugConsole.NewMessage($"Client selected option {selectedOption} for ConversationAction in event {ev.Prefab.Identifier}.");
                             convAction.SelectedOption = selectedOption;
-                            if (convAction.Options.Any() && !convAction.GetEndingOptions().Contains(selectedOption))
+                            if (convAction.Options.Any())
                             {
                                 var option = convAction.Options[selectedOption];
                                 if (option.ForceSay && sender.Character != null)
                                 {
                                     sender.Character.ForceSay(
                                         option.ForceSayText.IsNullOrEmpty() ? TextManager.Get(option.Text).Fallback(option.Text) : TextManager.Get(option.ForceSayText).Fallback(option.ForceSayText),
-                                        option.ForceSayInRadio,
-                                        option.ForceSayRemoveQuotes);
+                                        sayInRadio: option.ForceSayInRadio,
+                                        option.ForceSayOptions,
+                                        ignoreSpeechImpediments: option.ForceSayEvenIfCantSpeak,
+                                        ignoredClient: option.ForceSayOnlyShowToOthers ? sender : null);
                                 }
 
                                 foreach (Client c in convAction.TargetClients)

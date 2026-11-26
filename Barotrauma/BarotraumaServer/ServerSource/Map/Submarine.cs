@@ -1,19 +1,24 @@
 ﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 
 namespace Barotrauma
 {
-    partial class Submarine
+    public partial class Submarine
     {
         public readonly struct SetLayerEnabledEventData : NetEntityEvent.IData
         {
             public readonly Identifier Layer;
             public readonly bool Enabled;
+            public readonly float ShakeAmount;
+            public readonly Vector2 Acceleration;
 
-            public SetLayerEnabledEventData(Identifier layer, bool enabled)
+            public SetLayerEnabledEventData(Identifier layer, bool enabled, float shakeAmount, Vector2 acceleration)
             {
                 Layer = layer;
                 Enabled = enabled;
+                ShakeAmount = shakeAmount;
+                Acceleration = acceleration;
             }
         }
 
@@ -28,6 +33,9 @@ namespace Barotrauma
             {
                 msg.WriteIdentifier(setLayerEnabledEventData.Layer);
                 msg.WriteBoolean(setLayerEnabledEventData.Enabled);
+                msg.WriteSingle(setLayerEnabledEventData.ShakeAmount);
+                msg.WriteSingle(setLayerEnabledEventData.Acceleration.X);
+                msg.WriteSingle(setLayerEnabledEventData.Acceleration.Y);
             }
             else
             {

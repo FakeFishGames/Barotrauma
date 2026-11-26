@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace Barotrauma
 {
-    abstract class EventAction
+    public abstract class EventAction
     {
         public class SubactionGroup
         {
@@ -86,9 +86,9 @@ namespace Barotrauma
                 return false;
             }
 
-            public void Reset()
+            public void Reset(bool shouldEndConversations = true)
             {
-                Actions.ForEach(a => a.Reset());
+                Actions.ForEach(a => a.Reset(shouldEndConversations));
                 currentSubAction = 0;
             }
 
@@ -102,6 +102,8 @@ namespace Barotrauma
         }
 
         public readonly ScriptedEvent ParentEvent;
+
+        public virtual Mission ParentMission { get; set; }
 
         public EventAction(ScriptedEvent parentEvent, ContentXElement element)
         {
@@ -121,7 +123,7 @@ namespace Barotrauma
             return false;
         }
 
-        public abstract void Reset();
+        public abstract void Reset(bool shouldEndConversations = true);
 
         public virtual bool CanBeFinished()
         {
@@ -149,7 +151,13 @@ namespace Barotrauma
                 {
                     typeName = nameof(HighlightAction).ToIdentifier();
                 }
-                actionType = Type.GetType("Barotrauma." + typeName, throwOnError: true, ignoreCase: true);
+
+                actionType = ReflectionUtils
+                    .GetTypeWithBackwardsCompatibility(ToolBox.BarotraumaAssembly, "Barotrauma", typeName.Value, throwOnError: false, ignoreCase: true)
+                    ?? PluginData.LoadedPluginData
+                                 .SelectMany(static lpd => lpd.EventActions)
+                                 .FirstOrDefault(t => t.Name == typeName.Value);
+
                 if (actionType == null) { throw new NullReferenceException(); }
             }
             catch
@@ -159,14 +167,14 @@ namespace Barotrauma
                 return null;
             }
 
-            ConstructorInfo constructor = actionType.GetConstructor(new[] { typeof(ScriptedEvent), typeof(ContentXElement) });
+            ConstructorInfo constructor = actionType.GetConstructor([typeof(ScriptedEvent), typeof(ContentXElement)]);
             try
             {
                 if (constructor == null)
                 {
                     throw new Exception($"Error in scripted event \"{scriptedEvent.Prefab.Identifier}\" - could not find a constructor for the EventAction \"{actionType}\".");
                 }
-                return constructor.Invoke(new object[] { scriptedEvent, element }) as EventAction;
+                return constructor.Invoke([scriptedEvent, element]) as EventAction;
             }
             catch (Exception ex)
             {
@@ -202,9 +210,16 @@ namespace Barotrauma
 
         protected string GetEventDebugName()
         {
-            return ParentEvent?.Prefab?.Identifier is { IsEmpty: false } identifier ? $"the event \"{identifier}\"" : "an unknown event";
+            if (ParentEvent != null)
+            {
+                return $"the event \"{ParentEvent.Prefab.Identifier}\"";
+            }
+            else if (ParentMission != null)
+            {
+                return $"the mission \"{ParentMission.Prefab.Identifier.Value}\"";
+            }
+            return "an unknown event";
         }
-
 
         /// <summary>
         /// Rich test to display in debugdraw

@@ -15,9 +15,10 @@ namespace Barotrauma
         {
             get 
             { 
-                return 
-                    ForceMapUI || CoroutineManager.IsCoroutineRunning("LevelTransition") || 
-                    ShowCampaignUI && CampaignUI.SelectedTab == InteractionType.Map || 
+                return
+                    ForceMapUI || CoroutineManager.IsCoroutineRunning("LevelTransition") ||
+                    //don't pause if the map is opened during a conversation, the conversation needs the event to keep running (see ConversationAction.IsBlockedByMenu)
+                    ShowCampaignUI && CampaignUI.SelectedTab == InteractionType.Map && !ConversationAction.IsDialogOpen ||
                     (SlideshowPlayer != null && !SlideshowPlayer.LastTextShown); 
             }
         }
@@ -99,6 +100,11 @@ namespace Barotrauma
                 }
             }
             InitUI();
+
+            foreach (var hook in PluginData.GetHooks<PluginCampaignLoadDelegate>())
+            {
+                hook(this, Option.None, Settings);
+            }
         }
 
         /// <summary>
@@ -128,7 +134,7 @@ namespace Barotrauma
                         break;
                     case "crew":
                         GameMain.GameSession.CrewManager = new CrewManager(subElement, true);
-                        ActiveOrdersElement = subElement.GetChildElement("activeorders");
+                        CrewWideOrdersElement = subElement.GetChildElement("activeorders");
                         break;
                     case "map":
                         map = Map.Load(this, subElement);
@@ -148,6 +154,11 @@ namespace Barotrauma
             }
 
             savedOnStart = true;
+
+            foreach (var hook in PluginData.GetHooks<PluginCampaignLoadDelegate>())
+            {
+                hook(this, Option.Some(element), Settings);
+            }
         }
 
         /// <summary>
@@ -206,8 +217,8 @@ namespace Barotrauma
             CrewDead = false;
             endTimer = 5.0f;
             CrewManager.InitSinglePlayerRound();
-            LoadPets();
-            LoadActiveOrders();
+            LoadCreatures();
+            LoadCrewWideOrders();
 
             CargoManager.InitPurchasedIDCards();
 
@@ -224,7 +235,7 @@ namespace Barotrauma
 
         private IEnumerable<CoroutineStatus> DoLoadInitialLevel(LevelData level, bool mirror)
         {
-            GameMain.GameSession.StartRound(level, mirrorLevel: mirror, startOutpost: GetPredefinedStartOutpost());
+            GameMain.GameSession.StartRound(level, mirrorLevel: mirror);
             GameMain.GameScreen.Select();
 
             CoroutineManager.StartCoroutine(DoInitialCameraTransition(), "SinglePlayerCampaign.DoInitialCameraTransition");
@@ -340,6 +351,11 @@ namespace Barotrauma
                 // Event history must be registered before ending the round or it will be cleared
                 GameMain.GameSession.EventManager.StoreEventDataAtRoundEnd();
             }
+
+            //store the location and missions of the round for progressing the world (EndRound clears the missions and the transition may change the location)
+            Location roundLocation = Map.CurrentLocation;
+            List<Mission> roundMissions = GameMain.GameSession.Missions.ToList();
+
             GameMain.GameSession.EndRound("", transitionType);
             var continueButton = GameMain.GameSession.RoundSummary?.ContinueButton;
             RoundSummary roundSummary = null;
@@ -360,6 +376,7 @@ namespace Barotrauma
                 case TransitionType.None:
                     throw new InvalidOperationException("Level transition failed (no transitions available).");
                 case TransitionType.ReturnToPreviousLocation:
+                    Map.Visit(Map.CurrentLocation);
                     //deselect destination on map
                     map.SelectLocation(-1);
                     break;
@@ -375,9 +392,14 @@ namespace Barotrauma
                     EndCampaign();
                     IsFirstRound = true;
                     break;
+                case TransitionType.TeleportToLocation:
+                    Map.SelectLocation(Map.LocationToTeleportTo);
+                    Map.MoveToNextLocation(teleportDirectlyToSelectedLocation: true);
+                    Map.LocationToTeleportTo = null;
+                    break;
             }
 
-            Map.ProgressWorld(this, transitionType, GameMain.GameSession.RoundDuration);
+            Map.ProgressWorld(this, transitionType, GameMain.GameSession.RoundDuration, roundLocation, roundMissions);
 
             GUI.ClearMessages();
 
@@ -416,7 +438,6 @@ namespace Barotrauma
                 }
 
                 CrewManager?.ClearCurrentOrders();
-
                 SelectSummaryScreen(roundSummary, newLevel, mirror, () =>
                 {
                     GameMain.GameScreen.Select();
@@ -449,11 +470,11 @@ namespace Barotrauma
             };
         }
 
-        public override void Update(float deltaTime)
+        protected override void UpdateGameModeSpecific(float deltaTime)
         {
             if (CoroutineManager.IsCoroutineRunning("LevelTransition") || CoroutineManager.IsCoroutineRunning("SubmarineTransition") || gameOver) { return; }
 
-            base.Update(deltaTime);
+            base.UpdateGameModeSpecific(deltaTime);
 
             SlideshowPlayer?.UpdateManually(deltaTime);
 
@@ -482,56 +503,32 @@ namespace Barotrauma
                 if (CoroutineManager.IsCoroutineRunning("LevelTransition") || ForceMapUI) { return; }
             }
 
-            if (Level.Loaded.Type == LevelData.LevelType.Outpost)
+            var transitionType = GetAvailableTransition(out _, out Submarine leavingSub);
+            if (transitionType == TransitionType.TeleportToLocation)
             {
-                KeepCharactersCloseToOutpost(deltaTime);
-                if (wasDocked)
+                LoadNewLevel();
+            }
+            else if (Level.Loaded.Type == LevelData.LevelType.Outpost)
+            {
+                if (Level.Loaded.IsEndBiome)
                 {
-                    var connectedSubs = Submarine.MainSub.GetConnectedSubs();
-                    bool isDocked = Level.Loaded.StartOutpost != null && connectedSubs.Contains(Level.Loaded.StartOutpost);
-                    if (!isDocked)
-                    {
-                        //undocked from outpost, need to choose a destination
-                        ForceMapUI = true;
-                        CampaignUI.SelectTab(InteractionType.Map);
-                    }
-                }
-                else if (Level.Loaded.IsEndBiome)
-                {
-                    var transitionType = GetAvailableTransition(out _, out Submarine leavingSub);
                     if (transitionType == TransitionType.ProgressToNextLocation)
                     {
                         LoadNewLevel();
                     }
                 }
-                else
-                {
-                    //force the map to open if the sub is somehow not at the start of the outpost level
-                    //UNLESS the level has specific exit points, in that case the sub needs to get to those
-                    if (!Submarine.MainSub.AtStartExit &&
-                        /*there should normally always be a start outpost in outpost levels,
-                         * but that might not always be the case e.g. mods or outdated saves (see #13042)*/
-                        Level.Loaded.StartOutpost is not { ExitPoints.Count: > 0 })
-                    {
-                        ForceMapUI = true;
-                        CampaignUI.SelectTab(InteractionType.Map);
-                    }
-                }
             }
             else
             {
-                var transitionType = GetAvailableTransition(out _, out Submarine leavingSub);
                 if (Level.Loaded.IsEndBiome && transitionType == TransitionType.ProgressToNextLocation)
                 {
                     LoadNewLevel();
                 }
-                else if (transitionType == TransitionType.ProgressToNextLocation && 
-                    Level.Loaded.EndOutpost != null && Level.Loaded.EndOutpost.DockedTo.Contains(leavingSub))
+                else if (ShouldLoadNextLocation(transitionType, leavingSub))
                 {
                     LoadNewLevel();
                 }
-                else if (transitionType == TransitionType.ReturnToPreviousLocation &&
-                    Level.Loaded.StartOutpost != null && Level.Loaded.StartOutpost.DockedTo.Contains(leavingSub))
+                else if (ShouldLoadPreviousLocation(transitionType, leavingSub))
                 {
                     LoadNewLevel();
                 }
@@ -553,9 +550,9 @@ namespace Barotrauma
             {
                 endTimer -= deltaTime;
                 if (endTimer <= 0.0f) { GameOver(); }
-            }  
+            }
         }
-        
+
         private bool TryEndRound()
         {
             var transitionType = GetAvailableTransition(out LevelData nextLevel, out Submarine leavingSub);
@@ -643,7 +640,8 @@ namespace Barotrauma
 
             if (GameMain.GameSession?.EventManager != null)
             {
-                modeElement.Add(GameMain.GameSession?.EventManager.Save());
+                modeElement.Add(GameMain.GameSession.EventManager.Save());
+                modeElement.Add(GameMain.GameSession.EventManager.EventLog.Save());
             }
 
             foreach ((CharacterTeamType team, Identifier unlockedRecipe) in GameMain.GameSession.UnlockedRecipes)
@@ -665,15 +663,14 @@ namespace Barotrauma
                 if (c.Inventory != null)
                 {
                     c.Info.InventoryData = new XElement("inventory");
-                    c.SaveInventory();
+                    c.SaveInventory(removeStolenItemsOnOutpost: true);
                     c.Inventory?.DeleteAllItems();
                 }
                 c.Info.SaveOrderData();
             }
 
-            SavePets(modeElement);
-            var crewManagerElement = CrewManager.Save(modeElement);
-            SaveActiveOrders(crewManagerElement);
+            SaveCreatures(modeElement);
+            CrewManager.Save(modeElement);
 
             CampaignMetadata.Save(modeElement);
             Map.Save(modeElement);
@@ -681,6 +678,11 @@ namespace Barotrauma
             UpgradeManager?.Save(modeElement);
             modeElement.Add(Bank.Save());
             element.Add(modeElement);
+
+            foreach (var hook in PluginData.GetHooks<PluginCampaignSaveDelegate>())
+            {
+                hook(this, modeElement);
+            }
         }
     }
 }

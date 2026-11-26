@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 namespace Barotrauma;
 
-internal partial class LevelGenerationParams : PrefabWithUintIdentifier
+public partial class LevelGenerationParams : PrefabWithUintIdentifier
 {
     /// <remarks>Doesn't call SpriteBatch.Begin and SpriteBatch.End; They must be called manually.</remarks>
     public void DrawBackgrounds(SpriteBatch spriteBatch, Camera cam)

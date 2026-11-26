@@ -11,7 +11,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Barotrauma
 {
-    sealed class SerializableEntityEditor : GUIComponent
+    public sealed class SerializableEntityEditor : GUIComponent
     {
         private readonly int elementHeight;
         private readonly GUILayoutGroup layoutGroup;
@@ -463,7 +463,11 @@ namespace Barotrauma
             }
             if (toolTip.IsNullOrEmpty())
             {
-                toolTip = TextManager.Get($"{propertyTag}.description", $"{fallbackTag}.description", $"sp.{fallbackTag}.description");
+                toolTip = TextManager.Get(
+                    $"{propertyTag}.description", 
+                    $"{propertyTag}.tooltip", 
+                    $"{fallbackTag}.description", 
+                    $"sp.{fallbackTag}.description");
             }
             if (toolTip.IsNullOrEmpty())
             {

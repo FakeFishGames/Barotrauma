@@ -14,7 +14,7 @@ using Barotrauma.IO;
 
 namespace Barotrauma
 {
-    class SpriteEditorScreen : EditorScreen
+    public class SpriteEditorScreen : EditorScreen
     {
         private GUIListBox textureList, spriteList;
 
@@ -339,7 +339,7 @@ namespace Barotrauma
 #endif
             foreach (var contentPackage in contentPackages)
             {
-                foreach (var file in contentPackage.Files)
+                foreach (var file in contentPackage.AllFiles)
                 {
                     if (file.Path.EndsWith(".xml"))
                     {
@@ -354,31 +354,11 @@ namespace Barotrauma
 
             void LoadSprites(ContentXElement element)
             {
-                string[] spriteElementNames = {
-                    "Sprite",
-                    "DeformableSprite",
-                    "BackgroundSprite",
-                    "BrokenSprite",
-                    "ContainedSprite",
-                    "InventoryIcon",
-                    "Icon",
-                    "VineSprite",
-                    "LeafSprite",
-                    "FlowerSprite",
-                    "DecorativeSprite",
-                    "BarrelSprite",
-                    "RailSprite",
-                    "ChargeSprite",
-                    "SchematicSprite",
-                    "WeldedSprite"
-                };
-
-                foreach (string spriteElementName in spriteElementNames)
+                foreach (string spriteElementName in Sprite.SpriteElementNames)
                 {
-                    element.GetChildElements(spriteElementName).ForEach(s => CreateSprite(s));
+                    element.GetChildElements(spriteElementName).ForEach(CreateSprite);
                 }
-
-                element.Elements().ForEach(e => LoadSprites(e));
+                element.Elements().ForEach(LoadSprites);
             }
 
             void CreateSprite(ContentXElement element)

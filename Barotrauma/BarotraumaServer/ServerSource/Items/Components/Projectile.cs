@@ -3,7 +3,7 @@ using System;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Projectile : ItemComponent
+    public partial class Projectile : ItemComponent
     {
         private readonly struct EventData : IEventData
         {
@@ -22,9 +22,12 @@ namespace Barotrauma.Items.Components
         public override bool ValidateEventData(NetEntityEvent.IData data)
             => TryExtractEventData<EventData>(data, out _);
 
-        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
+        public virtual void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            var eventData = ExtractEventData<EventData>(extraData);
+            bool writeBase = TryExtractEventData(extraData, out EventData eventData);
+            msg.WriteBoolean(writeBase);
+            if (!writeBase) { return; }
+
             bool launch = eventData.Launch;
             
             msg.WriteBoolean(launch);
@@ -75,6 +78,11 @@ namespace Barotrauma.Items.Components
                 {
                     msg.WriteByte((byte)StickTargetType.LevelWall);
                     msg.WriteInt32(Level.Loaded.GetAllCells().IndexOf(cell));
+                }
+                else if (StickTarget.UserData is Character character)
+                {
+                    msg.WriteByte((byte)StickTargetType.Character);
+                    msg.WriteUInt16(character.ID);
                 }
                 else
                 {

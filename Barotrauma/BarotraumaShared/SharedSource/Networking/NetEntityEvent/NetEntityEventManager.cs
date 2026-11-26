@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma.Networking
 {
-    class EntityEventException : Exception
+    public class EntityEventException : Exception
     {
         public readonly Entity Entity;
 
@@ -13,10 +13,30 @@ namespace Barotrauma.Networking
         }
     }
 
-    abstract class NetEntityEventManager
+    public abstract class NetEntityEventManager
     {
         public const int MaxEventBufferLength = 1024;
-        
+
+        /// <summary>
+        /// Default hash to mark that the event is not associated with any plugin content package.
+        /// There might be a very low chance that a plugin content package hash is the same as this value.
+        /// However, it's so unlikely to happen that there are lengthy discussions on the internet about if it's
+        /// even possible since not even an empty file will result in this hash.
+        /// And the nature of hashes prevents finding concrete proof about it since they are designed to be irreversible
+        /// and have mitigations against brute force attacks.
+        /// <br/>
+        /// Even if we are truncating the 128-bit MD5 hash to 32 bits,
+        /// the chance of a collision is still astronomically low.
+        /// A quick look on the internet shows that the lowest MD5 hash that I could find
+        /// was found in 2016 by Jiyong Youn and has 14 leading zeros,
+        /// which is still very far from 32 leading zeros.
+        /// https://web.archive.org/web/20171201071711/http://www.crysys.hu/hashgame/allrecord.php
+        /// <br/>
+        /// Besides, hash collisions is something that high security researchers and cryptographers
+        /// should worry about. Not game developers. :D
+        /// </summary>
+        public const int VanillaEventHash = 0;
+
         /// <summary>
         /// Write the events to the outgoing message. The recipient parameter is only needed for ServerEntityEventManager
         /// </summary>
@@ -34,7 +54,14 @@ namespace Barotrauma.Networking
                 IWriteMessage tempEventBuffer = new WriteOnlyMessage();
                 try
                 {
-                    WriteEvent(tempEventBuffer, e, recipient);
+                    if (e.PluginContentPackageHash.TryUnwrap(out uint hash))
+                    {
+                        PluginData.WriteEvent(hash, tempEventBuffer, e, recipient);
+                    }
+                    else
+                    {
+                        WriteEvent(tempEventBuffer, e, recipient);
+                    }
                 }
                 catch (Exception exception)
                 {
@@ -46,7 +73,8 @@ namespace Barotrauma.Networking
                     //write an empty event to avoid messing up IDs
                     //(otherwise the clients might read the next event in the message and think its ID 
                     //is consecutive to the previous one, even though we skipped over this broken event)
-                    tempBuffer.WriteUInt16(Entity.NullEntityID);                   
+                    tempBuffer.WriteUInt16(Entity.NullEntityID);
+                    tempBuffer.WriteUInt32(VanillaEventHash);
                     tempBuffer.WriteVariableUInt32(0); //size of the event
                     eventCount++;
                     continue;
@@ -60,13 +88,14 @@ namespace Barotrauma.Networking
                 }
 
                 tempBuffer.WriteUInt16(e.EntityID);
+                tempBuffer.WriteUInt32(e.PluginContentPackageHash.Fallback(VanillaEventHash));
                 tempBuffer.WriteVariableUInt32((uint)tempEventBuffer.LengthBytes);
                 tempBuffer.WriteBytes(tempEventBuffer.Buffer, 0, tempEventBuffer.LengthBytes);
                 sentEvents.Add(e);
 
                 eventCount++;
             }
-            
+
             if (eventCount > 0)
             {
                 msg.WritePadBits();

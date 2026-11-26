@@ -5,7 +5,7 @@ using System;
 
 namespace Barotrauma
 {
-    partial class LevelWall : IDisposable
+    public partial class LevelWall : IDisposable
     {
         public LevelWallVertexBuffer VertexBuffer { get; private set; }
 

@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class MapGenerationParams : Prefab, ISerializableEntity
+    public class MapGenerationParams : Prefab, ISerializableEntity
     {
         public static readonly PrefabSelector<MapGenerationParams> Params = new PrefabSelector<MapGenerationParams>();
 
@@ -71,6 +71,13 @@ namespace Barotrauma
 
         public readonly ImmutableArray<int> GateCount;
 
+        [Serialize(25.0f, IsPropertySaveable.Yes, description: "Minimum difficulty of a level before hunting grounds can appear."), Editable(0.0f, 100.0f, DecimalCount = 2)]
+        public float HuntingGroundsDifficultyThreshold { get; set; }= 25;
+
+        [Serialize(0.3f, IsPropertySaveable.Yes, description: "Maximum probability of hunting grounds appearing in a level (the probability is 0 in levels below HuntingGroundsDifficultyThreshold, linearly going up to this value as the difficulty increases towards 100%)"), 
+            Editable(0.0f, 1.0f, DecimalCount = 2)]
+        public float MaxHuntingGroundsProbability { get; set; }
+
 #if CLIENT
 
         [Serialize(0.75f, IsPropertySaveable.Yes), Editable(DecimalCount = 2)]
@@ -81,6 +88,9 @@ namespace Barotrauma
 
         [Serialize(1.0f, IsPropertySaveable.Yes), Editable(DecimalCount = 2)]
         public float MapTileScale { get; set; }
+
+        [Serialize("255,255,255,255", IsPropertySaveable.Yes, description: "Color of the tiles drawn at the background of the map."), Editable]
+        public Color MapTileColor { get; set; }
 
         [Serialize(15.0f, IsPropertySaveable.Yes, description: "Size of the location icons in pixels when at 100% zoom."), Editable(1.0f, 1000.0f)]
         public float LocationIconSize { get; set; }
@@ -99,6 +109,9 @@ namespace Barotrauma
 
         [Serialize("150,150,150,255", IsPropertySaveable.Yes, description: "The color used to display the connections the player hasn't travelled through."), Editable()]
         public Color UnvisitedConnectionColor { get; set; }
+
+        [Serialize(500, IsPropertySaveable.Yes, description: "How many pixels of the map corresponds to a kilometer."), Editable()]
+        public int MapPixelsPerKilometer { get; set; }
 
         public Sprite ConnectionSprite { get; private set; }
         public Sprite PassedConnectionSprite { get; private set; }

@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class MultiPlayerCampaign : CampaignMode
+    public partial class MultiPlayerCampaign : CampaignMode
     {
         [Flags]
         public enum NetFlags : UInt16
@@ -27,6 +27,28 @@ namespace Barotrauma
         }
 
         private readonly Dictionary<NetFlags, UInt16> lastUpdateID;
+
+        /// <summary>
+        /// How close a player needs to be to an NPC offering a campaign interaction (<see cref="CampaignMode.InteractionType"/>)
+        /// for the server to accept the changes made through it (such as store purchases).
+        /// Larger than the default max interaction distance to give legit clients some leeway if their position is a bit off.
+        /// </summary>
+        public const float MaxCampaignInteractionDistance = 1.25f * Character.MaxCharacterInteractionDistance;
+
+        public static bool HasCampaignInteractionAvailable(Character character, InteractionType interactionType, float maxDistance = MaxCampaignInteractionDistance)
+        {
+            if (character == null || character.IsIncapacitated) { return false; }
+            if (GameMain.NetworkMember?.ServerSettings is { AllowRemoteCampaignInteractions: true }) { return true; }
+            foreach (var otherCharacter in Character.CharacterList)
+            {
+                if (otherCharacter.CampaignInteractionType != interactionType) { continue; }
+                if (character.CanInteractWith(otherCharacter, maxDist: maxDistance))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         public UInt16 GetLastUpdateIdForFlag(NetFlags flag)
         {
@@ -51,6 +73,15 @@ namespace Barotrauma
             {
                 if (!lastUpdateID.ContainsKey(flag)) { lastUpdateID[flag] = 0; }
                 lastUpdateID[flag]++;
+            }
+        }
+
+        public void DecrementAllLastUpdateIds()
+        {
+            foreach (NetFlags flag in Enum.GetValues(typeof(NetFlags)))
+            {
+                if (!lastUpdateID.ContainsKey(flag)) { lastUpdateID[flag] = 0; }
+                lastUpdateID[flag]--;
             }
         }
 
@@ -113,6 +144,11 @@ namespace Barotrauma
             CampaignID = currentCampaignID;
             UpgradeManager = new UpgradeManager(this);
             InitFactions();
+
+            foreach (var hook in PluginData.GetHooks<PluginCampaignLoadDelegate>())
+            {
+                hook(this, Option.None, settings);
+            }
         }
 
         public static MultiPlayerCampaign StartNew(string mapSeed, CampaignSettings settings)
@@ -201,8 +237,8 @@ namespace Barotrauma
                         break;
                     case "bots" when GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer:
                         CrewManager.HasBots = subElement.GetAttributeBool("hasbots", false);
-                        CrewManager.AddCharacterElements(subElement);
-                        ActiveOrdersElement = subElement.GetChildElement("activeorders");
+                        CrewManager.LoadCharacterElements(subElement);
+                        CrewWideOrdersElement = subElement.GetChildElement("activeorders");
                         break;
 #if SERVER
                     case "traitormanager":
@@ -237,8 +273,12 @@ namespace Barotrauma
                 }
             }
 #endif
+            foreach (var hook in PluginData.GetHooks<PluginCampaignLoadDelegate>())
+            {
+                hook(this, Option.Some(element), Settings);
+            }
         }
-        
+
         public static List<SubmarineInfo> GetCampaignSubs()
         {
             bool isSubmarineVisible(SubmarineInfo s)

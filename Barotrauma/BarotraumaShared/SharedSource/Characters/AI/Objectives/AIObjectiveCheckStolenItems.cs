@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using Barotrauma.Items.Components;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
@@ -7,11 +8,12 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveCheckStolenItems : AIObjective
+    public class AIObjectiveCheckStolenItems : AIObjective
     {
         public override Identifier Identifier { get; set; } = "check stolen items".ToIdentifier();
         protected override bool AllowOutsideSubmarine => false;
         protected override bool AllowInAnySub => false;
+        protected override bool RequireBothHandsAvailable => true;
 
         public float FindStolenItemsProbability = 1.0f;
 
@@ -75,6 +77,17 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
+            if (currentState is (State.GotoTarget or State.Inspect) && ConversationAction.IsConversationOpenFor(Target))
+            {
+                // Don't interrupt players who are in the middle of a conversation (abandoning also releases the grab, see OnDeselected).
+                Abandon = true;
+                return;
+            }
+            if (character.SelectedSecondaryItem?.GetComponent<Controller>() != null)
+            {
+                // Might be e.g. sitting on a chair.
+                character.SelectedSecondaryItem = null;
+            }
             switch (currentState)
             {
                 case State.Done:

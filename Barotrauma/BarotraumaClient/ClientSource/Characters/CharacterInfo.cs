@@ -1,18 +1,18 @@
 ﻿using Barotrauma.Extensions;
-using Barotrauma.Networking;
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using System.Xml.Linq;
 using Barotrauma.IO;
 using Barotrauma.Items.Components;
+using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class CharacterInfo
+    public partial class CharacterInfo
     {
         private static Sprite infoAreaPortraitBG;
 
@@ -135,7 +135,7 @@ namespace Barotrauma
                     Stretch = true
                 };
 
-                var skills = Job.GetSkills().ToList();
+                var skills = Job.GetSkills(exceptOutpostSkills: true).ToList();
                 skills.Sort((s1, s2) => -s1.Level.CompareTo(s2.Level));
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.AddPunctuation(':', TextManager.Get("skills"), string.Empty), font: font) { Padding = Vector4.Zero };
@@ -144,7 +144,11 @@ namespace Barotrauma
                 {
                     Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
 
-                    var skillName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), skill.DisplayName, textColor: textColor, font: font) { Padding = Vector4.Zero };
+                    var skillName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), skill.DisplayName, textColor: textColor, font: font)
+                    {
+                        Padding = Vector4.Zero,
+                        ToolTip = skill.Description
+                    };
 
                     float modifiedSkillLevel = skill.Level;
                     if (Character != null)
@@ -155,11 +159,11 @@ namespace Barotrauma
                     {
                         int skillChange = (int)MathF.Round(modifiedSkillLevel - skill.Level);
                         string changeText = $"{(skillChange > 0 ? "+" : "") + skillChange}";
-                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform), $"{(int)skill.Level} ({changeText})", textColor: textColor, font: font, textAlignment: Alignment.CenterRight);
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform), $"{(int)skill.Level} ({changeText})", textColor: textColor, font: font, textAlignment: Alignment.CenterRight) { CanBeFocused = false };
                     }
                     else
                     {
-                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform), ((int)skill.Level).ToString(), textColor: textColor, font: font, textAlignment: Alignment.CenterRight);
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform), ((int)skill.Level).ToString(), textColor: textColor, font: font, textAlignment: Alignment.CenterRight) { CanBeFocused = false };
                     }
                 }
             }
@@ -496,7 +500,7 @@ namespace Barotrauma
             float depth = attachment.Sprite.Depth;
             if (attachment.InheritLimbDepth)
             {
-                depth = head.Depth - depthStep;
+                depth = head.Depth + attachment.RelativeDepth - depthStep;
             }
             attachment.Sprite.Draw(spriteBatch, drawPos, color ?? Color.White, origin, rotate: 0, scale: scale, depth: depth, spriteEffect: spriteEffects);
         }
@@ -504,7 +508,8 @@ namespace Barotrauma
         {
             ushort infoID = inc.ReadUInt16();
             string newName = inc.ReadString();
-            string originalName = inc.ReadString();
+            bool hasDifferentOriginalName = inc.ReadBoolean();
+            string originalName = hasDifferentOriginalName ? inc.ReadString() : newName;
             bool renamingEnabled = inc.ReadBoolean();
             BotStatus botStatus = (BotStatus)inc.ReadByte();
             int salary = inc.ReadInt32();
@@ -522,6 +527,7 @@ namespace Barotrauma
             Color hairColor = inc.ReadColorR8G8B8();
             Color facialHairColor = inc.ReadColorR8G8B8();
 
+            Identifier npcSetId = inc.ReadIdentifier();
             Identifier npcId = inc.ReadIdentifier();
 
             Identifier factionId = inc.ReadIdentifier();
@@ -551,14 +557,14 @@ namespace Barotrauma
                 }
             }
 
-            CharacterInfo ch = new CharacterInfo(speciesName, newName, originalName, jobPrefab, variant, npcIdentifier: npcId)
+            CharacterInfo ch = new CharacterInfo(speciesName, newName, originalName, jobPrefab, variant, humanPrefabIds: (npcSetId, npcId))
             {
                 ID = infoID,
                 MinReputationToHire = (factionId, minReputationToHire),
-                RenamingEnabled = renamingEnabled
+                RenamingEnabled = renamingEnabled,
+                BotStatus = botStatus,
+                Salary = salary
             };
-            ch.BotStatus = botStatus;
-            ch.Salary = salary;
             ch.RecreateHead(tagSet.ToImmutableHashSet(), hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
             ch.Head.SkinColor = skinColor;
             ch.Head.HairColor = hairColor;
@@ -569,8 +575,8 @@ namespace Barotrauma
             ch.ExperiencePoints = inc.ReadInt32();
             ch.AdditionalTalentPoints = inc.ReadRangedInteger(0, MaxAdditionalTalentPoints);
             ch.PermanentlyDead = inc.ReadBoolean();
-            ch.TalentRefundPoints = inc.ReadInt32();
-            ch.TalentResetCount = inc.ReadInt32();
+            ch.TalentRefundPoints = inc.ReadRangedInteger(0, MaxTalentRefundPoints);
+            ch.TalentResetCount = inc.ReadRangedInteger(0, MaxTalentResetCount);
             return ch;
         }
 
@@ -594,6 +600,9 @@ namespace Barotrauma
             private readonly GUIComponent parentComponent;
             private readonly List<Sprite> characterSprites = new List<Sprite>();
             public GUIButton RandomizeButton;
+
+            // Set while the head currently being hovered in the head selection list is shown instead of the actual one
+            private HeadInfo headBeforePreview, previewHead;
 
             public AppearanceCustomizationMenu(CharacterInfo info, GUIComponent parent, bool hasIcon = true)
             {
@@ -943,22 +952,86 @@ namespace Barotrauma
 
             private bool SwitchHead(GUIButton button, object obj)
             {
+                // The clicked head is probably also being previewed, so end that first, or the preview's restore would later revert this switch
+                EndHeadPreview();
+
                 var info = CharacterInfo;
                 var headPreset = obj as HeadPreset;
                 if (info.Head.Preset != headPreset)
                 {
-                    info.Head = new HeadInfo(info, headPreset, info.Head.HairIndex, info.Head.BeardIndex, info.Head.MoustacheIndex, info.Head.FaceAttachmentIndex)
-                    {
-                        SkinColor = info.Head.SkinColor,
-                        HairColor = info.Head.HairColor,
-                        FacialHairColor = info.Head.FacialHairColor
-                    };
+                    info.Head = CreateHeadKeepingCustomization(headPreset);
                     info.ReloadHeadAttachments();
                 }
 
                 RecreateFrameContents();
                 OnHeadSwitch?.Invoke(this);
                 return true;
+            }
+
+            private HeadInfo CreateHeadKeepingCustomization(HeadPreset headPreset)
+            {
+                var currentHead = CharacterInfo.Head;
+                return new HeadInfo(CharacterInfo, headPreset, currentHead.HairIndex, currentHead.BeardIndex, currentHead.MoustacheIndex, currentHead.FaceAttachmentIndex)
+                {
+                    SkinColor = currentHead.SkinColor,
+                    HairColor = currentHead.HairColor,
+                    FacialHairColor = currentHead.FacialHairColor
+                };
+            }
+
+            /// <summary>
+            /// Temporarily shows the hovered head in the head selection list so it can be previewed.
+            /// Note: The preview swaps CharacterInfo.Head itself, so anything that saves or sends the head must call <see cref="EndHeadPreview"/> first.
+            /// </summary>
+            private void UpdateHeadPreview()
+            {
+                GUIComponent mouseOn = GUI.MouseOn;
+                if (HeadSelectionList is not { Visible: true } || mouseOn == null || !HeadSelectionList.Content.IsParentOf(mouseOn))
+                {
+                    EndHeadPreview();
+                    return;
+                }
+
+                // The hovered component may be a child of the head button (the head image)
+                HeadPreset hoveredPreset = null;
+                for (GUIComponent component = mouseOn; component != null && component != HeadSelectionList.Content; component = component.Parent)
+                {
+                    if (component.UserData is HeadPreset preset)
+                    {
+                        hoveredPreset = preset;
+                        break;
+                    }
+                }
+                HeadInfo committedHead = headBeforePreview ?? CharacterInfo.Head;
+                if (hoveredPreset == null || hoveredPreset == committedHead.Preset)
+                {
+                    EndHeadPreview();
+                }
+                else if (previewHead?.Preset != hoveredPreset)
+                {
+                    // End preview first, so we rebuild the preview from the actually committed head, not from any previous preview
+                    EndHeadPreview();
+                    headBeforePreview = CharacterInfo.Head;
+                    previewHead = CreateHeadKeepingCustomization(hoveredPreset);
+                    CharacterInfo.Head = previewHead;
+                    CharacterInfo.ReloadHeadAttachments();
+                }
+            }
+
+            /// <summary>
+            /// Ends head preview, restoring the actual head if a hovered one was being previewed.
+            /// </summary>
+            public void EndHeadPreview()
+            {
+                if (headBeforePreview == null) { return; }
+                // If something else (eg. the randomize button) replaced the head meanwhile, that one wins
+                if (CharacterInfo.Head == previewHead)
+                {
+                    CharacterInfo.Head = headBeforePreview;
+                    CharacterInfo.ReloadHeadAttachments();
+                }
+                headBeforePreview = null;
+                previewHead = null;
             }
 
             private bool SwitchAttachment(GUIScrollBar scrollBar, WearableType type)
@@ -996,6 +1069,7 @@ namespace Barotrauma
                 {
                     HeadSelectionList.Visible = false;
                 }
+                UpdateHeadPreview();
             }
 
             public void AddToGUIUpdateList()
@@ -1011,6 +1085,7 @@ namespace Barotrauma
 
             public void Dispose()
             {
+                EndHeadPreview();
                 ClearSprites();
                 if (HeadSelectionList != null)
                 {

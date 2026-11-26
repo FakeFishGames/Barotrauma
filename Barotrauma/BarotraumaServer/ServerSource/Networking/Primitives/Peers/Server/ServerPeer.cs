@@ -19,8 +19,8 @@ namespace Barotrauma.Networking
             List<ContentPackage> contentPackageList = new List<ContentPackage>();
             foreach (var cp in ContentPackageManager.EnabledPackages.All)
             {
-                if (!cp.Files.Any()) { continue; }
-                if (!cp.HasMultiplayerSyncedContent && !cp.Files.All(f => f is SubmarineFile)) { continue; }
+                if (!cp.AllFiles.Any()) { continue; }
+                if (!cp.HasMultiplayerSyncedContent && !cp.AllFiles.All(f => f is SubmarineFile)) { continue; }
                 if (cp.UgcId.TryUnwrap(out var id1) &&
                     contentPackageList.FirstOrDefault(cp => cp.UgcId.TryUnwrap(out var id2) && id1.Equals(id2)) is ContentPackage existingPackage)
                 {
@@ -350,7 +350,7 @@ namespace Barotrauma.Networking
             }
         }
     }
-    
+
     internal abstract class ServerPeer
     {
         public readonly record struct Callbacks(

@@ -117,13 +117,7 @@ namespace Barotrauma
                     {
                         if (!texts.ContainsKey(elemName)) { texts.Add(elemName, new List<Text>()); }
 
-                        string str = element.ElementInnerText()
-                            .Replace(@"\n", "\n")
-                            .Replace("&amp;", "&")
-                            .Replace("&lt;", "<")
-                            .Replace("&gt;", ">")
-                            .Replace("&quot;", "\"")
-                            .Replace("&apos;", "'");
+                        string str = PerformXmlSymbolReplacements(element.ElementInnerText());
 
                         texts[elemName].Add(new Text(str, isOverride, this));
                     }
@@ -136,6 +130,17 @@ namespace Barotrauma
         public void Unload()
         {
             texts = null;
+        }
+
+        public static string PerformXmlSymbolReplacements(string input)
+        {
+            return input
+                .Replace(@"\n", "\n")
+                .Replace("&amp;", "&")
+                .Replace("&lt;", "<")
+                .Replace("&gt;", ">")
+                .Replace("&quot;", "\"")
+                .Replace("&apos;", "'");
         }
 
 #if DEBUG
@@ -219,6 +224,10 @@ namespace Barotrauma
 
             foreach (var element in doc.Root.Elements())
             {
+                if (element.PreviousNode is XComment comment)
+                {
+                    texts.Add((comment.Value, string.Empty));
+                }
                 string text = element.ElementInnerText()
                     .Replace("&amp;", "&")
                     .Replace("&lt;", "<")

@@ -296,6 +296,7 @@ namespace Barotrauma.Networking
             var passwordHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), passwordMsgBox.Content.RectTransform), childAnchor: Anchor.TopCenter);
             var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1f), passwordHolder.RectTransform))
             {
+                OverflowClip = true,
                 Censor = true
             };
 
@@ -644,7 +645,7 @@ namespace Barotrauma.Networking
             };
 
             var filterText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), cargoContent.RectTransform), TextManager.Get("serverlog.filter"), font: GUIStyle.SubHeadingFont);
-            var entityFilterBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), filterText.RectTransform, Anchor.CenterRight), font: GUIStyle.Font, createClearButton: true);
+            var entityFilterBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), filterText.RectTransform, Anchor.CenterRight), font: GUIStyle.Font, createClearButton: true) { OverflowClip = true };
             filterText.RectTransform.MinSize = new Point(0, entityFilterBox.RectTransform.MinSize.Y);
             var cargoList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.8f), cargoContent.RectTransform));
             entityFilterBox.OnTextChanged += (textBox, text) =>

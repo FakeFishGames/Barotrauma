@@ -6,7 +6,7 @@ using System.Collections.Immutable;
 
 namespace Barotrauma
 {
-    partial class StructurePrefab : MapEntityPrefab
+    public partial class StructurePrefab : MapEntityPrefab
     {
         public readonly Color BackgroundSpriteColor;
 

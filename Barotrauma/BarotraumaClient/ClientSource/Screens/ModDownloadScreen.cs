@@ -1,20 +1,20 @@
 ﻿#nullable enable
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.IO;
 using Barotrauma.Networking;
 using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Color = Microsoft.Xna.Framework.Color;
 using ServerContentPackage = Barotrauma.Networking.ServerContentPackage;
 
 namespace Barotrauma
 {
-    class ModDownloadScreen : Screen
+    public class ModDownloadScreen : Screen
     {
         private readonly Queue<ServerContentPackage> pendingDownloads =
             new Queue<ServerContentPackage>();
@@ -24,6 +24,7 @@ namespace Barotrauma
         public IEnumerable<ContentPackage> DownloadedPackages => downloadedPackages;
 
         private bool confirmDownload;
+        private bool waitingToEnablePackages = true;
 
         public void Reset()
         {
@@ -31,6 +32,7 @@ namespace Barotrauma
             downloadedPackages.Clear();
             currentDownload = null;
             confirmDownload = false;
+            waitingToEnablePackages = true;
         }
 
         private void DeletePrevDownloads()
@@ -68,7 +70,7 @@ namespace Barotrauma
                 "", font: GUIStyle.LargeFont,
                 textAlignment: Alignment.CenterLeft)
             {
-                TextGetter = () => GameMain.Client.ServerName
+                TextGetter = () => GameMain.Client?.ServerName ?? "Not connected"
             };
             mainLayoutSpacing();
             var downloadList = new GUIListBox(new RectTransform((1.0f, 0.76f), mainLayout.RectTransform));
@@ -78,8 +80,7 @@ namespace Barotrauma
             {
                 OnClicked = (guiButton, o) =>
                 {
-                    GameMain.Client?.Quit();
-                    GameMain.MainMenuScreen.Select();
+                    DisconnectFromServer();
                     return false;
                 }
             };
@@ -95,7 +96,11 @@ namespace Barotrauma
                 .Where(sp => sp.ContentPackage is null).ToArray();
             if (!missingPackages.Any(p => p.IsMandatory))
             {
-                if (!GameMain.Client.IsServerOwner)
+                if (GameMain.Client.IsServerOwner)
+                {
+                    GameMain.NetLobbyScreen.Select();
+                }
+                else
                 {
                     var corePackage = GameMain.Client.ClientPeer.ServerContentPackages
                         .Select(p => p.CorePackage)
@@ -106,18 +111,40 @@ namespace Barotrauma
                                        $"Content package list received: {GameMain.Client.ClientPeer.ContentPackageOrderReceived}",
                             analyticsId: "ModDownloadScreen.Select:NoCorePackage");
                     }
-                    
-                    ContentPackageManager.EnabledPackages.BackUp();
-                    ContentPackageManager.EnabledPackages.SetCore(corePackage);
+
                     List<RegularPackage> regularPackages =
                         GameMain.Client.ClientPeer.ServerContentPackages
-                            .Select(p => p.RegularPackage)
-                            .OfType<RegularPackage>().ToList();
-                    //keep enabled client-side-only mods enabled
-                    regularPackages.AddRange(ContentPackageManager.EnabledPackages.Regular.Where(p => !p.HasMultiplayerSyncedContent && !regularPackages.Contains(p)));
-                    ContentPackageManager.EnabledPackages.SetRegular(regularPackages);
+                        .Select(p => p.RegularPackage)
+                        .OfType<RegularPackage>().ToList();
+
+                    List<ContentPackage> newContentPackagesWithWarnings = regularPackages
+                        .OfType<ContentPackage>()
+                        .Concat([corePackage])
+                        .Except(ContentPackageManager.EnabledPackages.All)
+                        .Where(static p => p.FilesThatShouldPromptWarning.Any())
+                        .ToList();
+
+                    if (newContentPackagesWithWarnings.Count == 0)
+                    {
+                        enableAndSelect();
+                    }
+                    else
+                    {
+                        MutableWorkshopMenu.PromptWarnings(newContentPackagesWithWarnings, enableAndSelect, DisconnectFromServer);
+                    }
+
+                    void enableAndSelect()
+                    {
+                        waitingToEnablePackages = false;
+                        ContentPackageManager.EnabledPackages.BackUp();
+                        ContentPackageManager.EnabledPackages.SetCore(corePackage);
+                        //keep enabled client-side-only mods enabled
+                        regularPackages.AddRange(ContentPackageManager.EnabledPackages.Regular.Where(p => !p.HasMultiplayerSyncedContent && !regularPackages.Contains(p)));
+                        ContentPackageManager.EnabledPackages.SetRegular(regularPackages);
+
+                        RefreshAndSelectLobby();
+                    }
                 }
-                GameMain.NetLobbyScreen.Select();
                 return;
             }
 
@@ -134,7 +161,7 @@ namespace Barotrauma
                 TextManager.Get("ModDownloadTitle"),
                 "",
                 Array.Empty<LocalizedString>(),
-                relativeSize: (0.5f, 0.75f));
+                relativeSize: (0.57f, 0.75f));
 
             GUILayoutGroup innerLayout = msgBox.Content;
             innerLayout.Stretch = true;
@@ -159,13 +186,20 @@ namespace Barotrauma
                 return tb;
             }
 
-            var header = textBlock(TextManager.Get("ModDownloadHeader"), GUIStyle.Font);
+            var header = textBlock(TextManager.Get("ModDownload.Header"), GUIStyle.Font, Alignment.Center);
             innerLayoutSpacing(0.05f);
+
+            var topColumnButtons = new GUILayoutGroup(new RectTransform((1f, 0.05f), innerLayout.RectTransform), isHorizontal: true);
+            new GUIButton(new RectTransform((0.35f, 1f), topColumnButtons.RectTransform), TextManager.Get("name"), style: "GUIButtonSmall") { CanBeFocused = false, CanBeSelected = false };
+            new GUIButton(new RectTransform((0.3f, 1f), topColumnButtons.RectTransform), TextManager.Get("infobutton"), style: "GUIButtonSmall") { CanBeFocused = false, CanBeSelected = false };
+            new GUIButton(new RectTransform((0.1f, 1f), topColumnButtons.RectTransform), TextManager.Get("ModDownload.Server"), style: "GUIButtonSmall") { CanBeFocused = false, CanBeSelected = false };
+            new GUIButton(new RectTransform((0.1f, 1f), topColumnButtons.RectTransform), TextManager.Get("ModDownload.Client"), style: "GUIButtonSmall") { CanBeFocused = false, CanBeSelected = false };
+            new GUIButton(new RectTransform((0.15f, 1f), topColumnButtons.RectTransform), "", style: "GUIButtonSmall") { CanBeFocused = false, CanBeSelected = false };
 
             var msgBoxModList = new GUIListBox(new RectTransform(Vector2.One, innerLayout.RectTransform));
             
             innerLayoutSpacing(0.05f);
-            var footer = textBlock(TextManager.Get(allowDownloads ? "ModDownloadFooter" : "ModDownloadFooterFail"), GUIStyle.Font, Alignment.Center);
+            var footer = textBlock(TextManager.Get(allowDownloads ? "ModDownload.Footer" : "ModDownloadFooterFail"), GUIStyle.Font, Alignment.Center);
             
             innerLayoutSpacing(0.05f);
             GUILayoutGroup buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), innerLayout.RectTransform), isHorizontal: true);
@@ -173,7 +207,7 @@ namespace Barotrauma
             void buttonContainerSpacing(float width)
                 => new GUIFrame(new RectTransform((width, 1.0f), buttonContainer.RectTransform), style: null);
 
-            void button(LocalizedString text, Action action, float width = 0.3f)
+            GUIButton button(LocalizedString text, Action action, float width = 0.3f)
                 => new GUIButton(new RectTransform((width, 1.0f), buttonContainer.RectTransform), text)
                 {
                     OnClicked = (_, __) =>
@@ -187,12 +221,16 @@ namespace Barotrauma
             if (allowDownloads)
             {
                 buttonContainerSpacing(0.1f);
-                button(TextManager.Get("Yes"), () => confirmDownload = true);
-                buttonContainerSpacing(0.2f);
-                button(TextManager.Get("No"), () =>
+                var yesButton = button(TextManager.Get("ModDownload.DownloadFromServer"), () => confirmDownload = true);
+                yesButton.Enabled = !missingPackages.Any(static p => !p.CanBeDownloaded);
+                if (!yesButton.Enabled)
                 {
-                    GameMain.Client?.Quit();
-                    GameMain.MainMenuScreen.Select();
+                    yesButton.ToolTip = TextManager.Get("ModDownload.DownloadFromServer.Disabled.ToolTip");
+                }
+                buttonContainerSpacing(0.2f);
+                button(TextManager.Get("Cancel"), () =>
+                {
+                    DisconnectFromServer();
                 });
                 buttonContainerSpacing(0.1f);
             }
@@ -207,42 +245,141 @@ namespace Barotrauma
                 buttonContainerSpacing(0.15f);
             }
 
-            var missingIds = missingPackages
-                .Where(p => p.IsMandatory)
-                .Select(mp => ContentPackageId.Parse(mp.UgcId))
-                .NotNone()
-                .Where(id => ContentPackageManager.WorkshopPackages.All(wp => !wp.UgcId.Equals(id)))
-                .ToArray();
-            if (missingIds.Any() && SteamManager.IsInitialized)
-            {
-                buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), innerLayout.RectTransform), isHorizontal: true);
-                buttonContainerSpacing(0.15f);
-                button(TextManager.Get("SubscribeToAllOnWorkshop"), () =>
-                {
-                    if (GameMain.Client != null)
-                    {
-                        BulkDownloader.SubscribeToServerMods(missingIds.OfType<SteamWorkshopId>().Select(id => id.Value),
-                            new ConnectCommand(
-                                serverName: GameMain.Client.ServerName,
-                                endpoint: GameMain.Client.ClientPeer.ServerEndpoint));
-                        GameMain.Client.Quit();
-                    }
-                    GameMain.MainMenuScreen.Select();
-                }, width: 0.7f);
-                buttonContainerSpacing(0.15f);
-            }
+            List<ContentPackageId> missingIds = new List<ContentPackageId>();
 
-            foreach (var p in missingPackages.Where(p => p.IsMandatory))
+            foreach (var p in missingPackages.Where(static p => p.IsMandatory).OrderBy(static p => p.CanBeDownloaded))
             {
                 pendingDownloads.Enqueue(p);
-                
-                //Message box frame
-                new GUITextBlock(new RectTransform((1.0f, 0.1f), msgBoxModList.Content.RectTransform), p.Name)
+
+                Option<ContentPackageId> parsedId = p.UgcId != null ? ContentPackageId.Parse(p.UgcId) : Option<ContentPackageId>.None();
+                parsedId.TryUnwrap(out ContentPackageId? contentPackageId);
+
+                ContentPackage? matchingWorkshopPackage = parsedId.TryUnwrap(out ContentPackageId? id) 
+                    ? ContentPackageManager.WorkshopPackages.FirstOrDefault(wp => wp.UgcId.Equals(id)) : null;
+
+                DlcInfo? dlcInfo = DlcInfo.RetrieveDLCsFromCatalog().FirstOrNull(dlcInfo => dlcInfo.AppId.ToString() == p.SteamAppId);
+
+                #region MessageBox
+                var messageBoxLayout = new GUILayoutGroup(new RectTransform((1.0f, 0.1f), msgBoxModList.Content.RectTransform), isHorizontal: true)
                 {
                     CanBeFocused = false
                 };
-                
-                //Download progress frame
+
+                var modNameTextBlock = new GUITextBlock(new RectTransform((0.35f, 1f), messageBoxLayout.RectTransform), p.Name);
+
+                if (!p.CanBeDownloaded && p.SteamAppId.IsNullOrEmpty())
+                {
+                    modNameTextBlock.TextColor = GUIStyle.Red;
+                    modNameTextBlock.ToolTip = TextManager.Get("ModDownload.NotAllowedToBeDownloaded");
+
+                    var modNameIcon = new GUIImage(new RectTransform(new Point((int)(modNameTextBlock.Rect.Height * 0.5f)), modNameTextBlock.RectTransform, Anchor.CenterLeft), style: "GUIButtonWarningRed")
+                    {
+                        CanBeFocused = false
+                    };
+
+                    modNameTextBlock.TextOffset = new Vector2(modNameIcon.Rect.Width, 0);
+                }
+                else if (dlcInfo != null)
+                {
+                    modNameTextBlock.TextColor = new Color(239, 115, 15);
+                }
+
+                var infoTextBlock = new GUITextBlock(new RectTransform((0.3f, 1f), messageBoxLayout.RectTransform), "")
+                {
+                    ToolTip = ""
+                };
+                var infoTextIcon = new GUIImage(new RectTransform(new Point((int)(infoTextBlock.Rect.Height * 0.6f)), infoTextBlock.RectTransform, Anchor.CenterLeft), style: "GUIButtonInfo")
+                {
+                    CanBeFocused = false
+                };
+                infoTextBlock.TextOffset = new Vector2(infoTextIcon.Rect.Width, 0);
+
+                if (dlcInfo != null)
+                {
+                    infoTextBlock.Text = TextManager.Get("ModDownload.Dlc");
+                    infoTextBlock.ToolTip = TextManager.Get("ModDownload.Dlc.Tooltip");
+                    infoTextBlock.TextColor = GUIStyle.Blue;
+                }
+                else if (contentPackageId != null)
+                {
+                    if (matchingWorkshopPackage == null)
+                    {
+                        missingIds.Add(contentPackageId);
+                        infoTextBlock.Text = TextManager.Get("ModDownload.AvailableOnWorkshop");
+                        infoTextBlock.ToolTip = TextManager.Get("ModDownload.AvailableOnWorkshop.Tooltip");
+                        infoTextBlock.TextColor = GUIStyle.Blue;
+                    }
+                    else if (Version.TryParse(matchingWorkshopPackage.ModVersion, out Version? localVersion) &&
+                        Version.TryParse(p.Version, out Version? serverVersion))
+                    {
+                        if (serverVersion > localVersion)
+                        {
+                            missingIds.Add(contentPackageId);
+                            infoTextBlock.Text = TextManager.Get("ModDownload.WorkshopUpdateAvailable");
+                            infoTextBlock.ToolTip = TextManager.Get("ModDownload.WorkshopUpdateAvailable.Tooltip");
+                            infoTextBlock.TextColor = GUIStyle.Blue;
+                        }
+                        else if (serverVersion == localVersion)
+                        {
+                            infoTextBlock.Text = TextManager.Get("ModDownload.HashMismatch");
+                            infoTextBlock.ToolTip = RichString.Rich(TextManager.Get("ModDownload.HashMismatch.Tooltip"));
+                            infoTextBlock.TextColor = GUIStyle.Yellow;
+                        }
+                        else
+                        {
+                            infoTextBlock.Text = TextManager.Get("ModDownload.ServerOutdated");
+                            infoTextBlock.ToolTip = TextManager.Get("ModDownload.ServerOutdated.Tooltip");
+                            infoTextBlock.TextColor = GUIStyle.Yellow;
+                        }
+                    }
+                }
+                else
+                {
+                    infoTextBlock.Text = TextManager.Get("ModDownload.NotOnWorkshop");
+                    infoTextBlock.ToolTip = TextManager.Get("ModDownload.NotOnWorkshop.Tooltip");
+                    infoTextBlock.TextColor = GUIStyle.Yellow;
+                }
+
+                new GUITextBlock(new RectTransform((0.1f, 1f), messageBoxLayout.RectTransform), p.Version, textAlignment: Alignment.Center)
+                {
+                    ToolTip = TextManager.Get("ModDownload.ServerVersion")
+                };
+
+                new GUITextBlock(new RectTransform((0.1f, 1f), messageBoxLayout.RectTransform), matchingWorkshopPackage?.ModVersion ?? "0.0.0", textAlignment: Alignment.Center)
+                {
+                    ToolTip = TextManager.Get("ModDownload.ClientVersion"),
+                    Enabled = matchingWorkshopPackage != null
+                };
+
+                var workshopButton = new GUIButton(new RectTransform((0.15f, 1f), messageBoxLayout.RectTransform), TextManager.Get("ModDownload.OpenOnWorkshopButton"))
+                {
+                    Enabled = false
+                };
+
+                if (dlcInfo != null)
+                {
+                    workshopButton.Text = TextManager.Get("ModDownload.OpenSteamPage");
+                    workshopButton.Enabled = true;
+
+                    workshopButton.OnClicked = (GUIButton button, object obj) =>
+                    {
+                        dlcInfo.Value.OpenStorePage();
+                        return true;
+                    };
+                }
+                else if (contentPackageId != null)
+                {
+                    workshopButton.Enabled = true;
+                    workshopButton.OnClicked = (GUIButton button, object obj) =>
+                    {
+                        SteamManager.OverlayCustomUrl(SteamWorkshopId.ToWorkshopURL(contentPackageId.ToString()));
+                        return true;
+                    };
+                }
+
+                #endregion
+
+                #region DownloadProgress
                 var downloadFrame = new GUIFrame(new RectTransform((1.0f, 0.06f), downloadList.Content.RectTransform),
                     style: "ListBoxElement")
                 {
@@ -302,6 +439,25 @@ namespace Barotrauma
 
                     return 0.0f;
                 };
+                #endregion
+            }
+
+            if (missingIds.Any() && SteamManager.IsInitialized)
+            {
+                buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), innerLayout.RectTransform), isHorizontal: true);
+                buttonContainerSpacing(0.15f);
+                button(TextManager.Get("ModDownload.DownloadFromWorkshop"), () =>
+                {
+                    if (GameMain.Client != null)
+                    {
+                        BulkDownloader.SubscribeToServerMods(missingIds.OfType<SteamWorkshopId>().Select(id => id.Value),
+                            new ConnectCommand(
+                                serverName: GameMain.Client.ServerName,
+                                endpoint: GameMain.Client.ClientPeer.ServerEndpoint));
+                    }
+                    DisconnectFromServer();
+                }, width: 0.7f);
+                buttonContainerSpacing(0.15f);
             }
         }
 
@@ -316,8 +472,10 @@ namespace Barotrauma
                 {
                     GameMain.Client.RequestFile(FileTransferType.Mod, currentDownload.Name, currentDownload.Hash.StringRepresentation);
                 }
-                else
+                else if (waitingToEnablePackages)
                 {
+                    waitingToEnablePackages = false;
+
                     var serverPackages = GameMain.Client.ClientPeer.ServerContentPackages;
                     CorePackage corePackage
                         = downloadedPackages.FirstOrDefault(p => p is CorePackage) as CorePackage
@@ -354,6 +512,22 @@ namespace Barotrauma
                         }
                         regularPackages.Add(matchingPackage);
                     }
+
+                    // Check if the server didn't sneak in content packages that are not allowed to be downloaded directly
+                    foreach (var downloadedPackage in downloadedPackages)
+                    {
+                        if (downloadedPackage.AllFiles.Any(static f => !f.CanBeDownloadedFromServer))
+                        {
+                            DebugConsole.ThrowError(
+                                $"The downloaded content package \"{downloadedPackage.Name}\" contains files that are not permitted to be downloaded directly from the " +
+                                $"server (e.g. plugin files). Under normal circumstances, the server should never send such packages. This may indicate that the server " +
+                                $"you attempted to connect to is malicious.");
+
+                            DisconnectFromServer();
+                            return;
+                        }
+                    }
+
                     foreach (var regularPackage in regularPackages)
                     {
                         DebugConsole.NewMessage($"Enabling \"{regularPackage.Name}\" ({regularPackage.Dir})", Color.Lime);
@@ -362,22 +536,30 @@ namespace Barotrauma
                     //keep enabled client-side-only mods enabled
                     regularPackages.AddRange(ContentPackageManager.EnabledPackages.Regular.Where(p => !p.HasMultiplayerSyncedContent && !regularPackages.Contains(p)));
 
-                    ContentPackageManager.EnabledPackages.BackUp();
-                    ContentPackageManager.EnabledPackages.SetCore(corePackage);
-                    ContentPackageManager.EnabledPackages.SetRegular(regularPackages);
+                    List<ContentPackage> newContentPackagesWithWarnings = regularPackages
+                        .OfType<ContentPackage>()
+                        .Concat([corePackage])
+                        .Except(ContentPackageManager.EnabledPackages.All)
+                        .Where(static p => p.FilesThatShouldPromptWarning.Any())
+                        .ToList();
 
-                    //see if any of the packages we enabled contain subs that we were missing previously, and update their paths
-                    foreach (var serverSub in GameMain.Client.ServerSubmarines)
+                    if (newContentPackagesWithWarnings.Count == 0)
                     {
-                        if (File.Exists(serverSub.FilePath)) { continue; }
-                        var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == serverSub.Name && s.MD5Hash == serverSub.MD5Hash);
-                        if (matchingSub != null)
-                        {
-                            serverSub.FilePath = matchingSub.FilePath;
-                        }
+                        enableAndSelect();
                     }
-                    GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, GameMain.Client.ServerSubmarines);
-                    GameMain.NetLobbyScreen.Select();
+                    else
+                    {
+                        MutableWorkshopMenu.PromptWarnings(newContentPackagesWithWarnings, enableAndSelect, DisconnectFromServer);
+                    }
+
+                    void enableAndSelect()
+                    {
+                        ContentPackageManager.EnabledPackages.BackUp();
+                        ContentPackageManager.EnabledPackages.SetCore(corePackage);
+                        ContentPackageManager.EnabledPackages.SetRegular(regularPackages);
+
+                        RefreshAndSelectLobby();
+                    }
                 }
             }
             else if (GameMain.Client.FileReceiver.ActiveTransfers.None())
@@ -386,7 +568,7 @@ namespace Barotrauma
             }
         }
 
-        public void CurrentDownloadFinished(FileReceiver.FileTransferIn transfer)
+        internal void CurrentDownloadFinished(FileReceiver.FileTransferIn transfer)
         {
             if (currentDownload is null) { throw new Exception("Current download is null"); }
 
@@ -413,6 +595,38 @@ namespace Barotrauma
             
             currentDownload = null;
 
+        }
+
+        private void RefreshAndSelectLobby()
+        {
+            // Invalidate a possible stale game session
+            GameMain.GameSession = null;
+            //see if any of the packages we enabled contain subs that we were missing previously, and update their paths
+            for (int i = GameMain.Client.ServerSubmarines.Count - 1; i >= 0; i--)
+            {
+                SubmarineInfo serverSub = GameMain.Client.ServerSubmarines[i];
+
+                // Ignore subs that aren't in the download folder
+                if (serverSub.FilePath == null || !serverSub.FilePath.Contains(SaveUtil.SubmarineDownloadFolder)) { continue; }
+
+                var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == serverSub.Name && s.MD5Hash == serverSub.MD5Hash);
+
+                if (matchingSub != null)
+                {
+                    // Found a matching sub from a local content package, replace the submarine info that came from the
+                    // server with it so we get complete information about the sub
+                    GameMain.Client.ServerSubmarines[i] = matchingSub;
+                }
+            }
+
+            GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, GameMain.Client.ServerSubmarines);
+            GameMain.NetLobbyScreen.Select();
+        }
+
+        private void DisconnectFromServer()
+        {
+            GameMain.Client?.Quit();
+            GameMain.MainMenuScreen.Select();
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)

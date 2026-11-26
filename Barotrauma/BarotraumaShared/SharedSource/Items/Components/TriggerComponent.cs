@@ -8,10 +8,11 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using Barotrauma.Extensions;
+using Barotrauma.Networking;
 
 namespace Barotrauma.Items.Components
 {
-    partial class TriggerComponent : ItemComponent 
+    public partial class TriggerComponent : ItemComponent 
     {
         [Editable, Serialize(0f, IsPropertySaveable.Yes, description: "The maximum amount of force applied to the triggering entitites.", alwaysUseInstanceValues: true)]
         public float Force { get; set; }
@@ -33,6 +34,9 @@ namespace Barotrauma.Items.Components
 
         [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Determines if the force fluctuates over time or if it stays constant.", alwaysUseInstanceValues: true)]
         public bool ForceFluctuation { get; set; }
+
+        [Serialize(NetConfig.MaxPhysicsBodyVelocity, IsPropertySaveable.Yes, description: "Maximum velocity the forces can accelerate the target to.", alwaysUseInstanceValues: true)]
+        public float MaxVelocity { get; set; }
 
         [Serialize(1.0f, IsPropertySaveable.Yes, description: "How much the fluctuation affects the force. 1 is the maximum fluctuation, 0 is no fluctuation.", alwaysUseInstanceValues: true)]
         public float ForceFluctuationStrength
@@ -234,7 +238,8 @@ namespace Barotrauma.Items.Components
                 }
             }
             conditionals = PropertyConditional.LoadConditionals(element);
-            IsActive = true;
+            //defaults to being active, but can be overridden in XML
+            IsActive = element.GetAttributeBool(nameof(IsActive), true);
         }
 
         public override void OnItemLoaded()
@@ -268,7 +273,8 @@ namespace Barotrauma.Items.Components
             PhysicsBody.FarseerBody.SetIsSensor(originalElement.GetAttributeBool("sensor", true));
             PhysicsBody.FarseerBody.OnCollision += OnCollision;
             PhysicsBody.FarseerBody.OnSeparation += OnSeparation;
-            RadiusInDisplayUnits = ConvertUnits.ToDisplayUnits(PhysicsBody.Radius);
+            // if there's no radius defined, take the lesser of the height or width
+            RadiusInDisplayUnits = ConvertUnits.ToDisplayUnits(PhysicsBody.Radius > 0 ? PhysicsBody.Radius : MathHelper.Min(PhysicsBody.Height, PhysicsBody.Width));
         }
 
         public void SetPhysicsBodyPosition(bool ignoreContacts = true)
@@ -318,6 +324,7 @@ namespace Barotrauma.Items.Components
 
         private bool OnCollision(Fixture sender, Fixture other, Contact contact)
         {
+            if (other.Body.UserData is Limb limb && limb.IsSevered) { return false; }
             if (LevelTrigger.GetEntity(other) is not Entity entity) { return false; }
             if (!LevelTrigger.IsTriggeredByEntity(entity, triggeredBy, triggerSpeciesOrGroup, conditionals, mustBeOnSpecificSub: (!MoveOutsideSub, item.Submarine))) { return false; }
             triggerers.Add(entity);
@@ -352,7 +359,7 @@ namespace Barotrauma.Items.Components
                 SetPhysicsBodyPosition();
                 PhysicsBody.Submarine = item.Submarine;
             }
-            else if (item.body is { BodyType: BodyType.Dynamic })
+            else if (item.body is { BodyType: BodyType.Dynamic or BodyType.Kinematic })
             {
                 SetPhysicsBodyPosition();
                 PhysicsBody.Submarine = item.Submarine;
@@ -431,7 +438,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                if (Force < 0.01f && DirectionalForce.LengthSquared() < 0.0001f)
+                if (Math.Abs(Force) < 0.01f && DirectionalForce.LengthSquared() < 0.0001f)
                 {
                     // Just ignore very minimal forces
                     continue;
@@ -446,7 +453,9 @@ namespace Barotrauma.Items.Components
                         }
                         foreach (var limb in c.AnimController.Limbs)
                         {
-                            ApplyForce(limb.body, multiplier: limb.Mass * c.AnimController.Collider.Mass / c.AnimController.Mass);
+                            //multiply by the mass of the collider, because it's what really determines how fast the trigger component can make the character move
+                            //we're only applying a force to the limbs to make them follow the collider
+                            ApplyForce(limb.body, multiplier: limb.Mass / c.AnimController.Mass * c.AnimController.Collider.Mass);
                         }
                     }
                 }
@@ -485,7 +494,7 @@ namespace Barotrauma.Items.Components
 
             Vector2 force = (radialForce + directionalForce) * CurrentForceFluctuation * distanceFactor * multiplier;
 
-            if (!HorizontalForce) { force.Y = 0.0f; }
+            if (!HorizontalForce) { force.X = 0.0f; }
             if (!VerticalForce) { force.Y = 0.0f; }
 
             if (force.LengthSquared() < 0.01f) { return; }
@@ -494,7 +503,7 @@ namespace Barotrauma.Items.Components
                 //restrict the force if the body is very light, otherwise it can end up moving at a speed that breaks physics
                 force *= body.Mass;
             }
-            body.ApplyForce(force);
+            body.ApplyForce(force, MaxVelocity);
         }
 
         public override void Move(Vector2 amount, bool ignoreContacts = false)

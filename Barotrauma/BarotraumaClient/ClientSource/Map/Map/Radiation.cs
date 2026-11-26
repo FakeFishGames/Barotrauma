@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    internal partial class Radiation
+    public partial class Radiation
     {
         private int? radiationMultiplier;
         private static float spriteIndex;

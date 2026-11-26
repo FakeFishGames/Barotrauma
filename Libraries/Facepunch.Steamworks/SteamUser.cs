@@ -465,7 +465,13 @@ namespace Steamworks
 		public static void EndAuthSession( SteamId steamid ) => Internal?.EndAuthSession( steamid );
 
 
-		// UserHasLicenseForApp - SERVER VERSION ( DLC CHECKING )
+		/// <summary>
+		/// Does the user own this app (which could be DLC).
+		/// </summary>
+		public static UserHasLicenseForAppResult UserHasLicenseForApp( SteamId steamid, AppId appid )
+		{
+			return Internal?.UserHasLicenseForApp( steamid, appid ) ?? UserHasLicenseForAppResult.NoAuth;
+		}
 
 		/// <summary>
 		/// Checks if the current users looks like they are behind a NAT device.

@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Deconstructor : Powered, IServerSerializable, IClientSerializable
+   public partial class Deconstructor : Powered, IServerSerializable, IClientSerializable
     {
         private float progressTimer;
         private float progressState;
@@ -43,6 +43,11 @@ namespace Barotrauma.Items.Components
 
         [Editable(MinValueFloat = 0.1f, MaxValueFloat = 1000), Serialize(1.0f, IsPropertySaveable.Yes)]
         public float DeconstructionSpeed { get; set; }
+
+        /// <summary>
+        /// Desconstructor rely on setting <see cref="Repairable.LastActiveTime"/> to make the item deteriorate during deconstructing.
+        /// </summary>
+        public override bool ShouldCauseDeterioration => false;
 
         public Deconstructor(Item item, ContentXElement element)
             : base(item, element)
@@ -96,6 +101,10 @@ namespace Barotrauma.Items.Components
             }
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime);
+
+            //don't progress while the level is still being generated (OutpostGenerator.PowerUpOutpost updates powered items):
+            //the EntitySpawner for the round doesn't exist yet, so the deconstructed item either wouldn't despawn or would be queued to the previous round's spawner
+            if (Level.Loaded is { Generating: true }) { return; }
 
             progressTimer += deltaTime * Math.Min(powerConsumption <= 0.0f ? 1 : Voltage, MaxOverVoltageFactor);
 
@@ -316,8 +325,9 @@ namespace Barotrauma.Items.Components
                     {
                         spawnedItem.StolenDuringRound = targetItem.StolenDuringRound;
                         spawnedItem.AllowStealing = targetItem.AllowStealing;
-                        spawnedItem.OriginalOutpost = targetItem.OriginalOutpost;
-                        spawnedItem.SpawnedInCurrentOutpost = targetItem.SpawnedInCurrentOutpost;
+                        spawnedItem.OriginalLocationSeed = targetItem.OriginalLocationSeed;
+                        spawnedItem.SpawnedInNonPlayerOutpostOrSubmarine = targetItem.SpawnedInNonPlayerOutpostOrSubmarine;
+                        spawnedItem.AllowSellingIfSpawnedInCurrentOutpost = targetItem.AllowSellingIfSpawnedInCurrentOutpost;
                         if (RelocateOutputToMainSub && user is { AIController: HumanAIController humanAi })
                         {
                             humanAi.HandleRelocation(spawnedItem);
@@ -446,8 +456,14 @@ namespace Barotrauma.Items.Components
 
             if (user != null)
             {
-                item.GetStatusEffectsOfType(type).ForEach(statusEffect => statusEffect.SetUser(user));
-                targetItem.GetStatusEffectsOfType(type).ForEach(statusEffect => statusEffect.SetUser(user));
+                foreach (var statusEffect in item.GetStatusEffectsOfType(type))
+                {
+                    statusEffect.SetUser(user);
+                }
+                foreach (var statusEffect in targetItem.GetStatusEffectsOfType(type))
+                {
+                    statusEffect.SetUser(user);
+                }
             }
 
             // Apply OnDeconstruct/OnDeconstructing to the Deconstructor/item being deconstructed

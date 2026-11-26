@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    internal partial class CircuitBoxWire : CircuitBoxSelectable, ICircuitBoxIdentifiable
+    public partial class CircuitBoxWire : CircuitBoxSelectable, ICircuitBoxIdentifiable
     {
         public CircuitBoxConnection From, To;
         public readonly Option<Item> BackingWire;
@@ -14,6 +14,9 @@ namespace Barotrauma
         public readonly Color Color;
         public readonly ItemPrefab UsedItemPrefab;
 
+        /// <summary>
+        /// Persistent ID of the wire. ID internal to the circuit box, not to be confused with item IDs.
+        /// </summary>
         public ushort ID { get; }
 
         public CircuitBoxWire(CircuitBox circuitBox, ushort Id, Option<Item> backingItem, CircuitBoxConnection from, CircuitBoxConnection to, ItemPrefab prefab)
@@ -48,6 +51,7 @@ namespace Barotrauma
 
         public static Option<CircuitBoxWire> TryLoadFromXML(ContentXElement element, CircuitBox circuitBox)
         {
+            //note that we don't need to remap these IDs: they're internal IDs of the circuit box, not entity IDs
             ushort id = element.GetAttributeUInt16("id", ICircuitBoxIdentifiable.NullComponentID);
             var backingItemIdOption = ItemSlotIndexPair.TryDeserializeFromXML(element, "backingitemid");
             Identifier usedPrefabIdentifier = element.GetAttributeIdentifier("prefab", Identifier.Empty);

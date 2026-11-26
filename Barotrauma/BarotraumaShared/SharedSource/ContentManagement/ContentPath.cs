@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using Barotrauma.IO;
 using System;
@@ -22,47 +22,61 @@ namespace Barotrauma
 
         private string? cachedValue;
         private string? cachedFullPath;
+
+        private readonly object mutex = new object();
         
         public string Value
         {
             get
             {
                 if (RawValue.IsNullOrEmpty()) { return ""; }
-                if (!cachedValue.IsNullOrEmpty()) { return cachedValue!; }
 
-                string? modName = ContentPackage?.Name;
-
-                var otherMods = OtherModDirRegex.Matches(RawValue ?? throw new NullReferenceException($"{nameof(RawValue)} is null."))
-                    .Select(m => m.Groups[1].Value.Trim().ToIdentifier())
-                    .Distinct().Where(id => !id.IsEmpty && id != modName).ToHashSet();
-                cachedValue = RawValue!;
-                if (!(ContentPackage is null))
+                lock (mutex)
                 {
-                    string modPath = Path.GetDirectoryName(ContentPackage.Path)!;
-                    cachedValue = cachedValue
-                        .Replace(ModDirStr, modPath, StringComparison.OrdinalIgnoreCase)
-                        .Replace(string.Format(OtherModDirFmt, ContentPackage.Name), modPath, StringComparison.OrdinalIgnoreCase);
-                    if (ContentPackage.UgcId.TryUnwrap(out var ugcId))
+                    if (!cachedValue.IsNullOrEmpty()) { return cachedValue!; }
+
+                    string? modName = ContentPackage?.Name;
+
+                    var otherMods = OtherModDirRegex.Matches(RawValue ?? throw new NullReferenceException($"{nameof(RawValue)} is null."))
+                        .Select(m => m.Groups[1].Value.Trim().ToIdentifier())
+                        .Distinct().Where(id => !id.IsEmpty && id != modName).ToHashSet();
+                    cachedValue = RawValue!;
+                    if (!(ContentPackage is null))
                     {
+                        string modPath = Path.GetDirectoryName(ContentPackage.Path)!;
                         cachedValue = cachedValue
-                            .Replace(string.Format(OtherModDirFmt, ugcId.StringRepresentation), modPath, StringComparison.OrdinalIgnoreCase);
+                            .Replace(ModDirStr, modPath, StringComparison.OrdinalIgnoreCase)
+                            .Replace(string.Format(OtherModDirFmt, ContentPackage.Name), modPath, StringComparison.OrdinalIgnoreCase);
+                        if (ContentPackage.UgcId.TryUnwrap(out var ugcId))
+                        {
+                            cachedValue = cachedValue
+                                .Replace(string.Format(OtherModDirFmt, ugcId.StringRepresentation), modPath, StringComparison.OrdinalIgnoreCase);
+                        }
                     }
-                }
-                var allPackages = ContentPackageManager.AllPackages;
+                    var allPackages = ContentPackageManager.AllPackages;
 #if CLIENT
-                if (GameMain.ModDownloadScreen?.DownloadedPackages != null) { allPackages = allPackages.Concat(GameMain.ModDownloadScreen.DownloadedPackages); }
+                    if (GameMain.ModDownloadScreen?.DownloadedPackages != null) { allPackages = allPackages.Concat(GameMain.ModDownloadScreen.DownloadedPackages); }
 #endif
-                foreach (Identifier otherModName in otherMods)
-                {
-                    Option<ContentPackageId> ugcId = ContentPackageId.Parse(otherModName.Value);
-                    ContentPackage? otherMod =
-                        allPackages.FirstOrDefault(p => ugcId.IsSome() && ugcId == p.UgcId)
-                        ?? allPackages.FirstOrDefault(p => p.Name == otherModName)
-                        ?? allPackages.FirstOrDefault(p => p.NameMatches(otherModName))
-                        ?? throw new MissingContentPackageException(ContentPackage, otherModName.Value);
-                    cachedValue = cachedValue.Replace(string.Format(OtherModDirFmt, otherModName.Value), Path.GetDirectoryName(otherMod.Path));
+                    foreach (Identifier otherModName in otherMods)
+                    {
+                        // Dependency identifiers can also be used for identifying content in other mods
+                        ContentPackage? dependencyPackage = null;
+                        ContentPackage?.Dependencies.FirstOrDefault(d => d.DependencyIdentifier == otherModName)?.TryResolve(allPackages, out dependencyPackage);
+
+                        Option<ContentPackageId> ugcId = ContentPackageId.Parse(otherModName.Value);
+
+                        ContentPackage? otherMod =
+                            dependencyPackage
+                            ?? allPackages.FirstOrDefault(p => ugcId.IsSome() && ugcId == p.UgcId)
+                            ?? allPackages.FirstOrDefault(p => p.Name == otherModName)
+                            ?? allPackages.FirstOrDefault(p => p.NameMatches(otherModName))
+                            ?? throw new MissingContentPackageException(ContentPackage, otherModName.Value);
+                        cachedValue = cachedValue.Replace(string.Format(OtherModDirFmt, otherModName.Value), Path.GetDirectoryName(otherMod.Path));
+                    }
+                    cachedValue = cachedValue.CleanUpPath();
+                    System.Diagnostics.Debug.Assert(!cachedValue.Contains(ModDirStr));
                 }
-                cachedValue = cachedValue.CleanUpPath();
+
                 return cachedValue;
             }
         }

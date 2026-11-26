@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    internal partial class Wallet
+    public partial class Wallet
     {
         private readonly Queue<WalletChangedData> transactions = new Queue<WalletChangedData>();
 

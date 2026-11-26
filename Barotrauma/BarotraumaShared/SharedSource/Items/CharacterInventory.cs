@@ -1,7 +1,9 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -10,11 +12,21 @@ namespace Barotrauma
     [Flags]
     public enum InvSlotType
     {
-        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, InnerClothes = 16, OuterClothes = 32, Headset = 64, Card = 128, Bag = 256, HealthInterface = 512
+        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, InnerClothes = 16, OuterClothes = 32, Headset = 64, Card = 128, Bag = 256, HealthInterface = 512,
+        RightHandProsthetic = 1024, LeftHandProsthetic = 2048,
+        RightLegProsthetic = 4096, LeftLegProsthetic = 8192
+
+        //NOTE: do not add any combined slot types like "HandSlots = RightHand | LeftHand"
+        //that can cause issues with the flag checks in TryPutItem and IsInLimbSlot, where we do checks for each individual flag in InvSlotType
+        //to check if an item is in an appropriate slot.
     };
 
-    partial class CharacterInventory : Inventory
+    public partial class CharacterInventory : Inventory
     {
+        public const InvSlotType ProstheticSlots = InvSlotType.RightHandProsthetic | InvSlotType.LeftHandProsthetic | InvSlotType.RightLegProsthetic | InvSlotType.LeftLegProsthetic;
+        public const InvSlotType HealthInterfaceSlots = InvSlotType.HealthInterface | ProstheticSlots;
+        public const InvSlotType HandSlots = InvSlotType.RightHand | InvSlotType.LeftHand;
+
         /// <summary>
         /// How much access other characters have to the inventory?
         /// </summary>
@@ -54,6 +66,7 @@ namespace Barotrauma
         public static readonly List<InvSlotType> BagSlot = new List<InvSlotType> { InvSlotType.Bag };
 
         public static bool IsHandSlotType(InvSlotType s) => s.HasFlag(InvSlotType.LeftHand) || s.HasFlag(InvSlotType.RightHand);
+        public bool IsHandSlot(int slotIndex) => IsIndexInRange(slotIndex) && IsHandSlotType(SlotTypes[slotIndex]);
 
         protected bool[] IsEquipped;
 
@@ -167,22 +180,49 @@ namespace Barotrauma
                 int amount = subElement.GetAttributeInt("amount", 1);
                 for (int i = 0; i < amount; i++)
                 {
-                    Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, this, ignoreLimbSlots: forceToSlot, slot: slot, onSpawned: (Item item) =>
+                    if (Screen.Selected is { IsEditor: true })
                     {
-                        if (item != null && item.ParentInventory != this)
+                        CoroutineManager.Invoke(() =>
                         {
-                            string errorMsg = $"Failed to spawn the initial item \"{item.Prefab.Identifier}\" in the inventory of \"{character.SpeciesName}\".";
-                            DebugConsole.ThrowError(errorMsg, contentPackage: element.ContentPackage);
-                            GameAnalyticsManager.AddErrorEventOnce("CharacterInventory:FailedToSpawnInitialItem", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
-                        }
-                        else if (!character.Enabled)
-                        {
-                            foreach (var heldItem in character.HeldItems)
+                            Item newItem = new Item(itemPrefab, Vector2.Zero, submarine: null);
+                            if (slot == InvSlotType.None)
                             {
-                                if (item.body != null) { item.body.Enabled = false; }
+                                TryPutItem(newItem, user: null);
                             }
+                            else
+                            {
+                                int slotIndex = FindLimbSlot(slot);
+                                TryPutItem(newItem, slotIndex, allowSwapping: true, allowCombine: true, user: null);
+                                if (forceToSlot)
+                                {
+                                    ForceToSlot(newItem, slotIndex);
+                                }
+                            }
+                        });
+                    }
+                    else
+                    {
+                        Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, this, ignoreLimbSlots: forceToSlot, slot: slot, onSpawned: (Item item) =>
+                        {
+                            InitializeSpawnedItem(item);
+                        });
+                    }
+                }
+                void InitializeSpawnedItem(Item item)
+                {
+                    if (item != null && item.ParentInventory != this)
+                    {
+                        string errorMsg = $"Failed to spawn the initial item \"{item.Prefab.Identifier}\" in the inventory of \"{character.SpeciesName}\".";
+                        DebugConsole.ThrowError(errorMsg, contentPackage: element.ContentPackage);
+                        GameAnalyticsManager.AddErrorEventOnce("CharacterInventory:FailedToSpawnInitialItem", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                    }
+                    else if (!character.Enabled)
+                    {
+                        foreach (var heldItem in character.HeldItems)
+                        {
+                            if (item.body != null) { item.body.Enabled = false; }
                         }
-                    });
+                    }
                 }
             }
         }
@@ -236,7 +276,7 @@ namespace Barotrauma
 
         public bool IsInLimbSlot(Item item, InvSlotType limbSlot)
         {
-            if (limbSlot == (InvSlotType.LeftHand | InvSlotType.RightHand))
+            if (limbSlot == HandSlots)
             {
                 if (GetItemsInLimbSlot(InvSlotType.RightHand).Contains(item) &&
                     GetItemsInLimbSlot(InvSlotType.LeftHand).Contains(item))
@@ -249,6 +289,18 @@ namespace Barotrauma
                 foreach (ItemSlot slot in slotList)
                 {
                     if (slot.Contains(item)) { return true; }
+                }
+            }
+            return false;
+        }
+
+        public bool IsInHealthInterfaceSlot(Item item)
+        {
+            foreach (var healthInterfaceSlot in EnumExtensions.GetIndividualFlags(HealthInterfaceSlots))
+            {
+                if (IsInLimbSlot(item, healthInterfaceSlot))
+                {
+                    return true;
                 }
             }
             return false;
@@ -267,6 +319,30 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Gives the items in the inventory a chance to release the items they're "forcibly" keeping in the hand slots
+        /// (see <see cref="ItemComponent.AttemptToFreeHands"/>), to make room for the item being equipped.
+        /// A swappable prosthetic for example only ever agrees to stow its equipped tool to make room for handcuffs and nothing else.
+        /// </summary>
+        /// <param name="force">
+        /// When set, the items give up the hand slots for any item, instead of only yielding to the specific ones they normally
+        /// accept. This still won't drop or remove anything by itself, but each component gets to release the slot in its own way.
+        /// Meant only for callers that have already attempted to equip the item and failed, and thus already know that
+        /// a forcibly kept item is what's in the way. Forcing pre-emptively would make the whole contract meaningless,
+        /// the items would then be released by any equipping attempt at all, including ones that would fail anyway.
+        /// </param>
+        public void AttemptToFreeHandsFor(Item itemToEquip, bool force = false)
+        {
+            // Loop by index instead of enumerating because freeing the hands modifies the inventory
+            for (int i = 0; i < capacity; i++)
+            {
+                if (slots[i].FirstOrDefault() is Item itemInSlot)
+                {
+                    itemInSlot.Components.ForEach(c => c.AttemptToFreeHands(itemToEquip, force));
+                }
+            }
+        }
+
+        /// <summary>
         /// Can the item be put in the inventory in a slot of the specified type (i.e. is there a suitable free slot or a stack the item can be put in).
         /// </summary>
         public bool CanBePut(Item item, InvSlotType slotType)
@@ -281,11 +357,24 @@ namespace Barotrauma
             return false;
         }
 
-        public override bool CanBePutInSlot(Item item, int i, bool ignoreCondition = false)
+        public override bool CanBePutInSlot(Item item, int i, bool ignoreCondition = false, bool allowReplacingIntactLimb = false)
         {
-            return 
-                base.CanBePutInSlot(item, i, ignoreCondition) && item.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i])) && 
-                (SlotTypes[i] == InvSlotType.Any || slots[i].Items.Count < 1);
+            if (!base.CanBePutInSlot(item, i, ignoreCondition, allowReplacingIntactLimb)) { return false; }
+            if (!item.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i]))) { return false; }
+            if (SlotTypes[i] != InvSlotType.Any && slots[i].Items.Count >= 1) { return false; }
+            if (!allowReplacingIntactLimb)
+            {
+                // Don't allow placing a prosthetic for a limb the character still has intact
+                if (ProstheticSlots.HasFlag(SlotTypes[i]) && Owner is Character character)
+                {
+                    foreach (var wearable in item.GetComponents<Wearable>())
+                    {
+                        if (!wearable.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i]))) { continue; }
+                        if (wearable.ProstheticsLimbTypes.Any(character.AnimController.HasIntactLimb)) { return false; }
+                    }
+                }
+            }
+            return true;
         }
 
         public override bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition, int? quality = null)
@@ -343,6 +432,10 @@ namespace Barotrauma
         /// </summary>
         public bool TryPutItemWithAutoEquipCheck(Item item, Character user, IEnumerable<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
         {
+            //don't allow auto-equipping in health interface slots!
+            //(e.g. installing prosthetics if there's no free space in the inventory)
+            allowedSlots = allowedSlots.Where(slot => !HealthInterfaceSlots.HasFlag(slot));
+
             // Does not auto-equip the item if specified and no suitable any slot found (for example handcuffs are not auto-equipped)
             if (item.AllowedSlots.Contains(InvSlotType.Any))
             {
@@ -358,7 +451,7 @@ namespace Barotrauma
                 bool allSlotsTaken = true;
                 foreach (var allowedSlot in allowedSlots)
                 {
-                    if (allowedSlot == (InvSlotType.RightHand | InvSlotType.LeftHand))
+                    if (allowedSlot == HandSlots)
                     {
                         int rightHandSlot = FindLimbSlot(InvSlotType.RightHand);
                         int leftHandSlot = FindLimbSlot(InvSlotType.LeftHand);
@@ -399,9 +492,10 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// If there is room, puts the item in the inventory and returns true, otherwise returns false
+        /// If there is room, puts the item in the inventory and returns true, otherwise returns false. Also returns true if the item is already in the desired slots.
         /// </summary>
-        public override bool TryPutItem(Item item, Character user, IEnumerable<InvSlotType> allowedSlots = null, bool createNetworkEvent = true, bool ignoreCondition = false, bool triggerOnInsertedEffects = true)
+        public override bool TryPutItem(Item item, Character user, IEnumerable<InvSlotType> allowedSlots = null, bool createNetworkEvent = true, bool ignoreCondition = false, bool triggerOnInsertedEffects = true, 
+            bool ignoreStuckInHand = false, bool allowReplacingIntactLimb = false)
         {
             if (allowedSlots == null || !allowedSlots.Any()) { return false; }
             if (item == null)
@@ -452,7 +546,10 @@ namespace Barotrauma
                 // if item is not in ALL required slot types
                 foreach (var flag in individualFlags)
                 {
-                    if (flag == InvSlotType.None) { continue; }
+                    if (flag == InvSlotType.None)
+                    { 
+                        continue; 
+                    }
                     if (!IsInLimbSlot(item, flag))
                     {
                         inSuitableSlot = false;
@@ -463,6 +560,8 @@ namespace Barotrauma
 
             //all good
             if (inSuitableSlot && !inWrongSlot) { return true; }
+
+            if (!ignoreStuckInHand && item.IsStuckInHandSlot) { return false; }
 
             //try to place the item in a LimbSlot.Any slot if that's allowed
             if (allowedSlots.Contains(InvSlotType.Any) && item.AllowedSlots.Contains(InvSlotType.Any))
@@ -480,22 +579,37 @@ namespace Barotrauma
             //order by whether the slot is empty, i.e. try putting in free slots first before trying to unequip items from occupied slots
             foreach (InvSlotType allowedSlot in allowedSlots.OrderBy(slotType => IsSlotEmpty(slotType) ? 0 : 1))
             {
-                if (allowedSlot.HasFlag(InvSlotType.RightHand) && character.AnimController.GetLimb(LimbType.RightHand) == null) { continue; }
-                if (allowedSlot.HasFlag(InvSlotType.LeftHand) && character.AnimController.GetLimb(LimbType.LeftHand) == null) { continue; }
+                if (allowedSlot.HasFlag(InvSlotType.RightHand) && character.AnimController.GetLimb(LimbType.RightHand) == null && 
+                    //allow putting in a severed hand slot if this is a hand prosthetic
+                    !allowedSlot.HasFlag(InvSlotType.RightHandProsthetic))
+                { 
+                    continue; 
+                }
+                if (allowedSlot.HasFlag(InvSlotType.LeftHand) && character.AnimController.GetLimb(LimbType.LeftHand) == null &&
+                    //allow putting in a severed hand slot if this is a hand prosthetic
+                    !allowedSlot.HasFlag(InvSlotType.LeftHandProsthetic)) 
+                { 
+                    continue; 
+                }
 
                 //check if all the required slots are free
                 bool free = true;
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (allowedSlot.HasFlag(SlotTypes[i]) && item.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i])) && slots[i].Items.Any(it => it != item))
+                    if (allowedSlot.HasFlag(SlotTypes[i]) && item.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i])) && 
+                        slots[i].Items.Any(it => it != item))
                     {
-                        if (!slots[i].First().AllowedSlots.Contains(InvSlotType.Any) || !TryPutItem(slots[i].FirstOrDefault(), character, new List<InvSlotType> { InvSlotType.Any }, true, ignoreCondition))
+                        //something in the slot, try taking it out (except if it's in a health interface slot, those must be removed through the health interface)
+                        var itemInSlot = slots[i].First();
+                        if (IsInHealthInterfaceSlot(itemInSlot) ||
+                            !itemInSlot.AllowedSlots.Contains(InvSlotType.Any) || 
+                            !TryPutItem(itemInSlot, character, AnySlot, true, ignoreCondition))
                         {
                             free = false;
 #if CLIENT
                             for (int j = 0; j < capacity; j++)
                             {
-                                if (visualSlots != null && slots[j] == slots[i]) { visualSlots[j].ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f); }
+                                if (visualSlots != null && slots[j].FirstOrDefault() == itemInSlot) { visualSlots[j].ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f); }
                             }
 #endif
                         }
@@ -506,7 +620,7 @@ namespace Barotrauma
 
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (allowedSlot.HasFlag(SlotTypes[i]) && item.GetComponents<Pickable>().Any(p => p.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i]))) && slots[i].Empty())
+                    if (allowedSlot.HasFlag(SlotTypes[i]) && item.GetComponents<Pickable>().Any(p => p.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i]))) && slots[i].Empty() && CanBePutInSlot(item, i, ignoreCondition, allowReplacingIntactLimb: allowReplacingIntactLimb))
                     {
                         bool removeFromOtherSlots = item.ParentInventory != this;
                         if (placedInSlot == -1 && inWrongSlot)
@@ -515,7 +629,8 @@ namespace Barotrauma
                         }
 
                         PutItem(item, i, user, removeFromOtherSlots, createNetworkEvent);
-                        item.Equip(character);
+                        // No user means we're just reconstructing existing state (e.g. loading, syncing), so we should not repeat any equip effects
+                        item.Equip(character, disableEquipEffects: user == null);
                         placedInSlot = i;
                     }
                 }
@@ -571,7 +686,8 @@ namespace Barotrauma
             return -1;
         }
 
-        public override bool TryPutItem(Item item, int index, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true, bool ignoreCondition = false, bool triggerOnInsertedEffects = true)
+        public override bool TryPutItem(Item item, int index, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true, bool ignoreCondition = false, bool triggerOnInsertedEffects = true, 
+            bool ignoreStuckInHand = false, bool allowReplacingIntactLimb = false)
         {
             if (index < 0 || index >= slots.Length)
             {
@@ -579,6 +695,9 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("CharacterInventory.TryPutItem:IndexOutOfRange", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return false;
             }
+
+            if (!ignoreStuckInHand && item.IsStuckInHandSlot) { return false; }
+
             //there's already an item in the slot
             if (slots[index].Any())
             {
@@ -616,7 +735,7 @@ namespace Barotrauma
 
             if (!slotsFree) { return false; }
 
-            return TryPutItem(item, user, new List<InvSlotType>() { placeToSlots }, createNetworkEvent, ignoreCondition);
+            return TryPutItem(item, user, new List<InvSlotType>() { placeToSlots }, createNetworkEvent, ignoreCondition, allowReplacingIntactLimb: allowReplacingIntactLimb);
         }
 
         protected override void PutItem(Item item, int i, Character user, bool removeItem = true, bool createNetworkEvent = true, bool triggerOnInsertedEffects = true)
@@ -642,6 +761,5 @@ namespace Barotrauma
         {
             GameMain.NetworkMember?.CreateEntityEvent(character, new Character.InventoryStateEventData(slotRange));
         }
-
     }
 }

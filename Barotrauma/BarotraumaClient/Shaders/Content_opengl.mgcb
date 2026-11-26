@@ -84,3 +84,9 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:wearableclip_opengl.fx
+
+#begin monochromeshader_opengl.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:monochromeshader_opengl.fx

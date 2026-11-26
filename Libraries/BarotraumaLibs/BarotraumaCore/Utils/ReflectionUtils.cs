@@ -9,6 +9,11 @@ namespace Barotrauma
 {
     public static class ReflectionUtils
     {
+        /// <summary>
+        /// A lock object to prevent multiple threads from accessing the caches at the same time
+        /// </summary>
+        private static readonly object mutex = new object();
+
         private static readonly Dictionary<Assembly, ImmutableArray<Type>> cachedNonAbstractTypes
             = new Dictionary<Assembly, ImmutableArray<Type>>();
 
@@ -31,25 +36,30 @@ namespace Barotrauma
             return castValue;
         }
 
-        public static IEnumerable<Type> GetDerivedNonAbstract<T>()
+        public static IEnumerable<Type> GetDerivedNonAbstract(Type type)
         {
-            Type t = typeof(T);
-            Assembly assembly = typeof(T).Assembly;
-            if (!cachedNonAbstractTypes.ContainsKey(assembly))
+            Assembly assembly = type.Assembly;
+            ImmutableArray<Type> newArray;
+            lock (mutex)
             {
-                cachedNonAbstractTypes[assembly] = assembly.GetTypes()
-                    .Where(t => !t.IsAbstract).ToImmutableArray();
+                if (!cachedNonAbstractTypes.ContainsKey(assembly))
+                {
+                    cachedNonAbstractTypes[assembly] = assembly.GetTypes()
+                        .Where(t => !t.IsAbstract).ToImmutableArray();
 
-                cachedDerivedNonAbstract[assembly] = new Dictionary<Type, ImmutableArray<Type>>();
+                    cachedDerivedNonAbstract[assembly] = new Dictionary<Type, ImmutableArray<Type>>();
+                }
+                if (cachedDerivedNonAbstract[assembly].TryGetValue(type, out var cachedArray))
+                {
+                    return cachedArray;
+                }
+                newArray = cachedNonAbstractTypes[assembly].Where(t2 => t2.IsSubclassOf(type)).ToImmutableArray();
+                cachedDerivedNonAbstract[assembly].Add(type, newArray);
             }
-            if (cachedDerivedNonAbstract[assembly].TryGetValue(t, out var cachedArray))
-            {
-                return cachedArray;
-            }
-            var newArray = cachedNonAbstractTypes[assembly].Where(t2 => t2.IsSubclassOf(t)).ToImmutableArray();
-            cachedDerivedNonAbstract[assembly].Add(t, newArray);
             return newArray;
         }
+
+        public static IEnumerable<Type> GetDerivedNonAbstract<T>() => GetDerivedNonAbstract(typeof(T));
 
         public static Type? GetType(string nameWithNamespace)
         {
@@ -109,6 +119,19 @@ namespace Barotrauma
             return result;
         }
 
+        public static PropertyInfo? Find(this PropertyInfo[] propertyInfos, string name, bool ignoreCase)
+        {
+            foreach (PropertyInfo propertyInfo in propertyInfos)
+            {
+                if (string.Equals(propertyInfo.Name, name, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+                {
+                    return propertyInfo;
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Gets a type by its name, with backwards compatibility for types that have been renamed.
         /// <see cref="TypePreviouslyKnownAs"/>
@@ -147,7 +170,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// The names of generic types include the arity at the end (fancy way of saying the number of parameters, e.g. GUISelectionCarousel<T> would be GUISelectionCarousel`1)
+        /// The names of generic types include the arity at the end (fancy way of saying the number of parameters, e.g. GUISelectionCarousel&lt;T&gt; would be GUISelectionCarousel`1)
         /// This method strips that part out.
         /// </summary>
         public static Identifier GetTypeNameWithoutGenericArity(Type type)
@@ -155,6 +178,73 @@ namespace Barotrauma
             string name = type.Name;
             int index = name.IndexOf('`');
             return (index == -1 ? name : name.Substring(0, index)).ToIdentifier();
+        }
+
+        private readonly record struct CachedMethod(MethodInfo Method, Type[] Types);
+
+        private static readonly Dictionary<Type, Dictionary<string, Dictionary<Type, CachedMethod>>> CachedGenericMethods = new();
+
+        public static object? InvokeGenericMethod(Type genericParam, Type module, string name, params (Type, object?)[] args)
+        {
+            Type[] types = new Type[args.Length];
+            object?[] values = new object[args.Length];
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                types[i] = args[i].Item1;
+                values[i] = args[i].Item2;
+            }
+
+            if (CachedGenericMethods.TryGetValue(module, out Dictionary<string, Dictionary<Type, CachedMethod>>? methods))
+            {
+                if (methods.TryGetValue(name, out Dictionary<Type, CachedMethod>? genericMethods))
+                {
+                    if (genericMethods.TryGetValue(genericParam, out CachedMethod cachedMethod))
+                    {
+                        if (cachedMethod.Types.Length != types.Length)
+                        {
+                            throw new ArgumentException($"Method {name} has {cachedMethod.Types.Length} parameters, but {types.Length} were provided");
+                        }
+
+                        if (!cachedMethod.Types.SequenceEqual(types))
+                        {
+                            throw new ArgumentException($"Method {name} has parameters of types {string.Join(", ", cachedMethod.Types.Select(t => t.Name))}, but {string.Join(", ", types.Select(t => t.Name))} were provided");
+                        }
+
+                        return cachedMethod.Method.Invoke(null, values);
+                    }
+                }
+            }
+
+            MethodInfo? method = module.GetMethod(name, BindingFlags.Public | BindingFlags.Static, types);
+            if (method is null)
+            {
+                throw new ArgumentException($"Method {name} not found in {module}");
+            }
+
+            MethodInfo genericMethod = method.MakeGenericMethod(genericParam);
+            if (!CachedGenericMethods.ContainsKey(module))
+            {
+                CachedGenericMethods[module] = new Dictionary<string, Dictionary<Type, CachedMethod>>();
+            }
+
+            if (!CachedGenericMethods[module].ContainsKey(name))
+            {
+                CachedGenericMethods[module][name] = new Dictionary<Type, CachedMethod>();
+            }
+
+            CachedGenericMethods[module][name][genericParam] = new CachedMethod(genericMethod, genericMethod.GetParameters().Select(static p => p.ParameterType).ToArray());
+            return genericMethod.Invoke(null, values);
+        }
+
+        public static void PurgeCache()
+        {
+            lock (mutex)
+            {
+                cachedNonAbstractTypes.Clear();
+                cachedDerivedNonAbstract.Clear();
+                CachedGenericMethods.Clear();
+            }
         }
     }
 }

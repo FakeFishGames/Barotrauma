@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class ScriptedEvent : Event
+    public class ScriptedEvent : Event
     {
         public sealed record TargetPredicate(
             TargetPredicate.EntityType Type,
@@ -21,6 +21,13 @@ namespace Barotrauma
             }
         }
 
+        public enum State
+        {
+            Incomplete,
+            Completed,
+            Failed
+        }
+
         private readonly Dictionary<Identifier, List<TargetPredicate>> targetPredicates = new Dictionary<Identifier, List<TargetPredicate>>();
 
         private readonly Dictionary<Identifier, List<Entity>> cachedTargets = new Dictionary<Identifier, List<Entity>>();
@@ -31,6 +38,7 @@ namespace Barotrauma
         /// </summary>
         private readonly Dictionary<Identifier, int> initialAmounts = new Dictionary<Identifier, int>();
 
+        private bool invalidateTargetCache = false;
         private bool newEntitySpawned;
         private int prevPlayerCount, prevBotCount;
         private Character prevControlled;
@@ -42,11 +50,29 @@ namespace Barotrauma
 
         public readonly Identifier RequiredDestinationFaction;
 
+        private State currentState;
+        public State CurrentState
+        {
+            get { return currentState; }
+            set
+            {
+                if (currentState == value) { return; }
+                currentState = value;
+                OnStateChanged?.Invoke();
+            }
+        }
+
+        public Action OnStateChanged;
+
         public int CurrentActionIndex { get; private set; }
         public List<EventAction> Actions { get; } = new List<EventAction>();
         public Dictionary<Identifier, List<Entity>> Targets { get; } = new Dictionary<Identifier, List<Entity>>();
 
-        protected virtual IEnumerable<Identifier> NonActionChildElementNames => Enumerable.Empty<Identifier>();
+        private readonly static HashSet<Identifier> nonActionChildElementNames = new HashSet<Identifier>()
+        {
+            "icon".ToIdentifier()
+        };
+        protected virtual IEnumerable<Identifier> NonActionChildElementNames => nonActionChildElementNames;
 
         public override string ToString()
         {
@@ -137,7 +163,9 @@ namespace Barotrauma
 
             foreach (var label in allActions.OfType<Label>())
             {
-                if (allActions.None(a => a is GoTo gotoAction && label.Name == gotoAction.Name))
+                if (allActions.None(a => 
+                    (a is GoTo gotoAction && label.Name == gotoAction.Name) || 
+                    (a is ConversationAction conversationAction && label.Name == conversationAction.InterruptedGotoLabel)))
                 {
                     //this can be safe, because a label with no gotos leading to it does nothing (but it's still a sign that something's misconfigured)
                     DebugConsole.AddWarning($"Error in event \"{prefab.Identifier}\". Could not find a GoTo matching the Label \"{label.Name}\".",
@@ -203,12 +231,16 @@ namespace Barotrauma
                     return $"[target \"{targetTag}\" not found]";
                 }
             }
+            if (tag == "location") { return Level.Loaded?.StartLocation?.DisplayName.Value ?? "unknown"; }
             return string.Empty;
         }
 
         public virtual LocalizedString ReplaceVariablesInEventText(LocalizedString str)
         {
-            return str;
+            return str
+                .Replace("[location]", GameMain.GameSession?.StartLocation?.DisplayName.Value ?? "")
+                .Replace("[location1]", GameMain.GameSession?.StartLocation?.DisplayName.Value ?? "")
+                .Replace("[location2]", GameMain.GameSession?.EndLocation?.DisplayName.Value ?? "");
         }
 
         /// <summary>
@@ -271,6 +303,22 @@ namespace Barotrauma
             if (!initialAmounts.ContainsKey(tag))
             {
                 initialAmounts.Add(tag, cachedTargets[tag].Count);
+            }
+        }
+
+        /// <summary>
+        /// Removes a target added with <see cref="AddTarget"/>. NOTE: If the entity also matches the tag through
+        /// a predicate, waypoint tag or outpost NPC tag, it's still found by <see cref="GetTargets"/>.
+        /// </summary>
+        public void RemoveTarget(Identifier tag, Entity target)
+        {
+            if (Targets.TryGetValue(tag, out List<Entity> targets))
+            {
+                targets.Remove(target);
+            }
+            if (cachedTargets.TryGetValue(tag, out List<Entity> cached))
+            {
+                cached.Remove(target);
             }
         }
 
@@ -400,10 +448,11 @@ namespace Barotrauma
                 }
             }
 
-            if (botCount != prevBotCount || playerCount != prevPlayerCount || prevControlled != Character.Controlled || NeedsToRefreshCachedTargets())
+            if (botCount != prevBotCount || playerCount != prevPlayerCount || prevControlled != Character.Controlled || invalidateTargetCache || NeedsToRefreshCachedTargets())
             {
                 cachedTargets.Clear();
                 newEntitySpawned = false;
+                invalidateTargetCache = false;
                 prevBotCount = botCount;
                 prevPlayerCount = playerCount;
                 prevControlled = Character.Controlled;
@@ -431,8 +480,10 @@ namespace Barotrauma
                 }
                 else
                 {
+                    GoTo gotoAction = GetAllActions().FirstOrDefault(a => a.action is GoTo goToAction && goToAction.Name == goTo).action as GoTo;
+                    bool shouldEndConversations = gotoAction == null || gotoAction.EndConversation;
                     CurrentActionIndex = -1;
-                    Actions.ForEach(a => a.Reset());
+                    Actions.ForEach(a => a.Reset(shouldEndConversations));
                     for (int i = 0; i < Actions.Count; i++)
                     {
                         if (Actions[i].SetGoToTarget(goTo))
@@ -457,6 +508,11 @@ namespace Barotrauma
             {
                 currentAction.Update(deltaTime);
             }
+        }
+
+        public void InvalidateTargetCache()
+        {
+            invalidateTargetCache = true;
         }
 
         private bool NeedsToRefreshCachedTargets()
@@ -511,7 +567,7 @@ namespace Barotrauma
                 var otherLocation = c.OtherLocation(currLocation);
                 if (!RequiredDestinationFaction.IsEmpty && otherLocation.Faction?.Prefab.Identifier != RequiredDestinationFaction) { continue; }
 
-                if (requiredDestinationTypes.Contains(Tags.AnyOutpost) && otherLocation.HasOutpost() && otherLocation.Type.IsAnyOutpost) { return true; }
+                if (requiredDestinationTypes.Contains(Tags.AnyOutpost) && otherLocation.HasOutpost() && otherLocation.Type.IsValidForAnyOutpostEventOrMission) { return true; }
                 if (requiredDestinationTypes.Any(t => otherLocation.Type.Identifier == t))
                 {
                     return true;
@@ -525,6 +581,18 @@ namespace Barotrauma
         {
             base.Finish();
             GameAnalyticsManager.AddDesignEvent($"ScriptedEvent:{prefab.Identifier}:Finished:{CurrentActionIndex}");
+
+            // Clear any unique name colors set by this event
+            foreach (var targetList in Targets.Values)
+            {
+                foreach (var target in targetList)
+                {
+                    if (target is Character character && !character.Removed)
+                    {
+                        character.UniqueNameColor = null;
+                    }
+                }
+            }
         }
     }
 }

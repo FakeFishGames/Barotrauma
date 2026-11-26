@@ -4,14 +4,20 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class Reputation
+    public class Reputation
     {
         public const float HostileThreshold = 0.2f;
         public const float ReputationLossPerNPCDamage = 0.025f;
         public const float ReputationLossPerWallDamage = 0.025f;
         public const float ReputationLossPerStolenItemPrice = 0.0025f;
         public const float MinReputationLossPerStolenItem = 0.025f;
-        public const float MaxReputationLossPerStolenItem = 0.5f;
+        public const float MaxReputationLossPerStolenItem = 1.0f;
+        public const float MinReputationLossPerUprootedPlant = 2.0f;
+
+        /// <summary>
+        /// Reputation gain from damaging a monster that's attacking someone else's sub (e.g. a friendly sub in a <see cref="SubmarineEncounterMission"/>
+        /// </summary>
+        public const float ReputationGainPerDamageToAttackingMonster = 0.025f;
 
         /// <summary>
         /// Maximum amount of reputation loss you can get from damaging outpost NPCs per round
@@ -21,6 +27,11 @@ namespace Barotrauma
         /// Maximum amount of reputation loss you can get from damaging outpost walls per round
         /// </summary>
         public const float MaxReputationLossFromWallDamage = 10.0f;
+
+        /// <summary>
+        /// Maximum amount of reputation you can gain by defending another sub against monsters
+        /// </summary>
+        public const float MaxReputationGainFromDamageToAttackingMonster = 2.0f;
 
         public Identifier Identifier { get; }
         public int MinReputation { get; }
@@ -65,6 +76,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Sets the reputation directly to the specified value, ignoring any reputation gain multipliers or per-round reputation change limits.
+        /// </summary>
         public void SetReputation(float newReputation)
         {
             Value = newReputation;

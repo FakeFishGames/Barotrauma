@@ -12,7 +12,7 @@ using Microsoft.Xna.Framework.Graphics;
  */
 namespace Barotrauma
 {
-    internal sealed class TestScreen : EditorScreen
+    public sealed class TestScreen : EditorScreen
     {
         public override Camera Cam { get; }
 

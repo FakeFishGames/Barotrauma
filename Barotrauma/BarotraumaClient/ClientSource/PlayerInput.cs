@@ -118,18 +118,11 @@ namespace Barotrauma
 
         public static bool operator ==(KeyOrMouse a, KeyOrMouse b)
         {
-            if (a is null)
+            if (a is null || b is null)
             {
-                return b is null;
+                return a is null == b is null;
             }
-            else if (a.MouseButton != MouseButton.None)
-            {
-                return !(b is null) && a.MouseButton == b.MouseButton;
-            }
-            else
-            {
-                return !(b is null) && a.Key.Equals(b.Key);
-            }
+            return a.MouseButton == b.MouseButton && a.Key == b.Key;
         }
 
         public static bool operator !=(KeyOrMouse a, KeyOrMouse b)
@@ -313,6 +306,11 @@ namespace Barotrauma
 
         }
 
+        public static int HorizontalScrollWheelSpeed
+        {
+            get { return AllowInput ? mouseState.HorizontalScrollWheelValue - oldMouseState.HorizontalScrollWheelValue : 0; }
+        }
+
         public static bool PrimaryMouseButtonHeld()
         {
             return AllowInput && mouseState.LeftButton == ButtonState.Pressed;
@@ -372,6 +370,13 @@ namespace Barotrauma
         public static bool MidButtonHeld()
         {
             return AllowInput && mouseState.MiddleButton == ButtonState.Pressed;
+        }
+
+        public static bool MidButtonDown()
+        {
+            return AllowInput &&
+                oldMouseState.MiddleButton == ButtonState.Released &&
+                mouseState.MiddleButton == ButtonState.Pressed;
         }
 
         public static bool Mouse4ButtonClicked()

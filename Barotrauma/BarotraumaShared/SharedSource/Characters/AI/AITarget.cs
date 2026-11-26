@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class AITarget
+    public partial class AITarget
     {
         public static List<AITarget> List = new List<AITarget>();
 
@@ -198,6 +198,7 @@ namespace Barotrauma
         {
             if (InDetectable) { return true; }
             if (Entity == null) { return true; }
+            if (Entity is MapEntity { IsDisabled: true }) { return true; }
             if (Level.IsPositionAboveLevel(WorldPosition))
             {
                 return true;

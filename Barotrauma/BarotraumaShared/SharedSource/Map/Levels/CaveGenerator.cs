@@ -169,6 +169,9 @@ namespace Barotrauma
 
             int iterationsLeft = cells.Count / 2;
 
+            //how many times the path has gone through each cell
+            Dictionary<VoronoiCell, int> visitCounts = new Dictionary<VoronoiCell, int>() { { currentCell, 1 } };
+
             do
             {
                 int edgeIndex = 0;
@@ -181,13 +184,17 @@ namespace Barotrauma
                     double dist = MathUtils.Distance(adjacentCell.Site.Coord.X, adjacentCell.Site.Coord.Y, targetCells[currentTargetIndex].Site.Coord.X, targetCells[currentTargetIndex].Site.Coord.Y);
                     dist += MathUtils.Distance(adjacentCell.Site.Coord.X, adjacentCell.Site.Coord.Y, currentCell.Site.Coord.X, currentCell.Site.Coord.Y) * 0.5f;
                       
+                    //disfavor cells the path has already gone through, prevents it from getting stuck going back and forth between cells
+                    //(e.g. 2 cells with almost overlapping sites: moving between them could otherwise always be "cheaper" than moving towards the target)
+                    dist *= 1 + visitCounts.GetValueOrDefault(adjacentCell);
+
                     //disfavor short edges to prevent generating a very small passage
                     if (Vector2.DistanceSquared(currentCell.Edges[i].Point1, currentCell.Edges[i].Point2) < 150.0f * 150.0f)
                     {
                         //divide by the number of times the current cell has been used
                         //  prevents the path from getting "stuck" (jumping back and forth between adjacent cells) 
                         //  if there's no other way to the destination than going through a short edge
-                        dist *= 10.0f / Math.Max(pathCells.Count(c => c == currentCell), 1.0f);
+                        dist *= 10.0f / Math.Max(visitCounts[currentCell], 1.0f);
                     }
                     if (dist < smallestDist)
                     {
@@ -202,6 +209,8 @@ namespace Barotrauma
 
                 iterationsLeft--;
 
+                visitCounts[currentCell] = visitCounts.GetValueOrDefault(currentCell) + 1;
+
                 if (currentCell == targetCells[currentTargetIndex])
                 {
                     currentTargetIndex++;
@@ -209,6 +218,14 @@ namespace Barotrauma
                 }
 
             } while (currentCell != targetCells[targetCells.Count - 1] && iterationsLeft > 0);
+
+            if (currentCell != targetCells[targetCells.Count - 1])
+            {
+                DebugConsole.ThrowError(
+                    $"Failed to generate a path through all the target cells (reached {currentTargetIndex}/{targetCells.Count} targets, " +
+                    $"stopped at {currentCell.Site.Coord.X:0},{currentCell.Site.Coord.Y:0}, " +
+                    $"next target at {targetCells[currentTargetIndex].Site.Coord.X:0},{targetCells[currentTargetIndex].Site.Coord.Y:0}).");
+            }
 
             return pathCells;
         }

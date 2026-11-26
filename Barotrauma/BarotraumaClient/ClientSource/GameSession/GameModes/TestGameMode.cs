@@ -79,9 +79,8 @@ namespace Barotrauma
             }
         }
 
-        public override void AddToGUIUpdateList()
+        protected override void AddToGUIUpdateListGameModeSpecific()
         {
-            base.AddToGUIUpdateList();
             createEventButton?.AddToGUIUpdateList();
         }
 
@@ -91,10 +90,8 @@ namespace Barotrauma
             OnRoundEnd?.Invoke();
         }
 
-        public override void Update(float deltaTime)
+        protected override void UpdateGameModeSpecific(float deltaTime)
         {
-            base.Update(deltaTime);
-
             if (scriptedEvent != null)
             {
                 foreach (Event sEvent in scriptedEvent.Where(sEvent => !sEvent.IsFinished))

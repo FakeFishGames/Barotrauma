@@ -17,6 +17,7 @@ namespace Barotrauma
         }
 
         public override bool Loaded => nestedStr.Loaded;
+        public override bool UsingDefaultLanguageAsFallback => nestedStr.UsingDefaultLanguageAsFallback;
         protected override bool MustRetrieveValue()
         {
             return base.MustRetrieveValue() || cachedFont != font.Value || cachedFont?.Size != font.Size;

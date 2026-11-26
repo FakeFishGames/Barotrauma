@@ -6,7 +6,7 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    class AIObjectiveRepairItem : AIObjective
+    public class AIObjectiveRepairItem : AIObjective
     {
         public override Identifier Identifier { get; set; } = "repair item".ToIdentifier();
 
@@ -14,7 +14,7 @@ namespace Barotrauma
 
         protected override bool AllowInFriendlySubs => true;
         public override bool KeepDivingGearOn => Item?.CurrentHull == null;
-        protected override bool AllowWhileHandcuffed => false;
+        protected override bool RequireOneHandAvailable => true;
 
         public Item Item { get; private set; }
 
@@ -160,7 +160,7 @@ namespace Barotrauma
                     if (fuel == null)
                     {
                         RemoveSubObjective(ref goToObjective);
-                        TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, item.Identifiers, repairTool.Item.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+                        TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, item.Identifiers, repairTool.Item.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.CanSpawnMissingItems)
                         {
                             RemoveExisting = true
                         },
@@ -252,7 +252,7 @@ namespace Barotrauma
                         };
                         if (repairTool != null)
                         {
-                            objective.CloseEnough = AIObjectiveFixLeak.CalculateReach(repairTool, character);
+                            objective.CloseEnough = repairTool.CalculateReach(character);
                         }
                         return objective;
                     },                    

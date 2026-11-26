@@ -270,6 +270,13 @@ namespace Barotrauma
                             serverPos.Rotation.Value - localPos.Rotation.Value :
                             0.0f;
 
+                        //if we inputs aren't allowed (e.g. character stunned), lets let the server control if we're ignoring platforms or not
+                        //when alive/conscious, we let the client predict this based on their inputs
+                        if (!Character.AllowInput)
+                        {
+                           character.AnimController.IgnorePlatforms = serverPos.IgnorePlatforms;
+                        }
+
                         for (int i = localPosIndex; i < character.MemLocalState.Count; i++)
                         {
                             Hull pointHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(character.MemLocalState[i].Position), clientHull, character.MemLocalState[i].Position.Y < lowestSubPos);
@@ -387,9 +394,9 @@ namespace Barotrauma
                 {
                     inWater = true;
                 }
-                SoundPlayer.PlaySound(inWater ? "footstep_water" : limb.HitSoundTag, limb.WorldPosition, hullGuess: character.CurrentHull);
+                SoundPlayer.PlaySound(inWater ? "footstep_water" : limb.HitSoundTag, limb.WorldPosition, volume: limb.HitSoundVolume, hullGuess: character.CurrentHull);
             }
-            foreach (WearableSprite wearable in limb.WearingItems)
+            foreach (WearableSprite wearable in limb.ActiveWearingItems)
             {
                 if (limb.type == wearable.Limb && !string.IsNullOrWhiteSpace(wearable.Sound))
                 {
@@ -500,44 +507,34 @@ namespace Barotrauma
             }
         }
 
-        partial void FlipProjSpecific()
+        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint, bool showHints, bool disableSeverEffects)
         {
-            foreach (Limb limb in Limbs)
+            bool prostheticInLimb =
+                character.Inventory != null &&
+                character.Inventory.AllItems.Any(it => 
+                    it.GetComponents<Wearable>().Any(w => w.ProstheticForLimbs.Contains(limbJoint.LimbA) || w.ProstheticForLimbs.Contains(limbJoint.LimbB)));
+            //if a prosthetic is currently worn on the limb (server is just notifying us of the limb being considered severed?)
+            //no need to do any of the visual/audio effects of severing
+            if (prostheticInLimb)
             {
-                if (limb == null || limb.IsSevered || !limb.DoesMirror) { continue; }
+                disableSeverEffects = true;
+                showHints = false;
+            }
 
-                FlipSprite(limb.DeformSprite?.Sprite ?? limb.Sprite);
-                foreach (var conditionalSprite in limb.ConditionalSprites)
+            if (!disableSeverEffects)
+            {
+                foreach (Limb limb in new Limb[] { limbJoint.LimbA, limbJoint.LimbB })
                 {
-                    FlipSprite(conditionalSprite.DeformableSprite?.Sprite ?? conditionalSprite.Sprite);
+                    float gibParticleAmount = MathHelper.Clamp(limb.Mass / character.AnimController.Mass, 0.1f, 1.0f);
+                    foreach (ParticleEmitter emitter in character.GibEmitters)
+                    {
+                        if (emitter?.Prefab == null) { continue; }
+                        if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) { continue; }
+                        if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) { continue; }
+
+                        emitter.Emit(1.0f, limb.WorldPosition, character.CurrentHull, amountMultiplier: gibParticleAmount);
+                    }
                 }
-            }
-            static void FlipSprite(Sprite sprite)
-            {
-                if (sprite == null) { return; }
-                Vector2 spriteOrigin = sprite.Origin;
-                spriteOrigin.X = sprite.SourceRect.Width - spriteOrigin.X;
-                sprite.Origin = spriteOrigin;
-            }
-        }
-
-        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint, bool playSound)
-        {
-            foreach (Limb limb in new Limb[] { limbJoint.LimbA, limbJoint.LimbB })
-            {
-                float gibParticleAmount = MathHelper.Clamp(limb.Mass / character.AnimController.Mass, 0.1f, 1.0f);
-                foreach (ParticleEmitter emitter in character.GibEmitters)
-                {
-                    if (emitter?.Prefab == null) { continue; }
-                    if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) { continue; }
-                    if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) { continue; }
-
-                    emitter.Emit(1.0f, limb.WorldPosition, character.CurrentHull, amountMultiplier: gibParticleAmount);
-                }
-            }
-
-            if (playSound)
-            {
                 var damageSound = character.GetSound(s => s.Type == CharacterSound.SoundType.Damage);
                 float range = damageSound != null ? damageSound.Range * 2 : ConvertUnits.ToDisplayUnits(character.AnimController.Collider.GetSize().Length() * 10);
                 if (!limbJoint.Params.BreakSound.IsNullOrEmpty() && !limbJoint.Params.BreakSound.Equals("none", StringComparison.OrdinalIgnoreCase))
@@ -545,11 +542,22 @@ namespace Barotrauma
                     SoundPlayer.PlayDamageSound(limbJoint.Params.BreakSound, 1.0f, limbJoint.LimbA.body.DrawPosition, range: range);
                 }
             }
+
+            if (showHints)
+            {
+                HintManager.OnLimbSevered(character);
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch, Camera cam, bool onlyDrawSeveredLimbs)
         {
-            if (simplePhysicsEnabled) { return; }
+            if (simplePhysicsEnabled)
+            {
+                //only draw the collider in simple physics mode
+                Collider.UpdateDrawPosition();
+                Collider.DebugDraw(spriteBatch, Character.IsPlayer ? Color.Cyan : Color.Magenta);
+                return; 
+            }
 
             Collider.UpdateDrawPosition();
 

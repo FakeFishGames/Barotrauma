@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Globalization;
 
@@ -14,7 +14,17 @@ namespace Barotrauma
         }
 
         private const string Prefix = "STEAM_WORKSHOP_";
-        
+
+        public string ToWorkshopURL()
+        {
+            return ToWorkshopURL(StringRepresentation);
+        }
+
+        public static string ToWorkshopURL(string id)
+        {
+            return $"https://steamcommunity.com/sharedfiles/filedetails/?id={id}";
+        }
+
         public override string StringRepresentation => Value.ToString(CultureInfo.InvariantCulture);
 
         public override bool Equals(object? obj)

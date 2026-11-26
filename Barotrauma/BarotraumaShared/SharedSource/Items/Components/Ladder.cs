@@ -3,7 +3,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Ladder : ItemComponent
+    public partial class Ladder : ItemComponent
     {
         public static List<Ladder> List { get; } = new List<Ladder>();
 
@@ -18,7 +18,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Select(Character character)
         {
-            if (character == null || character.LockHands || character.Removed ) { return false; }
+            if (character == null || character.BothHandsDisabled || character.Removed ) { return false; }
             if (!character.CanClimb) { return false; }
             character.AnimController.StartClimbing();
             return true;

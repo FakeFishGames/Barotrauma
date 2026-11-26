@@ -20,8 +20,14 @@ namespace Barotrauma.Items.Components
         [Serialize(UseEnvironment.Both, IsPropertySaveable.No, description: "Can the item be used in air, underwater or both.")]
         public UseEnvironment UsableIn { get; set; }
 
-        [Serialize(0.0f, IsPropertySaveable.No, description: "The force to apply to the user's body."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "The force to apply to the user's body, in the direction the item is pointing towards."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float Force { get; set; }
+
+        [Serialize("0,0", IsPropertySaveable.No, description: "The force to apply to the user's body, in a fixed direction (e.g. \"0,10\" would always apply an upwards force)."), Editable]
+        public Vector2 FixedForce { get; set; }
+
+        [Serialize(64.0f, IsPropertySaveable.No, description: "Maximum velocity that can be applied to the user (if the user is already going this fast, no more force is applied)"), Editable(MinValueFloat = 0.0f, MaxValueFloat = 64.0f)]
+        public float MaxVelocity { get; set; }
 
         [Serialize(true, IsPropertySaveable.No, description: "If the item is held in RightHand or LeftHand, apply extra force there")]
         public bool ApplyToHands { get; set; }
@@ -63,25 +69,27 @@ namespace Barotrauma.Items.Components
             float length = 200;
             dir = dir.ClampLength(length) / length;
             Vector2 propulsion = dir * Force * character.PropulsionSpeedMultiplier * (1.0f + character.GetStatValue(StatTypes.PropulsionSpeed));
+            propulsion += FixedForce;
+
             if (character.AnimController.InWater && Force > 0.0f) { character.AnimController.TargetMovement = dir; }
 
             foreach (Limb limb in character.AnimController.Limbs)
             {
                 if (limb.WearingItems.Find(w => w.WearableComponent.Item == item) == null) { continue; }
-                limb.body.ApplyForce(propulsion);
+                limb.body.ApplyForce(propulsion, maxVelocity: MaxVelocity);
             }
 
-            character.AnimController.Collider.ApplyForce(propulsion);
+            character.AnimController.Collider.ApplyForce(propulsion, maxVelocity: MaxVelocity);
 
             if (ApplyToHands) 
             { 
                 if (character.Inventory.IsInLimbSlot(item, InvSlotType.RightHand))
                 {
-                    character.AnimController.GetLimb(LimbType.RightHand)?.body.ApplyForce(propulsion);
+                    character.AnimController.GetLimb(LimbType.RightHand)?.body.ApplyForce(propulsion, maxVelocity: MaxVelocity);
                 }
                 if (character.Inventory.IsInLimbSlot(item, InvSlotType.LeftHand))
                 {
-                    character.AnimController.GetLimb(LimbType.LeftHand)?.body.ApplyForce(propulsion);
+                    character.AnimController.GetLimb(LimbType.LeftHand)?.body.ApplyForce(propulsion, maxVelocity: MaxVelocity);
                 }
             }
 
@@ -92,7 +100,6 @@ namespace Barotrauma.Items.Components
                     item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi), 0.0f, item.CurrentHull);
             }
 #endif
-
             return true;
         }
 

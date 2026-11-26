@@ -343,7 +343,12 @@ namespace Barotrauma.Steam
             subscribeButton.OnClicked = (button, o) =>
             {
                 if (!SteamManager.IsInitialized) { return false; }
-                
+
+                if (!MutableWorkshopMenu.CheckIfCanSafelyUpdateFiles(workshopItem.ToEnumerable()))
+                {
+                    return false;
+                }
+
                 if (!workshopItem.IsSubscribed)
                 {
                     workshopItem.Subscribe();
@@ -493,11 +498,17 @@ namespace Barotrauma.Steam
             return thumbnail;
         }
 
-        private GUICustomComponent CreateAsyncThumbnailComponent(GUIFrame thumbnailContainer, Func<Texture2D?> textureGetter, Func<bool> throbberEnabled)
+        public static GUICustomComponent CreateAsyncThumbnailComponent(GUIFrame thumbnailContainer, Func<Texture2D?> textureGetter, Func<bool> throbberEnabled)
         {
             int randomThrobberOffset = Rand.Range(0, 10, Rand.RandSync.Unsynced);
-            return new GUICustomComponent(
+            GUITextBlock? loadFailedText = null;
+            var thumbnailComponent = new GUICustomComponent(
                 new RectTransform(Vector2.One, thumbnailContainer.RectTransform, Anchor.Center),
+                onUpdate: (deltaTime, component) =>
+                {
+                    // Texture failed to load (or the item has no preview image)
+                    if (loadFailedText != null) { loadFailedText.Visible = textureGetter() == null && !throbberEnabled(); }
+                },
                 onDraw: (spriteBatch, component) =>
                 {
                     Rectangle rect = component.Rect;
@@ -527,6 +538,16 @@ namespace Barotrauma.Steam
                             scale: Vector2.One * component.Rect.Height / sheet.FrameSize.ToVector2() * 0.8f);
                     }
                 });
+            loadFailedText = new GUITextBlock(new RectTransform(Vector2.One, thumbnailComponent.RectTransform, Anchor.Center),
+                TextManager.Get("WorkshopItemPreviewImageLoadFailed"),
+                font: GUIStyle.SmallFont,
+                textAlignment: Alignment.Center,
+                wrap: true)
+            {
+                CanBeFocused = false,
+                Visible = false
+            };
+            return thumbnailComponent;
         }
         
         private GUIListBox CreateTagsList(IEnumerable<Identifier> tags, RectTransform rectT, bool canBeFocused)
@@ -608,6 +629,12 @@ namespace Barotrauma.Steam
 
             bool reinstallAction(GUIButton button, object o)
             {
+                if (contentPackage != null &&
+                    !MutableWorkshopMenu.CheckIfCanSafelyUpdateFiles(contentPackage.ToEnumerable())) 
+                {
+                    return false;
+                }
+
                 SettingsMenu.Instance?.ApplyInstalledModChanges();
                 int prevIndex = ContentPackageManager.EnabledPackages.Regular.IndexOf(contentPackage);
                 TaskPool.AddIfNotFound($"Reinstall{workshopItem.Id}", 

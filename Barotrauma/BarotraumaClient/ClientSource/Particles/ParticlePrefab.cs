@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Particles
 {
-    class ParticlePrefab : Prefab, ISerializableEntity
+    public class ParticlePrefab : Prefab, ISerializableEntity
     {
         public static readonly PrefabCollection<ParticlePrefab> Prefabs = new PrefabCollection<ParticlePrefab>();
 

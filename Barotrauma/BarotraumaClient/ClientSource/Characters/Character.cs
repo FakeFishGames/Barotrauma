@@ -254,46 +254,7 @@ namespace Barotrauma
             get { return activeObjectiveEntities; }
         }
 
-        private static readonly List<SpeechBubble> speechBubbles = new List<SpeechBubble>();
-
         private SpeechBubble textlessSpeechBubble;
-
-        sealed class SpeechBubble
-        {
-            public float LifeTime;
-            public Vector2 PrevPosition;
-            public Vector2 Position;
-            public Vector2 DrawPosition;
-            public float MoveUpAmount;
-            public readonly RichString Text;
-            public ImmutableArray<RichTextData>? RichTextData { get; private set; }
-
-            public readonly Character Character;
-            public readonly Submarine Submarine;
-            public readonly Vector2 TextSize;
-
-            public Color Color;
-            public bool Moving;
-
-            public SpeechBubble(Character character, float lifeTime, Color color, string text = "")
-            {
-                var richStr = RichString.Rich(text);
-                Text = ToolBox.WrapText(richStr.SanitizedValue, GUI.IntScale(300), GUIStyle.SmallFont.GetFontForStr(text));
-                TextSize = GUIStyle.SmallFont.MeasureString(Text);
-                RichTextData = richStr.RichTextData;
-
-                Character = character;
-                Position = GetDesiredPosition();
-                Submarine = character.Submarine;
-                LifeTime = lifeTime;
-                Color = color;
-            }
-
-            public Vector2 GetDesiredPosition()
-            {
-                return Character.Position + Vector2.UnitY * 100;
-            }
-        }
 
         private float pressureEffectTimer;
 
@@ -323,14 +284,6 @@ namespace Barotrauma
             hudProgressBars = new Dictionary<object, HUDProgressBar>();
         }
 
-        partial void UpdateLimbLightSource(Limb limb)
-        {
-            if (limb.LightSource != null)
-            {
-                limb.LightSource.Enabled = enabled;
-            }
-        }
-
         private readonly List<Item> previousInteractablesInRange = new();
         private readonly List<Item> interactablesInRange = new();
         
@@ -341,7 +294,7 @@ namespace Barotrauma
         /// </summary>
         public void ControlLocalPlayer(float deltaTime, Camera cam, bool moveCam = true)
         {
-            if (DisableControls || GUI.InputBlockingMenuOpen)
+            if (DisableControls || GUI.InputBlockingMenuOpen || ConversationAction.IsDialogOpen)
             {
                 foreach (Key key in keys)
                 {
@@ -378,7 +331,10 @@ namespace Barotrauma
                     }
                 }
 
-                ShowInteractionLabels = keys[(int)InputType.ShowInteractionLabels].Held;
+                ShowInteractionLabels =
+                    keys[(int)InputType.ShowInteractionLabels].Held &&
+                    //ShowInteractionLabels is also used for free placement of attachable items, so don't show the labels when placing one
+                    HeldItems.None(it => it?.GetComponent<Holdable>() is { } holdable && holdable.IsBeingPlacedBy(this));
 
                 if (ShowInteractionLabels)
                 {
@@ -447,7 +403,8 @@ namespace Barotrauma
                 }
                 else if (Lights.LightManager.ViewTarget is Item item && item.Prefab.FocusOnSelected)
                 {
-                    cam.OffsetAmount = targetOffsetAmount = item.Prefab.OffsetOnSelected * item.OffsetOnSelectedMultiplier;
+                    cam.OffsetAmount = targetOffsetAmount = 
+                        item.Prefab.OffsetOnSelected * item.OffsetOnSelectedMultiplier * item.GetOffsetOnSelectedMultiplierFromComponents();
                 }
                 else if (HeldItems.SelectMany(static item => item.GetComponents<Holdable>())
                                   .Where(static holdable => holdable.Aimable)
@@ -606,6 +563,11 @@ namespace Barotrauma
                     Lights.LightManager.ViewTarget = null;
                 }
             }
+            
+            foreach (var limb in AnimController.Limbs)
+            {
+                limb.UpdateLights();
+            }
 
             PlaySound(CharacterSound.SoundType.Die);
         }
@@ -759,10 +721,23 @@ namespace Barotrauma
                         distanceToItem = 2.0f + Vector2.Distance(rectIntersectionPoint, displayPosition);
                     }
                 }
-                
-                if (distanceToItem > closestItemDistance) { continue; }
+
+                //cursor is directly on 2 items - prefer the one that has a body (items on the floor take priority over static installations)
+                bool thisHasBody = item.body != null;
+                bool otherHasBody = closestItem?.body != null;
+                if (closestItemDistance < 1 && distanceToItem < 1 && thisHasBody != otherHasBody)
+                {
+                    if (!thisHasBody && otherHasBody)
+                    {
+                        continue;
+                    }
+                }
+                else if (distanceToItem > closestItemDistance)
+                {
+                    continue;
+                }
                 if (!CanInteractWith(item)) { continue; }
-                
+
                 debugInteractablesNearCursor.Add((item, 1.0f - distanceToItem / (100.0f * aimAssistModifier)));
                 closestItem = item;
                 closestItemDistance = distanceToItem;
@@ -864,6 +839,18 @@ namespace Barotrauma
                             break;
                     }
                 }
+                else if (AIController is HumanAIController humanAI && Params.UseHumanAI && Params.Sounds.Any())
+                {
+                    // Non-human species with human AI (e.g. cyborgs), play the species-specific idle/attack sounds
+                    if (humanAI.ObjectiveManager.IsCurrentObjective<AIObjectiveCombat>() && Rand.Value() > 0.5f)
+                    {
+                        PlaySound(CharacterSound.SoundType.Attack);
+                    }
+                    else
+                    {
+                        PlaySound(CharacterSound.SoundType.Idle);
+                    }
+                }
             }
 
             if (info != null || Vitality < MaxVitality * 0.98f || IsPet)
@@ -923,12 +910,15 @@ namespace Barotrauma
         public void DoVisibilityCheck(Camera cam)
         { 
             IsVisible = false;
-            if (!Enabled || AnimController.SimplePhysicsEnabled) { return; }
+            if (!Enabled) { return; }
 
             foreach (Limb limb in AnimController.Limbs)
             {
                 float maxExtent = ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent());
-                if (limb.LightSource != null) { maxExtent = Math.Max(limb.LightSource.Range, maxExtent); }
+                foreach (Limb.LimbLight light in limb.LimbLights)
+                {
+                    maxExtent = Math.Max(light.LightSource.Range, maxExtent);
+                }
                 if (limb.body.DrawPosition.X < cam.WorldView.X - maxExtent || limb.body.DrawPosition.X > cam.WorldView.Right + maxExtent) { continue; }
                 if (limb.body.DrawPosition.Y < cam.WorldView.Y - cam.WorldView.Height - maxExtent || limb.body.DrawPosition.Y > cam.WorldView.Y + maxExtent) { continue; }
                 IsVisible = true;
@@ -1174,13 +1164,13 @@ namespace Barotrauma
                 return;
             }
             float duration = MathHelper.Lerp(1.0f, 8.0f, Math.Min(text.Length / 100.0f, 1.0f));
-            speechBubbles.Add(new SpeechBubble(this, duration, color, text));
+            SpeechBubbleManager.ShowSpeechBubble(new SpeechBubble(this, duration, color, text));
             textlessSpeechBubble = null;
         }
 
         public void ShowTextlessSpeechBubble(float duration, Color color)
         {
-            if (speechBubbles.Any(sb => sb.Character == this)) { return; }
+            if (SpeechBubbleManager.SpeechBubbles.Any(sb => sb.Entity == this)) { return; }
             if (textlessSpeechBubble == null)
             {
                 textlessSpeechBubble = new SpeechBubble(this, duration, color);
@@ -1189,88 +1179,6 @@ namespace Barotrauma
             {
                 textlessSpeechBubble.Color = color;
                 textlessSpeechBubble.LifeTime = Math.Max(textlessSpeechBubble.LifeTime, duration);
-            }
-        }
-
-        public static void DrawSpeechBubbles(SpriteBatch spriteBatch, Camera cam)
-        {
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap, DepthStencilState.None, null, null, cam.Transform);
-            foreach (var bubble in speechBubbles)
-            {
-                Vector2 iconPos = Timing.Interpolate(bubble.PrevPosition, bubble.Position);
-                iconPos += Vector2.UnitY * bubble.MoveUpAmount;
-                if (bubble.Submarine != null)
-                {
-                    iconPos += bubble.Submarine.DrawPosition;
-                }
-
-                float alpha = 1.0f;
-                float mouseDist = Vector2.Distance(cam.WorldToScreen(iconPos), PlayerInput.MousePosition);
-                //treat the size of the bubble from corner to corner as the 
-                float textSize = bubble.TextSize.Length();
-                if (mouseDist < textSize)
-                {
-                    alpha *= Math.Max(mouseDist / textSize, 0.5f);
-                }
-
-                iconPos.Y = -iconPos.Y;
-                if (GUIStyle.SpeechBubbleIconSliced.Value is { } speechBubbleIconSliced)
-                {
-                    Vector2 bubbleSize = bubble.TextSize + Vector2.One * GUI.IntScale(15);
-                    speechBubbleIconSliced.Draw(spriteBatch, new RectangleF(iconPos - bubbleSize / 2, bubbleSize), bubble.Color * Math.Min(bubble.LifeTime, 1.0f) * alpha);
-                }
-                GUI.DrawStringWithColors(spriteBatch, iconPos - bubble.TextSize / 2, bubble.Text.SanitizedValue, bubble.Color * Math.Min(bubble.LifeTime, 1.0f) * alpha, bubble.RichTextData, font: GUIStyle.SmallFont);
-            }
-            spriteBatch.End();
-        }
-
-        static partial void UpdateSpeechBubbles(float deltaTime)
-        {
-            for (int i = speechBubbles.Count - 1; i >= 0; i--)
-            {
-                var bubble = speechBubbles[i];
-                bubble.LifeTime -= deltaTime;
-                if (bubble.LifeTime <= 0 || bubble.Character is { Removed: true })
-                {
-                    speechBubbles.RemoveAt(i);
-                    continue;
-                }
-
-                bubble.PrevPosition = bubble.Position;
-
-                Vector2 desiredPos = bubble.GetDesiredPosition();
-                Vector2 diff = desiredPos - bubble.Position;
-                float dist = diff.Length();
-                //how far the bubble needs to be from the desired position to start moving
-                const float MoveThreshold = 100.0f;
-                const float MaxSpeed = 1000.0f;
-                if (dist < 1)
-                {
-                    bubble.Moving = false;
-                }
-                else if (dist > MoveThreshold || bubble.Moving)
-                {
-                    Vector2 moveAmount = diff / dist * MathHelper.Clamp(dist * 5, 0, MaxSpeed) * deltaTime;
-                    //slower vertical movement (don't want to interfere too much with the bubbles floating up
-                    //and the overlap prevention which works vertically)
-                    moveAmount.Y *= 0.1f;
-                    bubble.Position += moveAmount;
-                    bubble.Moving = true;
-                }
-
-                bubble.MoveUpAmount += deltaTime * 5.0f;
-                //go through the newer bubbles, move this one out of the way if one is overlapping
-                for (int j = i + 1; j < speechBubbles.Count; j++)
-                {
-                    var otherBubble = speechBubbles[j];
-                    {
-                        if (Math.Abs(bubble.Position.X - otherBubble.Position.X) < (bubble.TextSize.X + otherBubble.TextSize.X) / 2 &&
-                            Math.Abs(bubble.Position.Y - otherBubble.Position.Y) < (bubble.TextSize.Y + otherBubble.TextSize.Y) / 2 + 10)
-                        {
-                            bubble.Position += Vector2.UnitY * deltaTime * 50.0f;
-                        }
-                    }
-                }
             }
         }
 
@@ -1302,6 +1210,11 @@ namespace Barotrauma
             if (TeamID == CharacterTeamType.FriendlyNPC)
             {
                 nameColor = UniqueNameColor ?? Color.SkyBlue;
+            }
+            else if (myTeam == CharacterTeamType.FriendlyNPC)
+            {
+                //"None" team is hostile to Friendly NPCs, every one else is friendly
+                nameColor = TeamID == CharacterTeamType.None ? GUIStyle.Red : Color.SkyBlue;
             }
             else if (team != myTeam)
             {
@@ -1377,6 +1290,8 @@ namespace Barotrauma
             else
             {
                 progressBar.TextTag = textTag;
+                progressBar.EmptyColor = emptyColor;
+                progressBar.FullColor = fullColor;
             }
 
             progressBar.WorldPosition = worldPosition;

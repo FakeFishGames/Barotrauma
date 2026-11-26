@@ -1,4 +1,4 @@
-struct VertexShaderInput
+﻿struct VertexShaderInput
 {
     float4 Position : POSITION0;
     float2 TexCoords: TEXCOORD0;
@@ -53,20 +53,49 @@ float2 radialDistortion(float2 coord, float distortion)
     return coord + (dist * dist + dist) * cc;
 }
 
-/*float4 sampleWithChromaticAberration(float2 samplePos)
+float positionalDistortionStrength;
+float2 positionalDistortionOrigin;
+float positionalDistortionRadius;
+
+float positionalDistortionAspectRatio = 1;
+
+float2 radialInwardsDistort(float2 coord, float2 origin, float distortion, float radius)
 {
-    return float4(
-        tex2D(TextureSampler, radialDistortion(samplePos, chromaticAberrationStrength.r)).r,
-        tex2D(TextureSampler, radialDistortion(samplePos, chromaticAberrationStrength.g)).g,
-        tex2D(TextureSampler, radialDistortion(samplePos, chromaticAberrationStrength.b)).b,
-        1);
-}*/
+    float2 cc = coord - origin;
+    // Apply aspect correction before distance calculations
+    cc.y /= positionalDistortionAspectRatio;
+    
+    float distSqr = dot(cc, cc); // squared distance from origin
+    float normalizedDist = max(0, 1.0f - distSqr / (radius * radius)); // normalize by radius
+    float d = normalizedDist * distortion;
+
+    // use normalized direction to origin
+    float len = sqrt(distSqr) + 1e-6; // avoid divide by zero
+    float2 dir = cc / len;
+
+    // compute new position in corrected space
+    float2 distorted = coord + d * dir * min(normalizedDist * radius, len) * float2(1.0f, positionalDistortionAspectRatio);
+    
+    return distorted;
+}
+
 float3 sampleChannelsSeparately(float2 samplePosR, float2 samplePosG, float2 samplePosB)
 {
     return float3(
         tex2D(TextureSampler, samplePosR).r,
         tex2D(TextureSampler, samplePosG).g,
         tex2D(TextureSampler, samplePosB).b);
+}
+
+float3 sampleWithPositionalDistortion(float2 samplePos)
+{
+    samplePos = radialInwardsDistort(samplePos, positionalDistortionOrigin, positionalDistortionStrength, positionalDistortionRadius);
+    return tex2D(TextureSampler, samplePos).rgb;
+}
+
+float4 positionalDistortion(VertexShaderOutput input) : COLOR0
+{
+    return float4(sampleWithPositionalDistortion(input.TexCoords).rgb, 1);
 }
 
 float3 sampleWithChromaticAberration(float2 samplePos)
@@ -257,3 +286,11 @@ technique BlurChromaticAberrationDistort
     }
 }
 
+technique PositionalDistortion
+{
+    pass Pass1
+    {
+        VertexShader = compile vs_3_0 mainVS();
+        PixelShader = compile ps_3_0 positionalDistortion();
+    }
+}

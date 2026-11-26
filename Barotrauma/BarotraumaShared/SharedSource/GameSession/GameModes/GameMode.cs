@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class GameMode
+    public partial class GameMode
     {
         public static List<GameModePreset> PresetList = new List<GameModePreset>();
 
@@ -47,6 +47,7 @@ namespace Barotrauma
         public GameMode(GameModePreset preset)
         {
             this.preset = preset;
+            GCHelper.RegisterForWatch(this, notes: $"GameMode: {preset.Name}");
         }
 
         public virtual void Start()
@@ -58,16 +59,36 @@ namespace Barotrauma
 
         public virtual void AddExtraMissions(LevelData levelData) { }
         
-        public virtual void AddToGUIUpdateList()
+        public void AddToGUIUpdateList()
         {
 #if CLIENT
             GameMain.GameSession?.CrewManager.AddToGUIUpdateList();
 #endif
+            AddToGUIUpdateListGameModeSpecific();
+            foreach (var hook in PluginData.GetHooks<PluginGameModeAddToGUIUpdateListDelegate>())
+            {
+                hook(this);
+            }
         }
 
-        public virtual void Update(float deltaTime)
+
+        protected virtual void AddToGUIUpdateListGameModeSpecific()
+        {
+        }
+
+
+        public void Update(float deltaTime)
         {
             CrewManager?.Update(deltaTime);
+            UpdateGameModeSpecific(deltaTime);
+            foreach (var hook in PluginData.GetHooks<PluginGameModeUpdateDelegate>())
+            {
+                hook(this, deltaTime);
+            }
+        }
+
+        protected virtual void UpdateGameModeSpecific(float deltaTime)
+        {
         }
 
         public virtual void End(CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)

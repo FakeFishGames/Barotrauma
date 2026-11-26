@@ -49,32 +49,53 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(500.0f, IsPropertySaveable.Yes, description: "How far the discharge can travel from the item.", alwaysUseInstanceValues: true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 5000.0f)]
+        [Serialize(500.0f, IsPropertySaveable.No, description: "How far the discharge branches can travel from the main lightning arc."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 5000.0f)]
         public float Range
         {
             get;
             set;
         }
 
-        [Serialize(25.0f, IsPropertySaveable.Yes, description: "How much further can the discharge be carried when moving across walls.", alwaysUseInstanceValues: true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(25.0f, IsPropertySaveable.No, description: "How much further can the discharge be carried when moving across walls."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float RangeMultiplierInWalls
         {
             get;
             set;
         }
-
-        [Serialize(0.0f, IsPropertySaveable.No)]
+        
+        [Serialize(0.0f, IsPropertySaveable.No, description: "How far the main lightning arc travels from the item."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 5000.0f)]
         public float RaycastRange { get; set; }
 
-        [Serialize(0.25f, IsPropertySaveable.Yes, description: "The duration of an individual discharge (in seconds)."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 60.0f, ValueStep = 0.1f, DecimalCount = 2)]
-        public float Duration
+        [Serialize(0.25f, IsPropertySaveable.No, description: "The duration of an individual discharge (in seconds)."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 60.0f, ValueStep = 0.1f, DecimalCount = 2)]
+        public float DischargeDuration
         {
             get;
             set;
         }
 
-        [Serialize(0.25f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 60.0f, ValueStep = 0.1f, DecimalCount = 2)]
+        [Serialize(0.25f, IsPropertySaveable.No), Editable(MinValueFloat = 0.0f, MaxValueFloat = 60.0f, ValueStep = 0.1f, DecimalCount = 2)]
         public float Reload
+        {
+            get;
+            set;
+        }
+        
+        [Serialize(0.5f, IsPropertySaveable.No, description: "Controls how chaotic the main lightning arc is. A higher value creates jagged, spreading arcs with more random paths, while a lower value results in straighter, more predictable lines."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, ValueStep = 0.01f, DecimalCount = 2)]
+        public float MainArcVariance
+        {
+            get;
+            set;
+        }
+        
+        [Serialize(0.25f, IsPropertySaveable.No, description: "Controls how chaotic the child lightning arcs, traveling in air/water, are. A higher value creates jagged, spreading arcs with more random paths, while a lower value results in straighter, more predictable lines."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, ValueStep = 0.01f, DecimalCount = 2)]
+        public float ChildArcVariance
+        {
+            get;
+            set;
+        }
+        
+        [Serialize(0.05f, IsPropertySaveable.No, description: "Controls how chaotic the child lightning arcs, traveling via structures, are. A higher value creates jagged, spreading arcs with more random paths, while a lower value results in straighter, more predictable lines."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, ValueStep = 0.01f, DecimalCount = 2)]
+        public float ChildArcVarianceAcrossStructures
         {
             get;
             set;
@@ -87,7 +108,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.Yes)]
+        [Serialize(false, IsPropertySaveable.No)]
         public bool IgnoreUser
         {
             get;
@@ -99,18 +120,37 @@ namespace Barotrauma.Items.Components
         {
             get { return nodes; }
         }
+        
+        
+        private readonly Attack originalAttack;
+        public Attack Attack
+        {
+            get => Item.FindAttackOverride() ?? originalAttack;
+            private init => originalAttack = value;
+        }
 
         private readonly List<(Character character, Node node)> charactersInRange = new List<(Character character, Node node)>();
-
         private bool charging;
-
         private float timer;
-
-        private readonly Attack attack;
-
         private Character user;
-
         private float reloadTimer;
+
+        /// <summary>
+        /// Ammo of the turret this discharger belongs to, captured when the discharge is triggered by the turret's shot. Can modify the discharge.
+        /// </summary>
+        private TurretAmmo dischargeAmmo;
+
+        private float CurrentRange => Range * (dischargeAmmo?.DischargeRangeMultiplier ?? 1.0f);
+        private float CurrentRaycastRange => RaycastRange * (dischargeAmmo?.DischargeRaycastRangeMultiplier ?? 1.0f);
+        private float CurrentRangeMultiplierInWalls => RangeMultiplierInWalls * (dischargeAmmo?.DischargeWallRangeMultiplier ?? 1.0f);
+        private float CurrentDischargeDuration => DischargeDuration * (dischargeAmmo?.DischargeDurationMultiplier ?? 1.0f);
+        private float CurrentMainArcVariance => dischargeAmmo?.DischargeMainArcVariance ?? MainArcVariance;
+        private float CurrentChildArcVariance => dischargeAmmo?.DischargeChildArcVariance ?? ChildArcVariance;
+
+        /// <summary>
+        /// The ammo of the turret's latest shot, if the discharger is part of a turret.
+        /// </summary>
+        private TurretAmmo GetTurretAmmo() => item.GetComponent<Turret>()?.LastLaunchedTurretAmmo;
 
         public ElectricalDischarger(Item item, ContentXElement element) : 
             base(item, element)
@@ -122,10 +162,13 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "attack":
-                    attack = new Attack(subElement, item.Name);
+                    Attack = new Attack(subElement, item.Name);
                     break;
                 }
             }
+            
+            // Backward support. The name of the property got changed due to it conflicting with StatusEffect.Duration (hence couldn't change the property via status effects).
+            DischargeDuration = element.GetAttributeFloat("Duration", DischargeDuration);
 
             InitProjSpecific();
         }
@@ -140,9 +183,10 @@ namespace Barotrauma.Items.Components
             if (character != null && !CharacterUsable) { return false; }
 
             charging = true;
-            timer = Duration;
+            dischargeAmmo = GetTurretAmmo();
+            timer = CurrentDischargeDuration;
             IsActive = true;
-            user = character;
+            user = character ?? item.GetComponent<Turret>()?.User;
 #if SERVER
             if (GameMain.Server != null) { item.CreateServerEvent(this); }
 #endif
@@ -168,35 +212,42 @@ namespace Barotrauma.Items.Components
             timer -= deltaTime;
             if (charging)
             {
-                bool hasPower = false;
+                if (CheckPower())
+                {
+                    Discharge();
+                }
+            }
+        }
+        
+        private bool CheckPower()
+        {
+            if (PowerConsumption > 0)
+            {
                 if (item.Connections == null)
                 {
                     //no connections and can't be wired = must be powered by something like batteries
-                    hasPower = HasPower;
+                    return HasPower;
                 }
-                else
+                return GetAvailableInstantaneousBatteryPower() >= PowerConsumption;
+            }
+            return true;
+        }
+        
+        private void TakePower()
+        {
+            var batteries = GetDirectlyConnectedBatteries().Where(static b => !b.OutputDisabled && b.Charge > 0.0001f && b.MaxOutPut > 0.0001f);
+            float neededPower = PowerConsumption;
+            while (neededPower > 0.0001f && batteries.Any())
+            {
+                float takePower = neededPower / batteries.Count();
+                takePower = Math.Min(takePower, batteries.Min(b => Math.Min(b.Charge * 3600.0f, b.MaxOutPut)));
+                foreach (PowerContainer battery in batteries)
                 {
-                    hasPower = GetAvailableInstantaneousBatteryPower() >= PowerConsumption;
-                }
-
-                if (hasPower)
-                {
-                    var batteries = GetDirectlyConnectedBatteries().Where(static b => !b.OutputDisabled && b.Charge > 0.0001f && b.MaxOutPut > 0.0001f);
-                    float neededPower = PowerConsumption;
-                    while (neededPower > 0.0001f && batteries.Any())
-                    {
-                        float takePower = neededPower / batteries.Count();
-                        takePower = Math.Min(takePower, batteries.Min(b => Math.Min(b.Charge * 3600.0f, b.MaxOutPut)));
-                        foreach (PowerContainer battery in batteries)
-                        {
-                            neededPower -= takePower;
-                            battery.Charge -= takePower / 3600.0f;
-#if SERVER
-                            if (GameMain.Server != null) { battery.Item.CreateServerEvent(battery); }
+                    neededPower -= takePower;
+                    battery.Charge -= takePower / 3600.0f;
+#if SERVER 
+                    if (GameMain.Server != null) { battery.Item.CreateServerEvent(battery); }
 #endif
-                        }
-                    }                    
-                    Discharge();
                 }
             }
         }
@@ -218,16 +269,32 @@ namespace Barotrauma.Items.Components
 
         private void Discharge()
         {
-            reloadTimer = Reload;
             ApplyStatusEffects(ActionType.OnUse, 1.0f);
-            FindNodes(item.WorldPosition, Range);
-            if (attack != null)
+            if (!CheckPower())
+            {
+                // Do another check for the power, because the OnUse status effect might change the power consumption (does not happen in the vanilla content though)
+                return;
+            }
+            reloadTimer = Reload;
+            // Set the timer again because the status effect might have changed it. Otherwise, it would apply only on the next discharge.
+            timer = CurrentDischargeDuration;
+            if (PowerConsumption > 0)
+            {
+                TakePower();
+            }
+            FindNodes(item.WorldPosition, CurrentRange);
+            Attack activeAttack = Attack;
+            if (activeAttack != null)
             {
                 foreach ((Character character, Node node) in charactersInRange)
                 {
                     if (character == null || character.Removed) { continue; }
-                    character.ApplyAttack(user, node.WorldPosition, attack, MathHelper.Clamp(Voltage, 1.0f, MaxOverVoltageFactor), 
-                        impulseDirection: character.WorldPosition - node.WorldPosition);
+
+                    float voltageFactor = MathHelper.Clamp(Voltage, 1.0f, MaxOverVoltageFactor);
+                    Limb targetLimb = character.AnimController.Limbs.MinBy(l => Vector2.DistanceSquared(l.WorldPosition, node.WorldPosition));
+                    character.ApplyAttack(user, node.WorldPosition, activeAttack, voltageFactor, 
+                        impulseDirection: character.WorldPosition - node.WorldPosition, targetLimb: targetLimb);
+                    activeAttack.ApplyStatusEffects(ActionType.OnSuccess, user, targetLimb, node.WorldPosition, voltageFactor);
                 }
             }
             DischargeProjSpecific();
@@ -238,16 +305,19 @@ namespace Barotrauma.Items.Components
 
         public void FindNodes(Vector2 worldPosition, float range)
         {
-            if (RaycastRange > 0.0f)
+            if (CurrentRaycastRange > 0.0f)
             {
-                float angle = 0.0f;
-                float dir = 1;
+                Vector2 aimDir = new Vector2(1, 0);
                 if (item.body != null)
                 {
-                    angle += item.body.Rotation;
-                    dir = item.body.Dir;
+                    float angle = item.body.Rotation;
+                    aimDir = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * item.body.Dir;
                 }
-                worldPosition += new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * RaycastRange * dir;
+                else if (item.GetComponent<Turret>() is Turret turret)
+                {
+                    aimDir = turret.GetFiringDirection();
+                }
+                worldPosition += aimDir * CurrentRaycastRange;
             }
 
             //see which submarines are within range so we can skip structures that are in far-away subs
@@ -276,7 +346,7 @@ namespace Barotrauma.Items.Components
             foreach (Structure structure in Structure.WallList)
             {
                 if (!structure.HasBody || structure.IsPlatform) { continue; }
-                if (structure.Submarine != null&& !submarinesInRange.Contains(structure.Submarine)) { continue; }
+                if (structure.Submarine != null && !submarinesInRange.Contains(structure.Submarine)) { continue; }
 
                 var structureWorldRect = structure.WorldRect;
                 if (worldPosition.X < structureWorldRect.X - range) { continue; }
@@ -315,11 +385,16 @@ namespace Barotrauma.Items.Components
 
 
             nodes.Clear();
-            if (RaycastRange > 0.0f) 
+            if (CurrentRaycastRange > 0.0f) 
             {
-                nodes.Add(new Node(item.WorldPosition, -1));
+                Vector2 startPosition = item.WorldPosition;
+                if (item.GetComponent<Turret>() is Turret turret)
+                {
+                    startPosition = turret.GetFiringPosition();
+                }
+                nodes.Add(new Node(startPosition, -1));
                 int parentNodeIndex = 0;
-                AddNodesBetweenPoints(item.WorldPosition, worldPosition, 0.5f, ref parentNodeIndex);
+                AddNodesBetweenPoints(item.WorldPosition, worldPosition, CurrentMainArcVariance, ref parentNodeIndex);
             }
             else
             {
@@ -327,7 +402,7 @@ namespace Barotrauma.Items.Components
             }
 
             //get all characters within range the arc could potentially hit
-            float totalRange = RaycastRange + range;
+            float totalRange = CurrentRaycastRange + range;
             foreach (Character character in Character.CharacterList)
             {
                 if (!character.Enabled) { continue; }
@@ -335,19 +410,22 @@ namespace Barotrauma.Items.Components
                 if (OutdoorsOnly && character.Submarine != null) { continue; }
                 if (character.Submarine != null && !submarinesInRange.Contains(character.Submarine)) { continue; }
 
-                if (Vector2.DistanceSquared(character.WorldPosition, worldPosition) < totalRange * totalRange * RangeMultiplierInWalls)
+                if (Vector2.DistanceSquared(character.WorldPosition, worldPosition) < totalRange * totalRange * CurrentRangeMultiplierInWalls)
                 {
                     entitiesInRange.Add(character);
                 }
                 //if the weapon does a raycast, check distance to the ray too (not just the end of the ray)
-                if (RaycastRange > 0)
+                if (CurrentRaycastRange > 0)
                 {
                     float distSqr = MathUtils.LineSegmentToPointDistanceSquared(worldPosition, item.WorldPosition, character.WorldPosition);
                     //if the distance from the initial raycast to the character is small (e.g. goes through the character), we know it must hit
-                    if (distSqr < range * range * RangeMultiplierInWalls)
+                    if (distSqr < range * range * CurrentRangeMultiplierInWalls)
                     {
-                        if (!entitiesInRange.Contains(character)) { entitiesInRange.Add(character); }                   
-                        charactersInRange.Add((character, nodes.First()));                        
+                        if (!entitiesInRange.Contains(character)) { entitiesInRange.Add(character); }     
+                        if (FindClosestNode(character.WorldPosition, out _) is int closestNodeIndex and >= 0)
+                        {
+                            charactersInRange.Add((character, nodes[closestNodeIndex]));
+                        }
                     }
                 }
             }
@@ -381,23 +459,42 @@ namespace Barotrauma.Items.Components
                     {
                         dist = Math.Abs(structure.WorldPosition.Y - currPos.Y);
                         if (currPos.X < structure.WorldRect.X)
+                        {
                             dist += structure.WorldRect.X - currPos.X;
+                        }
                         else if (currPos.X > structure.WorldRect.Right)
+                        {
                             dist += currPos.X - structure.WorldRect.Right;
+                        }
                     }
                     else
                     {
                         dist = Math.Abs(structure.WorldPosition.X - currPos.X);
                         if (currPos.Y < structure.WorldRect.Y - structure.Rect.Height)
+                        {
                             dist += (structure.WorldRect.Y - structure.Rect.Height) - currPos.Y;
+                        }
                         else if (currPos.Y > structure.WorldRect.Y)
+                        {
                             dist += currPos.Y - structure.WorldRect.Y;
+                        }
                     }
                 }
                 else if (entitiesInRange[i] is Character character)
                 {
                     dist = MathF.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(currPos, nodes[parentNodeIndex].WorldPosition, character.WorldPosition));
                 }
+
+                if (OutdoorsOnly)
+                {
+                    //rough check to prevent the arch from going through hulls:
+                    //if the middlepoint between the current position and the target is inside hulls, the arc would need to go through a hull -> let's disallow that
+                    Vector2 middlePos = (currPos + entitiesInRange[i].WorldPosition) / 2;
+                    if (Hull.FindHull(middlePos, useWorldCoordinates: true) != null)
+                    {
+                        continue;
+                    }
+                }                
 
                 if (dist < closestDist)
                 {
@@ -409,10 +506,17 @@ namespace Barotrauma.Items.Components
             if (closestIndex == -1 || closestDist > currentRange)
             {
                 //nothing in range, create some arcs to random directions
-                for (int i = 0; i < Rand.Int(4); i++)
+                int createdArcs = 0;
+                int randomArcCount = Rand.Int(4);
+                //max 20 attempts to create nodes that aren't inside hulls
+                const int MaxAttempts = 20;
+                for (int i = 0; i< MaxAttempts; i++)
                 {
                     Vector2 targetPos = currPos + Rand.Vector(MaxNodeDistance * Rand.Range(0.5f, 1.5f));
+                    if (OutdoorsOnly && Hull.FindHull(currPos, useWorldCoordinates: true) != null) { continue; }
                     nodes.Add(new Node(targetPos, parentNodeIndex));
+                    createdArcs++;
+                    if (createdArcs >= randomArcCount) { break; }
                 }
                 return;
             }
@@ -438,30 +542,24 @@ namespace Barotrauma.Items.Components
                             sectionPos.Y + targetStructure.BodyHeight / 2 * yDir);
 
                     //create nodes from the current position to the closest point on the structure
-                    AddNodesBetweenPoints(currPos, targetPos, 0.25f, ref parentNodeIndex);
+                    AddNodesBetweenPoints(currPos, targetPos, CurrentChildArcVariance, ref parentNodeIndex);
 
                     //add a node at the closest point
                     nodes.Add(new Node(targetPos, parentNodeIndex));
                     int nodeIndex = nodes.Count - 1;
                     entitiesInRange.RemoveAt(closestIndex);
-
-                    float newRange = currentRange - (targetStructure.Rect.Width / 2) * (1.0f / RangeMultiplierInWalls);
                     
                     //continue the discharge to the left edge of the structure and extend from there
                     int leftNodeIndex = nodeIndex;
                     Vector2 leftPos = targetStructure.SectionPosition(0, world: true);
                     leftPos.Y += targetStructure.BodyHeight / 2 * yDir;
-                    AddNodesBetweenPoints(targetPos, leftPos, 0.05f, ref leftNodeIndex);
-                    nodes.Add(new Node(leftPos, leftNodeIndex));
-                    FindNodes(entitiesInRange, leftPos, nodes.Count - 1, newRange);
+                    AddMinorNodes(targetPos, leftPos, ChildArcVarianceAcrossStructures, ref leftNodeIndex);
 
                     //continue the discharge to the right edge of the structure and extend from there
                     int rightNodeIndex = nodeIndex;
                     Vector2 rightPos = targetStructure.SectionPosition(targetStructure.SectionCount - 1, world: true);
-                    leftPos.Y += targetStructure.BodyHeight / 2 * yDir;
-                    AddNodesBetweenPoints(targetPos, rightPos, 0.05f, ref rightNodeIndex);
-                    nodes.Add(new Node(rightPos, rightNodeIndex));
-                    FindNodes(entitiesInRange, rightPos, nodes.Count - 1, newRange);
+                    rightPos.Y += targetStructure.BodyHeight / 2 * yDir;
+                    AddMinorNodes(targetPos, rightPos, ChildArcVarianceAcrossStructures, ref rightNodeIndex);
                 }
                 else
                 {
@@ -478,30 +576,32 @@ namespace Barotrauma.Items.Components
                             MathHelper.Clamp(sectionPos.Y, targetStructure.WorldRect.Y - targetStructure.Rect.Height, targetStructure.WorldRect.Y));
 
                     //create nodes from the current position to the closest point on the structure
-                    AddNodesBetweenPoints(currPos, targetPos, 0.25f, ref parentNodeIndex);
+                    AddNodesBetweenPoints(currPos, targetPos, CurrentChildArcVariance, ref parentNodeIndex);
 
                     //add a node at the closest point
                     nodes.Add(new Node(targetPos, parentNodeIndex));
                     int nodeIndex = nodes.Count - 1;
                     entitiesInRange.RemoveAt(closestIndex);
 
-                    float newRange = currentRange - (targetStructure.Rect.Height / 2) * (1.0f / RangeMultiplierInWalls);
-
                     //continue the discharge to the top edge of the structure and extend from there
                     int topNodeIndex = nodeIndex;
                     Vector2 topPos = targetStructure.SectionPosition(0, world: true);
                     topPos.X += targetStructure.BodyWidth / 2 * xDir; 
-                    AddNodesBetweenPoints(targetPos, topPos, 0.05f, ref topNodeIndex);
-                    nodes.Add(new Node(topPos, topNodeIndex));
-                    FindNodes(entitiesInRange, topPos, nodes.Count - 1, newRange);
+                    AddMinorNodes(targetPos, topPos, ChildArcVarianceAcrossStructures, ref topNodeIndex);
 
                     //continue the discharge to the bottom edge of the structure and extend from there
                     int bottomNodeIndex = nodeIndex;
-                    Vector2 bottomBos = targetStructure.SectionPosition(targetStructure.SectionCount - 1, world: true);
-                    bottomBos.X += targetStructure.BodyWidth / 2 * xDir;
-                    AddNodesBetweenPoints(targetPos, bottomBos, 0.05f, ref bottomNodeIndex);
-                    nodes.Add(new Node(bottomBos, bottomNodeIndex));
-                    FindNodes(entitiesInRange, bottomBos, nodes.Count - 1, newRange);
+                    Vector2 bottomPos = targetStructure.SectionPosition(targetStructure.SectionCount - 1, world: true);
+                    bottomPos.X += targetStructure.BodyWidth / 2 * xDir;
+                    AddMinorNodes(targetPos, bottomPos, ChildArcVarianceAcrossStructures, ref bottomNodeIndex);
+                }
+                
+                void AddMinorNodes(Vector2 position1, Vector2 position2, float variance, ref int index)
+                {
+                    AddNodesBetweenPoints(position1, position2, variance, ref index);
+                    nodes.Add(new Node(position1, index));
+                    float range = currentRange - (targetStructure.Rect.Height / 2f) * (1.0f / CurrentRangeMultiplierInWalls);
+                    FindNodes(entitiesInRange, position1, nodes.Count - 1, range);
                 }
 
                 //check if any character is close to this structure
@@ -534,24 +634,13 @@ namespace Barotrauma.Items.Components
                             continue; 
                         }
                     }
-                    if (!charactersInRange.Any(c => c.character == character))
+                    if (charactersInRange.All(c => c.character != character))
                     {
                         charactersInRange.Add((character, nodes[parentNodeIndex]));
                     }
-                    float closestNodeDistSqr = float.MaxValue;
-                    int closestNodeIndex = -1;
-                    for (int i = 0; i < nodes.Count; i++)
+                    if (FindClosestNode(character.WorldPosition, out float closestNodeDist) is int closestNodeIndex and >= 0)
                     {
-                        float distSqr = Vector2.DistanceSquared(character.WorldPosition, nodes[i].WorldPosition);
-                        if (distSqr < closestNodeDistSqr)
-                        {
-                            closestNodeDistSqr = distSqr;
-                            closestNodeIndex = i;
-                        }
-                    }
-                    if (closestNodeIndex > -1)
-                    {
-                        FindNodes(entitiesInRange, nodes[closestNodeIndex].WorldPosition, closestNodeIndex, currentRange - (float)Math.Sqrt(closestNodeDistSqr));
+                        FindNodes(entitiesInRange, nodes[closestNodeIndex].WorldPosition, closestNodeIndex, currentRange - closestNodeDist);
                     }
                 }
             }
@@ -559,21 +648,40 @@ namespace Barotrauma.Items.Components
             {
                 Vector2 targetPos = character.WorldPosition;
                 //create nodes from the current position to the closest point on the character
-                AddNodesBetweenPoints(currPos, targetPos, 0.25f, ref parentNodeIndex);
+                AddNodesBetweenPoints(currPos, targetPos, CurrentChildArcVariance, ref parentNodeIndex);
                 nodes.Add(new Node(targetPos, parentNodeIndex));
                 entitiesInRange.RemoveAt(closestIndex);
-                if (!charactersInRange.Any(c => c.character == character))
+                if (charactersInRange.All(c => c.character != character))
                 {
                     charactersInRange.Add((character, nodes[parentNodeIndex]));
                 }
                 FindNodes(entitiesInRange, targetPos, nodes.Count - 1, currentRange);
             }     
         }
+        
+        private int FindClosestNode(Vector2 worldPosition, out float closestNodeDist)
+        {
+            closestNodeDist = float.MaxValue;
+            float closestNodeDistSqr = float.MaxValue;
+            int closestNodeIndex = -1;
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                float distSqr = Vector2.DistanceSquared(worldPosition, nodes[i].WorldPosition);
+                if (distSqr < closestNodeDistSqr)
+                {
+                    closestNodeDistSqr = distSqr;
+                    closestNodeIndex = i;
+                }
+            }
+            closestNodeDist = MathF.Sqrt(closestNodeDistSqr);
+            return closestNodeIndex;
+        }
 
         private void AddNodesBetweenPoints(Vector2 currPos, Vector2 targetPos, float variance, ref int parentNodeIndex)
         {
             Vector2 diff = targetPos - currPos;
             float dist = diff.Length();
+            if (dist <= 0) { return; }
             Vector2 normal = new Vector2(-diff.Y, diff.X) / dist;
             for (float x = MaxNodeDistance; x < dist - MaxNodeDistance; x += MaxNodeDistance * Rand.Range(0.5f, 1.0f))
             {

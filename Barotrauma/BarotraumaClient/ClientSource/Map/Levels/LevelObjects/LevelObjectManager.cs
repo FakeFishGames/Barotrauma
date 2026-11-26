@@ -11,10 +11,9 @@ namespace Barotrauma
     public interface ILevelRenderableObject
     {
         public Vector3 Position { get; }
-
     }
 
-    partial class LevelObjectManager
+    public partial class LevelObjectManager
     {
 
         // Pre-initialized to the max size, so that we don't have to resize the lists at runtime. TODO: Could the capacity (of some collections?) be lower?

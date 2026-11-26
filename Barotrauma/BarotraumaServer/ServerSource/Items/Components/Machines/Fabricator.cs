@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Fabricator : Powered, IServerSerializable, IClientSerializable
+    public partial class Fabricator : Powered, IServerSerializable, IClientSerializable
     {
         public void ServerEventRead(IReadMessage msg, Client c)
         {

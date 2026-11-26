@@ -1,42 +1,121 @@
 ﻿using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
     class AIObjectiveReturn : AIObjective
     {
         public override Identifier Identifier { get; set; } = "return".ToIdentifier();
-        public Submarine Target { get; }
+        public Submarine Target { get; private set; }
 
         private AIObjectiveGoTo moveInsideObjective, moveOutsideObjective;
         private bool usingEscapeBehavior, isSteeringThroughGap;
 
+        /// <summary>
+        /// When pathfinding fails outside, swim in a random direction for this duration before retrying.
+        /// This helps to "unstuck" when stuck swimming against obstacles, and provides a slightly different
+        /// basis for trying again, rather than repeating the same attempt until suffocation.
+        /// </summary>
+        private float unstuckSwimTimer;
+        private Vector2 unstuckSwimDirection;
+        private const float UnstuckSwimDuration = 5.0f;
+
+        /// <summary>
+        /// Tracks where the last abandon objective happened. If we abandon again in roughly the same position,
+        /// we're likely stuck in a loop and should try unstucking.
+        /// </summary>
+        private Vector2? lastAbandonPosition;
+        private const float StuckDistanceThreshold = 200f;
+
+        /// <summary>
+        /// When returning from outside, the path is only allowed to go through the target airlock's sub (in addition to
+        /// the level itself), so the character doesn't take a detour through some other docked sub's airlock.
+        /// If the path keeps failing this many times, we allow other subs too, in case the target airlock is unreachable from outside.
+        /// </summary>
+        private const int MaxFailedAttemptsBeforeAllowingOtherSubs = 3;
+        private int failedMoveOutsideAttempts;
+
+        /// <summary>
+        /// If set, other friendly subs' airlocks compete with those of the original target by distance, counted at this multiple of their actual distance.
+        /// Otherwise they're only used when the target has no airlock.
+        /// </summary>
+        private readonly float? otherFriendlySubAirlockDistanceMultiplier;
+
+        /// <summary>
+        /// The actual target chosen on creation. <see cref="Target"/> follows the airlock the character heads to, which may be on another sub.
+        /// </summary>
+        private readonly Submarine originalTarget;
+
         protected override bool AllowOutsideSubmarine => true;
         protected override bool AllowInAnySub => true;
 
-        public AIObjectiveReturn(Character character, Character orderGiver, AIObjectiveManager objectiveManager, float priorityModifier = 1.0f) : base(character, objectiveManager, priorityModifier)
+        public AIObjectiveReturn(Character character, Character orderGiver, AIObjectiveManager objectiveManager, float priorityModifier = 1.0f,
+            Submarine preferredTarget = null, float? otherFriendlySubAirlockDistanceMultiplier = null)
+            : base(character, objectiveManager, priorityModifier)
         {
-            Target = GetReturnTarget(Submarine.MainSubs) ?? GetReturnTarget(Submarine.Loaded);
+            this.otherFriendlySubAirlockDistanceMultiplier = otherFriendlySubAirlockDistanceMultiplier;
+
+            // First priority: use preferred target if specified and still valid
+            if (preferredTarget != null)
+            {
+                if (Submarine.Loaded.Contains(preferredTarget))
+                {
+                    Target = preferredTarget;
+                    DebugConsole.NewMessage($"[Return:{character.Name}] Using preferred target: {Target.Info?.Name}");
+                }
+                else
+                {
+                    DebugConsole.NewMessage($"[Return:{character.Name}] Preferred target '{preferredTarget.Info?.Name}' not found in loaded submarines, falling back to search");
+                }
+            }
+
+            // Fall back to team-based search if no valid preferred target
+            if (Target == null)
+            {
+                // Exhaust home candidates everywhere before settling for any friendly sub, otherwise eg. an outpost
+                // dweller would pick the (friendly) player sub just because main subs are searched first.
+                // Among merely friendly subs, main subs still win over closer ones like respawn shuttles or drones.
+                Target =
+                    GetReturnTarget(Submarine.MainSubs, allowAnyFriendlyTeam: false) ??
+                    GetReturnTarget(Submarine.Loaded, allowAnyFriendlyTeam: false) ??
+                    GetReturnTarget(Submarine.MainSubs, allowAnyFriendlyTeam: true) ??
+                    GetReturnTarget(Submarine.Loaded, allowAnyFriendlyTeam: true);
+            }
+
+            originalTarget = Target;
+
             if (Target == null)
             {
                 if (GameMain.GameSession?.GameMode is not TestGameMode)
                 {
-                    DebugConsole.AddWarning($"({character.DisplayName}) No suitable return target found. Cannot return back to the main sub.");   
+                    DebugConsole.AddWarning($"({character.DisplayName}) No suitable return target found. Cannot return back to the main sub. " +
+                        $"PreferredTarget: {preferredTarget?.Info?.Name ?? "none"}, " +
+                        $"Loaded subs: {string.Join(", ", Submarine.Loaded.Select(s => $"{s?.Info?.Name ?? "null"}({s?.TeamID})"))}");
                 }
                 Abandon = true;
             }
 
-            Submarine GetReturnTarget(IEnumerable<Submarine> subs)
+            Submarine GetReturnTarget(IEnumerable<Submarine> subs, bool allowAnyFriendlyTeam)
             {
-                var requiredTeamID = orderGiver?.TeamID ?? character?.TeamID;
-                Submarine returnTarget = null;
-                foreach (var sub in subs)
+                if (subs.None(sub => sub != null)) { return null; }
+
+                // When following a return order by someone else, return to the order giver's home sub
+                Character homeOwner = orderGiver ?? character;
+                subs = subs
+                        .Where(sub => sub != null)
+                        .OrderBy(sub => Vector2.DistanceSquared(character.WorldPosition, sub.WorldPosition));
+                var validSubs = subs
+                        .Where(homeOwner.IsHomeSubmarine);
+                bool isPartOfPlayerCrew = GameSession.GetSessionCrewCharacters(CharacterType.Both).Contains(character);
+                Submarine returnTarget = validSubs.FirstOrDefault(sub => isPartOfPlayerCrew == sub.Info.IsPlayer);                
+
+                // If no home sub matched, try any friendly submarine (/outpost)
+                if (returnTarget == null && allowAnyFriendlyTeam)
                 {
-                    if (sub == null) { continue; }
-                    if (sub.TeamID != requiredTeamID) { continue; }
-                    returnTarget = sub;
-                    break;
+                    returnTarget = subs.FirstOrDefault(s => character.IsOnFriendlyTeam(s.TeamID));
                 }
                 return returnTarget;
             }
@@ -85,12 +164,22 @@ namespace Barotrauma
                     if (moveInsideObjective == null)
                     {
                         Hull targetHull = null;
-                        foreach (var d in Target.ConnectedDockingPorts.Values)
+
+                        //find the hull that's linked to a docking port leading to the target sub (i.e. the airlock hull)
+                        foreach (var potentialSubmarineDockingPot in Target.ConnectedDockingPorts.Values)
                         {
-                            if (!d.Docked) { continue; }
-                            if (d.DockingTarget == null) { continue; }
-                            if (d.DockingTarget.Item.Submarine != character.Submarine) { continue; }
-                            targetHull = d.Item.CurrentHull;
+                            if (!potentialSubmarineDockingPot.Docked) { continue; }
+                            if (potentialSubmarineDockingPot.DockingTarget == null) { continue; }
+                            //the docking port must be docked to the sub the character is in, or some sub connected to it
+                            //(e.g. the extension piece between the sub and the outpost)
+                            if (potentialSubmarineDockingPot.DockingTarget.Item.Submarine != character.Submarine) 
+                            { 
+                                if (!Target.IsConnectedTo(potentialSubmarineDockingPot.DockingTarget.Item.Submarine))
+                                {
+                                    continue;
+                                }
+                            }
+                            targetHull = potentialSubmarineDockingPot.Item.CurrentHull;
                             break;
                         }
                         if (targetHull != null && !targetHull.IsAirlock)
@@ -108,7 +197,6 @@ namespace Barotrauma
                                     airlock = hull;
                                     closestDist = dist;
                                 }
-                                
                             }
                             if (airlock != null)
                             {
@@ -125,7 +213,11 @@ namespace Barotrauma
                                     endNodeFilter = n => n.Waypoint.Submarine == targetHull.Submarine
                                 },
                                 onCompleted: () => RemoveSubObjective(ref moveInsideObjective),
-                                onAbandon: () => Abandon = true);
+                                onAbandon: () =>
+                                {
+                                    // Instead of immediately abandoning, clear and retry
+                                    RemoveSubObjective(ref moveInsideObjective);
+                                });
                         }
                         else
                         {
@@ -143,16 +235,104 @@ namespace Barotrauma
             }
             else if (!isSteeringThroughGap && moveOutsideObjective == null)
             {
-                Hull targetHull = null;
-                float targetDistanceSquared = float.MaxValue;
-                bool targetIsAirlock = false;
-                foreach (var hull in Target.GetHulls(false))
+                // If we're in unstuck swim mode, swim in the given (random) direction
+                if (unstuckSwimTimer > 0)
+                {
+                    unstuckSwimTimer -= deltaTime;
+                    SteeringManager.SteeringManual(deltaTime, unstuckSwimDirection);
+                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 1);
+                    return;
+                }
+
+                Hull targetHull = FindAirlockHull();
+
+                if (targetHull != null)
+                {
+                    // Update Target to match the hull we're going to (for CheckObjectiveState)
+                    Target = targetHull.Submarine;
+
+                    RemoveSubObjective(ref moveInsideObjective);
+                    bool allowOtherSubsAsFallback = failedMoveOutsideAttempts >= MaxFailedAttemptsBeforeAllowingOtherSubs;
+                    TryAddSubObjective(ref moveOutsideObjective,
+                        constructor: () => new AIObjectiveGoTo(targetHull, character, objectiveManager)
+                        {
+                            AllowGoingOutside = true,
+                            ExtraNodeFilter = allowOtherSubsAsFallback ?
+                                null :
+                                // Normally path only through the level and the target's own sub
+                                n => n.Waypoint.Submarine == null || n.Waypoint.Submarine == targetHull.Submarine
+                        },
+                        onCompleted: () => RemoveSubObjective(ref moveOutsideObjective),
+                        onAbandon: () =>
+                        {
+                            RemoveSubObjective(ref moveOutsideObjective);
+                            failedMoveOutsideAttempts++;
+
+                            // Check if we're stuck in the same position as last abandon
+                            bool isStuckInSameSpot = lastAbandonPosition.HasValue &&
+                                Vector2.DistanceSquared(character.WorldPosition, lastAbandonPosition.Value) < StuckDistanceThreshold * StuckDistanceThreshold;
+
+                            if (isStuckInSameSpot)
+                            {
+                                // We've been stuck in this position for a while now, try to unstuck
+                                unstuckSwimTimer = UnstuckSwimDuration;
+                                unstuckSwimDirection = Rand.Vector(1f);
+                                SteeringManager.Reset();
+                                lastAbandonPosition = null;
+                            }
+                            else
+                            {
+                                // First abandon from this particular position, so just record it and retry normally
+                                lastAbandonPosition = character.WorldPosition;
+                            }
+                        });
+                }
+                else
+                {
+#if DEBUG
+                    DebugConsole.ThrowError("Error with a Return objective: no suitable target for 'moveOutsideObjective'");
+#endif
+                    Abandon = true;
+                }
+            }
+            usingEscapeBehavior = shouldUseEscapeBehavior;
+        }
+
+        /// <summary>
+        /// Find the nearest airlock hull the character can enter.
+        /// Searches the target submarine first, then any other friendly submarines (incl. outposts).
+        /// </summary>
+        private Hull FindAirlockHull()
+        {
+            Hull targetHull = null;
+            float targetDistanceSquared = float.MaxValue;
+            bool targetIsAirlock = false;
+
+            List<Submarine> subsToSearch = new List<Submarine>();
+            // Search the target first, then any friendly subs
+            if (Target != null)
+            {
+                subsToSearch.Add(Target);
+            }
+            subsToSearch.AddRange(Submarine.Loaded.Where(s =>
+                s != null && s != Target && character.IsOnFriendlyTeam(s.TeamID)));
+
+            if (subsToSearch.Count == 0)
+            {
+                return null;
+            }
+
+            foreach (var sub in subsToSearch)
+            {
+                if (sub == null) { continue; }
+                float distanceMultiplier = sub != originalTarget && otherFriendlySubAirlockDistanceMultiplier.HasValue ? otherFriendlySubAirlockDistanceMultiplier.Value : 1.0f;
+                foreach (var hull in sub.GetHulls(false))
                 {
                     bool hullIsAirlock = hull.IsAirlock;
-                    if(hullIsAirlock || (!targetIsAirlock && hull.LeadsOutside(character)))
+                    if (hullIsAirlock || (!targetIsAirlock && hull.LeadsOutside(character)))
                     {
-                        float distanceSquared = Vector2.DistanceSquared(character.WorldPosition, hull.WorldPosition);
-                        if (targetHull == null || distanceSquared < targetDistanceSquared)
+                        float distanceSquared = Vector2.DistanceSquared(character.WorldPosition, hull.WorldPosition) * distanceMultiplier * distanceMultiplier;
+                        if (targetHull == null || (hullIsAirlock && !targetIsAirlock) || distanceSquared < targetDistanceSquared)
                         {
                             targetHull = hull;
                             targetDistanceSquared = distanceSquared;
@@ -160,25 +340,14 @@ namespace Barotrauma
                         }
                     }
                 }
-                if (targetHull != null)
+                // If we found an airlock in a higher-priority sub, prefer it (unless other subs' airlocks compete by distance)
+                if (!otherFriendlySubAirlockDistanceMultiplier.HasValue && targetIsAirlock && targetHull?.Submarine == sub)
                 {
-                    RemoveSubObjective(ref moveInsideObjective);
-                    TryAddSubObjective(ref moveOutsideObjective,
-                        constructor: () => new AIObjectiveGoTo(targetHull, character, objectiveManager)
-                        {
-                            AllowGoingOutside = true
-                        },
-                        onCompleted: () => RemoveSubObjective(ref moveOutsideObjective),
-                        onAbandon: () => Abandon = true);
-                }
-                else
-                {
-#if DEBUG
-                    DebugConsole.ThrowError("Error with a Return objective: no suitable target for 'moveOutsideObjective'");
-#endif
+                    break;
                 }
             }
-            usingEscapeBehavior = shouldUseEscapeBehavior;
+
+            return targetHull;
         }
 
         protected override bool CheckObjectiveState()
@@ -202,6 +371,10 @@ namespace Barotrauma
             moveOutsideObjective = null;
             usingEscapeBehavior = false;
             isSteeringThroughGap = false;
+            unstuckSwimTimer = 0;
+            unstuckSwimDirection = Vector2.Zero;
+            lastAbandonPosition = null;
+            failedMoveOutsideAttempts = 0;
             HumanAIController.ResetEscape();
         }
 

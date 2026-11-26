@@ -2,7 +2,7 @@
 
 namespace Barotrauma.MapCreatures.Behavior
 {
-    internal partial class BallastFloraBehavior
+    public partial class BallastFloraBehavior
     {
         public interface IEventData : NetEntityEvent.IData
         {

@@ -298,6 +298,7 @@ namespace Barotrauma
             var thirdRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.04f), fileListLayout.RectTransform), true);
             fileBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1.0f), thirdRow.RectTransform))
             {
+                OverflowClip = true,
                 OnEnterPressed = (tb, txt) => openButton?.OnClicked?.Invoke(openButton, null) ?? false
             };
 

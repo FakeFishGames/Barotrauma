@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Barotrauma;
 
-internal class DeathPrompt
+public class DeathPrompt
 {
     private static CoroutineHandle? createPromptCoroutine;
 
@@ -318,9 +318,12 @@ internal class DeathPrompt
 
         GUITextBlock.AutoScaleAndNormalize(leftHeader, middleHeader, rightHeader);
 
-        foreach (var skill in characterInfo.Job.GetSkills().OrderByDescending(s => s.Level))
+        foreach (var skill in characterInfo.Job.GetSkills(exceptOutpostSkills: true).OrderByDescending(s => s.Level))
         {
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), leftColumn.RectTransform), skill.DisplayName);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), leftColumn.RectTransform), skill.DisplayName)
+            {
+                ToolTip = skill.Description
+            };
 
             int previousSkill = (int)skill.HighestLevelDuringRound;
             int reducedSkill = (int)RespawnManager.GetReducedSkill(characterInfo, skill, RespawnManager.SkillLossPercentageOnDeath);

@@ -14,7 +14,7 @@ using Barotrauma.Sounds;
 
 namespace Barotrauma.Items.Components
 {
-    interface IDrawableComponent
+    public interface IDrawableComponent
     {
 #if CLIENT
         /// <summary>
@@ -29,11 +29,18 @@ namespace Barotrauma.Items.Components
     /// <summary>
     /// The base class for components holding the different functionalities of the item
     /// </summary>
-    partial class ItemComponent : ISerializableEntity
+    public partial class ItemComponent : ISerializableEntity
     {
         protected Item item;
 
         protected string name;
+
+        /// <summary>
+        /// Item components that are rendered in the light map (and will appear emissive)
+        /// </summary>
+        public static IReadOnlyCollection<IDrawableComponent> DrawInLightMap => _drawInLightMap;
+
+        protected static readonly HashSet<IDrawableComponent> _drawInLightMap = new HashSet<IDrawableComponent>();
 
         private bool isActive;
 
@@ -46,7 +53,39 @@ namespace Barotrauma.Items.Components
 
         public bool WasUsed, WasSecondaryUsed;
 
-        public readonly Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
+        private readonly Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
+        /// <summary>Returns the status effect lists without taking the potential overrides into account. In most cases you'd want to use <see cref="GetAllStatusEffects"/> or <see cref="GetStatusEffectsOfType"/> instead.</summary>
+        public Dictionary<ActionType, List<StatusEffect>> GetRawStatusEffectLists() => statusEffectLists;
+
+        public bool HasAnyStatusEffects => statusEffectLists != null;
+        
+        public bool HasStatusEffectsOfType(ActionType type) => statusEffectLists != null && statusEffectLists.ContainsKey(type);
+
+        /// <summary>
+        /// Returns status effects of a specific type, taking the potential overrides into account.
+        /// Zero memory allocation.
+        /// </summary>
+        public StatusEffectEnumerable GetStatusEffectsOfType(ActionType type)
+        {
+            List<StatusEffect> list = null;
+            statusEffectLists?.TryGetValue(type, out list);
+            return new StatusEffectEnumerable(list, Item);
+        }
+
+        /// <summary>
+        /// Returns all active status effects of all types, taking the potential overrides into account.
+        /// </summary>
+        public IEnumerable<StatusEffect> GetAllStatusEffects()
+        {
+            if (statusEffectLists == null) { yield break; }
+            foreach (var list in statusEffectLists.Values)
+            {
+                foreach (var effect in list)
+                {
+                    yield return Item.GetActiveStatusEffect(effect);
+                }
+            }
+        }
 
         public Dictionary<RelatedItem.RelationType, List<RelatedItem>> RequiredItems;
         public readonly List<RelatedItem> DisabledRequiredItems = new List<RelatedItem>();
@@ -213,14 +252,26 @@ namespace Barotrauma.Items.Components
             get { return characterUsable; }
             set { characterUsable = value; }
         }
+        
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should the component be activated when the item is used (or can it only be activated when directly targeting from status effects). ")]
+        public bool AutoActivateOnUse
+        {
+            get;
+            set;
+        }
 
-        //Remove item if combination results in 0 condition
         [Serialize(true, IsPropertySaveable.No, description: "Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties)."), Editable()]
         public bool AllowInGameEditing
         {
             get;
             set;
         }
+
+        /// <summary>
+        /// The amount of camera offset when the item is selected, i.e. how far the camera can be moved from the item.
+        /// A multiplier applied on the item's default <see cref="Item.OffsetOnSelectedMultiplier"/>
+        /// </summary>
+        public virtual float OffsetOnSelectedMultiplier => 1.0f;
 
         public InputType PickKey
         {
@@ -250,6 +301,9 @@ namespace Barotrauma.Items.Components
         {
             get { return name; }
         }
+        
+        [Serialize("", IsPropertySaveable.No, description: "An optional identifier for this specific component instance. Can be used by StatusEffects to target a specific component when an item has multiple components of the same type. If not set, StatusEffects will fall back to matching by component type name.")]
+        public Identifier Identifier { get; private set; }
 
         [Editable, Serialize("", IsPropertySaveable.Yes, translationTextTag: "ItemMsg", description: "A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. \"[Mouse1] Pick up\").")]
         public string Msg
@@ -264,7 +318,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(0f, IsPropertySaveable.No, description: "How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not forced). Note that there's also a generic BotPriority for all item prefabs.")]
+        [Serialize(0f, IsPropertySaveable.No, description: $"How useful the item is in combat? Used by AI to decide which item it should use as a handheld weapon. For the sake of clarity, use a value between 0 and 100 (not forced). Note that there's also a generic {nameof(ItemPrefab.BotPriority)} for all item prefabs.")]
         public float CombatPriority { get; private set; }
 
         /// <summary>
@@ -273,10 +327,19 @@ namespace Barotrauma.Items.Components
         [Serialize(0, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public int ManuallySelectedSound { get; private set; }
 
+        [Serialize(false, IsPropertySaveable.No, description: "Ignores all receiving signals to this ItemComponent.")]
+        public bool IgnoreSignals { get; private set; }
+
         /// <summary>
         /// Can be used by status effects or conditionals to the speed of the item
         /// </summary>
         public float Speed => item.Speed;
+
+        /// <summary>
+        /// Is this component currently in a state where it should cause the item to deteriorate over time (e.g. currently being actively used)? See <see cref="Repairable.ShouldDeteriorate"/>.
+        /// Another way for components to cause deterioration is to set <see cref="Repairable.LastActiveTime"/> manually as needed.
+        /// </summary>
+        public virtual bool ShouldCauseDeterioration => false;
 
         public readonly record struct ItemUseInfo(Item Item, Character User);
         public readonly NamedEvent<ItemUseInfo> OnUsed = new();
@@ -416,18 +479,39 @@ namespace Barotrauma.Items.Components
             void LoadStatusEffect(ContentXElement subElement)
             {
                 var statusEffect = StatusEffect.Load(subElement, item.Name + ", " + GetType().Name);
-                if (!statusEffectLists.TryGetValue(statusEffect.type, out List<StatusEffect> effectList))
+                if (!statusEffectLists.TryGetValue(statusEffect.Type, out List<StatusEffect> effectList))
                 {
                     effectList = new List<StatusEffect>();
-                    statusEffectLists.Add(statusEffect.type, effectList);
+                    statusEffectLists.Add(statusEffect.Type, effectList);
                 }
                 effectList.Add(statusEffect);
             }
         }
 
+        public virtual void SetDisabled(bool isDisabled)
+        {
+        }
+
         private void SetActiveState(bool isActive)
         {
             IsActive = isActive;
+        }
+
+        /// <summary>
+        /// If the item somehow prevents things from being placed in the hand slots at the moment, attempt to free the hands.
+        /// Note that "normally" putting the item in the hand slots doesn't need to be accounted for there, that can be handled by the inventory.
+        /// This is relevant for e.g. swappable prosthetics which may force an item into the hand slots.
+        /// </summary>
+        /// <param name="itemToEquip">The item being equipped into the hand slots. Components may choose to free the hands only for specific items (eg. a SwappableProsthetic only yields to handcuffs).</param>
+        /// <param name="force">
+        /// When set, the component should give up the hand slot for any item, instead of only yielding to the specific ones it normally accepts.
+        /// Note that the component still can and should decide how to free the slot, eg. a SwappableProsthetic stowing a tool rather than dropping.
+        /// Meant only for callers that have already attempted to equip the item and failed, and thus already know this
+        /// component's item is what's blocking the slot. Forcing pre-emptively would make the whole contract meaningless,
+        /// the component would then release the slot on any equipping attempt at all, including ones that would fail anyway.
+        /// </param>
+        public virtual void AttemptToFreeHands(Item itemToEquip, bool force = false)
+        {
         }
 
         public void SetRequiredItems(ContentXElement element, bool allowEmpty = false)
@@ -475,6 +559,16 @@ namespace Barotrauma.Items.Components
         /// <summary>a Character has dropped the item</summary>
         public virtual void Drop(Character dropper, bool setTransform = true) { }
 
+        /// <summary>
+        /// Can AI characters operate the component remotely, or do they need to go near it and select it first?
+        /// </summary>
+        public virtual bool AIOperateRemotely => false;
+
+        /// <summary>
+        /// Can the AI operation continue even when the character is outside any submarine?
+        /// </summary>
+        public virtual bool AIOperateAllowedOutside => false;
+
         /// <returns>true if the operation was completed</returns>
         public virtual bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
@@ -519,6 +613,10 @@ namespace Barotrauma.Items.Components
         //called then the item is dropped or dragged out of a "limbslot"
         public virtual void Unequip(Character character) { }
 
+        /// <summary>
+        /// Called only when the item is equipped, return true to allow the character to interact with a NonInteractable item anyway
+        /// </summary>
+        public virtual bool BypassNonInteractableItem(Character character, Item item) { return false; }
         public virtual void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
@@ -774,7 +872,12 @@ namespace Barotrauma.Items.Components
         {
             if (character.IsBot && item.IgnoreByAI(character)) { return false; }
             if (!item.IsInteractable(character)) { return false; }
-            if (RequiredItems.Count == 0) { return true; }
+            //Contained items or the item's container aren't relevant to checking whether a character can access the item.
+            //If there are no other types of requirements, we can assume the character has access to the item.
+            if (RequiredItems.None(static r => r.Key is not (RelatedItem.RelationType.Contained or RelatedItem.RelationType.Container)))
+            {
+                return true; 
+            }
             if (character.Inventory != null && RequiredItems.TryGetValue(RelatedItem.RelationType.Picked, out List<RelatedItem> relatedItems))
             {
                 foreach (RelatedItem relatedItem in relatedItems)
@@ -805,8 +908,21 @@ namespace Barotrauma.Items.Components
         {
             if (item.Submarine is { IsRespawnShuttle: false })
             {
-                //id cards don't work in enemy subs (except on items that only require the default "idcard" tag)
-                if (idCard.TeamID != CharacterTeamType.None && idCard.TeamID != item.Submarine.TeamID && relatedItem.Identifiers.Any(id => id != "idcard"))
+                //only id cards specific to this sub work here, regardless of the team or the required identifiers
+                if (item.Submarine.RequireSubmarineSpecificIdCards && idCard.SubmarineSpecificID != item.Submarine.SubmarineSpecificIDTag)
+                {
+                    return false;
+                }
+
+                bool isDwellerOnPlayerOutpost =
+                    item.Submarine.TeamID == CharacterTeamType.Team1 && 
+                    item.Submarine.Info.IsOutpost && 
+                    idCard.TeamID == CharacterTeamType.FriendlyNPC;
+
+                //id cards don't work in subs belonging to a different team (except on items that only require the default "idcard" identifier or "identitycard" tag)
+                if (idCard.TeamID != CharacterTeamType.None && 
+                    idCard.TeamID != item.Submarine.TeamID && !isDwellerOnPlayerOutpost &&
+                    relatedItem.Identifiers.Any(id => id != "idcard" && id != Tags.IdCardTag))
                 {
                     if (GameMain.GameSession?.GameMode is PvPMode)
                     {
@@ -823,7 +939,7 @@ namespace Barotrauma.Items.Components
                         return false;
                     }
                 }
-                else if (idCard.SubmarineSpecificID != 0 && item.Submarine.SubmarineSpecificIDTag != idCard.SubmarineSpecificID)
+                else if (idCard.SubmarineSpecificID != 0 && idCard.RestrictToSpecificSubmarine && item.Submarine.SubmarineSpecificIDTag != idCard.SubmarineSpecificID)
                 {
                     return false;
                 }
@@ -833,8 +949,13 @@ namespace Barotrauma.Items.Components
 
         public virtual bool HasRequiredItems(Character character, bool addMessage, LocalizedString msg = null)
         {
-            if (RequiredItems.None()) { return true; }
-            if (character.Inventory == null) { return false; }
+            //contained items are handled separately in places where it's relevant, see HasRequiredContainedItems
+
+            //this method seems to be used in cases where lacking required items prevents the interaction altogether,
+            //while the contained items affect whether the item can be used; it wouldn't make sense to have an item that
+            //you can't interact with unless there's an appropriate item inside, but that you can't interact with to put in the item
+            if (RequiredItems.None(static r => r.Key != RelatedItem.RelationType.Contained)) { return true; }
+            if (character?.Inventory == null) { return false; }
             bool hasRequiredItems = false;
             bool canContinue = true;
             if (RequiredItems.ContainsKey(RelatedItem.RelationType.Equipped))
@@ -931,18 +1052,19 @@ namespace Barotrauma.Items.Components
             bool reducesCondition = false;
             foreach (StatusEffect effect in statusEffects)
             {
-                if (broken && !effect.AllowWhenBroken && effect.type != ActionType.OnBroken) { continue; }
-                if (user != null) { effect.SetUser(user); }
-                effect.AttackMultiplier = attackMultiplier;
+                StatusEffect activeEffect = Item.GetActiveStatusEffect(effect);
+                if (broken && !activeEffect.AllowWhenBroken && activeEffect.Type != ActionType.OnBroken) { continue; }
+                if (user != null) { activeEffect.SetUser(user); }
+                activeEffect.AttackMultiplier = attackMultiplier;
                 var c = character;
-                if (user != null && effect.HasTargetType(StatusEffect.TargetType.Character) && !effect.HasTargetType(StatusEffect.TargetType.UseTarget))
+                if (user != null && activeEffect.HasTargetType(StatusEffect.TargetType.Character) && !activeEffect.HasTargetType(StatusEffect.TargetType.UseTarget))
                 {
                     // A bit hacky, but fixes MeleeWeapons targeting the use target instead of the attacker. Also applies to Projectiles and Throwables, or other callers that passes the user.
                     c = user;
                 }
-                item.ApplyStatusEffect(effect, type, deltaTime, c, targetLimb, useTarget, isNetworkEvent: false, checkCondition: false, worldPosition);
-                effect.AttackMultiplier = 1.0f;
-                reducesCondition |= effect.ReducesItemCondition();
+                item.ApplyStatusEffect(activeEffect, type, deltaTime, c, targetLimb, useTarget, isNetworkEvent: false, checkCondition: false, worldPosition);
+                activeEffect.AttackMultiplier = 1.0f;
+                reducesCondition |= activeEffect.ReducesItemCondition();
             }
             //if any of the effects reduce the item's condition, set the user for OnBroken effects as well
             if (reducesCondition && user != null && type != ActionType.OnBroken)
@@ -952,7 +1074,8 @@ namespace Barotrauma.Items.Components
                     if (ic.statusEffectLists == null || !ic.statusEffectLists.TryGetValue(ActionType.OnBroken, out List<StatusEffect> brokenEffects)) { continue; }
                     foreach (var brokenEffect in brokenEffects)
                     {
-                        brokenEffect.SetUser(user);
+                        StatusEffect activeEffect = item.GetActiveStatusEffect(brokenEffect);
+                        activeEffect.SetUser(user);
                     }
                 }
             }
@@ -977,7 +1100,8 @@ namespace Barotrauma.Items.Components
                     }
                 }
                 ParseMsg();
-                OverrideRequiredItems(componentElement);
+                //the required items in the element are the old item's when swapping, keep the ones from the new prefab
+                if (!isItemSwap) { OverrideRequiredItems(componentElement); }
             }
 #if CLIENT
             if (GuiFrame != null)
@@ -1003,6 +1127,11 @@ namespace Barotrauma.Items.Components
         public virtual void OnItemLoaded() { }
 
         /// <summary>
+        /// Called when the item component is loaded from a character inventory.
+        /// </summary>
+        public virtual void OnLoadCharacterInventory(Character character) { }
+
+        /// <summary>
         /// Implement in a base class if the instances of the component contain some sort of data that isn't serialized using the normal serializable properties
         /// (i.e. some data that changes per-item and isn't loaded from the prefab, but that isn't a property marked with [Serialize] either),
         /// but that must be copied when cloning the item.
@@ -1010,6 +1139,11 @@ namespace Barotrauma.Items.Components
         public virtual void Clone(ItemComponent original) { }
 
         public virtual void OnScaleChanged() { }
+
+        /// <summary>
+        /// Called when the condition of the item drops to 0, before the OnBroken status effects are applied.
+        /// </summary>
+        public virtual void OnItemBroken() { }
 
         /// <summary>
         /// Called when the item has an ItemContainer and the contents inside of it changed.
@@ -1023,12 +1157,15 @@ namespace Barotrauma.Items.Components
             try
             {
                 // Get the type of a specified class.
-                type = ReflectionUtils.GetDerivedNonAbstract<ItemComponent>().Append(typeof(ItemComponent)).FirstOrDefault(t => t.Name == typeName);
+                type = ReflectionUtils.GetDerivedNonAbstract<ItemComponent>()
+                                      .Union(PluginData.LoadedPluginData.SelectMany(static lpd => lpd.ItemComponents))
+                                      .Append(typeof(ItemComponent))
+                                      .FirstOrDefault(t => t.Name == typeName);
                 if (type == null)
                 {
                     if (errorMessages)
                     {
-                        DebugConsole.ThrowError($"Could not find the component \"{typeName}\" ({item.Prefab.ContentFile.Path})", 
+                        DebugConsole.ThrowError($"Could not find the component \"{typeName}\" ({item.Prefab.Identifier}, {item.Prefab.ContentFile.Path})", 
                             contentPackage: element.ContentPackage);
                     }
                     return null;
@@ -1067,8 +1204,7 @@ namespace Barotrauma.Items.Components
             ItemComponent ic = null;
             try
             {
-                object[] lobject = new object[] { item, element };
-                object component = constructor.Invoke(lobject);
+                object component = constructor.Invoke([item, element]);
                 ic = (ItemComponent)component;
                 ic.name = element.Name.ToString();
             }
@@ -1201,7 +1337,7 @@ namespace Barotrauma.Items.Components
         protected const float AIUpdateInterval = 0.2f;
         protected float aiUpdateTimer;
 
-        protected AIObjectiveContainItem AIContainItems<T>(ItemContainer container, Character character, AIObjective currentObjective, int itemCount, bool equip, bool removeEmpty, bool spawnItemIfNotFound = false, bool dropItemOnDeselected = false) where T : ItemComponent
+        protected static AIObjectiveContainItem AIContainItems<T>(ItemContainer container, Character character, AIObjective currentObjective, int itemCount, bool equip, bool removeEmpty, bool spawnItemIfNotFound = false, bool dropItemOnDeselected = false) where T : ItemComponent
         {
             AIObjectiveContainItem containObjective = null;
             if (character.AIController is HumanAIController aiController)
@@ -1211,7 +1347,7 @@ namespace Barotrauma.Items.Components
                     ItemCount = itemCount,
                     Equip = equip,
                     RemoveEmpty = removeEmpty,
-                    GetItemPriority = i =>
+                    GetItemFetchPriority = i =>
                     {
                         if (i.ParentInventory?.Owner is Item)
                         {

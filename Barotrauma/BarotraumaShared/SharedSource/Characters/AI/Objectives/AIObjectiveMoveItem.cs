@@ -6,10 +6,10 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveMoveItem : AIObjective
+    public class AIObjectiveMoveItem : AIObjective
     {
         public override Identifier Identifier { get; set; } = "move item".ToIdentifier();
-        protected override bool AllowWhileHandcuffed => false;
+        protected override bool RequireOneHandAvailable => true;
 
         public Func<Item, float> GetItemPriority;
 
@@ -45,7 +45,11 @@ namespace Barotrauma
         public bool RemoveExistingWhenNecessary { get; set; }
         public Func<Item, bool> RemoveExistingPredicate { get; set; }
         public int? RemoveExistingMax { get; set; }
-        public string AbandonGetItemDialogueIdentifier { get; set; }
+        /// <summary>
+        /// Should the items removed from the targetContainer be put in a suitable container instead of leaving them on the floor?
+        /// </summary>
+        public bool StoreRemovedItems { get; set; }
+        public Identifier AbandonGetItemDialogueIdentifier { get; set; }
         public Func<bool> AbandonGetItemDialogueCondition { get; set; }
         
         /// <summary>
@@ -140,7 +144,8 @@ namespace Barotrauma
                         RemoveExistingWhenNecessary = RemoveExistingWhenNecessary,
                         RemoveExistingPredicate = RemoveExistingPredicate,
                         RemoveMax = RemoveExistingMax,
-                        GetItemPriority = GetItemPriority,
+                        StoreRemovedItems = StoreRemovedItems,
+                        GetItemFetchPriority = GetItemPriority,
                         ignoredContainerIdentifiers = sourceContainer?.Item.Prefab.Identifier.ToEnumerable().ToImmutableHashSet(),
                         AllowToFindDivingGear = AllowToFindDivingGear
                     },

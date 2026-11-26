@@ -3,7 +3,7 @@ using Barotrauma.Networking;
 
 namespace Barotrauma
 {
-    partial class EntitySpawner : Entity, IServerSerializable
+    public partial class EntitySpawner : Entity, IServerSerializable
     {
         public void CreateNetworkEvent(SpawnOrRemove spawnOrRemove)
         {
@@ -14,8 +14,27 @@ namespace Barotrauma
         {
             if (GameMain.Server == null || spawnOrRemove?.Entity == null) { return; }
 
+            bool isSpawnEvent = spawnOrRemove is SpawnEntity;
+#if DEBUG
+            if (isSpawnEvent)
+            {
+                // Discrepancies here cause very hairy bugs, so let's make sure they are loud
+                foreach (ServerEntityEvent entityEvent in GameMain.Server.EntityEventManager.Events)
+                {
+                    if (entityEvent.Entity == spawnOrRemove.Entity)
+                    {
+                        DebugConsole.ThrowError(
+                            $"A network event ({entityEvent.Data?.GetType().Name ?? "null"}) was created for the entity " +
+                            $"{spawnOrRemove.Entity} before the entity's spawn event. " +
+                            "The clients will not be able to process the event, because they don't know the entity yet." +
+                            $"\nThe event was created at:\n{entityEvent.StackTrace}");
+                    }
+                }
+            }
+#endif
+
             GameMain.Server.CreateEntityEvent(this, spawnOrRemove);
-            if (spawnOrRemove is SpawnEntity)
+            if (isSpawnEvent)
             {
                 if (spawnOrRemove.Entity is Character { Info: { } } character && !character.Removed)
                 {

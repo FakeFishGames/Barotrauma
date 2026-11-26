@@ -7,7 +7,7 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    partial class KarmaManager : ISerializableEntity
+    public partial class KarmaManager : ISerializableEntity
     {
         private class ClientMemory
         {

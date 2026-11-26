@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Items.Components
 {
-    partial class ItemLabel : ItemComponent, IDrawableComponent, IServerSerializable
+    public partial class ItemLabel : ItemComponent, IDrawableComponent, IServerSerializable
     {
         public Vector2 DrawSize
         {

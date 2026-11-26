@@ -58,7 +58,6 @@ namespace Barotrauma
         enum Platform
         {
             Steam,
-            EOS,
             None
         }
 
@@ -79,10 +78,6 @@ namespace Barotrauma
             if (SteamManager.IsInitialized)
             {
                 return await GetSteamAuthTicket();
-            }
-            else if (EosInterface.IdQueries.IsLoggedIntoEosConnect)
-            {
-                return await GetEOSAuthTicket();
             }
             return new AuthTicket(string.Empty, Platform.None);
         }
@@ -105,21 +100,6 @@ namespace Barotrauma
             return authTicket.TryUnwrap(out var ticketUnwrapped) && ticketUnwrapped.Data is { Length: > 0 }
                 ? new AuthTicket(ToolBoxCore.ByteArrayToHexString(ticketUnwrapped.Data), Platform.Steam) //convert byte array to hex
                 : throw new Exception("Could not retrieve Steam authentication ticket, possibly due to connection issues. GameAnalytics logging will be disabled.");
-        }
-
-        private static async Task<AuthTicket> GetEOSAuthTicket()
-        {
-            var puid = EosInterface.IdQueries.GetLoggedInPuids().First();
-            var tokenResult = EosInterface.EosIdToken.FromProductUserId(puid);
-            if (tokenResult.TryUnwrapFailure(out var error))
-            {
-                throw new Exception($"Could not retrieve EOS authentication ticket for GameAnalytics. {error}");
-            }
-            else if (tokenResult.TryUnwrapSuccess(out var token))
-            {
-                return new AuthTicket(token.JsonWebToken.ToString(), Platform.EOS);
-            }
-            throw new UnreachableCodeException();
         }
 
         /// <summary>
@@ -267,16 +247,16 @@ namespace Barotrauma
             #if DEBUG
             return;
             #endif
-            
+
             if (!ConsentTextAvailable)
             {
                 SetConsent(Consent.Unknown);
                 return;
             }
 
-            if (!SteamManager.IsInitialized && EosInterface.IdQueries.GetLoggedInPuids() is not { Length: > 0 })
+            if (!SteamManager.IsInitialized)
             {
-                DebugConsole.AddWarning("Error in GameAnalyticsManager.GetConsent: Could not get a Steam or EOS authentication ticket (not connected to Steam or EOS).");
+                DebugConsole.AddWarning("Error in GameAnalyticsManager.GetConsent: Could not get a Steam authentication ticket (not connected to Steam).");
                 SetConsent(Consent.Error);
                 return;
             }

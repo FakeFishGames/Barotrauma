@@ -1,4 +1,3 @@
-using Barotrauma;
 using System;
 using System.Linq;
 using System.Xml.Linq;
@@ -7,7 +6,7 @@ namespace Barotrauma
 {
 
     [RequiredByCorePackage]
-    sealed class JobsFile : ContentFile
+    public sealed class JobsFile : ContentFile
     {
         public JobsFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

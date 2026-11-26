@@ -8,14 +8,14 @@ namespace Barotrauma.Networking
         Disconnected = 0x2
     }
 
-    abstract class NetworkConnection<T> : NetworkConnection where T : Endpoint
+    public abstract class NetworkConnection<T> : NetworkConnection where T : Endpoint
     {
         protected NetworkConnection(T endpoint) : base(endpoint) { }
 
         public new T Endpoint => (base.Endpoint as T)!;
     }
-    
-    abstract class NetworkConnection
+
+    public abstract class NetworkConnection
     {
         public static double TimeoutThresholdNotInGame => GameMain.NetworkMember?.ServerSettings?.TimeoutThresholdNotInGame ?? 60.0; //full minute for timeout because loading screens can take quite a while
         public static double TimeoutThresholdInGame => GameMain.NetworkMember?.ServerSettings?.TimeoutThresholdInGame ?? 10.0;

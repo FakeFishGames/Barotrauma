@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class DecalPrefab : PrefabWithUintIdentifier
+    public class DecalPrefab : PrefabWithUintIdentifier
     {
         public string Name => Identifier.Value;
 
@@ -21,6 +21,8 @@ namespace Barotrauma
         public readonly List<Sprite> Sprites;
 
         public readonly Color Color;
+
+        public readonly float MinScale, MaxScale;
 
         public readonly float LifeTime;
         public readonly float FadeOutTime;
@@ -39,6 +41,10 @@ namespace Barotrauma
             }
 
             Color = element.GetAttributeColor("color", Color.White);
+
+            float scale = element.GetAttributeFloat("scale", 1.0f);
+            MinScale = element.GetAttributeFloat(nameof(MinScale), scale);
+            MaxScale = element.GetAttributeFloat(nameof(MaxScale), scale);
 
             LifeTime = element.GetAttributeFloat("lifetime", 10.0f);
             FadeOutTime = Math.Min(LifeTime, element.GetAttributeFloat("fadeouttime", 1.0f));

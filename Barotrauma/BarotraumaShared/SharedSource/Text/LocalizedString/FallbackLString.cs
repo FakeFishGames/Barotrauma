@@ -6,6 +6,9 @@ namespace Barotrauma
         private readonly LocalizedString primary;
         private readonly LocalizedString fallback;
 
+        /// <summary>
+        /// Is the primary text loaded, or are we using the fallback text instead?
+        /// </summary>
         public bool PrimaryIsLoaded { get; private set; }
 
         private readonly bool useDefaultLanguageIfFound;
@@ -35,15 +38,21 @@ namespace Barotrauma
         }
 
         public override bool Loaded => primary.Loaded || fallback.Loaded;
+
+        /// <summary>
+        /// Should we use the primary text even though it didn't load, because it's available in the default language (English)?
+        /// </summary>
+        private bool UsingPrimaryInDefaultLanguage => useDefaultLanguageIfFound && primary.UsingDefaultLanguageAsFallback;
+
+        public override bool UsingDefaultLanguageAsFallback =>
+            !primary.Loaded && (UsingPrimaryInDefaultLanguage || fallback.UsingDefaultLanguageAsFallback);
+
         public override void RetrieveValue()
         {
             cachedValue = primary.Value;
             PrimaryIsLoaded = primary.Loaded;
 
-            bool defaultLanguageFallbackAvailable = primary is TagLString { UsingDefaultLanguageAsFallback: true };
-
-            if (!primary.Loaded && 
-                (!defaultLanguageFallbackAvailable || !useDefaultLanguageIfFound))
+            if (!primary.Loaded && !UsingPrimaryInDefaultLanguage)
             {
                 cachedValue = fallback.Value;
             }

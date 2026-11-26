@@ -1,4 +1,6 @@
-﻿namespace Barotrauma
+﻿using Microsoft.Xna.Framework;
+
+namespace Barotrauma
 {
     /// <summary>
     /// Adjusts the crew's reputation by some value.
@@ -17,6 +19,12 @@
         [Serialize(0.0f, IsPropertySaveable.Yes, description: "Amount of reputation to add or remove.")]
         public float Increase { get; set; }
 
+        [Serialize(float.MinValue, IsPropertySaveable.Yes, description: "The reputation is clamped above this value after adding/removing the specified amount.")]
+        public float Min { get; set; }
+
+        [Serialize(float.MaxValue, IsPropertySaveable.Yes, description: "The reputation is clamped below this value after adding/removing the specified amount.")]
+        public float Max { get; set; }
+
         [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the faction you want to adjust the reputation for. Ignored if TargetType is set to Location.")]
         public Identifier Identifier { get; set; }
 
@@ -29,7 +37,7 @@
         {
             return isFinished;
         }
-        public override void Reset()
+        public override void Reset(bool shouldEndConversations = true)
         {
             isFinished = false;
         }
@@ -44,10 +52,10 @@
                 {
                     case ReputationType.Faction:
                         {
-                            Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier == Identifier);
+                            Faction faction = campaign.GetFaction(Identifier);
                             if (faction != null)
                             {
-                                faction.Reputation.AddReputation(Increase);
+                                ModifyReputation(faction.Reputation);
                             }
                             else
                             {
@@ -59,7 +67,7 @@
                         }
                     case ReputationType.Location:
                         {
-                            campaign.Map.CurrentLocation?.Reputation?.AddReputation(Increase);
+                            ModifyReputation(campaign.Map.CurrentLocation?.Reputation);
                             break;
                         }
                     default:
@@ -68,6 +76,20 @@
                                 contentPackage: ParentEvent.Prefab.ContentPackage);
                             break;
                         }
+                }
+            }
+
+            void ModifyReputation(Reputation reputation)
+            {
+                if (reputation == null) { return; }
+                reputation.AddReputation(Increase);
+                if (reputation.Value < Min)
+                {
+                    reputation.SetReputation(Min);
+                }
+                else if (reputation.Value > Max)
+                {
+                    reputation.SetReputation(Max);
                 }
             }
 

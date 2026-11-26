@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Items.Components
 {
-    internal sealed partial class CircuitBox
+    public sealed partial class CircuitBox
     {
         public CircuitBoxUI? UI;
         public readonly Dictionary<Character, CircuitBoxCursor> ActiveCursors = new Dictionary<Character, CircuitBoxCursor>();

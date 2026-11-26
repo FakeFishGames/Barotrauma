@@ -1,9 +1,9 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace Barotrauma
 {
-    class SlideshowPrefab : Prefab
+    public class SlideshowPrefab : Prefab
     {
         public static readonly PrefabCollection<SlideshowPrefab> Prefabs = new PrefabCollection<SlideshowPrefab>();
 
@@ -14,6 +14,7 @@ namespace Barotrauma
 
             public readonly float FadeInDelay, FadeInDuration, FadeOutDuration;
             public readonly float TextFadeInDelay, TextFadeInDuration;
+            public readonly float PressAnyKeyDelay;
 
             public Slide(ContentXElement element)
             {
@@ -25,6 +26,7 @@ namespace Barotrauma
                 FadeOutDuration = element.GetAttributeFloat(nameof(FadeOutDuration), 2.0f);
                 TextFadeInDelay = element.GetAttributeFloat(nameof(TextFadeInDelay), 2.0f);
                 TextFadeInDuration = element.GetAttributeFloat(nameof(TextFadeInDuration), 3.0f);
+                PressAnyKeyDelay = element.GetAttributeFloat(nameof(PressAnyKeyDelay), TextFadeInDelay * 2f); // backwards compat
 
                 foreach (var subElement in element.Elements())
                 {

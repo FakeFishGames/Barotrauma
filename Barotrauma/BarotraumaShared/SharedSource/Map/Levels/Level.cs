@@ -16,7 +16,7 @@ using Voronoi2;
 
 namespace Barotrauma
 {
-    partial class Level : Entity, IServerSerializable
+    public partial class Level : Entity, IServerSerializable
     {
         public enum PlacementType
         {
@@ -187,12 +187,15 @@ namespace Barotrauma
 
             public readonly CaveGenerationParams CaveGenerationParams;
 
-            public Cave(CaveGenerationParams caveGenerationParams, Rectangle area, Point startPos, Point endPos)
+            public readonly bool IsAbyssCave;
+
+            public Cave(CaveGenerationParams caveGenerationParams, Rectangle area, Point startPos, Point endPos, bool isAbyssCave)
             {
                 CaveGenerationParams = caveGenerationParams;
                 Area = area;
                 StartPos = startPos;
                 EndPos = endPos;
+                IsAbyssCave = isAbyssCave;
             }
         }
 
@@ -469,7 +472,14 @@ namespace Barotrauma
         /// </summary>
         public static bool IsLoadedFriendlyOutpost => 
             loaded?.Type == LevelData.LevelType.Outpost && 
-            (loaded?.StartLocation?.Type?.OutpostTeam == CharacterTeamType.FriendlyNPC || loaded?.StartLocation?.Type?.OutpostTeam == CharacterTeamType.Team1);
+            (loaded?.StartLocation?.Type?.OutpostTeam is CharacterTeamType.FriendlyNPC or CharacterTeamType.Team1 || loaded?.StartOutpost?.TeamID is CharacterTeamType.FriendlyNPC or CharacterTeamType.Team1);
+
+        /// <summary>
+        /// Is there a loaded level set, and does it belong to Team1.
+        /// </summary>
+        public static bool IsLoadedTeam1Outpost =>
+            loaded?.Type == LevelData.LevelType.Outpost && 
+            (loaded?.StartLocation?.Type?.OutpostTeam == CharacterTeamType.Team1 || loaded?.StartOutpost?.TeamID == CharacterTeamType.Team1);
 
         public LevelGenerationParams GenerationParams
         {
@@ -497,18 +507,34 @@ namespace Barotrauma
             borders = new Rectangle(Point.Zero, levelData.Size);
         }
 
-        public bool ShouldSpawnCrewInsideOutpost()
+        /// <summary>
+        /// Should characters from the specified team spawn inside the outpost?
+        /// </summary>
+        /// <param name="isInitialSpawn">Is this the first spawn of the round, rather than a character spawning/respawning mid-round?</param>
+        public bool ShouldSpawnCrewInsideOutpost(CharacterTeamType team, bool isInitialSpawn)
         {
-            if (StartOutpost != null &&
-                Type == LevelData.LevelType.Outpost &&
-                ((StartOutpost.Info.OutpostGenerationParams is { SpawnCrewInsideOutpost: true } && StartOutpost.GetConnectedSubs().Any(s => s.Info.Type == SubmarineType.Player)) || Submarine.MainSub == null))
+            if (StartOutpost != null && Type == LevelData.LevelType.Outpost)
             {
-                return GameMain.GameSession.Campaign?.CurrentLocation is not { IsFactionHostile: true };
+                if (team == CharacterTeamType.Team1 && GameMain.GameSession.Missions.Any(m => m.Prefab.ForceTeam1SpawnInsideSub))
+                {
+                    return false;
+                }
+                else if (team == CharacterTeamType.Team2 && GameMain.GameSession.Missions.Any(m => m.Prefab.ForceTeam2SpawnInsideSub))
+                {
+                    return false;
+                }
+
+                if ((StartOutpost.Info.OutpostGenerationParams is { SpawnCrewInsideOutpost: true } && StartOutpost.GetConnectedSubs().Contains(Submarine.MainSub)) || 
+                    Submarine.MainSub == null ||
+                    (!isInitialSpawn && GameMain.GameSession.Missions.Any(m => m.Prefab.ForceRespawnInsideOutpost)))
+                {
+                    return GameMain.GameSession.Campaign?.CurrentLocation is not { IsFactionHostile: true };
+                }
             }
             return false;
         }
 
-        public static Level Generate(LevelData levelData, bool mirror, Location startLocation, Location endLocation, SubmarineInfo startOutpost = null, SubmarineInfo endOutpost = null)
+        public static Level Generate(LevelData levelData, bool mirror, Location startLocation, Location endLocation)
         {
             Debug.Assert(levelData.Biome != null);
             if (levelData.Biome == null) { throw new ArgumentException("Biome was null"); }
@@ -517,9 +543,28 @@ namespace Barotrauma
 
             Level level = new Level(levelData)
             {
-                preSelectedStartOutpost = startOutpost,
-                preSelectedEndOutpost = endOutpost
+                preSelectedStartOutpost = levelData.ForceStartOutpost,
+                preSelectedEndOutpost = levelData.ForceEndOutpost,
             };
+            TryGetForcedOutpostParams(startLocation, ref level.preSelectedStartOutpost);
+            if (levelData.Type != LevelData.LevelType.Outpost)
+            {
+                TryGetForcedOutpostParams(endLocation, ref level.preSelectedEndOutpost);
+            }
+
+            void TryGetForcedOutpostParams(Location location, ref SubmarineInfo outpostInfo)
+            {
+                if (outpostInfo != null) { return; }
+                if (location?.Type.GetForcedOutpostGenerationParams() is OutpostGenerationParams forcedOutpostParameters &&
+                    !forcedOutpostParameters.OutpostFilePath.IsNullOrEmpty())
+                {
+                    outpostInfo = new SubmarineInfo(forcedOutpostParameters.OutpostFilePath.Value)
+                    {
+                        OutpostGenerationParams = forcedOutpostParameters
+                    };
+                }
+            }
+
             level.Generate(mirror, startLocation, endLocation);
             return level;
         }
@@ -1341,6 +1386,7 @@ namespace Barotrauma
             //----------------------------------------------------------------------------------
 
             CreateOutposts();
+            ObstructBlockedTunnelWaypoints();
 
             GenerateEqualityCheckValue(LevelGenStage.Outposts);
 
@@ -1835,13 +1881,18 @@ namespace Barotrauma
             return FindClosestWayPoint(worldPosition, otherTunnel.WayPoints);
         }
 
-        private static WayPoint FindClosestWayPoint(Vector2 worldPosition, IEnumerable<WayPoint> waypoints, Func<WayPoint, bool> filter = null)
+        private static WayPoint FindClosestWayPoint(Vector2 worldPosition, IEnumerable<WayPoint> waypoints, Func<WayPoint, bool> filter = null, 
+            Func<WayPoint, float> distanceMultiplier = null)
         {
             float closestDist = float.PositiveInfinity;
             WayPoint closestWayPoint = null;
             foreach (WayPoint otherWayPoint in waypoints)
             {
                 float dist = Vector2.DistanceSquared(otherWayPoint.WorldPosition, worldPosition);
+                if (distanceMultiplier != null)
+                {
+                    dist *= distanceMultiplier(otherWayPoint);
+                }
                 if (dist < closestDist)
                 {
                     if (filter != null)
@@ -2075,7 +2126,8 @@ namespace Barotrauma
                 GenerateCave(
                     caveParams, Tunnels.First(),
                     new Point(islandArea.Center.X, islandArea.Center.Y + (int)(islandArea.Size.Y * (1.0f - caveScaleRelativeToIsland)) / 2),
-                    new Point((int)(islandArea.Size.X * caveScaleRelativeToIsland), (int)(islandArea.Size.Y * caveScaleRelativeToIsland)));
+                    new Point((int)(islandArea.Size.X * caveScaleRelativeToIsland), (int)(islandArea.Size.Y * caveScaleRelativeToIsland)),
+                    isAbyssCave: true);
                 AbyssIslands.Add(new AbyssIsland(islandArea, islandCells));
                 createdCaves++;
             }
@@ -2140,7 +2192,14 @@ namespace Barotrauma
         private void GenerateCaves(Tunnel parentTunnel)
         {
             ResetRandomSeed();
-            for (int i = 0; i < GenerationParams.CaveCount; i++)
+
+            int caveCount = GenerationParams.CaveCount;
+            if (GameMain.GameSession?.GameMode?.Missions.Any(m => m.Prefab.RequireCave) ?? false)
+            {
+                caveCount = Math.Max(caveCount, 1);
+            }
+
+            for (int i = 0; i < caveCount; i++)
             {
                 var caveParams = CaveGenerationParams.GetRandom(this, abyss: false, rand: Rand.RandSync.ServerAndClient);
                 Point caveSize = new Point(
@@ -2152,17 +2211,18 @@ namespace Barotrauma
                 int radius = Math.Max(caveSize.X, caveSize.Y) / 2;
                 var cavePos = FindPosAwayFromMainPath((parentTunnel.MinWidth + radius) * 1.25f, asCloseAsPossible: true, allowedArea);
 
-                GenerateCave(caveParams, parentTunnel, cavePos, caveSize);
+                GenerateCave(caveParams, parentTunnel, cavePos, caveSize, isAbyssCave: false);
 
                 CalculateTunnelDistanceField(null);
             }
         }
 
-        private void GenerateCave(CaveGenerationParams caveParams, Tunnel parentTunnel, Point cavePos, Point caveSize)
+        private void GenerateCave(CaveGenerationParams caveParams, Tunnel parentTunnel, Point cavePos, Point caveSize, bool isAbyssCave)
         {
             Rectangle caveArea = new Rectangle(cavePos - new Point(caveSize.X / 2, caveSize.Y / 2), caveSize);
             Point closestParentNode = parentTunnel.Nodes.First();
             double closestDist = double.PositiveInfinity;
+
             foreach (Point node in parentTunnel.Nodes)
             {
                 if (caveArea.Contains(node)) { continue; }
@@ -2182,7 +2242,7 @@ namespace Barotrauma
             Point caveStartPos = caveStartPosVector.ToPoint();
             Point caveEndPos = cavePos - (caveStartPos - cavePos);
 
-            Cave cave = new Cave(caveParams, caveArea, caveStartPos, caveEndPos);
+            Cave cave = new Cave(caveParams, caveArea, caveStartPos, caveEndPos, isAbyssCave);
             Caves.Add(cave);
 
             var caveSegments = MathUtils.GenerateJaggedLine(
@@ -2401,36 +2461,8 @@ namespace Barotrauma
             Debug.Assert(wayPoints.Any(), "Couldn't generate waypoints around ruins.");
 
             //connect ruin entrances to the outside waypoints
-            foreach (Gap g in Gap.GapList)
-            {
-                if (g.Submarine != ruin.Submarine || g.IsRoomToRoom || g.linkedTo.Count == 0) { continue; }
-                var gapWaypoint = WayPoint.WayPointList.Find(wp => wp.ConnectedGap == g);
-                if (gapWaypoint == null) { continue; }
-
-                //place another waypoint in front of the entrance
-                Vector2 entranceDir = Vector2.Zero;
-                if (g.IsHorizontal)
-                {
-                    entranceDir = Vector2.UnitX * 2 * Math.Sign(g.WorldPosition.X - g.linkedTo[0].WorldPosition.X);
-                }
-                else
-                {
-                    entranceDir = Vector2.UnitY * 2 * Math.Sign(g.WorldPosition.Y - g.linkedTo[0].WorldPosition.Y);
-                }
-                var entranceWayPoint = new WayPoint(g.WorldPosition + entranceDir * 64.0f, SpawnType.Path, null)
-                {
-                    Ruin = ruin
-                };
-                entranceWayPoint.ConnectTo(gapWaypoint);
-                var closestWp = FindClosestWayPoint(entranceWayPoint.WorldPosition, wayPoints, (wp) =>
-                {
-                    return Submarine.PickBody(
-                        ConvertUnits.ToSimUnits(wp.WorldPosition),
-                        ConvertUnits.ToSimUnits(entranceWayPoint.WorldPosition), collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) == null;
-                });
-                if (closestWp == null) { continue; }
-                ConnectWaypoints(entranceWayPoint, closestWp, outSideWaypointInterval);
-            }
+            var entranceWaypoints = ConnectEntranceWaypoints(ruin.Submarine, wayPoints, outSideWaypointInterval);
+            entranceWaypoints.ForEach(wp => wp.Ruin = ruin);
 
             //create a waypoint path from the ruin to the closest tunnel
             WayPoint prevWp = FindClosestWayPoint(ruin.PathCells.First().Center, wayPoints, (wp) =>
@@ -2457,6 +2489,202 @@ namespace Barotrauma
                 var closestPathPoint = FindClosestWayPoint(prevWp.WorldPosition, Tunnels.SelectMany(t => t.WayPoints));
                 ConnectWaypoints(prevWp, closestPathPoint, outSideWaypointInterval);
             }
+        }
+
+        /// <summary>
+        /// Generates the ring of waypoints around the outpost that bots use to get between the outpost's entrances and the level.
+        /// Its lower half is linked to the closest visible tunnel waypoints, and also to each outpost entrance by chains of
+        /// waypoints that form "fan" shapes from the entrances to the ring (<see cref="ConnectEntranceWaypoints"/>).
+        /// </summary>
+        /// <param name="desiredDistanceFromOutpost">How far the ring is from the borders of the outpost (and the assumed docked main sub), horizontally and vertically.</param>
+        /// <param name="dockedMainSubWorldBounds">Where the main sub will be if it docks to the outpost (see <see cref="PredictDockedMainSubWorldBounds"/>).
+        /// The ring of waypoints should go around it too, because it docks only after the waypoints are generated, and would otherwise critically cut off the parts of the ring it covers.</param>
+        private void GenerateOutpostWayPoints(Submarine outpost, Vector2 desiredDistanceFromOutpost, (Vector2 MinWorldCorner, Vector2 MaxWorldCorner)? dockedMainSubWorldBounds)
+        {
+            List<WayPoint> newWaypoints = new List<WayPoint>();
+
+            Vector2 outpostHalfSize = outpost.Borders.Size.ToVector2() / 2;
+            Vector2 enclosedMinWorldCorner = outpost.WorldPosition - outpostHalfSize;
+            Vector2 enclosedMaxWorldCorner = outpost.WorldPosition + outpostHalfSize;
+            if (dockedMainSubWorldBounds is { } dockedSubBounds)
+            {
+                enclosedMinWorldCorner = Vector2.Min(enclosedMinWorldCorner, dockedSubBounds.MinWorldCorner);
+                enclosedMaxWorldCorner = Vector2.Max(enclosedMaxWorldCorner, dockedSubBounds.MaxWorldCorner);
+            }
+            Vector2 enclosedCenterWorldPosition = (enclosedMinWorldCorner + enclosedMaxWorldCorner) / 2;
+            Vector2 halfSize = (enclosedMaxWorldCorner - enclosedMinWorldCorner) / 2;
+
+            int maxTestPoints = 20;
+            for (int i = 0; i < maxTestPoints; i++)
+            {
+                float angle = i / (float)maxTestPoints * MathHelper.TwoPi;
+                Vector2 dir = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+
+                //calculate a point desiredDistanceFromOutpost away from the borders of the outpost (and the docked main sub)
+                Vector2 position =
+                    enclosedCenterWorldPosition
+                    + new Vector2(dir.X * halfSize.X, dir.Y * halfSize.Y)
+                    + dir * new Vector2(desiredDistanceFromOutpost.X, desiredDistanceFromOutpost.Y);
+
+                if (!IsPositionWithinBounds(position)) { continue; }
+                if (IsPositionInsideWall(position)) { continue; }
+
+                var newWaypoint = new WayPoint(position, SpawnType.Path, submarine: null);
+                if (newWaypoints.Count > 0)
+                {
+                    newWaypoint.ConnectTo(newWaypoints.Last());
+                }
+                newWaypoints.Add(newWaypoint);
+            }
+
+            if (newWaypoints.Count > 2)
+            {
+                newWaypoints.First().ConnectTo(newWaypoints.Last());
+            }
+
+            //connected the circle of waypoints we generated to the level waypoints
+            foreach (var outpostWaypoint in newWaypoints.ToList())
+            {
+                if (outpostWaypoint.WorldPosition.Y > enclosedCenterWorldPosition.Y) { continue; }
+                //create waypoint connections between the outpost waypoints and the closest tunnel waypoints
+                WayPoint closestWaypoint = FindClosestWayPoint(outpostWaypoint.WorldPosition, Tunnels.SelectMany(t => t.WayPoints), (wp) =>
+                {
+                    return Submarine.PickBody(
+                        ConvertUnits.ToSimUnits(wp.WorldPosition),
+                        ConvertUnits.ToSimUnits(outpostWaypoint.WorldPosition), collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) == null;
+                });
+                if (closestWaypoint != null)
+                {
+                    newWaypoints.AddRange(ConnectWaypoints(closestWaypoint, outpostWaypoint, 150.0f));
+                }
+            }
+
+            //connect entrances to the circle of waypoints we generated outside the outpost
+            newWaypoints.AddRange(ConnectEntranceWaypoints(outpost, newWaypoints, outsideWaypointInterval: 150.0f, 
+                preferredDirections: new List<Vector2>() { -Vector2.UnitX, new Vector2(-0.5f,-0.5f), -Vector2.UnitY, new Vector2(0.5f, -0.5f), Vector2.UnitX }));
+
+            foreach (var newWaypoint in newWaypoints)
+            {
+                newWaypoint.Move(-outpost.Position);
+                newWaypoint.Submarine = outpost;
+            }
+
+            //these should never be saved (not even in the persistent DLC outposts), they're always regenerated after creating the outpost
+            newWaypoints.ForEach(wp => wp.ShouldBeSaved = false);
+            //regenerate to take the newly created waypoints into account
+            outpost.GenerateOutdoorNodes();
+        }
+
+        /// <summary>
+        /// Predict where the main sub (including whatever is docked to it) will be once it has docked to the outpost at the start of the round,
+        /// approximating the placement in <see cref="GameSession.PlaceSubAtInitialPosition"/>. That runs only after level generation, and hence:
+        /// 1. The ports are the ones already chosen when positioning the outpost, which can differ from the actual final choice if there are several free vertical ports.
+        /// 2. Docking port extensions aren't taken into account, but they're likely too small to matter.
+        /// </summary>
+        /// <returns>Null if there's no main sub or no ports to dock with.</returns>
+        private static (Vector2 MinWorldCorner, Vector2 MaxWorldCorner)? PredictDockedMainSubWorldBounds(DockingPort subPort, DockingPort outpostPort)
+        {
+            if (Submarine.MainSub == null || subPort == null || outpostPort == null) { return null; }
+
+            Vector2 dockedSubWorldPosition = DockingPort.GetSubPositionForDockingFromBelow(subPort, outpostPort);
+
+            // Borders relative to the sub's position
+            Rectangle dockedBorders = Submarine.MainSub.GetDockedBorders();
+            return (
+                dockedSubWorldPosition + new Vector2(dockedBorders.X, dockedBorders.Y - dockedBorders.Height),
+                dockedSubWorldPosition + new Vector2(dockedBorders.Right, dockedBorders.Y));
+        }
+
+        /// <summary>
+        /// Obstruct tunnel waypoints that are blocked by some submarine/outpost.
+        /// </summary>
+        private void ObstructBlockedTunnelWaypoints()
+        {
+            foreach (var tunnel in Tunnels)
+            {
+                for (int i = 0; i < tunnel.WayPoints.Count - 1; i++)
+                {
+                    WayPoint wp = tunnel.WayPoints[i];
+                    WayPoint connectedWp = tunnel.WayPoints[i + 1];
+
+                    Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition);
+                    Vector2 end = ConvertUnits.ToSimUnits(connectedWp.WorldPosition);
+                    var body = Submarine.PickBody(start, end, collisionCategory: Physics.CollisionWall, allowInsideFixture: true);
+                    if (body != null)
+                    {
+                        connectedWp.ObstructedConnections.Add(wp);
+                        wp.ObstructedConnections.Add(connectedWp);
+                    }
+                }
+            }
+        }
+
+        /// <param name="preferredDirections">A list of directions towards which we want to generate a path, or multiple paths. If empty, the method will just use the closest outside waypoint it can find.</param>
+        private List<WayPoint> ConnectEntranceWaypoints(Submarine outpostOrRuin, List<WayPoint> outpostOrRuinWaypoints, float outsideWaypointInterval,
+            List<Vector2> preferredDirections = null)
+        {
+            preferredDirections ??= new List<Vector2>() { Vector2.Zero };
+            List<WayPoint> newWayPoints = new List<WayPoint>();
+            foreach (Gap g in Gap.GapList)
+            {
+                if (g.Submarine != outpostOrRuin || g.IsRoomToRoom || g.linkedTo.Count == 0) { continue; }
+                //if there's a door and a docking port at the gap, it must be a docking port and we shouldn't try to generate waypoints there (not a valid exit/entrance most of the time as it's blocked by a sub)
+                if (g.ConnectedDoor != null && DockingPort.List.Any(dockingPort => Submarine.RectContains(g.ConnectedDoor.Item.Rect, dockingPort.Item.Position))) { continue; }
+                var gapWaypoint = WayPoint.WayPointList.Find(wp => wp.ConnectedGap == g);
+                if (gapWaypoint == null) { continue; }
+
+                //place another waypoint in front of the entrance
+                Vector2 entranceDir = Vector2.Zero;
+                if (g.IsHorizontal)
+                {
+                    entranceDir = Vector2.UnitX * 2 * Math.Sign(g.WorldPosition.X - g.linkedTo[0].WorldPosition.X);
+                }
+                else
+                {
+                    entranceDir = Vector2.UnitY * 2 * Math.Sign(g.WorldPosition.Y - g.linkedTo[0].WorldPosition.Y);
+                }
+                var entranceWayPoint = new WayPoint(g.WorldPosition + entranceDir * 64.0f, SpawnType.Path, null);
+                newWayPoints.Add(entranceWayPoint);
+                entranceWayPoint.ConnectTo(gapWaypoint);
+
+                HashSet<WayPoint> alreadyUsedOutdoorsWaypoints = new HashSet<WayPoint>();
+
+                foreach (var preferredDirection in preferredDirections)
+                {
+                    var closestWp = FindClosestWayPoint(entranceWayPoint.WorldPosition, outpostOrRuinWaypoints, (wp) =>
+                    {
+                        return Submarine.PickBody(
+                            ConvertUnits.ToSimUnits(wp.WorldPosition),
+                            ConvertUnits.ToSimUnits(entranceWayPoint.WorldPosition), collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) == null;
+                    },
+                    distanceMultiplier: (wp) =>
+                    {
+                        if (preferredDirection == Vector2.Zero) { return 1.0f; }
+                        float dot = Vector2.Dot(Vector2.Normalize(preferredDirection), wp.WorldPosition - entranceWayPoint.WorldPosition);
+                        // Exclude waypoints behind the desired direction
+                        if (dot <= 0.0f) { return float.PositiveInfinity; }
+
+                        // The further from the desired direction (the smaller the dot product), the larger the distance multiplier.
+                        // The dot product needs to be squared to cancel out the squared distance (see FindClosestWayPoint),
+                        // so candidates get ranked only by aligned direction (1 / cos^2), without a bonus weight from proximity.
+                        // This way we get an open fan, rather than a narrow cone pointing mostly downwards (where the waypoints are closer).
+                        return 1.0f / (dot * dot);
+                    });
+                    if (closestWp == null || alreadyUsedOutdoorsWaypoints.Contains(closestWp)) { continue; }
+                    var newPoints = ConnectWaypoints(entranceWayPoint, closestWp, outsideWaypointInterval);
+                    newWayPoints.AddRange(newPoints);
+                    alreadyUsedOutdoorsWaypoints.Add(closestWp);
+                }
+
+                // No visible waypoint in any preferred direction (something like a hatch in a recess?)
+                if (alreadyUsedOutdoorsWaypoints.None())
+                {
+                    DebugConsole.AddWarning(
+                        $"Failed to connect an entrance of '{outpostOrRuin.Info.Name}' at {g.WorldPosition} to any waypoint outside. " +
+                        $"Bots won't be able to path through it from outside. Level seed: {Seed}");
+                }
+            }
+            return newWayPoints;
         }
 
         private Point FindPosAwayFromMainPath(double minDistance, bool asCloseAsPossible, Rectangle? limits = null)
@@ -2823,6 +3051,7 @@ namespace Barotrauma
                         if (l.Cell == null || l.Edge == null) { return false; }
                         if (resourceInfo.IsIslandSpecific && !l.Cell.Island) { return false; }
                         if (!resourceInfo.AllowAtStart && l.EdgeCenter.Y > startPosition.Y && l.EdgeCenter.X < Size.X * 0.25f) { return false; }
+                        if (!resourceInfo.AllowAtEnd && l.EdgeCenter.Y > startPosition.Y && l.EdgeCenter.X > Size.X * 0.75f) { return false; }
                         if (l.Edge.Length < itemPrefab.Size.X) { return false; }
                         if (l.EdgeCenter.Y < AbyssArea.Bottom) { return false; }
                         return resourceInfo.ClusterSize <= GetMaxResourcesOnEdge(itemPrefab, l, out _);
@@ -3311,7 +3540,8 @@ namespace Barotrauma
             var selectedLocation = allValidLocations.FirstOrDefault(l =>
                 Vector2.Distance(l.Edge.Point1, l.Edge.Point2) is float edgeLength &&
                 !l.Edge.OutsideLevel &&
-                ((l.Edge.Cell1?.IsDestructible ?? false) || (l.Edge.Cell2?.IsDestructible ?? false)) &&
+                //don't spawn minerals on the breakable level walls
+                (l.Edge.Cell1 is { IsDestructible: false } || l.Edge.Cell2 is { IsDestructible: false }) &&
                 requiredAmount <= (int)Math.Floor(edgeLength / ((1.0f - maxResourceOverlap) * prefab.Size.X)));
 
 
@@ -3338,7 +3568,7 @@ namespace Barotrauma
 
             static bool IsOnMainPath(ClusterLocation location) => location.Edge.NextToMainPath;
             static bool IsOnSidePath(ClusterLocation location) => location.Edge.NextToSidePath;
-            static bool IsInCave(ClusterLocation location) => location.Edge.NextToCave;
+            bool IsInCave(ClusterLocation location) => location.Edge.NextToCave && !IsInAbyssCave(location);
             bool IsInAbyssCave(ClusterLocation location) => location.EdgeCenter.Y < AbyssStart;
             void RemoveInvalidLocations(Predicate<ClusterLocation> match)
             {
@@ -3478,6 +3708,17 @@ namespace Barotrauma
 
                 Vector2 offset = Rand.Vector(Rand.Range(0.0f, randomSpread, Rand.RandSync.ServerAndClient), Rand.RandSync.ServerAndClient);
                 Vector2 startPos = potentialPos.Position.ToVector2();
+
+                if (spawnPosType is PositionType.Wreck or PositionType.BeaconStation or PositionType.Outpost)
+                {
+                    // the "interestingposition" points to the wreck/station itself, but when we're trying to find a position for spawning items, lets prefer a cargo spawnpoint
+                    var cargoSpawnPoint = WayPoint.WayPointList.FindAll(wp => wp.Submarine == potentialPos.Submarine && wp.SpawnType == SpawnType.Cargo).GetRandom(Rand.RandSync.ServerAndClient);
+                    if (cargoSpawnPoint != null)
+                    {
+                        startPos = cargoSpawnPoint.WorldPosition;
+                    }
+                }
+
                 if (!IsPositionInsideWall(startPos + offset))
                 {
                     startPos += offset;
@@ -3560,10 +3801,10 @@ namespace Barotrauma
             {
                 if (!suppressWarning)
                 {
-                    string errorMsg = "Could not find a suitable position of interest. (PositionType: " + positionType + ", minDistFromSubs: " + minDistFromSubs + ")\n" + Environment.StackTrace.CleanupStackTrace();
-                    GameAnalyticsManager.AddErrorEventOnce("Level.TryGetInterestingPosition:PositionTypeNotFound", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
-                    DebugConsole.ThrowError(errorMsg);
+                    string errorMsg =
+                        "[DEBUG-ONLY] Could not find a suitable position of interest (PositionType: " + positionType + ", minDistFromSubs: " + minDistFromSubs + ")\n" + Environment.StackTrace.CleanupStackTrace();
+                    DebugConsole.ThrowError("[DEBUG-ONLY error, could be a] " + errorMsg);
 #endif
                 }
                 position = PositionsOfInterest[Rand.Int(PositionsOfInterest.Count, (useSyncedRand ? Rand.RandSync.ServerAndClient : Rand.RandSync.Unsynced))];
@@ -3586,9 +3827,10 @@ namespace Barotrauma
 
             if (!farEnoughPositions.Any())
             {
-                string errorMsg = "Could not find a position of interest far enough from the submarines. (PositionType: " + positionType + ", minDistFromSubs: " + minDistFromSubs + ")\n" + Environment.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("Level.TryGetInterestingPosition:TooCloseToSubs", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
+                string errorMsg =
+                    "[DEBUG-ONLY] Could not find a position of interest far enough from the submarines. This can happen e.g. if we want to place something near a wreck far away from the main sub, but all wrecks in the level very close. " +
+                    "Choosing the furthest suitable position. (PositionType: " + positionType + ", minDistFromSubs: " + minDistFromSubs + ")\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
 #endif
                 float maxDist = 0.0f;
@@ -3669,6 +3911,11 @@ namespace Barotrauma
             float yPos = MathHelper.Lerp(bottomPositions[index].Y, bottomPositions[index + 1].Y, t);
 
             return new Vector2(xPosition, yPos);
+        }
+
+        public bool IsPositionWithinBounds(Vector2 worldPosition)
+        {
+            return worldPosition.X >= 0 && worldPosition.X <= Size.X && worldPosition.Y >= 0 && worldPosition.Y <= Size.Y;
         }
         
         public List<VoronoiCell> GetAllCells()
@@ -4030,7 +4277,7 @@ namespace Barotrauma
 
                     sub.ShowSonarMarker = false;
                     sub.DockedTo.ForEach(s => s.ShowSonarMarker = false);
-                    sub.PhysicsBody.FarseerBody.BodyType = BodyType.Static;
+                    sub.PhysicsBody.BodyType = BodyType.Static;
                     sub.TeamID = CharacterTeamType.None;
                 }
                 tempSW.Stop();
@@ -4299,75 +4546,71 @@ namespace Barotrauma
                 return;
             }
 
-            var placeableWrecks = ContentPackageManager.EnabledPackages.All
+            List<PlaceableWreck> allWrecks = ContentPackageManager.EnabledPackages.All
                 .SelectMany(p => p.GetFiles<WreckFile>())
                 .OrderBy(f => f.UintIdentifier)
                 .Select(PlaceableWreck.TryCreate)
                 .Where(w => w.IsSome())
                 .Select(o => o.TryUnwrap(out var w) ? w : throw new InvalidOperationException())
                 .ToList();
+
+            List<PlaceableWreck> placeableWrecks = allWrecks.ToList();
             
             if (LevelData.ForceWreck != null)
             {
                 DebugConsole.NewMessage($"Level Generation - Forcing wreck {LevelData.ForceWreck.DisplayName}");
             }
-            else
+
+            //we must filter the placeable wrecks even if we are forcing a wreck,
+            //otherwise if there's multiple wrecks in the level we could end up picking one unsuitable for the difficulty
+            for (int i = placeableWrecks.Count - 1; i >= 0; i--)
             {
-                for (int i = placeableWrecks.Count - 1; i >= 0; i--)
+                var wreckInfo = placeableWrecks[i].WreckInfo;
+                if (!IsAllowedDifficulty(wreckInfo.MinLevelDifficulty, wreckInfo.MaxLevelDifficulty))
                 {
-                    var wreckInfo = placeableWrecks[i].WreckInfo;
-                    if (!IsAllowedDifficulty(wreckInfo.MinLevelDifficulty, wreckInfo.MaxLevelDifficulty))
-                    {
-                        placeableWrecks.RemoveAt(i);
-                    }
-                    // Exclude wrecks that have mission tags, those can't show up randomly
-                    else if (wreckInfo.MissionTags.Count != 0)
-                    {
-                        placeableWrecks.RemoveAt(i);
-                    }
+                    placeableWrecks.RemoveAt(i);
                 }
-                if (placeableWrecks.None())
+                // Exclude wrecks that have mission tags, those can't show up randomly
+                else if (wreckInfo.MissionTags.Count != 0)
                 {
-                    DebugConsole.ThrowError($"No wreck files found for the level difficulty {LevelData.Difficulty}!");
-                    Wrecks = new List<Submarine>();
-                    return;
+                    placeableWrecks.RemoveAt(i);
                 }
-                
-                placeableWrecks.Shuffle(Rand.RandSync.ServerAndClient);
             }
+            if (placeableWrecks.None())
+            {
+                DebugConsole.ThrowError($"No wreck files found for the level difficulty {LevelData.Difficulty}!");
+                Wrecks = new List<Submarine>();
+                return;
+            }                
+            placeableWrecks.Shuffle(Rand.RandSync.ServerAndClient);            
 
             int minWreckCount = Math.Min(Loaded.GenerationParams.MinWreckCount, placeableWrecks.Count);
             int maxWreckCount = Math.Min(Loaded.GenerationParams.MaxWreckCount, placeableWrecks.Count);
             int wreckCount = Rand.Range(minWreckCount, maxWreckCount + 1, Rand.RandSync.ServerAndClient);
-            bool requireThalamus = false;
+            bool missionRequiresThalamus = false;
 
-            if (GameMain.GameSession?.GameMode?.Missions.Any(m => m.Prefab.RequireWreck) ?? false)
+            if (GameMain.GameSession?.GameMode?.Missions is { } missions &&
+                missions.Any(m => m.Prefab.RequireWreck))
             {
-                wreckCount = Math.Max(wreckCount, 1);
+                //increase wreck count based on how many missions require a specific wreck
+                int missionsRequiringSpecificWreck = missions.Count(m => m.RequiresSpecificWreck);
+                int missionsNotRequiringSpecificWreck = missions.Count(m => m.Prefab.RequireWreck && !m.RequiresSpecificWreck);
+
+                int minWrecksRequiredByMissions = missionsRequiringSpecificWreck;
+                if (missionsNotRequiringSpecificWreck > 0)
+                {
+                    //one extra wreck is enough for the missions that don't require a specific one
+                    minWrecksRequiredByMissions += 1;
+                }
+                wreckCount = Math.Max(wreckCount, minWrecksRequiredByMissions);
             }
             
             if (GameMain.GameSession?.GameMode?.Missions.Any(static m => m.Prefab.RequireThalamusWreck) ?? false)
             {
-                requireThalamus = true;
+                missionRequiresThalamus = true;
             }
-            
-            if (LevelData.ForceWreck != null)
-            {
-                //force the desired wreck to be chosen first
-                PlaceableWreck matchingFile =  placeableWrecks.FirstOrDefault(wreck => wreck.WreckFile.Path == LevelData.ForceWreck.FilePath);
-                if (matchingFile.WreckFile != null)
-                {
-                    placeableWrecks.Remove(matchingFile);
-                    placeableWrecks.Insert(0, matchingFile);
-                    
-                    if (LevelData.ForceThalamus == LevelData.ThalamusSpawn.Forced && matchingFile.WreckInfo.WreckContainsThalamus == WreckInfo.HasThalamus.No)
-                    {
-                        DebugConsole.ThrowError($"Forced wreck {LevelData.ForceWreck.DisplayName} can't have thalamus!");
-                    }
-                }
-                wreckCount = Math.Max(wreckCount, 1);
-            }
-            else if (requireThalamus)
+
+            if (missionRequiresThalamus)
             {
                 var thalamusWrecks = placeableWrecks
                     .Where(static w => w.WreckInfo.WreckContainsThalamus == WreckInfo.HasThalamus.Yes)
@@ -4376,7 +4619,6 @@ namespace Barotrauma
                 if (thalamusWrecks.Any())
                 {
                     thalamusWrecks.Shuffle(Rand.RandSync.ServerAndClient);
-
                     foreach (var wreck in thalamusWrecks)
                     {
                         placeableWrecks.Remove(wreck);
@@ -4384,7 +4626,35 @@ namespace Barotrauma
                     }
                 }
             }
+            if (LevelData.ForceWreck != null)
+            {
+                //force the desired wreck to be chosen first
+                PlaceableWreck matchingFile = allWrecks.FirstOrDefault(wreck => wreck.WreckFile.Path == LevelData.ForceWreck.FilePath);
+                if (matchingFile.WreckFile != null)
+                {
+                    placeableWrecks.Remove(matchingFile);
+                    placeableWrecks.Insert(0, matchingFile);
 
+                    if (missionRequiresThalamus &&
+                        matchingFile.WreckInfo.WreckContainsThalamus == WreckInfo.HasThalamus.No)
+                    {
+                        //if the forced wreck doesn't contain a thalamus but a thalamus is required,
+                        //we must spawn at least 2 subs (the forced one and the one with the thalamus)
+                        wreckCount = Math.Max(wreckCount, 2);
+
+                    }
+                    else if (LevelData.ForceThalamus == LevelData.ThalamusSpawn.Forced)
+                    {
+                        if (matchingFile.WreckInfo.WreckContainsThalamus == WreckInfo.HasThalamus.No)
+                        {
+                            DebugConsole.ThrowError($"Forced wreck {LevelData.ForceWreck.DisplayName} can't have thalamus!");
+                        }
+                    }
+                }
+                wreckCount = Math.Max(wreckCount, 1);
+            }
+
+            bool thalamusSpawned = false;
             Wrecks = new List<Submarine>(wreckCount);
             for (int i = 0; i < wreckCount; i++)
             {
@@ -4395,14 +4665,15 @@ namespace Barotrauma
                 {
                     var placeableWreck = placeableWrecks.First();
                     var wreckFile = placeableWreck.WreckFile;
-                    if (LevelData.ForceWreck == null)
-                    {
-                        // If a wreck is forced, don't remove it -> only spawns those wrecks (makes testing them in the editor easier).
-                        // Normally we don't want two instances of the same wreck to spawn in the same level, but when we test or debug certain wrecks, we want only them.
-                        placeableWrecks.RemoveAt(0);   
+                    LevelData.ThalamusSpawn thalamusSpawn = LevelData.ThalamusSpawn.Random;
+
+                    if (!thalamusSpawned)
+                    { 
+                        if (missionRequiresThalamus || LevelData.ForceThalamus == LevelData.ThalamusSpawn.Forced)
+                        {
+                            thalamusSpawn = LevelData.ThalamusSpawn.Forced;
+                        }
                     }
-                    LevelData.ThalamusSpawn thalamusSpawn = requireThalamus ? LevelData.ThalamusSpawn.Forced : LevelData.ThalamusSpawn.Random;
-                    if (LevelData.ForceWreck != null) { thalamusSpawn = LevelData.ForceThalamus; }
 
                     // disable thalamus spawning in pvp if monster spawning is disabled
                     if (GameMain.NetworkMember is { } netMember && 
@@ -4415,6 +4686,14 @@ namespace Barotrauma
                     string wreckName = System.IO.Path.GetFileNameWithoutExtension(wreckFile.Path.Value);
                     if (SpawnSubOnPath(wreckName, wreckFile, SubmarineType.Wreck, thalamusSpawn: thalamusSpawn) is Submarine wreck)
                     {
+                        if (wreck.Info.WreckInfo is { WreckContainsThalamus: WreckInfo.HasThalamus.Yes })
+                        {
+                            thalamusSpawned = true;
+                        }
+                        if (placeableWrecks.Count > 1)
+                        {
+                            placeableWrecks.Remove(placeableWreck);
+                        }
                         //placed successfully
                         
                         // Disabled at least for now, because labels etc. can cause issues.
@@ -4477,10 +4756,8 @@ namespace Barotrauma
             // Reset the seed so the outposts keep the same on mirrored levels.
             ResetRandomSeed();
             
-            var outpostFiles = ContentPackageManager.EnabledPackages.All
-                .SelectMany(p => p.GetFiles<OutpostFile>())
-                .OrderBy(f => f.UintIdentifier).ToList();
-            if (!outpostFiles.Any() && !OutpostGenerationParams.OutpostParams.Any() && LevelData.ForceOutpostGenerationParams == null)
+            var outpostFiles = OutpostGenerator.GetOutpostFiles();
+            if (outpostFiles.None() && OutpostGenerationParams.OutpostParams.None() && LevelData.ForceOutpostGenerationParams == null)
             {
                 DebugConsole.ThrowError("No outpost files found in the selected content packages");
                 return;
@@ -4500,11 +4777,15 @@ namespace Barotrauma
                     if (!HasEndOutpost()) { continue; }
                 }
 
+                bool onlyEntrance = LevelData.Type != LevelData.LevelType.Outpost;
+
                 SubmarineInfo outpostInfo;
                 Submarine outpost = null;
 
                 SubmarineInfo preSelectedOutpost = isStart ? preSelectedStartOutpost : preSelectedEndOutpost;
-                if (preSelectedOutpost == null)
+                if (preSelectedOutpost == null ||
+                    //don't use the preselected outpost, but instead just generate the entrance if it defines an entrance tag
+                    (onlyEntrance && preSelectedOutpost?.OutpostGenerationParams != null && !preSelectedOutpost.OutpostGenerationParams.EntranceTag.IsEmpty))
                 {
                     if (LevelData.OutpostGenerationParamsExist)
                     {
@@ -4515,15 +4796,17 @@ namespace Barotrauma
                         {
                             foreach (var mission in missions)
                             {
-                                if (!mission.Prefab.ForceOutpostGenerationParameters.IsEmpty)
+                                Identifier forceOutpostGenParameters =
+                                    GameMain.GameSession?.GameMode is MissionMode && !mission.Prefab.ForceOutpostGenerationParametersInMissionMode.IsEmpty ?
+                                    mission.Prefab.ForceOutpostGenerationParametersInMissionMode :
+                                    mission.Prefab.ForceOutpostGenerationParameters;
+                                if (!forceOutpostGenParameters.IsEmpty)
                                 {
-                                    missionForcedOutpostParamsId = mission.Prefab.ForceOutpostGenerationParameters;
+                                    missionForcedOutpostParamsId = forceOutpostGenParameters;
                                     break;
                                 }
                             }
                         }
-
-                        bool onlyEntrance = LevelData.Type != LevelData.LevelType.Outpost;
 
                         LocationType locationType = location?.Type;
                         if (missionForcedOutpostParamsId != null && 
@@ -4560,22 +4843,43 @@ namespace Barotrauma
                             }
                         }
 
-                        if (location != null)
+                        if (onlyEntrance && !outpostGenerationParams.GenerateFullOutpostInsteadOfEntrance)
                         {
-                            DebugConsole.NewMessage($"Generating an outpost for the {(isStart ? "start" : "end")} of the level... (Location: {location.DisplayName}, level type: {LevelData.Type})");
-                            outpost = OutpostGenerator.Generate(outpostGenerationParams, location, onlyEntrance: onlyEntrance, LevelData.AllowInvalidOutpost);
+                            List<SubmarineInfo> outpostInfos = new List<SubmarineInfo>();
+                            foreach (var outpostFile in outpostFiles)
+                            {
+                                outpostInfos.Add(new SubmarineInfo(outpostFile.Path.Value));
+                            }
+                            Identifier entranceTag = outpostGenerationParams.EntranceTag.IsEmpty ? "OutpostEntrance".ToIdentifier() : outpostGenerationParams.EntranceTag;
+
+                            outpostInfo = outpostInfos.FindAll(o => o.OutpostTags.Contains(entranceTag)).GetRandom(Rand.RandSync.ServerAndClient);
+                            if (outpostInfo == null)
+                            {
+                                DebugConsole.ThrowError($"Failed to generate outpost entrance. Could not find any outposts with the tag {entranceTag}. Using a fallback entrance instead...");
+                                outpostInfo = new SubmarineInfo("Content/Map/Outposts/Outpost.sub");
+                            }
+                            outpost = new Submarine(outpostInfo);
+                            outpost.Info.OutpostGenerationParams = outpostGenerationParams;
                         }
                         else
                         {
-                            DebugConsole.NewMessage($"Generating an outpost for the {(isStart ? "start" : "end")} of the level... (Location type: {locationType}, level type: {LevelData.Type})");
-                            outpost = OutpostGenerator.Generate(outpostGenerationParams, locationType, onlyEntrance: LevelData.Type != LevelData.LevelType.Outpost, LevelData.AllowInvalidOutpost);
+                            if (location != null)
+                            {
+                                DebugConsole.NewMessage($"Generating an outpost for the {(isStart ? "start" : "end")} of the level... (Location: {location.DisplayName}, level type: {LevelData.Type}, location type: {location.Type.Identifier})");
+                                outpost = OutpostGenerator.Generate(outpostGenerationParams, location, onlyEntrance: onlyEntrance, LevelData.AllowInvalidOutpost);
+                            }
+                            else
+                            {
+                                DebugConsole.NewMessage($"Generating an outpost for the {(isStart ? "start" : "end")} of the level... (Location type: {locationType}, level type: {LevelData.Type}, location type: {location.Type.Identifier})");
+                                outpost = OutpostGenerator.Generate(outpostGenerationParams, locationType, onlyEntrance: LevelData.Type != LevelData.LevelType.Outpost, LevelData.AllowInvalidOutpost);
+                            }
                         }
 
                         foreach (string categoryToHide in locationType.HideEntitySubcategories)
                         {
                             foreach (MapEntity entityToHide in MapEntity.MapEntityList.Where(me => me.Submarine == outpost && (me.Prefab?.HasSubCategory(categoryToHide) ?? false)))
                             {
-                                entityToHide.IsLayerHidden = true;
+                                entityToHide.SetDisabled(disabled: true);
                             }                                
                         }
                     }
@@ -4597,6 +4901,12 @@ namespace Barotrauma
                     outpostInfo = preSelectedOutpost;
                     outpostInfo.Type = SubmarineType.Outpost;
                     outpost = new Submarine(outpostInfo);
+                    //Set the module index manually, as it doesn't get set when we're not generating the outpost from individual modules.
+                    //It's regardless needed for the logic that handles removing items from outposts.
+                    foreach (var item in outpost.GetEntities<MapEntity>(includingConnectedSubs: false, MapEntity.MapEntityList))
+                    {
+                        item.OriginalModuleIndex = 0;
+                    }
                 }
                 // Outposts tend to have labels, flags, and other texts that can't be flipped.
                 // if (Mirrored)
@@ -4607,11 +4917,11 @@ namespace Barotrauma
                 Point? minSize = null;
                 DockingPort subPort = null;
                 float closestDistance = float.MaxValue;
+                Point subSize = Point.Zero, outpostSize = Point.Zero;
                 if (Submarine.MainSub != null)
                 {
-                    Point subSize = Submarine.MainSub.GetDockedBorders().Size;
-                    Point outpostSize = outpost.GetDockedBorders().Size;
-                    minSize = new Point(Math.Max(subSize.X, outpostSize.X), subSize.Y + outpostSize.Y);
+                    subSize = Submarine.MainSub.GetDockedBorders().Size;
+                    outpostSize = outpost.GetDockedBorders().Size;
 
                     foreach (DockingPort port in DockingPort.List)
                     {
@@ -4629,13 +4939,19 @@ namespace Barotrauma
                 }
 
                 Vector2 spawnPos;
+                DockingPort outpostPort = null;
                 if (GenerationParams.ForceOutpostPosition != Vector2.Zero)
                 {
-                    spawnPos = new Vector2(Size.X * GenerationParams.ForceOutpostPosition.X, Size.Y * GenerationParams.ForceOutpostPosition.Y);
+                    spawnPos = new Vector2(
+                        Size.X * GenerationParams.ForceOutpostPosition.X, 
+                        Size.Y * (1.0f - GenerationParams.ForceOutpostPosition.Y));
+                    float margin = 100.0f;
+                    spawnPos = new Vector2(
+                        MathHelper.Clamp(spawnPos.X, -outpost.Borders.X + margin, Size.X - outpost.Borders.Right - margin),
+                        MathHelper.Clamp(spawnPos.Y, (outpost.Borders.Y - outpost.Borders.Height) + margin, Size.Y - outpost.Borders.Y - margin));
                 }
                 else
                 {
-                    DockingPort outpostPort = null;
                     closestDistance = float.MaxValue;
                     foreach (DockingPort port in DockingPort.List)
                     {
@@ -4681,14 +4997,44 @@ namespace Barotrauma
                     //Makes outpost placement a little nicer in levels with lots of verticality: if there's a tall vertical
                     //shaft leading down to the end position, we don't want the outpost to be placed all the way up to wherever the
                     //ceiling is at the top of that shaft.
-                    if (i == 1 && GenerationParams.CreateHoleNextToEnd && 
-                        preferredSpawnPos.X > Size.X * 0.75f && 
+                    if (i == 1 && GenerationParams.CreateHoleNextToEnd &&
+                        preferredSpawnPos.X > Size.X * 0.75f &&
                         preferredSpawnPos.Y < Size.Y * 0.25f)
                     {
                         preferredSpawnPos.X = (preferredSpawnPos.X + Size.X) / 2;
                     }
 
-                    spawnPos = outpost.FindSpawnPos(preferredSpawnPos, minSize, outpostDockingPortOffset != null ? subDockingPortOffset - outpostDockingPortOffset.Value : 0.0f, verticalMoveDir: 1);
+                    //Below: some hairy math to make sure we position the outpost in a way that the docked sub doesn't overlap with walls either,
+                    //taking into account its size and where it's positioned relative to the outpost
+
+                    // offset of the outpost's origin relative to the sub's origin
+                    float dockingCenterOffset = outpostDockingPortOffset != null ? subDockingPortOffset - outpostDockingPortOffset.Value : 0.0f;
+                    if (Submarine.MainSub != null)
+                    {
+                        float subHalfWidth = subSize.X / 2.0f;
+                        float outpostHalfWidth = outpostSize.X / 2.0f;
+
+                        //extents relative to the submarine's position
+                        float subLeft = -subHalfWidth;
+                        float subRight = subHalfWidth;
+                        float outpostLeft = dockingCenterOffset - outpostHalfWidth;
+                        float outpostRight = dockingCenterOffset + outpostHalfWidth;
+
+                        float combinedLeft = Math.Min(subLeft, outpostLeft);
+                        float combinedRight = Math.Max(subRight, outpostRight);
+
+                        //the point (relative to the sub's center) the horizontal space check below should be centered on
+                        float combinedCenterOffset = (combinedLeft + combinedRight) / 2.0f;
+
+                        minSize = new Point((int)Math.Ceiling(combinedRight - combinedLeft), subSize.Y + outpostSize.Y);
+                        // find the spawnpos based on the origin of the combined sub+outpost instead of the sub's own center,
+                        // and reduce the offset passed to FindSpawnPos by the same amount, so the outpost still ends up exactly
+                        // where it needs to be
+                        preferredSpawnPos.X += combinedCenterOffset;
+                        dockingCenterOffset -= combinedCenterOffset;
+                    }
+
+                    spawnPos = outpost.FindSpawnPos(preferredSpawnPos, minSize, dockingCenterOffset, verticalMoveDir: 1);
                     if (Type == LevelData.LevelType.Outpost)
                     {
                         spawnPos.Y = Math.Min(Size.Y - outpost.Borders.Height * 0.6f, spawnPos.Y + outpost.Borders.Height / 2);
@@ -4696,6 +5042,17 @@ namespace Barotrauma
                 }
 
                 outpost.SetPosition(spawnPos, forceUndockFromStaticSubmarines: false);
+                foreach (var item in outpost.GetItems(alsoFromConnectedSubs: true))
+                {
+                    // Refresh pos to maintain in all steering components maintaining position (e.g. ones controlling shuttles/drones docked to the outpost),
+                    // the position was set when the outpost was loaded, before it was moved to its actual position
+                    if (item.GetComponent<Steering>() is { MaintainPos: true } steering)
+                    {
+                        steering.RefreshPosToMaintain();
+                    }
+                }
+                GenerateOutpostWayPoints(outpost, desiredDistanceFromOutpost: new Vector2(3500.0f, 2000.0f),
+                    dockedMainSubWorldBounds: isStart ? PredictDockedMainSubWorldBounds(subPort, outpostPort) : null);
                 SetLinkedSubCrushDepth(outpost);
 
                 foreach (WayPoint wp in WayPoint.WayPointList)
@@ -4711,7 +5068,7 @@ namespace Barotrauma
                     StartOutpost = outpost;
                     if (StartLocation != null) 
                     {
-                        outpost.TeamID = StartLocation.Type.OutpostTeam;
+                        Submarine.SetOutpostTeam(outpost, StartLocation.Type.OutpostTeam);
                         outpost.Info.Name = StartLocation.DisplayName.Value;
                     }
                 }
@@ -4720,7 +5077,7 @@ namespace Barotrauma
                     EndOutpost = outpost;
                     if (EndLocation != null)
                     {
-                        outpost.TeamID = EndLocation.Type.OutpostTeam; 
+                        Submarine.SetOutpostTeam(outpost, EndLocation.Type.OutpostTeam);
                         outpost.Info.Name = EndLocation.DisplayName.Value; 
                     }
                 }
@@ -4738,7 +5095,7 @@ namespace Barotrauma
             }
 
             bool missionRequiresBeaconStation = GameMain.GameSession?.GameMode?.Missions.Any(m => m.Prefab.RequireBeaconStation) ?? false;
-            if (!missionRequiresBeaconStation &&!LevelData.HasBeaconStation && LevelData.ForceBeaconStation == null && string.IsNullOrEmpty(GenerationParams.ForceBeaconStation)) 
+            if (!missionRequiresBeaconStation && !LevelData.HasBeaconStation && LevelData.ForceBeaconStation == null && string.IsNullOrEmpty(GenerationParams.ForceBeaconStation)) 
             { 
                 return; 
             }
@@ -5158,14 +5515,18 @@ namespace Barotrauma
             return Loaded != null && worldPosition.Y < loaded.AbyssStart && worldPosition.Y > loaded.AbyssEnd;
         }
 
+        public bool LocationSetByDebugCommands { get; private set; }
+
         public void DebugSetStartLocation(Location newStartLocation)
         {
             StartLocation = newStartLocation;
+            LocationSetByDebugCommands = true;
         }
 
         public void DebugSetEndLocation(Location newEndLocation)
         {
             EndLocation = newEndLocation;
+            LocationSetByDebugCommands = true;
         }
 
         public override void Remove()

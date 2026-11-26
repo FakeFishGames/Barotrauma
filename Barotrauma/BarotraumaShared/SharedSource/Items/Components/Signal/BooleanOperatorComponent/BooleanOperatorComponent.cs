@@ -128,6 +128,9 @@ namespace Barotrauma.Items.Components
                 case "set_output":
                     output = signal.value;
                     break;
+                case "set_falseoutput":
+                    falseOutput = signal.value;
+                    break;
             }
         }
     }

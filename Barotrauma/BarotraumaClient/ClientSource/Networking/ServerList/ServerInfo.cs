@@ -13,7 +13,7 @@ using System.Globalization;
 
 namespace Barotrauma.Networking
 {
-    sealed class ServerInfo : ISerializableEntity
+    public sealed class ServerInfo : ISerializableEntity
     {
         public abstract class DataSource
         {
@@ -144,8 +144,6 @@ namespace Barotrauma.Networking
         [Serialize("", IsPropertySaveable.Yes)]
         public LanguageIdentifier Language { get; set; }
 
-        public bool EosCrossplay { get; set; }
-
         [Serialize("", IsPropertySaveable.Yes)]
         public string SelectedSub { get; set; } = string.Empty;
 
@@ -172,14 +170,20 @@ namespace Barotrauma.Networking
 
         public static ServerInfo FromServerEndpoints(ImmutableArray<Endpoint> endpoints, ServerSettings serverSettings)
         {
+            if (GameMain.Client == null)
+            {
+                DebugConsole.ThrowError($"Attempted to get {nameof(ServerInfo)} from server endpoints with no client running.\n" + Environment.StackTrace);
+                //continue anyway, we'll just use empty values on the values we need the client for
+            }
+
             var serverInfo = new ServerInfo(endpoints)
             {
                 GameMode = GameMain.NetLobbyScreen.SelectedMode?.Identifier ?? Identifier.Empty,
                 GameStarted = Screen.Selected != GameMain.NetLobbyScreen,
                 GameVersion = GameMain.Version,
-                PlayerCount = GameMain.Client.ConnectedClients.Count,
+                PlayerCount = GameMain.Client?.ConnectedClients.Count ?? -1,
                 ContentPackages = ContentPackageManager.EnabledPackages.All.Select(p => new ServerListContentPackageInfo(p)).ToImmutableArray(),
-                Ping = GameMain.Client.Ping,
+                Ping = GameMain.Client?.Ping ?? Option.None,
                 
                 // -------------------------------------
                 // Settings that cannot be copied via
@@ -537,7 +541,6 @@ namespace Barotrauma.Networking
             AllowSpectating = getBool("allowspectating");
             AllowRespawn = getBool("allowrespawn");
             VoipEnabled = getBool("voicechatenabled");
-            EosCrossplay = getBool("eoscrossplay");
 
             GameMode = valueGetter("gamemode")?.ToIdentifier() ?? Identifier.Empty;
             if (float.TryParse(valueGetter("traitors"), NumberStyles.Any, CultureInfo.InvariantCulture, out float traitorProbability)) { TraitorProbability = traitorProbability; }

@@ -259,6 +259,8 @@ namespace Barotrauma
 
         private readonly MTRandom rng;
 
+        public override bool RequiresSpecificWreck => wreckTags.Any();
+
         public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
@@ -501,7 +503,7 @@ namespace Barotrauma
                         if (target.Item.CurrentHull == null && target.Item.body != null)
                         {
                             //prevent the body from moving if it spawned outside the hulls (we don't want it e.g. falling to the bottom of a cave or into the abyss)
-                            target.Item.body.FarseerBody.BodyType = BodyType.Kinematic;
+                            target.Item.body.BodyType = BodyType.Kinematic;
                         }
                     }
                     if (target.RequiredRetrievalState == Target.RetrievalState.Interact)
@@ -517,7 +519,7 @@ namespace Barotrauma
                         if (effectList.Count == 0) { continue; }
                         int effectIndex = Rand.Int(effectList.Count);
                         var selectedEffect = effectList[effectIndex];
-                        target.Item.ApplyStatusEffect(selectedEffect, selectedEffect.type, deltaTime: 1.0f, worldPosition: target.Item.Position);
+                        target.Item.ApplyStatusEffect(selectedEffect, selectedEffect.Type, deltaTime: 1.0f, worldPosition: target.Item.Position);
 #if SERVER
                         executedEffectIndices.Add((i, effectIndex));
 #endif
@@ -596,7 +598,7 @@ namespace Barotrauma
             }
         }
         
-        private static bool IsValidSubmarine(Submarine sub, Level.PositionType spawnPosType)
+        private bool IsValidSubmarine(Submarine sub, Level.PositionType spawnPosType)
         {
             if (sub == null)
             {
@@ -609,7 +611,9 @@ namespace Barotrauma
             return spawnPosType switch
             {
                 Level.PositionType.Ruin => sub.Info.IsRuin,
-                Level.PositionType.Wreck => sub.Info.IsWreck,
+                Level.PositionType.Wreck => 
+                    sub.Info.IsWreck && 
+                        (wreckTags.None() || wreckTags.Any(sub.Info.GetExtraSubmarineInfo.MissionTags.Contains)),
                 Level.PositionType.BeaconStation => sub.Info.IsBeacon,
                 Level.PositionType.Outpost => sub.Info.IsOutpost,
                 _ => false
@@ -623,7 +627,7 @@ namespace Barotrauma
             {
                 var root = target.Item?.RootContainer ?? target.Item;
                 if (root == null) { continue; }
-                if (target.Item.ParentInventory != null && target.Item.body != null) { target.Item.body.FarseerBody.BodyType = BodyType.Dynamic; }
+                if (target.Item.ParentInventory != null && target.Item.body != null) { target.Item.body.BodyType = BodyType.Dynamic; }
             }
 
             if (IsClient) { return; }
@@ -642,9 +646,10 @@ namespace Barotrauma
                     return;
                 }
 
+                const CharacterTeamType playerTeam = CharacterTeamType.Team1;
                 Entity rootInventoryOwner = target.Item.GetRootInventoryOwner();
                 Submarine parentSub = target.Item.CurrentHull?.Submarine ?? rootInventoryOwner?.Submarine;
-                bool inPlayerSub = parentSub != null && parentSub.Info.Type == SubmarineType.Player;
+                bool inPlayerSub = parentSub != null && parentSub.Info.Type == SubmarineType.Player && parentSub.TeamID == playerTeam;
                 switch (target.State)
                 {
                     case Target.RetrievalState.None:
@@ -653,7 +658,7 @@ namespace Barotrauma
                             TrySetRetrievalState(Target.RetrievalState.Interact);
                         }
                         var root = target.Item?.RootContainer ?? target.Item;
-                        if (root.ParentInventory?.Owner is Character { TeamID: CharacterTeamType.Team1 })
+                        if (root.ParentInventory?.Owner is Character { TeamID: playerTeam })
                         {
                             TrySetRetrievalState(Target.RetrievalState.PickedUp);
 #if CLIENT
@@ -667,19 +672,15 @@ namespace Barotrauma
                         break;
                     case Target.RetrievalState.PickedUp:
                     case Target.RetrievalState.RetrievedToSub:
-                        bool inPlayerInventory = false;
-                        bool playerInFriendlySub = false;
-                        if (rootInventoryOwner is Character { TeamID: CharacterTeamType.Team1 } character)
+                        if (rootInventoryOwner is Character { TeamID: playerTeam } character)
                         {
-                            inPlayerInventory = true;
-                            if (character.Submarine != null)
+                            if (character.Submarine?.Info is { Type: SubmarineType.Player } && 
+                                character.Submarine.TeamID == playerTeam)
                             {
-                                playerInFriendlySub =
-                                    character.IsInFriendlySub ||
-                                    (character.Submarine == Level.Loaded?.StartOutpost && Level.IsLoadedFriendlyOutpost && GameMain.GameSession?.Campaign.CurrentLocation is not { IsFactionHostile: true });
+                                inPlayerSub = true;
                             }
                         }
-                        if (inPlayerSub || (inPlayerInventory && playerInFriendlySub))
+                        if (inPlayerSub)
                         {
                             TrySetRetrievalState(Target.RetrievalState.RetrievedToSub);
                         }
@@ -742,9 +743,15 @@ namespace Barotrauma
             //consider failed (can't attempt again) if we picked up any of the items but failed to bring them out of the level
             failed = !completed && targets.Any(t => t.State >= Target.RetrievalState.PickedUp);
             List<Target> targetsToRemove = new List<Target>();
+
+            //if the mission can be retried, we must delete the target items,
+            //or the player would be able to collect the items, retry and collect the same items again
+            bool forceRemoveItems = !Completed && Prefab.AllowRetry;
+
             foreach (var target in targets)
             {
                 if (target.RemoveItem ||
+                    forceRemoveItems ||
                     /*remove the target if it's inside another target that's set to be removed (e.g. inside the crate it spawned in)*/
                     targets.Any(t => t.RemoveItem && target.Item?.ParentInventory?.Owner as Item == t.Item))
                 {

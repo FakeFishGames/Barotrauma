@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    internal partial class Radiation : ISerializableEntity
+    public partial class Radiation : ISerializableEntity
     {
         public string Name => nameof(Radiation);
 

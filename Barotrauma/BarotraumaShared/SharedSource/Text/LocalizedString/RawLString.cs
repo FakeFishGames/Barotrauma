@@ -3,7 +3,12 @@ namespace Barotrauma
 {
     public class RawLString : LocalizedString
     {
-        public RawLString(string value) { cachedValue = value; }
+        public override bool UsingDefaultLanguageAsFallback => false;
+
+        public RawLString(string value) 
+        { 
+            cachedValue = TextPack.PerformXmlSymbolReplacements(value); 
+        }
 
         protected override bool MustRetrieveValue() => false;
 

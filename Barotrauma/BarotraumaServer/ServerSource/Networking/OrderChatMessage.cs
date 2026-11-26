@@ -3,7 +3,7 @@ using System;
 
 namespace Barotrauma.Networking
 {
-    partial class OrderChatMessage : ChatMessage
+    public partial class OrderChatMessage : ChatMessage
     {
         public override void ServerWrite(in SegmentTableWriter<ServerNetSegment> segmentTable, IWriteMessage msg, Client c)
         {

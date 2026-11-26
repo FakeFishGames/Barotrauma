@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class HireManager
+    public class HireManager
     {
         public List<CharacterInfo> AvailableCharacters { get; set; }
         public List<CharacterInfo> PendingHires = new List<CharacterInfo>();

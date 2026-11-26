@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    class AIObjectiveRepairItems : AIObjectiveLoop<Item>
+    public class AIObjectiveRepairItems : AIObjectiveLoop<Item>
     {
         public override Identifier Identifier { get; set; } = "repair items".ToIdentifier();
 
@@ -20,6 +20,7 @@ namespace Barotrauma
 
         public override bool AllowMultipleInstances => true;
         protected override bool AllowInFriendlySubs => true;
+        protected override bool RequireOneHandAvailable => true;
 
         public const float RequiredSuccessFactor = 0.4f;
 
@@ -64,7 +65,7 @@ namespace Barotrauma
 
         protected override bool IsValidTarget(Item item)
         {
-            if (!ViableForRepair(item, character, HumanAIController)) { return false; };
+            if (!ViableForRepair(item, character, HumanAIController, AllowInAnySub, AllowInFriendlySubs)) { return false; };
             if (!Objectives.ContainsKey(item))
             {
                 if (item != character.SelectedItem)
@@ -79,9 +80,9 @@ namespace Barotrauma
             return !IsItemRepairedByAnother(character, item);
         }
 
-        public static bool ViableForRepair(Item item, Character character, HumanAIController humanAIController)
+        public static bool ViableForRepair(Item item, Character character, HumanAIController humanAIController, bool allowInAnySub = false, bool allowInFriendlySubs = false)
         {
-            if (!IsValidTarget(item, character)) { return false; }
+            if (!IsValidTarget(item, character, allowInAnySub, allowInFriendlySubs)) { return false; }
             if (item.CurrentHull == null) { return true; }
             if (item.CurrentHull.FireSources.Count > 0) { return false; }
             // Don't repair items in rooms that have enemies inside.
@@ -144,19 +145,19 @@ namespace Barotrauma
         protected override void OnObjectiveCompleted(AIObjective objective, Item target)
             => HumanAIController.RemoveTargets<AIObjectiveRepairItems, Item>(character, target);
 
-        public static bool IsValidTarget(Item item, Character character)
+        public static bool IsValidTarget(Item item, Character character, bool allowInAnySub = false, bool allowInFriendlySubs = false)
         {
             if (item == null) { return false; }
             if (item.IgnoreByAI(character)) { return false; }
             if (!item.IsInteractable(character)) { return false; }
             if (item.IsFullCondition) { return false; }
             if (item.Submarine == null || character.Submarine == null) { return false; }
-            if (item.IsClaimedByBallastFlora) { return false; } 
-            //player crew ignores items in outposts
-            if (character.IsOnPlayerTeam && item.Submarine.Info.IsOutpost) { return false; }
-            if (!character.Submarine.IsEntityFoundOnThisSub(item, includingConnectedSubs: true)) { return false; }
+            if (item.IsClaimedByBallastFlora) { return false; }
+            //player crew ignores items in NPC outposts
+            if (character.IsOnPlayerTeam && item.Submarine.Info.IsOutpost && character.TeamID != item.Submarine.TeamID) { return false; }
+            if (!IsAllowedInSubmarine(item.Submarine, character, allowInAnySub, allowInFriendlySubs)) { return false; }
+            if (!character.Submarine.IsEntityFoundOnThisSub(item, includingConnectedSubs: true, allowDifferentTeam: true, allowDifferentType: true)) { return false; }
             if (item.Repairables.None()) { return false; }
-
             System.Diagnostics.Debug.Assert(item.Repairables.Any(), "Invalid target in AIObjectiveRepairItems - the objective should only be checking items that have a Repairable component (Item.RepairableItems)");
 
             return true;

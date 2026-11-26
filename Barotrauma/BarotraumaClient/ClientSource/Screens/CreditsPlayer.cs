@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    class CreditsPlayer : GUIComponent
+    public class CreditsPlayer : GUIComponent
     {
         private GUIListBox listBox;
 

@@ -1,23 +1,24 @@
-﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
+#if !DEBUG
+using Barotrauma.IO;
+#endif
 using Barotrauma.Sounds;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using System;
+using System.Collections.Generic;
 #if DEBUG
 using System.IO;
-#else
-using Barotrauma.IO;
 #endif
+using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma.CharacterEditor
 {
-    class CharacterEditorScreen : EditorScreen
+    public class CharacterEditorScreen : EditorScreen
     {
         public static CharacterEditorScreen Instance { get; private set; }
 
@@ -236,6 +237,7 @@ namespace Barotrauma.CharacterEditor
 
         protected override void DeselectEditorSpecific()
         {
+            Array.Clear(wallGroups);
             SoundPlayer.OverrideMusicType = Identifier.Empty;
             GameMain.SoundManager.SetCategoryGainMultiplier(SoundManager.SoundCategoryWaterAmbience, GameSettings.CurrentConfig.Audio.SoundVolume, 0);
             GUI.ForceMouseOn(null);
@@ -662,11 +664,12 @@ namespace Barotrauma.CharacterEditor
             }
             if (!isFrozen)
             {
-                foreach (PhysicsBody body in PhysicsBody.List)
+                foreach (PhysicsBody body in PhysicsBody.ActiveBodyList)
                 {
                     body.SetPrevTransform(body.SimPosition, body.Rotation);
                     body.Update();
                 }
+                MapEntity.UpdateAll((float)deltaTime, cam);
                 // Handle ragdolling here, because we are not calling the Character.Update() method.
                 if (!Character.DisableControls)
                 {
@@ -702,6 +705,7 @@ namespace Barotrauma.CharacterEditor
                     DebugConsole.ThrowError(errorMsg, e);
                     GameAnalyticsManager.AddErrorEventOnce("CharacterEditorScreen.Update:WorldLockedException" + e.Message, GameAnalyticsManager.ErrorSeverity.Critical, errorMsg);
                 }
+                character.AnimController.UpdateAnimationsAfterPhysicsStep();
             }
             // Camera
             Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
@@ -4351,12 +4355,26 @@ namespace Barotrauma.CharacterEditor
                 }).Draw(spriteBatch, deltaTime);
             }
 
-            foreach (Limb limb in character.AnimController.Limbs)
+            if (character.AnimController.CurrentAnimationParams is GroundedMovementParams)
             {
-                if (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot)
+                foreach (Limb limb in character.AnimController.Limbs)
                 {
-                    GUI.DrawRectangle(spriteBatch, SimToScreen(limb.DebugRefPos) - Vector2.One * 3, Vector2.One * 6, Color.White, isFilled: true);
-                    GUI.DrawRectangle(spriteBatch, SimToScreen(limb.DebugTargetPos) - Vector2.One * 3, Vector2.One * 6, GUIStyle.Green, isFilled: true);
+                    if (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot)
+                    {
+                        LimbJoint refJoint = null;
+                        if (limb.RefJointIndex > -1 && limb.RefJointIndex < character.AnimController.LimbJoints.Length)
+                        {
+                            refJoint = character.AnimController.LimbJoints[limb.RefJointIndex];
+                        }
+                        GUI.DrawRectangle(spriteBatch, SimToScreen(limb.DebugRefPos) - Vector2.One * 3 + limb.body.DrawPositionOffset, Vector2.One * 6, Color.LightGray * 0.7f, isFilled: true);
+                        if (refJoint != null)
+                        {
+                            GUI.DrawRectangle(spriteBatch, SimToScreen(limb.DebugTargetPos) - Vector2.One * 3 + limb.body.DrawPositionOffset, Vector2.One * 6, GUIStyle.Green, isFilled: true);
+                            //line from the walking reference pos to the reference joint
+                            GUI.DrawLine(spriteBatch, SimToScreen(limb.DebugRefPos) + limb.body.DrawPositionOffset, SimToScreen(refJoint.WorldAnchorA), Color.LightGray * 0.2f, width: 5);
+                        }
+                        GUI.DrawRectangle(spriteBatch, SimToScreen(limb.DebugTargetPos) - Vector2.One * 3 + limb.body.DrawPositionOffset, Vector2.One * 6, GUIStyle.Green, isFilled: true);
+                    }
                 }
             }
         }
@@ -4701,7 +4719,8 @@ namespace Barotrauma.CharacterEditor
         {
             get
             {
-                if (textures == null)
+                // Textures may get disposed if they're reloaded outside the editor (e.g. with the reloadsprite console command)
+                if (textures == null || textures.Any(t => t.IsDisposed))
                 {
                     CreateTextures();
                 }
@@ -4753,8 +4772,9 @@ namespace Barotrauma.CharacterEditor
                     Vector2 origin = limb.ActiveSprite.Origin;
                     Vector2 limbScreenPos = new Vector2(rect.X + origin.X * spriteSheetZoom, rect.Y + origin.Y * spriteSheetZoom);
                     // Draw the clothes
-                    foreach (var wearable in limb.WearingItems)
+                    foreach (var wearable in limb.ActiveWearingItems)
                     {
+                        if (!wearable.IsActive) { return; }
                         Vector2 orig = limb.ActiveSprite.Origin;
                         if (!wearable.InheritOrigin)
                         {

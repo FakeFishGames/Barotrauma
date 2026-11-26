@@ -32,6 +32,9 @@ namespace Barotrauma
         /// </summary>
         private const int CullMoveThreshold = 50;
 
+        /// <inheritdoc cref="SubmarineBody.VisibleBorders"/>
+        public Rectangle VisibleBorders => subBody == null ? Rectangle.Empty : subBody.VisibleBorders;
+
         public static void CullEntities(Camera cam)
         {
             Rectangle camView = cam.WorldView;
@@ -58,11 +61,12 @@ namespace Barotrauma
             {
                 if (Level.Loaded != null && sub.WorldPosition.Y < Level.MaxEntityDepth) { continue; }
 
+                Rectangle visibleBorders = sub.VisibleBorders;
                 Rectangle worldBorders = new Rectangle(
-                    sub.VisibleBorders.X + (int)sub.WorldPosition.X,
-                    sub.VisibleBorders.Y + (int)sub.WorldPosition.Y,
-                    sub.VisibleBorders.Width,
-                    sub.VisibleBorders.Height);
+                    visibleBorders.X + (int)sub.WorldPosition.X,
+                    visibleBorders.Y + (int)sub.WorldPosition.Y,
+                    visibleBorders.Width,
+                    visibleBorders.Height);
 
                 if (RectsOverlap(worldBorders, camView))
                 {
@@ -162,6 +166,14 @@ namespace Barotrauma
 
         private static readonly List<Structure> depthSortedDamageable = new List<Structure>();
 
+        public static void CleanUpStaticReferences()
+        {
+            depthSortedDamageable.Clear();
+            lastPickedFixture = null;
+            checkSubmarineBorders.Clear();
+            CameraTransition.CleanUpStaticReferences();
+        }
+
         public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false, Predicate<MapEntity> predicate = null)
         {
             var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.MapEntityList;
@@ -195,7 +207,7 @@ namespace Barotrauma
             }
         }
 
-        public static void DrawPaintedColors(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
+        public static void DrawPaintedColors(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null, float depth = 0.8f)
         {
             var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.MapEntityList;
 
@@ -209,7 +221,7 @@ namespace Barotrauma
                         {
                             if (!predicate(e)) { continue; }
                         }
-                        hull.DrawSectionColors(spriteBatch);
+                        hull.DrawSectionColors(spriteBatch, depth);
                     }
                 }
             }
@@ -261,7 +273,15 @@ namespace Barotrauma
         [Obsolete("Use MiniMap.CreateMiniMap()")]
         public void CreateMiniMap(GUIComponent parent, IEnumerable<Entity> pointsOfInterest = null, bool ignoreOutpost = false)
         {
-            Rectangle worldBorders = GetDockedBorders();
+            bool getOutpostBorders = false;
+            if (!ignoreOutpost && Level.IsLoadedTeam1Outpost)
+            {
+                //if the outpost is owned by the player team,
+                //get the extents of the outpost too to position the minimap so it shows both the sub and the outpost
+                getOutpostBorders = true;
+            }
+
+            Rectangle worldBorders = GetDockedBorders(ignoreOutposts: !getOutpostBorders);
             worldBorders.Location += WorldPosition.ToPoint();
 
             //create a container that has the same "aspect ratio" as the sub
@@ -314,8 +334,7 @@ namespace Barotrauma
 
                 if (hideHull) { continue; }
 
-                Color color = Color.DarkCyan * 0.8f;
-
+                Color color = GetSubmarineColorOnMinimap(hull.Submarine);
                 var hullFrame = new GUIFrame(new RectTransform(relativeHullSize, hullContainer.RectTransform) { RelativeOffset = relativeHullPos }, style: "MiniMapRoom", color: color)
                 {
                     UserData = hull
@@ -334,8 +353,7 @@ namespace Barotrauma
 
                 Vector2 relativeHullSize = new Vector2(data.Bounds.Width / worldBorders.Width, data.Bounds.Height / worldBorders.Height);
 
-                Color color = Color.DarkCyan * 0.8f;
-
+                Color color = GetSubmarineColorOnMinimap(mainHull.Submarine);
                 float highestY = 0f,
                       highestX = 0f;
 
@@ -404,7 +422,13 @@ namespace Barotrauma
                     };
                 }
             }
+
+            static Color GetSubmarineColorOnMinimap(Submarine sub)
+            {
+                return (sub is { Info.IsOutpost: true } ? GUIStyle.Yellow : Color.DarkCyan) * 0.8f;
+            }
         }
+
 
         public static MiniMapHullData ConstructLinkedHulls(Hull mainHull, HashSet<Hull> linkedHulls, GUIComponent parent, Rectangle worldBorders)
         {
@@ -471,7 +495,7 @@ namespace Barotrauma
 
             if (!Hull.HullList.Any())
             {
-                if (!IsWarningSuppressed(SubEditorScreen.WarningType.NoWaypoints))
+                if (!IsWarningSuppressed(SubEditorScreen.WarningType.NoHulls))
                 {
                     errorMsgs.Add(TextManager.Get("NoHullsWarning").Value);
                     warnings.Add(SubEditorScreen.WarningType.NoHulls);
@@ -491,14 +515,29 @@ namespace Barotrauma
                 }
             }
 
-            if (Hull.HullList.Any(h => h.WaterVolume > 0.0f))
+            if (!IsWarningSuppressed(SubEditorScreen.WarningType.WaypointInLayer))
+            {
+                foreach (var waypoint in WayPoint.WayPointList)
+                {
+                    if (!waypoint.Layer.IsNullOrEmpty())
+                    {
+                        errorMsgs.Add(TextManager.GetWithVariable("WaypointInLayerWarning", "[layername]", waypoint.Layer).Value);
+                        warnings.Add(SubEditorScreen.WarningType.WaypointInLayer);
+                        break;
+                    }
+                }
+            }
+
+            if (!IsWarningSuppressed(SubEditorScreen.WarningType.WaterInHulls) && Hull.HullList.Any(h => h.WaterVolume > 0.0f))
             {
                 errorMsgs.Add(TextManager.Get("WaterInHullsWarning").Value);
                 warnings.Add(SubEditorScreen.WarningType.WaterInHulls);
                 Hull.ShowHulls = true;
+                //keep the "show entities" tickbox in sync
+                GameMain.SubEditorScreen?.ShowEntityType("hull");
             }
             
-            if (Info.IsWreck)
+            if (Info.IsWreck && !IsWarningSuppressed(SubEditorScreen.WarningType.NoSuitableBrainRooms))
             {
                 Point vanillaBrainSize = new Point(204, 204);
                 if (WreckAI.GetPotentialBrainRooms(this, WreckAIConfig.GetRandom(), minSize: vanillaBrainSize).None())
@@ -553,7 +592,9 @@ namespace Barotrauma
             {
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.GetComponent<Vent>() == null) { continue; }
+                    if (item.GetComponent<Vent>() is not Vent vent) { continue; }
+                    //vents that link automatically when the round starts (e.g. diving suit lockers, oxygen tank shelves) don't need manual links
+                    if (!vent.LinkWithOtherVentsIdOrTag.IsNullOrEmpty()) { continue; }
                     if (!item.linkedTo.Any())
                     {
                         if (!IsWarningSuppressed(SubEditorScreen.WarningType.DisconnectedVents))
@@ -566,6 +607,7 @@ namespace Barotrauma
                 }
                 foreach (Item item in Item.ItemList)
                 {
+                    if (IsWarningSuppressed(SubEditorScreen.WarningType.LowOxygenOutputWarning)) { break; }
                     if (item.GetComponent<OxygenGenerator>() is not OxygenGenerator oxygenGenerator) { continue; }
 
                     oxygenGenerator.GetVents();
@@ -722,6 +764,15 @@ namespace Barotrauma
                 }
             }
 
+            if (HasDisconnectedWaypointNetworks())
+            {
+                if (!IsWarningSuppressed(SubEditorScreen.WarningType.DisconnectedWaypointNetworks))
+                {
+                    errorMsgs.Add(TextManager.Get("subeditor.DisconnectedWaypointNetworksWarning").Value);
+                    warnings.Add(SubEditorScreen.WarningType.DisconnectedWaypointNetworks);
+                }
+            }
+
             if (errorMsgs.Any())
             {
                 GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("Warning"), string.Empty, new Vector2(0.25f, 0.0f), minSize: new Point(GUI.IntScale(650), GUI.IntScale(650)));
@@ -792,6 +843,40 @@ namespace Barotrauma
             }
         }
 
+        private static bool HasDisconnectedWaypointNetworks()
+        {
+            var pathPoints = WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Path);
+            if (pathPoints.None()) { return false; }
+
+            var firstWaypoint = pathPoints.FirstOrDefault();
+            if (firstWaypoint == null) { return false; }
+
+            var connectedWaypoints = new List<WayPoint>();
+            var visited = new HashSet<WayPoint>();
+
+            void Traverse(WayPoint wp)
+            {
+                if (wp == null || visited.Contains(wp)) { return; }
+
+                visited.Add(wp);
+                connectedWaypoints.Add(wp);
+
+                if (wp.linkedTo == null) { return; }
+
+                foreach (var linked in wp.linkedTo)
+                {
+                    if (linked is WayPoint otherWp)
+                    {
+                        Traverse(otherWp);
+                    }
+                }
+            }
+
+            Traverse(firstWaypoint);
+
+            return connectedWaypoints.Count() < pathPoints.Count();
+        }
+
         public static int GetLightCount()
         {
             int disabledItemLightCount = 0;
@@ -845,7 +930,9 @@ namespace Barotrauma
         {
             Identifier layerIdentifier = msg.ReadIdentifier();
             bool enabled = msg.ReadBoolean();
-            SetLayerEnabled(layerIdentifier, enabled);
+            float shakeAmount = msg.ReadSingle();
+            Vector2 acceleration = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+            SetLayerEnabled(layerIdentifier, enabled, shakeAmount, acceleration);
         }
     }
 }

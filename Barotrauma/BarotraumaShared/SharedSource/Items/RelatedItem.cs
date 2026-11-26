@@ -13,7 +13,7 @@ namespace Barotrauma
     /// for example, which item a character must have equipped to interact with some item in some way, 
     /// which items can go inside a container, or which kind of item the target of a status effect must have for the effect to execute.
     /// </summary>
-    class RelatedItem
+    public class RelatedItem
     {
         public enum RelationType
         {
@@ -139,6 +139,12 @@ namespace Barotrauma
         ///  Should the character who equipped the item be blamed if the wearer / character who's inventory the item is in dies?
         /// </summary>
         public bool BlameEquipperForDeath;
+
+        /// <summary>
+        ///  Only valid when used in the Containable definitions of an ItemContainer.
+        ///  Should bots be allowed to refill these types of items in the container if the container is something they try to refill?
+        /// </summary>
+        public bool AllowBotRefills;
 
         /// <summary>
         /// Only valid for the RequiredItems of an ItemComponent. Can be used to make the requirement optional, 
@@ -269,6 +275,7 @@ namespace Barotrauma
             Rotation = element.GetAttributeFloat("rotation", 0f);
             SetActive = element.GetAttributeBool("setactive", false);
             BlameEquipperForDeath = element.GetAttributeBool(nameof(BlameEquipperForDeath), false);
+            AllowBotRefills = element.GetAttributeBool(nameof(AllowBotRefills), true);
 
             CharacterInventorySlotType = element.GetAttributeEnum(nameof(CharacterInventorySlotType), InvSlotType.None);
 
@@ -343,7 +350,7 @@ namespace Barotrauma
                     return CheckItem(parentItem.Container, this);
                 case RelationType.Equipped:
                     if (character == null) { return false; }
-                    foreach (var item in character.Inventory.AllItemsMod)
+                    foreach (var item in character.Inventory.AllItems)
                     {
                         if (character.HasEquippedItem(item) && CheckItem(item, this))
                         {
@@ -376,6 +383,14 @@ namespace Barotrauma
             static bool CheckItem(Item i, RelatedItem ri) => (!ri.ExcludeBroken || ri.RequireEmpty || i.Condition > 0.0f) && (!ri.ExcludeFullCondition || !i.IsFullCondition) && ri.MatchesItem(i);
 
             return false;
+        }
+
+        public void ReplaceIdentifier(Identifier identifier, Identifier newIdentifier)
+        {
+            if (Identifiers.Contains(identifier))
+            {
+                Identifiers = Identifiers.Remove(identifier).Add(newIdentifier);
+            }
         }
 
         private bool CheckContained(Item parentItem)

@@ -81,7 +81,7 @@ namespace Barotrauma.Networking
                         IReadMessage inc = new ReadOnlyMessage(incBuf, false, 0, incBuf.Length, OwnerConnection);
                         HandleDataMessage(inc, out senderEndpoint);
                     }
-                    catch (NetStructReadException)
+                    catch (MalformedDataException)
                     {
                         //kick the client if we fail to parse their message
                         if (senderEndpoint != null && senderEndpoint != ownerEndpoint)
@@ -120,13 +120,13 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void HandleDataMessage(IReadMessage inc, out P2PEndpoint? senderEndPoint)
+        private void HandleDataMessage(IReadMessage inc, out P2PEndpoint? senderEndpoint)
         {
-            senderEndPoint = null;
+            senderEndpoint = null;
             if (!started) { return; }
 
             var senderInfo = INetSerializableStruct.Read<P2POwnerToServerHeader>(inc);
-            if (!senderInfo.Endpoint.TryUnwrap(out var senderEndpoint)) { return; }
+            if (!senderInfo.Endpoint.TryUnwrap(out senderEndpoint)) { return; }
             var (_, packetHeader, initialization) = INetSerializableStruct.Read<PeerPacketHeaders>(inc);
 
             if (packetHeader.IsServerMessage())
@@ -137,8 +137,10 @@ namespace Barotrauma.Networking
 
             if (senderEndpoint != ownerEndpoint) //sender is remote, handle disconnects and heartbeats
             {
+                // copy so it can be used in lambda / local functions
+                P2PEndpoint connectionMatchEndpoint = senderEndpoint;
                 bool connectionMatches(P2PConnection conn) =>
-                    conn.Endpoint == senderEndpoint;
+                    conn.Endpoint == connectionMatchEndpoint;
 
                 var pendingClient = pendingClients.Find(c => connectionMatches(c.Connection));
                 var connectedClient = connectedClients.Find(c => connectionMatches(c.Connection));

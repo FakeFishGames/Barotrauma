@@ -38,6 +38,13 @@ namespace Barotrauma.Items.Components
             SetLightSourceTransformProjSpecific();
         }
 
+        /// <summary>
+        /// The color of the light, taking into account the ammo of the turret the light is attached to.
+        /// Only lights with an identifier can have their color defined by the ammo (see <see cref="TurretAmmo.GetLightColor"/>).
+        /// </summary>
+        private Color CurrentLightColor =>
+            !Identifier.IsEmpty && turret?.GetActiveTurretAmmo()?.GetLightColor(Identifier) is Color ammoLightColor ? ammoLightColor : LightColor;
+
         partial void SetLightSourceState(bool enabled, float brightness)
         {
             if (Light == null) { return; }
@@ -46,7 +53,7 @@ namespace Barotrauma.Items.Components
             lightColorMultiplier = brightness;
             if (enabled)
             {
-                Light.Color = LightColor.Multiply(lightColorMultiplier);
+                Light.Color = CurrentLightColor.Multiply(lightColorMultiplier);
             }
         }
 
@@ -55,9 +62,7 @@ namespace Barotrauma.Items.Components
             Vector2 offset = LightOffset * item.Scale;
             if (offset != Vector2.Zero)
             {
-                if (item.FlippedX) { offset.X *= -1; }
-                if (item.FlippedY) { offset.Y *= -1; }
-                offset = Vector2.Transform(offset, Matrix.CreateRotationZ(-item.RotationRad));
+                offset = GetLightOffset();
             }
 
             if (ParentBody != null)
@@ -103,10 +108,7 @@ namespace Barotrauma.Items.Components
             if (Light?.LightSprite == null) { return; }
             if ((item.body == null || item.body.Enabled) && lightBrightness > 0.0f && IsOn && Light.Enabled)
             {
-                Vector2 offset = LightOffset * item.Scale;
-                if (item.FlippedX) { offset.X *= -1; }
-                if (item.FlippedY) { offset.Y *= -1; }
-                offset = Vector2.Transform(offset, Matrix.CreateRotationZ(-item.RotationRad));
+                Vector2 offset = GetLightOffset();
 
                 Vector2 origin = Light.LightSprite.Origin;
                 if ((Light.LightSpriteEffect & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally) { origin.X = Light.LightSprite.SourceRect.Width - origin.X; }
@@ -114,10 +116,10 @@ namespace Barotrauma.Items.Components
 
                 Vector2 drawPos = item.body?.DrawPosition ?? item.DrawPosition + offset;
 
-                Color color = lightColor;
+                Color color = CurrentLightColor;
                 if (Light.OverrideLightSpriteAlpha.HasValue)
                 {
-                    color = new Color(lightColor, Light.OverrideLightSpriteAlpha.Value);
+                    color = new Color(color, Light.OverrideLightSpriteAlpha.Value);
                 }
 
                 Light.LightSprite.Draw(spriteBatch, 
@@ -128,6 +130,14 @@ namespace Barotrauma.Items.Components
                     item.Scale * LightSpriteScale, 
                     Light.LightSpriteEffect, itemDepth - 0.0001f);
             }
+        }
+
+        private Vector2 GetLightOffset()
+        {
+            Vector2 flippedLightOffset = LightOffset * item.Scale;
+            if (item.FlippedX) { flippedLightOffset.X *= -1; }
+            if (item.FlippedY) { flippedLightOffset.Y *= -1; }
+            return Vector2.Transform(flippedLightOffset, Matrix.CreateRotationZ(-item.RotationRad));
         }
 
         public override void FlipX(bool relativeToSub)
@@ -184,6 +194,7 @@ namespace Barotrauma.Items.Components
         {
             base.RemoveComponentSpecific();
             Light.Remove();
+            ActivePlantLightSources.Remove(this);
         }
     }
 }

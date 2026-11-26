@@ -387,7 +387,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < character.Inventory.Capacity && i < husk.Inventory.Capacity; i++)
                 {
-                    character.Inventory.GetItemsAt(i).ForEachMod(item => husk.Inventory.TryPutItem(item, i, true, false, null));
+                    character.Inventory.GetItemsAt(i).ForEachMod(item => husk.Inventory.TryPutItem(item, i, allowSwapping: true, allowCombine: false, user: null, allowReplacingIntactLimb: true));
                 }
             }
 

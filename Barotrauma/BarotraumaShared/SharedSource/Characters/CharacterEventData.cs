@@ -8,7 +8,7 @@ using Voronoi2;
 
 namespace Barotrauma
 {
-    partial class Character
+    public partial class Character
     {
         public enum EventType
         {
@@ -56,23 +56,29 @@ namespace Barotrauma
         {
             public EventType EventType => EventType.Control;
             public readonly Client Owner;
+            public readonly Character PreviousCharacter;
             
-            public ControlEventData(Client owner)
+            public ControlEventData(Client owner, Character previousCharacter)
             {
                 Owner = owner;
+                PreviousCharacter = previousCharacter;
             }
         }
 
         public struct CharacterStatusEventData : IEventData
         {
-            public EventType EventType => EventType.Status;
+            public readonly EventType EventType => EventType.Status;
 
 #if SERVER
             public bool ForceAfflictionData;
+            public bool ForceLimbSeveringData;
+            public bool DisableSeverEffects;
 
-            public CharacterStatusEventData(bool forceAfflictionData)
+            public CharacterStatusEventData(bool forceAfflictionData, bool forceLimbSeveringData, bool disableSeverEffects = false)
             {
                 ForceAfflictionData = forceAfflictionData;
+                ForceLimbSeveringData = forceLimbSeveringData;
+                DisableSeverEffects = disableSeverEffects;
             }
 #endif
         }

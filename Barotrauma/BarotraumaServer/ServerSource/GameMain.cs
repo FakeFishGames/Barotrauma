@@ -14,7 +14,7 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    class GameMain
+    public class GameMain
     {
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
 
@@ -89,15 +89,6 @@ namespace Barotrauma
             {
                 Console.WriteLine("Initializing SteamManager");
                 SteamManager.Initialize();
-
-                if (!SteamManager.SteamworksLibExists)
-                {
-                    Console.WriteLine("Initializing EosManager");
-                    if (EosInterface.Core.Init(EosInterface.ApplicationCredentials.Server, enableOverlay: false).TryUnwrapFailure(out var initError))
-                    {
-                        Console.WriteLine($"EOS failed to initialize: {initError}");
-                    }
-                }
             }
 
             //TODO: figure out how consent is supposed to work for servers
@@ -233,6 +224,9 @@ namespace Barotrauma
                     case "-lenienthandshake":
                         NetConfig.UseLenientHandshake = true;
                         break;
+                    case "-simpleio":
+                        DebugConsole.EnableSimpleIO = true;
+                        break;
                 }
             }
 
@@ -299,11 +293,6 @@ namespace Barotrauma
 
         public void Run()
         {
-            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Character));
-            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Item));
-            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Items.Components.ItemComponent));
-            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Hull));
-
             Init();
             StartServer();
 
@@ -337,6 +326,11 @@ namespace Barotrauma
                 prevTicks = currTicks;
                 while (Timing.Accumulator >= Timing.Step)
                 {
+                    foreach (var hook in PluginData.GetHooks<PluginOnPreUpdateDelegate>())
+                    {
+                        hook((float)Timing.Step);
+                    }
+                    
                     Timing.TotalTime += Timing.Step;
                     Timing.TotalTimeUnpaused += Timing.Step;                    
                     DebugConsole.Update();
@@ -347,9 +341,13 @@ namespace Barotrauma
                     Server.Update((float)Timing.Step);
                     if (Server == null) { break; }
                     SteamManager.Update((float)Timing.Step);
-                    EosInterface.Core.Update();
                     TaskPool.Update();
                     CoroutineManager.Update(paused: false, (float)Timing.Step);
+
+                    foreach (var hook in PluginData.GetHooks<PluginOnPostUpdateDelegate>())
+                    {
+                        hook((float)Timing.Step);
+                    }
 
                     Timing.Accumulator -= Timing.Step;
                     updateCount++;

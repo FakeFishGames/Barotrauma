@@ -1,10 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
+using System.Linq;
 
 namespace Barotrauma
 {
-    class Skill
+    public class Skill
     {
         public readonly Identifier Identifier;
+
+        public bool IsOutpostSkill => SkillSettings.Current.OutpostSkills.Contains(Identifier);
 
         /// <summary>
         /// The "normal" maximum skill level. It's possible to go above this with certain talents, see <see cref="SkillSettings.MaximumSkillWithTalents"/>.
@@ -31,6 +35,11 @@ namespace Barotrauma
         public LocalizedString DisplayName { get; private set; }
 
         /// <summary>
+        /// Description of the skill, shown e.g. as a tooltip on the skill name. Empty if the skill has no description text.
+        /// </summary>
+        public LocalizedString Description { get; private set; }
+
+        /// <summary>
         /// Increase the skill level by a value. Handles clamping the level above the maximum. 
         /// Note that if the skill level is already above maximum (if it for example has been set by console commands), it's allowed to stay at that level, but not to increase further.
         /// </summary>
@@ -49,9 +58,31 @@ namespace Barotrauma
 
         private readonly Identifier iconJobId;
 
-        public Sprite Icon => !iconJobId.IsEmpty && JobPrefab.Prefabs.TryGet(iconJobId, out var jobPrefab)
-            ? jobPrefab.Icon
-            : null;
+        public Sprite Icon
+        {
+            get
+            {
+                if (!iconJobId.IsEmpty && JobPrefab.Prefabs.TryGet(iconJobId, out var jobPrefab))
+                {
+                    return jobPrefab.Icon;
+                }
+#if CLIENT
+                //skills that don't borrow a job's icon can define one in a UI style named SkillIcon.[identifier] (e.g. mods)
+                return IconStyle?.GetDefaultSprite();
+#else
+                return null;
+#endif
+            }
+        }
+
+#if CLIENT
+        private GUIComponentStyle IconStyle => GUIStyle.GetComponentStyle($"SkillIcon.{Identifier}");
+
+        /// <summary>
+        /// Fixed color of the icon, if the skill defines its own SkillIcon style. Null if the UI should pick the color (e.g. based on the job).
+        /// </summary>
+        public Color? IconColor => IconStyle is { } style && style.Color != Color.Transparent ? style.Color : null;
+#endif
 
         public readonly float PriceMultiplier = 1.0f;
 
@@ -64,6 +95,7 @@ namespace Barotrauma
             iconJobId = GetIconJobId();
             PriceMultiplier = prefab.PriceMultiplier;
             DisplayName = TextManager.Get("SkillName." + Identifier);
+            Description = TextManager.Get("SkillDescription." + Identifier).Fallback(LocalizedString.EmptyString);
         }
 
         public Skill(Identifier identifier, float level)
@@ -72,6 +104,7 @@ namespace Barotrauma
             Level = level;
             iconJobId = GetIconJobId();
             DisplayName = TextManager.Get("SkillName." + Identifier);
+            Description = TextManager.Get("SkillDescription." + Identifier).Fallback(LocalizedString.EmptyString);
         }
 
         private Identifier GetIconJobId()

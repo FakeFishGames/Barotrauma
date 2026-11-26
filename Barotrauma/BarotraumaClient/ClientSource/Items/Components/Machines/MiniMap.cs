@@ -10,7 +10,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma.Items.Components
 {
-    internal readonly record struct MiniMapGUIComponent(GUIComponent RectComponent, GUIComponent BorderComponent)
+    public readonly record struct MiniMapGUIComponent(GUIComponent RectComponent, GUIComponent BorderComponent)
     {
         public MiniMapGUIComponent(GUIComponent rectComponent) : this(rectComponent, rectComponent)
         {
@@ -23,7 +23,7 @@ namespace Barotrauma.Items.Components
         }
     }
     
-    internal readonly record struct MiniMapSprite(Sprite? Sprite, Color Color)
+    public readonly record struct MiniMapSprite(Sprite? Sprite, Color Color)
     {
         public MiniMapSprite(JobPrefab prefab) : this(prefab.IconSmall, prefab.UIColor)
         {
@@ -34,7 +34,7 @@ namespace Barotrauma.Items.Components
         }
     }
 
-    internal readonly struct MiniMapHullData
+    public readonly struct MiniMapHullData
     {
         public readonly List<List<Vector2>> Polygon;
         public readonly (RectangleF Rect, Hull Hull)[] RectDatas;
@@ -55,7 +55,7 @@ namespace Barotrauma.Items.Components
         }
     }
 
-    internal enum MiniMapMode
+    public enum MiniMapMode
     {
         None,
         HullStatus,
@@ -63,7 +63,7 @@ namespace Barotrauma.Items.Components
         ItemFinder
     }
 
-    internal readonly struct RelativeEntityRect
+    public readonly struct RelativeEntityRect
     {
         public readonly Vector2 RelativePosition;
         public readonly Vector2 RelativeSize;
@@ -103,7 +103,7 @@ namespace Barotrauma.Items.Components
         }
     }
 
-    internal readonly struct MiniMapSettings
+    public readonly struct MiniMapSettings
     {
         public static MiniMapSettings Default = new MiniMapSettings
         (
@@ -121,7 +121,7 @@ namespace Barotrauma.Items.Components
         }
     }
 
-    partial class MiniMap : Powered
+    public partial class MiniMap : Powered
     {
         private Dictionary<Hull, HullData> hullDatas;
         private DateTime resetDataTime;
@@ -252,7 +252,6 @@ namespace Barotrauma.Items.Components
             GuiFrame.ClearChildren();
             TryCreateDragHandle();
 
-            GuiFrame.RectTransform.RelativeOffset = new Vector2(0.05f, 0.0f);
             GuiFrame.CanBeFocused = true;
             var submarineBack = new GUICustomComponent(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) { AbsoluteOffset = GUIStyle.ItemFrameOffset }, DrawHUDBack, null);
             GUIFrame paddedContainer = new GUIFrame(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center), style: null);
@@ -540,24 +539,29 @@ namespace Barotrauma.Items.Components
                 else if (it.GetComponent<Turret>() is { } turret)
                 {
                     int parentWidth = (int) (submarineContainer.Rect.Width / 16f);
+
+                    float lastPoweredRotation = turret.BarrelRotation;
                     GUICustomComponent frame = new GUICustomComponent(new RectTransform(new Point(parentWidth, parentWidth), component.RectComponent.RectTransform, anchor: Anchor.Center), (batch, customComponent) =>
                     {
                         Vector2 center = customComponent.Center;
-                        float rotation = turret.Rotation;
 
-                        if (!hasPower)
+                        if (hasPower)
                         {
-                            float minRotation = MathHelper.ToRadians(Math.Min(turret.RotationLimits.X, turret.RotationLimits.Y)),
-                                  maxRotation = MathHelper.ToRadians(Math.Max(turret.RotationLimits.X, turret.RotationLimits.Y));
-
-                            rotation = (minRotation + maxRotation) / 2;
+                            lastPoweredRotation = turret.BarrelRotation;
                         }
+                        float rotation = lastPoweredRotation;
+
+                        float timeSinceFired = (float)Timing.TotalTimeUnpaused - turret.LastFiredTime;
 
                         if (turret.WeaponIndicatorSprite is { } weaponSprite)
                         {
                             Vector2 origin = weaponSprite.Origin;
                             float scale = parentWidth / Math.Max(weaponSprite.size.X, weaponSprite.size.Y);
-                            Color color = !hasPower ? NoPowerColor : turret.ActiveUser is null ? Color.DimGray : GUIStyle.Green;
+                            Color color = !hasPower ? NoPowerColor : turret.IsBeingActivelyUsed ? GUIStyle.Green : Color.DimGray;
+                            if (hasPower && timeSinceFired < 0.1f)
+                            {
+                                color = Color.Lerp(Color.Orange, color, timeSinceFired / 0.1f);
+                            }
                             weaponSprite.Draw(batch, center, color, origin, rotation, scale, SpriteEffects.None);
                         }
                     })
@@ -576,12 +580,20 @@ namespace Barotrauma.Items.Components
 
             displayedSubs.Clear();
             displayedSubs.Add(item.Submarine);
-            displayedSubs.AddRange(item.Submarine.DockedTo.Where(s => s.TeamID == item.Submarine.TeamID));
+            displayedSubs.AddRange(item.Submarine.DockedTo.Where(s => IsDisplayedWith(item.Submarine, s)));
 
             subEntities = MapEntity.MapEntityList.Where(me => (item.Submarine is { } sub && sub.IsEntityFoundOnThisSub(me, includingConnectedSubs: true, allowDifferentType: false)) && !me.IsHidden).OrderByDescending(w => w.SpriteDepth).ToList();
 
             BakeSubmarine(item.Submarine, parentRect);
             elementSize = GuiFrame.Rect.Size;
+        }
+
+        /// <summary>
+        /// Docked subs only get drawn on the minimap if they're in the same team and of the same type (e.g. a player-owned outpost docked to the main sub is not drawn)
+        /// </summary>
+        private static bool IsDisplayedWith(Submarine sub, Submarine dockedSub)
+        {
+            return dockedSub.TeamID == sub.TeamID && dockedSub.Info.Type == sub.Info.Type;
         }
 
         public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
@@ -593,7 +605,7 @@ namespace Barotrauma.Items.Components
                     // current sub not displayed
                     !displayedSubs.Contains(itemSub) ||
                     // some of the docked subs not displayed
-                    itemSub.DockedTo.Where(s => s.TeamID == item.Submarine.TeamID).Any(s => !displayedSubs.Contains(s) && itemSub.ConnectedDockingPorts[s].IsLocked) ||
+                    itemSub.DockedTo.Where(s => IsDisplayedWith(itemSub, s)).Any(s => !displayedSubs.Contains(s) && itemSub.ConnectedDockingPorts[s].IsLocked) ||
                     // displaying a sub that shouldn't be displayed
                     displayedSubs.Any(s => s != itemSub && !itemSub.DockedTo.Contains(s))
                 ) ||
@@ -645,7 +657,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
                 
-                if (currentMode != MiniMapMode.HullStatus && Math.Abs(PlayerInput.ScrollWheelSpeed) > 0 && (GUI.MouseOn == scissorComponent || scissorComponent.IsParentOf(GUI.MouseOn)))
+                if (currentMode != MiniMapMode.HullStatus && Math.Abs(PlayerInput.ScrollWheelSpeed) > 0 && (GUI.IsMouseOn(scissorComponent)))
                 {
                     float newZoom = Math.Clamp(Zoom + PlayerInput.ScrollWheelSpeed / 1000.0f * Zoom, minZoom, maxZoom);
                     float distanceScale = newZoom / Zoom;
@@ -1291,6 +1303,23 @@ namespace Barotrauma.Items.Components
                         pingCircle.Draw(spriteBatch, electricalFrame.Rect.Location.ToVector2() + blip * Zoom, GUIStyle.Red * alpha, pingCircle.Origin, 0f, spriteScale * scale, SpriteEffects.None);
                     }
                 }
+                if (Character.Controlled is { } character && 
+                    miniMapFrame != null && electricalFrame != null)
+                {
+                    RectangleF dockedBorders = item.Submarine.GetDockedBorders(allowDifferentTeam: false);
+                    dockedBorders.Location += item.Submarine.WorldPosition;
+                    RectangleF parentRect = miniMapFrame.Rect;
+                    Sprite? youAreHereCircle = GUIStyle.YouAreHereCircle.Value?.Sprite;
+                    if (youAreHereCircle is not null)
+                    {
+                        RelativeEntityRect scaledRect = new RelativeEntityRect(dockedBorders, new RectangleF(character.WorldPosition, Vector2.One));
+                        Vector2 pos =
+                            electricalFrame.Rect.Location.ToVector2() +
+                            (scaledRect.PositionRelativeTo(parentRect, skipOffset: true) + scaledRect.SizeRelativeTo(parentRect) / 2f) * Zoom;
+                        youAreHereCircle.Draw(spriteBatch, pos, Color.Black, youAreHereCircle.Origin, 0f, 0.6f * zoom, SpriteEffects.None);
+                        youAreHereCircle.Draw(spriteBatch, pos, GUIStyle.Green, youAreHereCircle.Origin, 0f, 0.5f * zoom, SpriteEffects.None);
+                    }
+                }
             }
             else
             {
@@ -1441,7 +1470,7 @@ namespace Barotrauma.Items.Components
                 drawPos.Y = -drawPos.Y;
                 if (turret.BarrelSprite is { } barrelSprite)
                 {
-                    DrawAdditionalSprite(drawPos, barrelSprite, turret.Rotation + MathHelper.PiOver2);
+                    DrawAdditionalSprite(drawPos, barrelSprite, turret.BarrelRotation + MathHelper.PiOver2);
                 }
             }
 

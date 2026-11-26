@@ -26,12 +26,18 @@ namespace Barotrauma.Items.Components
             Monster = 2,
             Wall = 4,
             Pet = 8,
+            Submarine = 16,
+            Outpost = 32,
             Any = Human | Monster | Wall | Pet,
         }
 
         private bool triggerFromHumans = true;
-        private bool triggerFromPets = true;
         private bool triggerFromMonsters = true;
+        private bool triggerFromPets = true;
+        private bool triggerFromWalls = false;
+        private bool triggerFromSubs = false;
+        private bool triggerFromOutposts = false;
+
         private TargetType _target;
         
         [InGameEditable, Serialize(TargetType.Any, IsPropertySaveable.Yes, description: "Which kind of targets can trigger the sensor?", alwaysUseInstanceValues: true)]
@@ -44,8 +50,11 @@ namespace Barotrauma.Items.Components
                 {
                     _target = value;
                     triggerFromHumans = Target.HasFlag(TargetType.Human);
-                    triggerFromPets = Target.HasFlag(TargetType.Pet);
                     triggerFromMonsters = Target.HasFlag(TargetType.Monster);
+                    triggerFromPets = Target.HasFlag(TargetType.Pet);
+                    triggerFromWalls = Target.HasFlag(TargetType.Wall);
+                    triggerFromSubs = Target.HasFlag(TargetType.Submarine);
+                    triggerFromOutposts = Target.HasFlag(TargetType.Outpost);
                 }
             }
         }
@@ -230,7 +239,8 @@ namespace Barotrauma.Items.Components
             float broadRangeX = Math.Max(rangeX * 2, 500);
             float broadRangeY = Math.Max(rangeY * 2, 500);
 
-            if (item.CurrentHull == null && item.Submarine != null && Target.HasFlag(TargetType.Wall))
+            if (item.CurrentHull == null && item.Submarine != null && 
+                (triggerFromWalls || triggerFromSubs || triggerFromOutposts))
             {
                 if (Level.Loaded != null && (Math.Abs(item.Submarine.Velocity.X) > MinimumVelocity || Math.Abs(item.Submarine.Velocity.Y) > MinimumVelocity))
                 {
@@ -261,6 +271,12 @@ namespace Barotrauma.Items.Components
                 {
                     if (sub == item.Submarine) { continue; }
 
+                    if (!triggerFromWalls)
+                    {
+                        if (!triggerFromOutposts && sub.Info.IsOutpost) { continue; }
+                        if (!triggerFromSubs && sub.Info.Type is SubmarineType.Player or SubmarineType.AIControlled) { continue; }
+                    }
+
                     Vector2 relativeVelocity = item.Submarine.Velocity - sub.Velocity;
                     if (Math.Abs(relativeVelocity.X) < MinimumVelocity && Math.Abs(relativeVelocity.Y) < MinimumVelocity) { continue; }
 
@@ -285,34 +301,37 @@ namespace Barotrauma.Items.Components
                 }
             }
             
-            bool hasTriggers = triggerFromHumans || triggerFromPets || triggerFromMonsters;
-            if (!hasTriggers) { return; }
-            foreach (Character character in Character.CharacterList)
+            bool hasCharacterTriggers = triggerFromHumans || triggerFromPets || triggerFromMonsters;
+            if (hasCharacterTriggers) 
             {
-                //ignore characters that have spawned a second or less ago
-                //makes it possible to detect when a spawned character moves without triggering the detector immediately as the ragdoll spawns and drops to the ground
-                if (character.SpawnTime > Timing.TotalTime - 1.0) { continue; }
-                
-                if (!TriggersOn(character)) { continue; }
-                
-                //do a rough check based on the position of the character's collider first
-                //before the more accurate limb-based check
-                if (Math.Abs(character.WorldPosition.X - detectPos.X) > broadRangeX || Math.Abs(character.WorldPosition.Y - detectPos.Y) > broadRangeY)
+                foreach (Character character in Character.CharacterList)
                 {
-                    continue;
-                }
+                    //ignore characters that have spawned a second or less ago
+                    //makes it possible to detect when a spawned character moves without triggering the detector immediately as the ragdoll spawns and drops to the ground
+                    if (character.SpawnTime > Timing.TotalTime - 1.0) { continue; }
 
-                foreach (Limb limb in character.AnimController.Limbs)
-                {
-                    if (limb.IsSevered) { continue; }
-                    if (limb.LinearVelocity.LengthSquared() < MinimumVelocity * MinimumVelocity) { continue; }
-                    if (MathUtils.CircleIntersectsRectangle(limb.WorldPosition, ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent()), detectRect))
+                    if (!TriggersOn(character)) { continue; }
+
+                    //do a rough check based on the position of the character's collider first
+                    //before the more accurate limb-based check
+                    if (Math.Abs(character.WorldPosition.X - detectPos.X) > broadRangeX || Math.Abs(character.WorldPosition.Y - detectPos.Y) > broadRangeY)
                     {
-                        MotionDetected = true;
-                        return;
+                        continue;
+                    }
+
+                    foreach (Limb limb in character.AnimController.Limbs)
+                    {
+                        if (limb.IsSevered) { continue; }
+                        if (limb.LinearVelocity.LengthSquared() < MinimumVelocity * MinimumVelocity) { continue; }
+                        if (MathUtils.CircleIntersectsRectangle(limb.WorldPosition, ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent()), detectRect))
+                        {
+                            MotionDetected = true;
+                            return;
+                        }
                     }
                 }
             }
+
         }
         
         public bool TriggersOn(Character character)

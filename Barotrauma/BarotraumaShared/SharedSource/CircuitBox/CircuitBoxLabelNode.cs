@@ -6,9 +6,13 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    internal sealed partial class CircuitBoxLabelNode : CircuitBoxNode, ICircuitBoxIdentifiable
+    public sealed partial class CircuitBoxLabelNode : CircuitBoxNode, ICircuitBoxIdentifiable
     {
         public Color Color;
+
+        /// <summary>
+        /// Persistent ID of the label. ID internal to the circuit box, not to be confused with item IDs.
+        /// </summary>
         public ushort ID { get; }
 
         public override bool IsResizable => true;

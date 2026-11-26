@@ -7,14 +7,14 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveFixLeak : AIObjective
+    public class AIObjectiveFixLeak : AIObjective
     {
         public override Identifier Identifier { get; set; } = "fix leak".ToIdentifier();
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
         protected override bool AllowInFriendlySubs => true;
         protected override bool AllowInAnySub => true;
-        protected override bool AllowWhileHandcuffed => false;
+        protected override bool RequireBothHandsAvailable => true;
 
         public Gap Leak { get; private set; }
 
@@ -98,7 +98,7 @@ namespace Barotrauma
             var repairTool = weldingTool?.GetComponent<RepairTool>();
             if (weldingTool == null)
             {
-                TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingequipment".ToIdentifier(), objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC), 
+                TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingequipment".ToIdentifier(), objectiveManager, equip: true, spawnItemIfNotFound: character.CanSpawnMissingItems), 
                     onAbandon: () =>
                     {
                         if (character.IsOnPlayerTeam && objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>())
@@ -130,7 +130,7 @@ namespace Barotrauma
                 }
                 if (weldingTool.OwnInventory != null && weldingTool.OwnInventory.AllItems.None(i => i.HasTag(Tags.WeldingFuel) && i.Condition > 0.0f))
                 {
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, Tags.WeldingFuel, weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, Tags.WeldingFuel, weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.CanSpawnMissingItems)
                     {
                         RemoveExisting = true
                     },
@@ -164,11 +164,12 @@ namespace Barotrauma
             if (subObjectives.Any()) { return; }
             Vector2 toLeak = Leak.WorldPosition - character.AnimController.AimSourceWorldPos;
             // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(toLeak.X) < 100 && toLeak.Y < 0.0f && toLeak.Y > -150)
+            if (character.AnimController is HumanoidAnimController { InWater: false } humanoidAnimController && 
+                Math.Abs(toLeak.X) < 100 && toLeak.Y < 0.0f && toLeak.Y > -150)
             {
-                HumanAIController.AnimController.Crouch();
+                humanoidAnimController.Crouch();
             }
-            float reach = CalculateReach(repairTool, character);
+            float reach = repairTool.CalculateReach(character);
             bool canOperate = toLeak.LengthSquared() < reach * reach;
             if (canOperate)
             {
@@ -198,7 +199,9 @@ namespace Barotrauma
                     TargetName = Leak.FlowTargetHull?.DisplayName,
                     requiredCondition = () => 
                         Leak.Submarine == character.Submarine &&
-                        Leak.linkedTo.Any(e => e is Hull h && (character.CurrentHull == h || h.linkedTo.Contains(character.CurrentHull))),
+                        Leak.linkedTo.Any(e => 
+                            e is Hull h && 
+                                (character.CurrentHull == h || h.linkedTo.Contains(character.CurrentHull) || h.GetApproximateDistance(Leak.WorldPosition, character.WorldPosition, character.CurrentHull, maxDistance: reach) < reach)),
                     endNodeFilter = IsSuitableEndNode,
                     // The Go To objective can be abandoned if the leak is fixed (in which case we don't want to use the dialogue)
                     // Only report about contextual targets.
@@ -237,15 +240,6 @@ namespace Barotrauma
             refuelObjective = null;
             gotoObjective = null;
             operateObjective = null;
-        }
-
-        public static float CalculateReach(RepairTool repairTool, Character character)
-        {
-            float armLength = ConvertUnits.ToDisplayUnits(((HumanoidAnimController)character.AnimController).ArmLength);
-            // This is an approximation, because we don't know the exact reach until the pose is taken.
-            // And even then the actual range depends on the direction we are aiming to.
-            // Found out that without any multiplier the value (209) is often too short.
-            return repairTool.Range + armLength * 2;
         }
     }
 }

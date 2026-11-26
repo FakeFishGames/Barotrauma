@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
@@ -8,6 +8,9 @@ namespace Barotrauma
     {
         public const ushort NullComponentID = ushort.MaxValue;
 
+        /// <summary>
+        /// Persistent ID of the component. ID internal to the circuit box, not to be confused with item IDs.
+        /// </summary>
         public ushort ID { get; }
 
         public static ushort FindFreeID<T>(IReadOnlyCollection<T> ids) where T : ICircuitBoxIdentifiable

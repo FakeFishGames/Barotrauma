@@ -46,7 +46,7 @@ namespace Barotrauma
                         MetadataSource = Option<ServerInfo.DataSource>.Some(new DataSource((UInt16)entry.QueryPort))
                     });
 
-        private void HandleResponsiveServer(Steamworks.Data.ServerInfo entry, Action<ServerInfo, ServerProvider> onServerDataReceived)
+        private void HandleResponsiveServer(Steamworks.Data.ServerInfo entry, Action<ServerInfo> onServerDataReceived)
         {
             TaskPool.Add($"QueryServerRules (GetServers, {entry.Name}, {entry.Address})", entry.QueryRulesAsync(),
                 t =>
@@ -69,21 +69,21 @@ namespace Barotrauma
                     serverInfo.Checked = true;
                     serverInfo.HasPassword |= entry.Passworded;
 
-                    onServerDataReceived(serverInfo, this);
+                    onServerDataReceived(serverInfo);
                 });
         }
         
-        private void HandleUnresponsiveServer(Steamworks.Data.ServerInfo entry, Action<ServerInfo, ServerProvider> onServerDataReceived)
+        private void HandleUnresponsiveServer(Steamworks.Data.ServerInfo entry, Action<ServerInfo> onServerDataReceived)
         {
             //TODO: do we still want to list unresponsive servers?
             if (!InfoFromListEntry(entry).TryUnwrap(out var serverInfo)) { return; }
-            onServerDataReceived(serverInfo, this);
+            onServerDataReceived(serverInfo);
         }
 
         private Steamworks.ServerList.Internet? serverQuery;
         private CoroutineHandle? queryCoroutine;
         
-        protected override void RetrieveServersImpl(Action<ServerInfo, ServerProvider> onServerDataReceived, Action onQueryCompleted)
+        protected override void RetrieveServersImpl(Action<ServerInfo> onServerDataReceived, Action onQueryCompleted)
         {
             if (!SteamManager.IsInitialized)
             {

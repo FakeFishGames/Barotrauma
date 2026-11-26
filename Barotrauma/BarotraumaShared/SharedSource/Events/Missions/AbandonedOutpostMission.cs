@@ -1,12 +1,13 @@
 ﻿using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class AbandonedOutpostMission : Mission
+    public partial class AbandonedOutpostMission : Mission
     {
         protected readonly HashSet<Character> requireKill = new HashSet<Character>();
         protected readonly HashSet<Character> requireRescue = new HashSet<Character>();
@@ -24,7 +25,21 @@ namespace Barotrauma
 
         private readonly bool allowOrderingRescuees;
 
+        private readonly SubmarineType submarineType;
+
         public override bool AllowRespawning => false;
+
+        /// <summary>
+        /// Have the objectives of the mission been completed (targets eliminated, hostages rescued), without any of the hostages getting killed?
+        /// The mission can still fail after this if a hostage dies later during the round.
+        /// </summary>
+        public bool ObjectivesCompleted => State > 0 && State != HostagesKilledState;
+
+        /// <summary>
+        /// Stop blocking as soon as the objectives are completed (instead of at the end of the round when the mission is marked as completed),
+        /// so the location can be e.g. claimed during the same round.
+        /// </summary>
+        public override bool BlocksLocationTypeChanges => base.BlocksLocationTypeChanges && !ObjectivesCompleted;
 
         public override bool AllowUndocking
         {
@@ -84,6 +99,8 @@ namespace Barotrauma
 
             itemConfig = prefab.ConfigElement.GetChildElement("Items");
             itemTag = prefab.ConfigElement.GetAttributeIdentifier("targetitem", Identifier.Empty);
+
+            submarineType = prefab.ConfigElement.GetAttributeEnum(nameof(submarineType), SubmarineType.Outpost);
         }
 
         protected override void StartMissionSpecific(Level level)
@@ -97,7 +114,7 @@ namespace Barotrauma
             spawnedItems.Clear();
 #endif
 
-            var submarine = Submarine.Loaded.Find(s => s.Info.Type == SubmarineType.Outpost) ?? Submarine.MainSub;
+            var submarine = Submarine.Loaded.Find(s => s.Info.Type == submarineType) ?? Submarine.MainSub;
             InitItems(submarine);
             if (!IsClient)
             {
@@ -235,7 +252,7 @@ namespace Barotrauma
 
         protected override bool DetermineCompleted(CampaignMode.TransitionType transitionType)
         {
-            return State > 0 && State != HostagesKilledState;
+            return ObjectivesCompleted;
         }
 
         protected override void EndMissionSpecific(bool completed)
@@ -249,6 +266,11 @@ namespace Barotrauma
             if (element.GetAttributeBool("requirekill", false))
             {
                 requireKill.Add(character);
+                //humans you're require to kill should always fight intruders in abandoned outpost missions
+                if (character.AIController is HumanAIController humanAi)
+                {
+                    humanAi.ObjectiveManager.AddObjective(new AIObjectiveFightIntruders(character, humanAi.ObjectiveManager));
+                }
             }
         }
 

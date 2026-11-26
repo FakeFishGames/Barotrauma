@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma.Items.Components
 {
-    partial class WifiComponent : IDrawableComponent
+    public partial class WifiComponent : IDrawableComponent
     {
         public Vector2 DrawSize
         {

@@ -63,9 +63,7 @@ namespace Barotrauma.Networking
 
             isActive = false;
 
-            var selfSteamEndpoint = allEndpoints.FirstOrNone(e => e is SteamP2PEndpoint);
-            var selfEosEndpoint = allEndpoints.FirstOrNone(e => e is EosP2PEndpoint);
-            var selfPrimaryEndpointOption = selfSteamEndpoint.Fallback(selfEosEndpoint);
+            var selfPrimaryEndpointOption = allEndpoints.FirstOrNone(e => e is SteamP2PEndpoint);
             if (!selfPrimaryEndpointOption.TryUnwrap(out var selfPrimaryEndpointNotNull))
             {
                 throw new Exception("Could not determine endpoint for P2POwnerPeer");
@@ -89,25 +87,23 @@ namespace Barotrauma.Networking
             remotePeers.Clear();
 
             var socketCallbacks = new P2PSocket.Callbacks(OnIncomingConnection, OnConnectionClosed, OnExcessivePackets, OnP2PData);
-            var socketCreateResult = DualStackP2PSocket.Create(socketCallbacks, type: P2PSocket.OwnerOrClient.Owner);
+            var socketCreateResult = SteamListenSocket.Create(socketCallbacks, type: P2PSocket.OwnerOrClient.Owner);
             socket = socketCreateResult.TryUnwrapSuccess(out var s)
                 ? s
-                : throw new Exception($"Failed to create dual-stack socket: {socketCreateResult}");
-
-            TaskPool.Add("P2POwnerPeer.GetAccountId", GetAccountId(), t =>
-            {
-                if (t.TryGetResult(out Option<AccountId> accountIdOption) && accountIdOption.TryUnwrap(out var accountId))
-                {
-                    selfAccountInfo = new AccountInfo(accountId);
-                }
-
-                if (selfAccountInfo.IsNone)
-                {
-                    Close(PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationFailed));
-                }
-            });
+                : throw new Exception($"Failed to create steam listen socket: {socketCreateResult}");
 
             isActive = true;
+            var accountIdOption = GetAccountId();
+            if (accountIdOption.TryUnwrap(out var accountId))
+            {
+                selfAccountInfo = new AccountInfo(accountId);
+            }
+
+            if (selfAccountInfo.IsNone)
+            {
+                Close(PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationFailed));
+            }
+
         }
 
         private bool OnIncomingConnection(P2PEndpoint remoteEndpoint)
@@ -216,27 +212,34 @@ namespace Barotrauma.Networking
 
             if (!INetSerializableStruct.TryRead(inc, remotePeer.AccountInfo, out ClientAuthTicketAndVersionPacket packet))
             {
-                failAuth();
+                failAuth(DisconnectReason.AuthenticationFailed);
                 return;
             }
             if (!packet.AuthTicket.TryUnwrap(out var authenticationTicket))
             {
-                failAuth();
+                failAuth(DisconnectReason.AuthenticationFailed);
                 return;
             }
             if (!authenticators.TryGetValue(authenticationTicket.Kind, out var authenticator))
             {
-                failAuth();
+                failAuth(DisconnectReason.AuthenticationFailed);
                 return;
             }
-            TaskPool.Add($"P2POwnerPeer.VerifyRemotePeerAccountId",
+            TaskPool.Add("P2POwnerPeer.VerifyRemotePeerAccountId",
                 authenticator.VerifyTicket(authenticationTicket),
                 t =>
                 {
                     if (!t.TryGetResult(out AccountInfo accountInfo)
                         || accountInfo.IsNone)
                     {
-                        failAuth();
+                        failAuth(DisconnectReason.AuthenticationFailed);
+                        return;
+                    }
+
+                    if (!authenticator.CheckContentPackageAppLicenseOwnership(accountInfo))
+                    {
+                        failAuth(DisconnectReason.DLCAuthenticationFailed);
+                        endAuthSession(accountInfo);
                         return;
                     }
 
@@ -254,11 +257,18 @@ namespace Barotrauma.Networking
                         ForwardToServerProcess(msg);
                     }
                     remotePeer.UnauthedMessages.Clear();
+                    return;
+
+                    void endAuthSession(AccountInfo info)
+                    {
+                        if (!info.AccountId.TryUnwrap(out AccountId? id)) { return; }
+                        authenticator.EndAuthSession(id);
+                    }
                 });
 
-            void failAuth()
+            void failAuth(DisconnectReason reason)
             {
-                CommunicateDisconnectToRemotePeer(remotePeer, PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationFailed));
+                CommunicateDisconnectToRemotePeer(remotePeer, PeerDisconnectPacket.WithReason(reason));
             }
         }
 
@@ -508,6 +518,7 @@ namespace Barotrauma.Networking
 
             IWriteMessage msgToSend = new WriteOnlyMessage();
             byte[] msgData = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);
+            GameMain.Client?.NetStats?.RegisterSentPacket(msg, msgData.Length);
             msgToSend.WriteNetSerializableStruct(new P2POwnerToServerHeader
             {
                 EndpointStr = selfPrimaryEndpoint.StringRepresentation,
@@ -569,21 +580,14 @@ namespace Barotrauma.Networking
             }
         }
 
-        protected override async Task<Option<AccountId>> GetAccountId()
+        protected override Option<AccountId> GetAccountId()
         {
-            if (SteamManager.IsInitialized) { return SteamManager.GetSteamId().Select(id => (AccountId)id); }
+            if (SteamManager.IsInitialized)
+            {
+                return SteamManager.GetSteamId().Select(static id => (AccountId)id);
+            }
 
-            if (EosInterface.IdQueries.GetLoggedInPuids() is not { Length: > 0 } puids)
-            {
-                return Option.None;
-            }
-            var externalAccountIdsResult = await EosInterface.IdQueries.GetSelfExternalAccountIds(puids[0]);
-            if (!externalAccountIdsResult.TryUnwrapSuccess(out var externalAccountIds)
-                || externalAccountIds is not { Length: > 0 })
-            {
-                return Option.None;
-            }
-            return Option.Some(externalAccountIds[0]);
+            return Option.None;
         }
 
 #if DEBUG

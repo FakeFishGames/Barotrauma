@@ -9,7 +9,7 @@ using Barotrauma.RuinGeneration;
 
 namespace Barotrauma
 {
-    class LevelData
+    public class LevelData
     {
         [Flags]
         public enum LevelType
@@ -22,7 +22,7 @@ namespace Barotrauma
 
         public readonly string Seed;
 
-        public readonly float Difficulty;
+        public float Difficulty;
 
         public readonly Biome Biome;
 
@@ -33,16 +33,6 @@ namespace Barotrauma
 
         public bool HasHuntingGrounds, OriginallyHadHuntingGrounds;
 
-        /// <summary>
-        /// Minimum difficulty of the level before hunting grounds can appear.
-        /// </summary>
-        public const float HuntingGroundsDifficultyThreshold = 25;
-
-        /// <summary>
-        /// Probability of hunting grounds appearing in 100% difficulty levels.
-        /// </summary>
-        public const float MaxHuntingGroundsProbability = 0.3f;
-
         public OutpostGenerationParams ForceOutpostGenerationParams;
 
         public SubmarineInfo ForceBeaconStation;
@@ -50,6 +40,8 @@ namespace Barotrauma
         public SubmarineInfo ForceWreck;
 
         public RuinGenerationParams ForceRuinGenerationParams;
+
+        public SubmarineInfo ForceStartOutpost, ForceEndOutpost;
 
         public enum ThalamusSpawn
         {
@@ -86,6 +78,10 @@ namespace Barotrauma
         /// </summary>
         public readonly List<Identifier> NonRepeatableEvents = new List<Identifier>();
 
+        /// <summary>
+        /// Counts of events that have been finished from each set. Used to prevent new missions from getting triggered when you save and reload the level or leave and re-enter the level.
+        /// Cleared after one world step (~10 min, see Map.ProgressWorld) has passed.
+        /// </summary>
         public readonly Dictionary<EventSet, int> FinishedEvents = new Dictionary<EventSet, int>();
 
         /// <summary>
@@ -235,7 +231,7 @@ namespace Barotrauma
         /// <summary>
         /// Instantiates level data using the properties of the connection (seed, size, difficulty)
         /// </summary>
-        public LevelData(LocationConnection locationConnection)
+        public LevelData(LocationConnection locationConnection, Map map)
         {
             Seed = locationConnection.Locations[0].LevelData.Seed + locationConnection.Locations[1].LevelData.Seed;
             bool connectionIsBiomeTransition = locationConnection.Locations[0].Biome.Identifier != locationConnection.Locations[1].Biome.Identifier;
@@ -262,9 +258,10 @@ namespace Barotrauma
             }
             else
             {
-                HasHuntingGrounds = OriginallyHadHuntingGrounds = rand.NextDouble() < MathUtils.InverseLerp(HuntingGroundsDifficultyThreshold, 100.0f, Difficulty) * MaxHuntingGroundsProbability;
+                HasHuntingGrounds = OriginallyHadHuntingGrounds =
+                    rand.NextDouble() < MathUtils.InverseLerp(map.GenerationParams.HuntingGroundsDifficultyThreshold, 100.0f, Difficulty) * map.GenerationParams.MaxHuntingGroundsProbability;
                 HasBeaconStation = !HasHuntingGrounds && rand.NextDouble() < locationConnection.Locations.Select(l => l.Type.BeaconStationChance).Max();
-            }            
+            }
             IsBeaconActive = false;
         }
 
@@ -342,6 +339,10 @@ namespace Barotrauma
         public void ExhaustEventSet(EventSet eventSet)
         {
             exhaustedEventSets.Add(eventSet.Identifier);
+            if (eventSet.ParentSet is { Exhaustible: true })
+            {
+                ExhaustEventSet(eventSet.ParentSet);
+            }
         }
 
         /// <summary>
@@ -360,6 +361,14 @@ namespace Barotrauma
         {
             allEventsExhausted = false;
             exhaustedEventSets.Clear();
+        }
+
+        /// <summary>
+        /// Resets the events that have been finished in the level, allowing them (or other events from the same set) to appear again.
+        /// </summary>
+        public void ResetFinishedEvents()
+        {
+            FinishedEvents.Clear();
         }
 
         public void ReassignGenerationParams(string seed)

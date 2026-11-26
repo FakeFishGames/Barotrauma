@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
-using Barotrauma.Eos;
 using Barotrauma.Extensions;
 using Barotrauma.Networking;
+using Barotrauma.Plugins;
 using Barotrauma.Sounds;
 using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
@@ -26,7 +26,9 @@ namespace Barotrauma
             AudioAndVC,
             Controls,
             Gameplay,
-            Mods
+            Mods,
+            ModSettings,
+            DLC
         }
 
         public Tab CurrentTab { get; private set; }
@@ -58,6 +60,8 @@ namespace Barotrauma
 
         private SettingsMenu(RectTransform mainParent, GameSettings.Config setConfig = default)
         {
+            GCHelper.RegisterForWatch(this);
+
             unsavedConfig = GameSettings.CurrentConfig;
             
             mainFrame = new GUIFrame(new RectTransform(Vector2.One, mainParent));
@@ -89,12 +93,25 @@ namespace Barotrauma
             CreateControlsTab();
             CreateGameplayTab();
             CreateModsTab(out WorkshopMenu);
+            RecreateModSettingsTab();
+            CreateDlcTab();
+
+            if (SteamManager.IsInitialized)
+            {
+                Steamworks.SteamApps.OnDlcInstalled += OnDlcInstalled;
+            }
 
             CreateBottomButtons();
             
             SelectTab(Tab.Graphics);
             
             tabber.Recalculate();
+        }
+
+        private void OnDlcInstalled(Steamworks.AppId id)
+        {
+            CreateDlcTab();
+            GameMain.MainMenuScreen.RefreshDlcNotificationVisibility();
         }
 
         private void SwitchContent(GUIFrame newContent)
@@ -212,7 +229,7 @@ namespace Barotrauma
                 Range = range,
                 BarScrollValue = currentValue,
                 Step = 1.0f / (float)(steps - 1),
-                BarSize = 1.0f / steps
+                BarSize = 0.05f
             };
             if (tooltip != null)
             {
@@ -246,7 +263,299 @@ namespace Barotrauma
         private string Percentage(float v) => ToolBox.GetFormattedPercentage(v);
 
         private static int Round(float v) => MathUtils.RoundToInt(v);
-        
+
+        public void RefreshDlcTab() => CreateDlcTab();
+
+        private void CreateDlcTab()
+        {
+            if (WorkshopMenu is not MutableWorkshopMenu workshopMenu) { return; }
+            GUIFrame content = CreateNewContentFrame(Tab.DLC);
+            content.ClearChildren();
+            GUILayoutGroup layout = new GUILayoutGroup(new RectTransform(Vector2.One, content.RectTransform), childAnchor: Anchor.Center);
+
+            // refresh button
+            new GUIButton(
+                new RectTransform(new Vector2(0.066f), content.RectTransform, Anchor.TopRight, scaleBasis: ScaleBasis.BothHeight),
+                text: "", style: "GUIReloadButton")
+            {
+                OnClicked = (b, o) =>
+                {
+                    CreateDlcTab();
+                    return false;
+                },
+                ToolTip = TextManager.Get("RefreshModLists")
+            };
+
+            GUIComponent dlcContent;
+            ImmutableArray<DlcInfo> dlcs = [..DlcInfo.RetrieveDLCsFromCatalog().Where(static d => d.HasContentPackage)];
+
+            if (!SteamManager.IsInitialized)
+            {
+                GUILayoutGroup mainErrorLayout = new GUILayoutGroup(new RectTransform((0.5f, 0.8f), layout.RectTransform), childAnchor: Anchor.Center);
+                GUILayoutGroup errorLayout = new GUILayoutGroup(new RectTransform((1f, 0.4f), mainErrorLayout.RectTransform));
+                new GUITextBlock(new RectTransform((1.0f, 0.4f), errorLayout.RectTransform), TextManager.Get("dlcnodlcs"), textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont)
+                {
+                    TextColor = GUIStyle.Red,
+                };
+
+                new GUITextBlock(new RectTransform((1.0f, 0.4f), errorLayout.RectTransform), TextManager.Get("dlcnodlcsdescription"), textAlignment: Alignment.Center, wrap: true);
+                return;
+            }
+            else if (dlcs.Length > 2)
+            {
+                GUIListBox dlcArea = new GUIListBox(new RectTransform((1.0f, 0.8f), layout.RectTransform), isHorizontal: true)
+                {
+                    AutoHideScrollBar = false,
+                    ScrollBarEnabled = true,
+                    AlwaysOverrideCursor = true,
+                    HoverCursor = CursorState.Default
+                };
+                dlcContent = dlcArea.Content;
+            }
+            else
+            {
+                bool onlyOne = dlcs.Length == 1;
+                dlcContent = new GUILayoutGroup(new RectTransform((onlyOne ? 0.5f : 1.0f, 0.8f), layout.RectTransform), isHorizontal: true, childAnchor: onlyOne ? Anchor.Center : Anchor.TopLeft)
+                {
+                    Stretch = true,
+                };
+            }
+
+            if (WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu)
+            {
+                mutableWorkshopMenu.PopulateInstalledModLists();
+            }
+
+            foreach (DlcInfo info in dlcs)
+            {
+                ContentPackage? installedContentPackage = ContentPackageManager.DlcPackages.FirstOrDefault(info.Matches);
+                bool isContentPackageEnabled = installedContentPackage != null && workshopMenu.GetContentPackageEnabledState(installedContentPackage);
+
+                GUIFrame dlcFrame = new GUIFrame(new RectTransform((0.45f, 1.0f), dlcContent.RectTransform), style: null)
+                {
+                    UserData = info
+                };
+
+
+                Sprite? coverArt = info.Sprite;
+
+                GUILayoutGroup artLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.9f), dlcFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter);
+
+                artLayout.Recalculate();
+                GUIFrame artFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.9f), artLayout.RectTransform), style: null);
+
+                float xScaleAnimation = 1f;
+                bool isOpen;
+                GUICustomComponent artComponent = new GUICustomComponent(new RectTransform(new Vector2(0.85f, 1f), artFrame.RectTransform, Anchor.Center),
+                                                                         onDraw: (spriteBatch, component) =>
+                                                                         {
+                                                                             if (coverArt is null) { return; }
+
+                                                                             Vector2 spriteSize = coverArt.size;
+                                                                             float scale = Math.Max(component.Rect.Width / spriteSize.X, component.Rect.Height / spriteSize.Y);
+
+                                                                             Vector2 scaleVector = new Vector2(scale);
+                                                                             scaleVector.X *= xScaleAnimation;
+
+                                                                             SpriteEffects spriteEffect = SpriteEffects.None;
+                                                                             if (scaleVector.X < 0f)
+                                                                             {
+                                                                                 scaleVector.X = Math.Abs(scaleVector.X);
+                                                                                 spriteEffect = SpriteEffects.FlipHorizontally;
+                                                                             }
+                                                                             Vector2 position = new Vector2(((component.Center.X) - (spriteSize.X * scaleVector.X) / 2f), component.Rect.Bottom - (spriteSize.Y * scaleVector.Y));
+
+                                                                             Effect oldEffect = spriteBatch.GetCurrentEffect();
+
+                                                                             if (!isContentPackageEnabled || !info.IsOwned)
+                                                                             {
+                                                                                 spriteBatch.SwapEffect(GameMain.GameScreen.MonochromeEffect, new Dictionary<string, object>
+                                                                                 {
+                                                                                     ["monoColor"] = xScaleAnimation < 0f ? new Vector3(0.1f) : new Vector3(0.299f, 0.587f, 0.114f)
+                                                                                 });
+                                                                             }
+
+                                                                             Color color = Color.White;
+                                                                             if (xScaleAnimation < 0f)
+                                                                             {
+                                                                                 color = new Color(r: 0.15f, g: 0.15f, b: 0.15f, alpha: 1f);
+                                                                             }
+
+                                                                             coverArt.Draw(spriteBatch, pos: position, color: color, rotate: 0f, scale: scaleVector, origin: Vector2.Zero, spriteEffect: spriteEffect);
+                                                                             spriteBatch.SwapEffect(oldEffect);
+                                                                         },
+                                                                         onUpdate: (f, component) =>
+                                                                         {
+                                                                             isOpen = GUI.IsMouseOn(component);
+
+                                                                             float increase = f * 10f;
+                                                                             if (isOpen)
+                                                                             {
+                                                                                 if (xScaleAnimation > -1f)
+                                                                                 {
+                                                                                     xScaleAnimation -= increase;
+                                                                                 }
+
+                                                                                 xScaleAnimation = Math.Max(xScaleAnimation, -1f);
+                                                                             }
+                                                                             else
+                                                                             {
+                                                                                if (xScaleAnimation < 1f)
+                                                                                {
+                                                                                    xScaleAnimation += increase;
+                                                                                }
+
+                                                                                xScaleAnimation = Math.Min(xScaleAnimation, 1f);
+                                                                             }
+
+                                                                             if (component.GetChild<GUITextBlock>() is { } descriptionText)
+                                                                             {
+                                                                                 descriptionText.Visible = MathUtils.NearlyEqual(xScaleAnimation, -1);
+                                                                             }
+                                                                         });
+
+                new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.9f), artComponent.RectTransform, Anchor.Center),
+                    info.Description, wrap: true, textAlignment: Alignment.Center)
+                {
+                    CanBeFocused = false,
+                    Visible = false,
+                };
+
+                GUILayoutGroup buttonLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.1f), artLayout.RectTransform), isHorizontal: true);
+
+                if (!info.IsOwned)
+                {
+                    GUIButton buyButton = new GUIButton(new RectTransform((0.25f, 0.15f), artComponent.RectTransform, Anchor.BottomRight)
+                    {
+                        RelativeOffset = new Vector2(0.05f)
+                    }, style: "StoreAddToCrateButton")
+                    {
+                        ToolTip = TextManager.GetWithVariable("dlcbuylinktooltip", "[dlcname]", info.Name),
+                        OnClicked = (button, obj) =>
+                        {
+                            info.OpenStorePage();
+                            return true;
+                        }
+                    };
+
+                    new GUIButton(new RectTransform((1f, 0.2f), buttonLayout.RectTransform, Anchor.BottomCenter), text: TextManager.Get("dlcinstall"))
+                    {
+                        OnClicked = (button, obj) =>
+                        {
+                            button.Enabled = false;
+                            info.ForceInstall();
+                            CreateDownloadBar(info, button, this);
+                            return true;
+                        }
+                    };
+                }
+                else if (info.GetDownloadProgress().IsValid || installedContentPackage is null)
+                {
+                    GUIButton button = new GUIButton(new RectTransform((1f, 0.15f), buttonLayout.RectTransform), text: TextManager.Get("dlcinstall"))
+                    {
+                        Enabled = false
+                    };
+                    CreateDownloadBar(info, button, this);
+                }
+                else
+                {
+                    bool isEnabled = workshopMenu.GetContentPackageEnabledState(installedContentPackage);
+
+                    LocalizedString buttonText = isEnabled ? TextManager.Get("dlcdisable") : TextManager.Get("dlcenable");
+                    Color textColor = isEnabled ? GUIStyle.Red : GUIStyle.Green;
+                    new GUIButton(new RectTransform((1f, 0.25f), buttonLayout.RectTransform, Anchor.BottomCenter))
+                    {
+                        Text = buttonText,
+                        Color = textColor,
+                        OnClicked = (button, obj) =>
+                        {
+                            workshopMenu.SetContentPackageEnabledState(installedContentPackage, !isEnabled);
+                            isEnabled = !isEnabled;
+                            return true;
+                        }
+                    };
+                }
+            }
+            return;
+
+            static void CreateDownloadBar(DlcInfo info, GUIComponent parent, SettingsMenu menu)
+            {
+                GUIProgressBar bar = new GUIProgressBar(new RectTransform(Vector2.One, parent.RectTransform, Anchor.Center), barSize: 0f, color: GUIStyle.Green);
+
+                GUITextBlock dlcNotOwnedText = new GUITextBlock(new RectTransform(Vector2.One, parent.RectTransform, Anchor.Center), TextManager.Get("dlcnotowned"), textAlignment: Alignment.Center)
+                {
+                    Visible = false,
+                    Shadow = true
+                };
+
+                GUITextBlock inQueueText = new GUITextBlock(new RectTransform(Vector2.One, parent.RectTransform, Anchor.Center), TextManager.Get("dlcinstallwaiting"), textAlignment: Alignment.Center)
+                {
+                    Visible = true,
+                    Shadow = true
+                };
+                GUITextBlock progressText = new GUITextBlock(new RectTransform(Vector2.One, parent.RectTransform, Anchor.Center), TextManager.Get("dlcinstalldownloaded"), textAlignment: Alignment.Center)
+                {
+                    Shadow = true,
+                    Visible = false
+                };
+
+                GUIButton helpButton = new GUIButton(new RectTransform(Vector2.One, bar.RectTransform, Anchor.TopRight, scaleBasis: ScaleBasis.BothHeight)
+                {
+                    Pivot = Pivot.Center
+                }, style: "TalentPointNotification")
+                {
+                    Visible = false,
+                    Color = GUIStyle.Green,
+                    ToolTip = TextManager.Get("dlcstuckwaiting"),
+                };
+
+                if (!info.IsOwned)
+                {
+                    dlcNotOwnedText.Visible = true;
+                    inQueueText.Visible = false;
+                    progressText.Visible = false;
+                    return;
+                }
+
+                float helpPopupTimer = 0f;
+                float contentPackageCheckTimer = 0f;
+                new GUICustomComponent(new RectTransform(Vector2.One, bar.RectTransform))
+                {
+                    CanBeFocused = false,
+                    OnUpdate = (deltaTime, component) =>
+                    {
+                        DlcDownloadProgress currentProgress = info.GetDownloadProgress();
+                        inQueueText.Visible = !currentProgress.IsActive;
+                        progressText.Visible = !inQueueText.Visible;
+                        progressText.Text = TextManager.GetWithVariable("PublishPopupDownload", "[percentage]", $"{MathF.Round(currentProgress.Progress * 100f, digits: 1)}").Value;
+                        bar.BarSize = currentProgress.Progress;
+                        bar.Color = currentProgress.IsActive ? GUIStyle.Green : GUIStyle.Orange;
+                        if (!currentProgress.IsActive || MathUtils.NearlyEqual(currentProgress.Progress, 0f))
+                        {
+                            helpPopupTimer += deltaTime;
+                            contentPackageCheckTimer += deltaTime;
+                        }
+
+                        // Check if the content package is already downloaded?
+                        // Somehow? maybe it was cached and 'downloaded' immediately
+                        if (contentPackageCheckTimer > 5f)
+                        {
+                            ContentPackageManager.DlcPackages.Refresh();
+
+                            if (ContentPackageManager.DlcPackages.Any(info.Matches))
+                            {
+                                menu.CreateDlcTab();
+                                return;
+                            }
+                            contentPackageCheckTimer = 0f;
+                        }
+
+                        helpButton.Visible = helpPopupTimer > 5f;
+                    }
+                };
+            }
+        }
+
         private void CreateGraphicsTab()
         {
             GUIFrame content = CreateNewContentFrame(Tab.Graphics);
@@ -924,18 +1233,6 @@ namespace Barotrauma
                 statisticsTickBox.Enabled &= GameAnalyticsManager.UserConsented != GameAnalyticsManager.Consent.Error;
             });
 #endif
-            //Steam version supports hosting/joining servers using EOS networking
-            if (SteamManager.IsInitialized)
-            {
-                bool shouldCrossplayBeEnabled = false;
-                var crossplayTickBox = Tickbox(rightColumn, TextManager.Get("EosAllowCrossplay"), TextManager.Get("EosAllowCrossplayTooltip"), shouldCrossplayBeEnabled, v =>
-                {
-                    unsavedConfig.CrossplayChoice = v
-                        ? Eos.EosSteamPrimaryLogin.CrossplayChoice.Enabled
-                        : Eos.EosSteamPrimaryLogin.CrossplayChoice.Disabled;
-                });
-                crossplayTickBox.Enabled = false;
-            }
         }
 
         private void CreateModsTab(out WorkshopMenu workshopMenu)
@@ -950,9 +1247,167 @@ namespace Barotrauma
             GameMain.MainMenuScreen.ResetModUpdateButton();
         }
 
+        public static void ShowModSettings(ContentPackage contentPackage, GUIFrame contentList)
+        {
+            contentList.ClearChildren();
+
+            SettingsService? settingsService = PluginData.SettingsServices.FirstOrDefault(c => c.ContentPackage == contentPackage);
+            if (settingsService == null)
+            {
+                return;
+            }
+
+            if (settingsService.OverrideUI != null)
+            {
+                settingsService.OverrideUI(contentList);
+            }
+            else
+            {
+                foreach (ISetting config in settingsService.RegisteredSettings)
+                {
+                    if (!config.ShowInUI) { continue; }
+
+                    config.AddUI(contentList);
+                }
+            }
+
+            contentList.RectTransform.RecalculateChildren(true);
+        }
+
+        public void RecreateModSettingsTab(bool dontAddSettings = false, bool shouldNotifySettings = false)
+        {
+            GUIFrame content = CreateNewContentFrame(Tab.ModSettings);
+            content.ClearChildren();
+
+            GUIButton notificationButton = tabContents[Tab.ModSettings].Button.GetChild<GUIButton>();
+
+            if (notificationButton == null)
+            {
+                notificationButton = new GUIButton(new RectTransform(Vector2.One * 0.5f, tabContents[Tab.ModSettings].Button.RectTransform, scaleBasis: ScaleBasis.BothHeight, anchor: Anchor.BottomRight), style: "TalentPointNotification")
+                {
+                    ToolTip = TextManager.Get("settingstab.modsettings.newsettingsavailable"),
+                    Visible = false
+                };
+            }
+
+            GUILayoutGroup verticalLayout = new GUILayoutGroup(new RectTransform(Vector2.One, content.RectTransform), false);
+
+            new GUITextBlock(new RectTransform((1f, 0.05f), verticalLayout.RectTransform), TextManager.Get("settingstab.modsettings"), textAlignment: Alignment.BottomLeft, font: GUIStyle.SubHeadingFont)
+            {
+                Padding = (25, 0, 0, 5)
+            };
+
+            GUILayoutGroup horizontalLayout = new GUILayoutGroup(new RectTransform(Vector2.One, verticalLayout.RectTransform), true);
+
+            GUIFrame leftSideFrame = new GUIFrame(new RectTransform((0.3f, 1f), horizontalLayout.RectTransform), style: null);
+            GUIFrame rightSideFrame = new GUIFrame(new RectTransform((0.7f, 1f), horizontalLayout.RectTransform), style: null);
+
+            GUILayoutGroup leftSideLayout = new GUILayoutGroup(new RectTransform((1f, 0.9f), leftSideFrame.RectTransform), isHorizontal: false);
+            GUILayoutGroup rightSideLayout = new GUILayoutGroup(new RectTransform((1f, 0.9f), rightSideFrame.RectTransform), isHorizontal: false, childAnchor: Anchor.TopCenter);
+
+            GUIListBox contentPackageList = new GUIListBox(new RectTransform((1f, 1f), leftSideLayout.RectTransform), isHorizontal: false)
+            {
+                CanBeFocused = true,
+            };
+
+            GUIListBox configContent = new GUIListBox(new RectTransform((1.0f, 1f), rightSideLayout.RectTransform), isHorizontal: false)
+            {
+                CurrentSelectMode = GUIListBox.SelectMode.None,
+                Padding = (10, 10, 10, 10)
+            };
+
+            new GUIFrame(new RectTransform((1.0f, 0.015f), rightSideLayout.RectTransform, Anchor.CenterLeft), style: null);
+
+            GUIButton resetButton = new GUIButton(new RectTransform((0.4f, 0.03f), rightSideLayout.RectTransform), text: TextManager.Get("settingstab.modsettings.resetsettings"), style: "GUIButtonSmall")
+            {
+                OnClicked = (GUIButton button, object obj) =>
+                {
+                    var settingsService = PluginData.SettingsServices.FirstOrDefault(c => c.ContentPackage == contentPackageList.SelectedComponent?.UserData);
+
+                    if (settingsService != null)
+                    {
+                        foreach (ISetting setting in settingsService.RegisteredSettings)
+                        {
+                            if (setting.IsAllowedToSet(setting, GameMain.Client?.MyClient))
+                            {
+                                setting.ResetToDefault();
+                                if (GameMain.NetworkMember != null) 
+                                { 
+                                    setting.IsDirty = true; 
+                                }
+                            }
+                        }
+                    }
+
+                    return true;
+                },
+                Visible = false
+            };
+
+            contentPackageList.OnSelected = (GUIComponent guiComponent, object obj) =>
+            {
+                ShowModSettings((ContentPackage)guiComponent.UserData, configContent.Content);
+                resetButton.Visible = guiComponent != null;
+                return true;        
+            };
+
+            if (dontAddSettings) { return; }
+
+            bool anySettings = false;
+
+            foreach (ContentPackage contentPackage in ContentPackageManager.EnabledPackages.All)
+            {
+                if (!PluginData.SettingsServices.Any(c => c.ContentPackage == contentPackage)) { continue; }
+
+                anySettings = true;
+
+                var contentPackageBox = new GUITextBlock(new RectTransform((1.0f, 0.07f), contentPackageList.Content.RectTransform), text: contentPackage.Name)
+                {
+                    CanBeFocused = true,
+                    UserData = contentPackage
+                };
+            }
+
+            if (anySettings && shouldNotifySettings)
+            {
+                notificationButton.Visible = true;
+                notificationButton.Pulsate(Vector2.One, Vector2.One * 1.25f, 1.5f);
+            }
+            else
+            {
+                notificationButton.Visible = false;
+            }
+
+            if (contentPackageList.SelectedIndex == -1)
+            {
+                contentPackageList.Select(0);
+            }
+        }
+
+        /// <summary>
+        /// Checks if there are any unsaved changes in settings or the mod list.
+        /// </summary>
+        private bool HasUnsavedChanges()
+        {
+            if (!unsavedConfig.Equals(GameSettings.CurrentConfig))
+            {
+                return true;
+            }
+            if (WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu && mutableWorkshopMenu.HasUnsavedModListChanges())
+            {
+                return true;
+            }
+            if (PluginData.SettingsServices.SelectMany(static s => s.RegisteredSettings).Any(static s => s.HasPendingChanges))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         private void CreateBottomButtons()
         {
-            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), bottom.RectTransform), text: TextManager.Get("Cancel"))
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), bottom.RectTransform), text: TextManager.Get("Close"))
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -960,6 +1415,13 @@ namespace Barotrauma
                     GameMain.SoundManager?.ApplySettings();
                     Close();
                     return false;
+                },
+                OnAddedToGUIUpdateList = (GUIComponent component) =>
+                {
+                    if (component is GUIButton button)
+                    {
+                        button.Text = HasUnsavedChanges() ? TextManager.Get("Cancel") : TextManager.Get("Close");
+                    }
                 }
             };
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), bottom.RectTransform), text: TextManager.Get("applysettingsbutton"))
@@ -972,26 +1434,59 @@ namespace Barotrauma
                 },
                 OnAddedToGUIUpdateList = (GUIComponent component) =>
                 {
-                    component.Enabled = 
+                    bool isOnValidModsTab =
                         CurrentTab != Tab.Mods ||
                         (WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu && mutableWorkshopMenu.CurrentTab == MutableWorkshopMenu.Tab.InstalledMods && !mutableWorkshopMenu.ViewingItemDetails);
+                    component.Enabled = isOnValidModsTab && HasUnsavedChanges();
                 }                
             };
         }
 
         public void ApplyInstalledModChanges()
         {
-            EosSteamPrimaryLogin.HandleCrossplayChoiceChange(unsavedConfig.CrossplayChoice);
+            PluginData.SettingsServices.SelectMany(static s => s.RegisteredSettings).ForEach(static s => s.Apply());
+
+            // Only save plugin settings if they been applied outside of multiplayer, so we can later
+            // reload them from disk to revert any changes
+            if (GameMain.Client == null)
+            {
+                PluginData.SettingsServices.ForEach(static s => s.Save());
+            }
+
             GameSettings.SetCurrentConfig(unsavedConfig);
             if (WorkshopMenu is MutableWorkshopMenu { CurrentTab: MutableWorkshopMenu.Tab.InstalledMods } mutableWorkshopMenu)
             {
-                mutableWorkshopMenu.Apply();
+                // Recreate the settings tab so anything that was added there by plugins gets cleared
+                if (mutableWorkshopMenu.HasUnsavedModListChanges())
+                {
+                    RecreateModSettingsTab(dontAddSettings: true);
+                }
+                mutableWorkshopMenu.ApplyButtonPressed();
             }
             GameSettings.SaveCurrentConfig();
         }
 
+        /// <summary>
+        /// Refreshes the settings menu with the current config data, used to prevent the settings menu from
+        /// overwritting settings applied elsewhere while the settings menu is open, since the settings menu
+        /// will keep the old values saved until it's opened again.
+        /// </summary>
+        public void RefreshSettings()
+        {
+            unsavedConfig = GameSettings.CurrentConfig;
+        }
+
         public void Close()
         {
+            // Revert custom settings
+            PluginData.SettingsServices.SelectMany(static s => s.RegisteredSettings).ForEach(static s => s.Revert());
+
+            // Remove any custom mod settings to prevent unload issues
+            GUIFrame content = CreateNewContentFrame(Tab.ModSettings);
+            content.ClearChildren();
+
+            Steamworks.SteamApps.OnDlcInstalled -= OnDlcInstalled;
+
             if (GameMain.Client is null || GameSettings.CurrentConfig.Audio.VoiceSetting == VoiceMode.Disabled)
             {
                 VoipCapture.Instance?.Dispose();

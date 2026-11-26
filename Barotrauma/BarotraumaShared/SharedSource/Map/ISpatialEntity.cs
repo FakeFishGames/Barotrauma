@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    interface ISpatialEntity
+    public interface ISpatialEntity
     {
         Vector2 Position { get; }
         Vector2 WorldPosition { get; }
@@ -79,29 +79,28 @@ namespace Barotrauma
             {
                 if (Math.Sign(diff.X) != seeingCharacter.AnimController.Dir) { return false; }
             }
-            //both inside the same sub (or both outside)
-            //OR the we're inside, the other character outside
-            if (target.Submarine == seeingEntity.Submarine || target.Submarine == null)
+            //different subs (or one outside, other inside)
+            // -> need to do the checks in both coordinate spaces (sub's local space or world space if one is outside)
+            if (target.Submarine != seeingEntity.Submarine)
             {
-                return Submarine.CheckVisibility(seeingEntity.SimPosition, seeingEntity.SimPosition + diff, blocksVisibilityPredicate: IsBlocking) == null;
+                return
+                    Submarine.CheckVisibility(seeingEntity.SimPosition, seeingEntity.SimPosition + diff, blocksVisibilityPredicate: IsBlocking) == null &&
+                    Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff, blocksVisibilityPredicate: IsBlocking) == null;
             }
-            //we're outside, the other character inside
-            else if (seeingEntity.Submarine == null)
-            {
-                return Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff, blocksVisibilityPredicate: IsBlocking) == null;
-            }
-            //both inside different subs
             else
             {
-                return 
-                    Submarine.CheckVisibility(seeingEntity.SimPosition, seeingEntity.SimPosition + diff, blocksVisibilityPredicate: IsBlocking) == null &&
-                    Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff, blocksVisibilityPredicate: IsBlocking) == null;                
+                //only one sub involved or both outside -> we can just check in that coordinate space
+                return Submarine.CheckVisibility(seeingEntity.SimPosition, seeingEntity.SimPosition + diff, blocksVisibilityPredicate: IsBlocking) == null;
             }
 
             bool IsBlocking(Fixture f)
             {
+                //if the raycast hit the target, it shouldn't be considered blocked
+                //(in the case of the sub's external collider, the userdata of the fixture is the structure/item and the userdata of the body is the sub)
+                if (f.UserData == target) { return false; }
+
                 var body = f.Body;
-                if (body == null) { return false; }
+                if (body == null || body.UserData == target) { return false; }
                 if (body.UserData is Structure wall)
                 {
                     if (!wall.CastShadow && seeThroughWindows) { return false; }

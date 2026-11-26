@@ -62,6 +62,8 @@ namespace Barotrauma
         public GUIImage BackgroundIcon { get; private set; }
         private GUIImage newBackgroundIcon;
 
+        public bool HasBackgroundIcon => BackgroundIcon != null || newBackgroundIcon != null;
+
         /// <summary>
         /// Close the message box automatically after enough time has passed (<see cref="inGameCloseTime"/>)
         /// </summary>
@@ -170,7 +172,7 @@ namespace Barotrauma
 
                 if (!text.IsNullOrWhiteSpace())
                 {
-                    Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), text, textAlignment: textAlignment, wrap: true);
+                    Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), RichString.Rich(text), textAlignment: textAlignment, wrap: true);
                     GUIStyle.Apply(Text, "", this);
                     Text.RectTransform.NonScaledSize = Text.RectTransform.MinSize = Text.RectTransform.MaxSize = 
                         new Point(Text.Rect.Width, Text.Rect.Height);
@@ -212,6 +214,11 @@ namespace Barotrauma
                 {
                     var button = new GUIButton(new RectTransform(new Vector2(0.6f, 1.0f / buttons.Length), buttonContainer.RectTransform), buttons[i]);
                     Buttons.Add(button);
+                }
+                //if any of the buttons has long texts, make the buttons wider
+                if (Buttons.Any(b => b.TextBlock.TextSize.X > b.Rect.Width))
+                {
+                    Buttons.ForEach(b => b.RectTransform.RelativeSize = new Vector2(0.95f, b.RectTransform.RelativeSize.Y));
                 }
                 GUITextBlock.AutoScaleAndNormalize(Buttons.Select(btn => btn.TextBlock));
             }
@@ -285,7 +292,7 @@ namespace Barotrauma
 
                 if (!text.IsNullOrWhiteSpace())
                 {
-                    Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), text, textAlignment: textAlignment, wrap: true);
+                    Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), RichString.Rich(text), textAlignment: textAlignment, wrap: true);
                     GUIStyle.Apply(Text, "", this);
                     Content.Recalculate();
                     Text.RectTransform.NonScaledSize = Text.RectTransform.MinSize = Text.RectTransform.MaxSize =
@@ -534,7 +541,8 @@ namespace Barotrauma
             if (Draggable)
             {
                 GUIComponent parent = GUI.MouseOn?.Parent?.Parent;
-                if ((GUI.MouseOn == InnerFrame || InnerFrame.IsParentOf(GUI.MouseOn)) && !(GUI.MouseOn is GUIButton || GUI.MouseOn is GUIColorPicker || GUI.MouseOn is GUITextBox || parent is GUITextBox))
+                if ((GUI.IsMouseOn(InnerFrame)) && !(GUI.MouseOn is GUIButton || GUI.MouseOn is GUIColorPicker || GUI.MouseOn is GUITextBox || parent is GUITextBox))
+
                 {
                     GUI.MouseCursor = CursorState.Move;
                     if (PlayerInput.PrimaryMouseButtonDown())
@@ -587,7 +595,9 @@ namespace Barotrauma
                         openState = Math.Min(openState + deltaTime * 2.0f, 1.0f);
                     }
 
-                    if (GUI.MouseOn != InnerFrame && !InnerFrame.IsParentOf(GUI.MouseOn) && AutoClose)
+                    //don't start the auto-close timer until the box has fully opened (opening may be paused e.g. while the round summary is open)
+                    if (openState >= 1.0f && GUI.MouseOn != InnerFrame && !InnerFrame.IsParentOf(GUI.MouseOn) && AutoClose &&
+                        Screen.Selected is not RoundSummaryScreen)
                     {
                         inGameCloseTimer += deltaTime;
                     }
@@ -630,9 +640,9 @@ namespace Barotrauma
                             BackgroundIcon.Color *= 0.9f;
                             if (BackgroundIcon.Color.A == 0)
                             {
-                                BackgroundIcon = null;
                                 iconSwitching = true;
                                 RemoveChild(BackgroundIcon);
+                                BackgroundIcon = null;
                             }
                         }
                         else

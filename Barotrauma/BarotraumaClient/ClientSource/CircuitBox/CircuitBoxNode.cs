@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    internal partial class CircuitBoxNode
+    public partial class CircuitBoxNode
     {
         public RectangleF DrawRect;
         private RectangleF TopDrawRect;

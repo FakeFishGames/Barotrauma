@@ -47,8 +47,8 @@ namespace Barotrauma
             affectedNpcs = ParentEvent.GetTargets(NPCTag).OfType<Character>().ToList();
             foreach (Character npc in affectedNpcs)
             {
-                // characters will still remain on friendlyNPC team for rest of the tick
-                npc.SetOriginalTeamAndChangeTeam(TeamID);
+                if (npc.IsDead || npc.Removed) { continue; }
+                npc.SetOriginalTeamAndChangeTeam(TeamID, processImmediately: true);
                 foreach (Item item in npc.Inventory.AllItems)
                 {
                     var idCard = item.GetComponent<Items.Components.IdCard>();
@@ -68,59 +68,25 @@ namespace Barotrauma
                         if (npc.Info is CharacterInfo info)
                         {
                             info.StartItemsGiven = true;
-                            crewManager.AddCharacter(npc);
+                            crewManager.AddCharacter(npc, changeItemTeams: true, createNetworkEvent: true);
                         }
                         else
                         {
                             DebugConsole.AddWarning($"Attempted to change the team of a character ({npc.Name}) that doesn't have Character Info. Can't add to the crew.");
-                        }
-                        ChangeItemTeam(Submarine.MainSub ?? Submarine.Loaded.FirstOrDefault(s => s.TeamID == TeamID), allowStealing: true);
-                        if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
-                        {
-                            GameMain.NetworkMember.CreateEntityEvent(npc, new Character.AddToCrewEventData(TeamID, npc.Inventory.FindAllItems(recursive: true)));
-                        }                  
+                        } 
                     }
                     else if (RemoveFromCrew && npc.TeamID is CharacterTeamType.Team1 or CharacterTeamType.Team2)
                     {
                         if (npc.Info is CharacterInfo info)
                         {
                             info.StartItemsGiven = true;
-                            crewManager.RemoveCharacter(npc, removeInfo: true);
+                            crewManager.RemoveCharacter(npc, removeInfo: true, changeItemTeams: true, createNetworkEvent: true);
                         }
                         else
                         {
                             DebugConsole.AddWarning($"Attempted to change the team of a character ({npc.Name}) that doesn't have Character Info. Can't remove from the crew.");
                         }
-                        Submarine sub = Submarine.Loaded.FirstOrDefault(s => s.TeamID == TeamID);
-                        ChangeItemTeam(sub, false);
-                        if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
-                        {
-                            GameMain.NetworkMember.CreateEntityEvent(npc, new Character.RemoveFromCrewEventData(TeamID, npc.Inventory.FindAllItems(recursive: true)));
-                        }
                     }   
-                }
-
-                void ChangeItemTeam(Submarine sub, bool allowStealing)
-                {
-                    foreach (Item item in npc.Inventory.FindAllItems(recursive: true))
-                    {
-                        item.AllowStealing = allowStealing;
-                        if (item.GetComponent<Items.Components.WifiComponent>() is { } wifiComponent)
-                        {
-                            wifiComponent.TeamID = TeamID;
-                        }
-                        if (item.GetComponent<Items.Components.IdCard>() is { } idCard)
-                        {
-                            idCard.SubmarineSpecificID = 0;
-                        }
-                    }
-                    WayPoint subWaypoint =
-                        WayPoint.WayPointList.Find(wp => wp.Submarine == sub && wp.SpawnType == SpawnType.Human && wp.AssignedJob == npc.Info?.Job?.Prefab) ??
-                        WayPoint.WayPointList.Find(wp => wp.Submarine == sub && wp.SpawnType == SpawnType.Human);
-                    if (subWaypoint != null)
-                    {
-                        npc.GiveIdCardTags(subWaypoint, createNetworkEvent: true);
-                    }
                 }
             }
             isFinished = true;
@@ -131,7 +97,7 @@ namespace Barotrauma
             return isFinished;
         }
 
-        public override void Reset()
+        public override void Reset(bool shouldEndConversations = true)
         {
             isFinished = false;
         }

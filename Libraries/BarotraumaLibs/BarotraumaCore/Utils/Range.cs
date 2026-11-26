@@ -4,7 +4,7 @@ using System;
 namespace Barotrauma
 {
     /// <summary>
-    /// An inclusive range, i.e. [Start, End] where Start <= End
+    /// An inclusive range, i.e. [Start, End] where Start &lt;= End
     /// </summary>
     public struct Range<T> where T : notnull, IComparable<T>
     {

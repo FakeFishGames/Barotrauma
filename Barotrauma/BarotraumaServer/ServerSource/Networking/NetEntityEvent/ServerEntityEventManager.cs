@@ -6,10 +6,10 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    class ServerEntityEvent : NetEntityEvent
+    public class ServerEntityEvent : NetEntityEvent
     {
-        private IServerSerializable serializable;
-                
+        public readonly IServerSerializable Serializable;
+
 #if DEBUG
         public string StackTrace;
 #endif
@@ -25,10 +25,11 @@ namespace Barotrauma.Networking
             createTime = Timing.TotalTime;
         }
 
-        public ServerEntityEvent(IServerSerializable serializableEntity, UInt16 id)
-            : base(serializableEntity, id)
+        /// <inheritdoc cref="NetworkMember.CreateEntityEvent"/>
+        public ServerEntityEvent(IServerSerializable serializableEntity, UInt16 id, Option<uint> pluginContentPackageHash)
+            : base(serializableEntity, id, pluginContentPackageHash)
         {
-            serializable = serializableEntity;
+            Serializable = serializableEntity;
             createTime = Timing.TotalTime;
 
 #if DEBUG
@@ -38,11 +39,11 @@ namespace Barotrauma.Networking
 
         public void Write(IWriteMessage msg, Client recipient)
         {
-            serializable.ServerEventWrite(msg, recipient, Data);
+            Serializable.ServerEventWrite(msg, recipient, Data);
         }
     }
 
-    class ServerEntityEventManager : NetEntityEventManager
+    public class ServerEntityEventManager : NetEntityEventManager
     {
         private readonly List<ServerEntityEvent> events;
 
@@ -69,6 +70,8 @@ namespace Barotrauma.Networking
         {
             public readonly Client Sender;
 
+            public readonly uint PluginContentPackageHash;
+
             public readonly UInt16 CharacterStateID;
             public readonly ReadWriteMessage Data;
 
@@ -83,8 +86,9 @@ namespace Barotrauma.Networking
             /// </summary>
             public bool RequireCharacter = true;
 
-            public BufferedEvent(Client sender, Character senderCharacter, UInt16 characterStateID, IClientSerializable targetEntity, ReadWriteMessage data)
+            public BufferedEvent(uint pluginContentPackageHash, Client sender, Character senderCharacter, UInt16 characterStateID, IClientSerializable targetEntity, ReadWriteMessage data)
             {
+                this.PluginContentPackageHash = pluginContentPackageHash;
                 this.Sender = sender;
                 this.Character = senderCharacter;
                 this.CharacterStateID = characterStateID;
@@ -116,11 +120,12 @@ namespace Barotrauma.Networking
             lastWarningTime = -10.0;
         }
 
-        public void CreateEvent(IServerSerializable entity, NetEntityEvent.IData extraData = null)
+        /// <inheritdoc cref="NetworkMember.CreateEntityEvent"/>
+        public void CreateEvent(IServerSerializable entity, NetEntityEvent.IData extraData = null, Option<uint> pluginContentPackageHash = default)
         {
             if (!ValidateEntity(entity)) { return; }
 
-            var newEvent = new ServerEntityEvent(entity, (UInt16)(ID + 1));
+            var newEvent = new ServerEntityEvent(entity, id: (UInt16)(ID + 1), pluginContentPackageHash);
             if (extraData != null) newEvent.SetData(extraData);
 
             bool inGameClientsPresent = server.ConnectedClients.Count(c => c.InGame) > 0;
@@ -149,11 +154,27 @@ namespace Barotrauma.Networking
             if (!uniqueEvents.Any(e => e.IsDuplicate(newEvent)))
             {
                 //create a copy of the event and give it a new ID
-                var uniqueEvent = new ServerEntityEvent(entity, (UInt16)(uniqueEvents.Count + 1));
+                var uniqueEvent = new ServerEntityEvent(entity, id: (UInt16)(uniqueEvents.Count + 1), pluginContentPackageHash);
                 uniqueEvent.SetData(extraData);
 
                 uniqueEvents.Add(uniqueEvent);
             }
+        }
+
+        /// <summary>
+        /// Returns the number of seconds since the last event the client hasn't yet received was created - or, in other words, how many seconds the client is behind on the events.
+        /// 0 if the client is up-to-date (received all the events the server has created).
+        /// </summary>
+        public float HowManySecondsClientIsBehind(Client client)
+        {
+            foreach (var ev in events)
+            {
+                if (NetIdUtils.IdMoreRecent(ev.ID, client.LastRecvEntityEventID))
+                {
+                    return (float)(Timing.TotalTime - ev.CreateTime);
+                }
+            }
+            return 0.0f;
         }
 
         public void Update(List<Client> clients)
@@ -183,9 +204,15 @@ namespace Barotrauma.Networking
 
                 try
                 {
-                    ReadEvent(bufferedEvent.Data, bufferedEvent.TargetEntity, bufferedEvent.Sender);
+                    if (bufferedEvent.PluginContentPackageHash == VanillaEventHash)
+                    {
+                        ReadEvent(bufferedEvent.Data, bufferedEvent.TargetEntity, bufferedEvent.Sender);
+                    }
+                    else
+                    {
+                        PluginData.ReadServerEvent(bufferedEvent.PluginContentPackageHash, bufferedEvent.Data, bufferedEvent.TargetEntity, bufferedEvent.Sender);
+                    }
                 }
-
                 catch (Exception e)
                 {
                     string entityName = bufferedEvent.TargetEntity == null ? "null" : bufferedEvent.TargetEntity.ToString();
@@ -203,6 +230,7 @@ namespace Barotrauma.Networking
                 bufferedEvent.IsProcessed = true;
             }
 
+            //clients who are in-game and not in need of midround syncing
             var inGameClients = clients.FindAll(c => c.InGame && !c.NeedsMidRoundSync);
             if (inGameClients.Count > 0)
             {
@@ -249,7 +277,7 @@ namespace Barotrauma.Networking
                     //  in which case we'll wait until the timeout runs out before kicking the client
                     List<Client> toKick = inGameClients.FindAll(c => 
                         NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.LastRecvEntityEventID) &&
-                        (!c.NeedsMidRoundSync || firstEventToResend.CreateTime > c.MidRoundSyncTimeOut || lastSentToAnyoneTime > c.MidRoundSyncTimeOut || Timing.TotalTime > c.MidRoundSyncTimeOut + 10.0));
+                        (firstEventToResend.CreateTime > c.MidRoundSyncTimeOut || lastSentToAnyoneTime > c.MidRoundSyncTimeOut || Timing.TotalTime > c.MidRoundSyncTimeOut + 10.0));
                     toKick.ForEach(c =>
                         {
                             DebugConsole.NewMessage(c.Name + " was kicked because they were expecting a very old network event (" + (c.LastRecvEntityEventID + 1).ToString() + ")", Color.Red);
@@ -462,10 +490,10 @@ namespace Barotrauma.Networking
 
                 //how many (unique) events the clients had missed before joining
                 client.UnreceivedEntityEventCount = (UInt16)uniqueEvents.Count;
-                //ID of the first event sent after the client joined 
+                //ID of the first event the client should read after they've done mid-round syncing
                 //(after the client has been synced they'll switch their lastReceivedID 
-                //to the one before this, and the eventmanagers will start to function "normally")
-                client.FirstNewEventID = events.Count == 0 ? (UInt16)0 : events[events.Count - 1].ID;
+                //to the one before this, and the EventManagers will start to function "normally")
+                client.FirstNewEventID = (UInt16)(ID + 1);
             }
         }
 
@@ -483,13 +511,21 @@ namespace Barotrauma.Networking
                 UInt16 thisEventID = (UInt16)(firstEventID + (UInt16)i);
                 UInt16 entityID = msg.ReadUInt16();
 
+                // 0 if vanilla, otherwise the hash of the content package
+                uint pluginContentPackageHash = msg.ReadUInt32();
+                int msgLength = (int)msg.ReadVariableUInt32();
+
+                // check the length before allocating anything in case it's invalid
+                if (msgLength < 0 || (long)msgLength * 8 > msg.LengthBits - msg.BitPosition)
+                {
+                    throw new MalformedDataException($"Received an entity event with an invalid length ({msgLength} bytes, {(msg.LengthBits - msg.BitPosition) / 8} bytes remaining in the message).");
+                }
+
                 if (entityID == Entity.NullEntityID)
                 {
                     if (thisEventID == (UInt16)(sender.LastSentEntityEventID + 1)) sender.LastSentEntityEventID++;
                     continue;
                 }
-
-                int msgLength = (int)msg.ReadVariableUInt32();
 
                 IClientSerializable entity = Entity.FindEntityByID(entityID) as IClientSerializable;
 
@@ -523,6 +559,12 @@ namespace Barotrauma.Networking
                         DebugConsole.NewMessage("Received msg " + thisEventID, Microsoft.Xna.Framework.Color.Green);
                     }
 
+                    // the length includes the 2-byte character state ID so it must always be 2 or more
+                    if (msgLength < 2)
+                    {
+                        throw new MalformedDataException($"Received an entity event with an invalid length ({msgLength} bytes).");
+                    }
+
                     UInt16 characterStateID = msg.ReadUInt16();
 
                     ReadWriteMessage buffer = new ReadWriteMessage();
@@ -530,7 +572,7 @@ namespace Barotrauma.Networking
                     buffer.WriteBytes(temp, 0, msgLength - 2);
                     buffer.BitPosition = 0;
                     BufferEvent(
-                        new BufferedEvent(sender, sender.Character, characterStateID, entity, buffer)
+                        new BufferedEvent(pluginContentPackageHash, sender, sender.Character, characterStateID, entity, buffer)
                         {
                             //hull updates can be sent without a character to allow editing water and fire in spectator mode
                             RequireCharacter = entity is not Hull

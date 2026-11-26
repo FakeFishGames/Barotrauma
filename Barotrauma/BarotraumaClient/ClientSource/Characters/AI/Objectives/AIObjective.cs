@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    abstract partial class AIObjective
+    public abstract partial class AIObjective
     {
         public static Color ObjectiveIconColor => Color.LightGray;
 

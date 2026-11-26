@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class HumanPrefab : PrefabWithUintIdentifier
+    public class HumanPrefab : PrefabWithUintIdentifier
     {
         [Serialize("any", IsPropertySaveable.No)]
         public Identifier Job { get; protected set; }
@@ -107,6 +107,43 @@ namespace Barotrauma
         [Serialize(CampaignMode.InteractionType.None, IsPropertySaveable.No)]
         public CampaignMode.InteractionType CampaignInteractionType { get; protected set; }
 
+        private readonly List<Identifier> storeIdentifiers = [];
+        
+        [Serialize("", IsPropertySaveable.No, description: "Store identifier(s) for this merchant NPC. Supports multiple identifiers separated by a semicolon. Merchants with the same combination of identifiers share the same store. If not set, defaults to the character's own identifier.")]
+        public string StoreIdentifier
+        {
+            get => string.Join(";", storeIdentifiers);
+            set
+            {
+                storeIdentifiers.Clear();
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    foreach (string id in value.Split(';'))
+                    {
+                        string trimmedId = id.Trim();
+                        if (!string.IsNullOrEmpty(trimmedId))
+                        {
+                            storeIdentifiers.Add(trimmedId.ToIdentifier());
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the store identifier for this character's shop. For merchants with multiple store identifier pools, this is the semicolon-joined
+        /// combination of all the identifiers. The first identifier determines the display name.
+        /// Falls back to the character's own Identifier if no StoreIdentifier has been set.
+        /// </summary>
+        public Identifier GetStoreIdentifier() =>
+            storeIdentifiers.Count > 0 ? StoreIdentifier.ToIdentifier() : Identifier;
+
+        /// <summary>
+        /// The <see cref="StoreIdentifier"/> pool of this merchant. Used for stacking merchants' store pools, and also
+        /// for falling back their titles and names from left to right if those are not defined.
+        /// </summary>
+        public IReadOnlyList<Identifier> StoreIdentifiers => storeIdentifiers;
+
         [Serialize(AIObjectiveIdle.BehaviorType.Passive, IsPropertySaveable.No)]
         public AIObjectiveIdle.BehaviorType Behavior { get; protected set; }
 
@@ -201,7 +238,7 @@ namespace Barotrauma
                 (GameMain.GameSession.GameMode as CampaignMode)?.AssignNPCMenuInteraction(npc, CampaignInteractionType);
                 if (positionToStayIn != null && humanAI != null)
                 {
-                    humanAI.ObjectiveManager.SetForcedOrder(new AIObjectiveGoTo(positionToStayIn, npc, humanAI.ObjectiveManager, repeat: true, getDivingGearIfNeeded: false, closeEnough: 200)
+                    humanAI.ObjectiveManager.SetForcedOrder(new AIObjectiveGoTo(positionToStayIn, npc, humanAI.ObjectiveManager, repeat: true, getDivingGearIfNeeded: false, minimumCloseEnoughDistance: 200)
                     {
                         FaceTargetOnCompleted = false,
                         DebugLogWhenFails = false,
@@ -241,11 +278,11 @@ namespace Barotrauma
             CharacterInfo characterInfo;
             if (characterElement == null)
             {
-                characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: GetJobPrefab(randSync), npcIdentifier: Identifier, randSync: randSync);
+                characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: GetJobPrefab(randSync), randSync: randSync, humanPrefabIds: (NpcSetIdentifier, Identifier));
             }
             else
             {
-                characterInfo = new CharacterInfo(characterElement, Identifier);
+                characterInfo = new CharacterInfo(characterElement, humanPrefabIds: (NpcSetIdentifier, Identifier));
             }
             if (characterInfo.Job != null && !MathUtils.NearlyEqual(SkillMultiplier, 1.0f))
             {
@@ -256,7 +293,6 @@ namespace Barotrauma
                 }
             }
             characterInfo.Salary = characterInfo.CalculateSalary(BaseSalary, SalaryMultiplier);
-            characterInfo.HumanPrefabIds = (NpcSetIdentifier, Identifier);
             characterInfo.GiveExperience(ExperiencePoints);
             return characterInfo;
         }
@@ -278,7 +314,7 @@ namespace Barotrauma
                     contentPackage: itemElement?.ContentPackage);
                 return;
             }
-            Item item = new Item(itemPrefab, character.Position, null);
+            Item item = new Item(itemPrefab, character.Position, submarine);
 #if SERVER
             if (GameMain.Server != null && Entity.Spawner != null && createNetworkEvents)
             {
@@ -290,24 +326,34 @@ namespace Barotrauma
                     GameMain.Server.EntityEventManager.UniqueEvents.RemoveAll(ev => ev.Entity == item);
                     GameMain.Server.EntityEventManager.Events.RemoveAll(ev => ev.Entity == item);
                 }
-
+                item.ParentInventory = character.Inventory;
                 Entity.Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(item));
             }
 #endif
             if (itemElement.GetAttributeBool("equip", false))
             {
-                //if the item is both pickable and wearable, try to wear it instead of picking it up
-                List<InvSlotType> allowedSlots =
-                    item.GetComponents<Pickable>().Count() > 1 ?
-                    new List<InvSlotType>(item.GetComponent<Wearable>()?.AllowedSlots ?? item.GetComponent<Pickable>().AllowedSlots) :
-                    new List<InvSlotType>(item.AllowedSlots);
+                List<InvSlotType> allowedSlots;
+
+                IEnumerable<Wearable> wearableComponents = item.GetComponents<Wearable>();
+                if (wearableComponents.Count() > 0)
+                {
+                    // If the item has wearable components, try to wear it instead by only allowing the slots
+                    // used by those wearables rather than all slots the item itself could normally use.
+                    allowedSlots = wearableComponents.SelectMany(static w => w.AllowedSlots).Distinct().ToList();
+                }
+                else
+                {
+                    allowedSlots = item.AllowedSlots.Distinct().ToList();
+                }
+
                 allowedSlots.Remove(InvSlotType.Any);
+
                 item.UnequipAutomatically = false;
-                character.Inventory.TryPutItem(item, null, allowedSlots);
+                character.Inventory.TryPutItem(item, null, allowedSlots, allowReplacingIntactLimb: true);
             }
             else
             {
-                character.Inventory.TryPutItem(item, null, item.AllowedSlots);
+                character.Inventory.TryPutItem(item, null, item.AllowedSlots, allowReplacingIntactLimb: true);
             }
             IdCard idCardComponent = item.GetComponent<IdCard>();
             if (idCardComponent != null)

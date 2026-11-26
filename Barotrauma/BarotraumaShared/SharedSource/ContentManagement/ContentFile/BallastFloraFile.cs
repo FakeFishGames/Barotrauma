@@ -3,7 +3,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
     [RequiredByCorePackage, AlternativeContentTypeNames("MapCreature")]
-    sealed class BallastFloraFile : GenericPrefabFile<BallastFloraPrefab>
+    public sealed class BallastFloraFile : GenericPrefabFile<BallastFloraPrefab>
     {
         public BallastFloraFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

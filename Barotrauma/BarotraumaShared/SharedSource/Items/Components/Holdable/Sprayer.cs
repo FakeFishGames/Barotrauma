@@ -13,6 +13,9 @@ namespace Barotrauma.Items.Components
         [Serialize(1.0f, IsPropertySaveable.No, description: "How fast the item changes the color of the walls.")]
         public float SprayStrength { get; set; }
 
+        [Serialize(10.0f, IsPropertySaveable.No, description: "How fast the item cleans dirty walls.")]
+        public float CleanStrength { get; set; }
+
         public readonly ImmutableDictionary<Identifier, Color> LiquidColors;
         public ItemContainer LiquidContainer { get; private set; }
 

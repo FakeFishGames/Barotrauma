@@ -85,7 +85,44 @@ namespace Barotrauma
             return (float)Math.Sin(t * MathHelper.PiOver2);
         }
 
+        /// <summary>
+        /// Simplified copy of Unity's Mathf.SmoothDamp: smoothly eases "current" toward "target" over roughly "smoothTime" seconds. 
+        /// Useful for smoothing a value that changes erratically towards some target, eg. a value jittered by network sync.
+        /// </summary>
+        /// <param name="velocity">The value's velocity, responsible for the "spring" effect. NOTE: Must be persisted externally.</param>
+        public static float SmoothDamp(float current, float target, ref float velocity, float smoothTime, float deltaTime)
+        {
+            if (deltaTime <= 0.0f) { return current; }
+            
+            smoothTime = Math.Max(0.0001f, smoothTime);
+            float omega = 2.0f / smoothTime;
+            float x = omega * deltaTime;
+            // Cheap approximation of e^-x
+            float exp = 1.0f / (1.0f + x + 0.48f * x * x + 0.235f * x * x * x);
+            float change = current - target;
+            float temp = (velocity + omega * change) * deltaTime;
+            velocity = (velocity - omega * temp) * exp;
+            float output = target + (change + temp) * exp;
+            // Prevent the spring from overshooting past the target
+            if (target - current > 0.0f == output > target)
+            {
+                output = target;
+                velocity = (output - target) / deltaTime;
+            }
+            return output;
+        }
+
         public static Vector2 ClampLength(this Vector2 v, float length)
+        {
+            float currLength = v.Length();
+            if (currLength > length)
+            {
+                return v / currLength * length;
+            }
+            return v;
+        }
+
+        public static Vector3 ClampLength(this Vector3 v, float length)
         {
             float currLength = v.Length();
             if (currLength > length)
@@ -111,12 +148,12 @@ namespace Barotrauma
 
         public static float RoundTowardsClosest(float value, float div)
         {
-            return (float)Math.Round(value / div) * div;
+            return MathF.Round(value / div) * div;
         }
 
         public static float VectorToAngle(Vector2 vector)
         {
-            return (float)Math.Atan2(vector.Y, vector.X);
+            return MathF.Atan2(vector.Y, vector.X);
         }
 
         public static Point ToPoint(Vector2 vector)
@@ -281,7 +318,17 @@ namespace Barotrauma
             float numerator1 = ((a.Y - c.Y) * (d.X - c.X)) - ((a.X - c.X) * (d.Y - c.Y));
             float numerator2 = ((a.Y - c.Y) * (b.X - a.X)) - ((a.X - c.X) * (b.Y - a.Y));
 
-            if (denominator == 0) return numerator1 == 0 && numerator2 == 0;
+            //lines are parallel
+            if (denominator == 0)
+            {
+                //not collinear, can't intersect
+                if (numerator1 != 0 || numerator2 != 0) { return false; }
+                //collinear -> check overlap
+                return Math.Max(a.X, b.X) >= Math.Min(c.X, d.X) &&
+                       Math.Max(c.X, d.X) >= Math.Min(a.X, b.X) &&
+                       Math.Max(a.Y, b.Y) >= Math.Min(c.Y, d.Y) &&
+                       Math.Max(c.Y, d.Y) >= Math.Min(a.Y, b.Y);
+            }
 
             float r = numerator1 / denominator;
             float s = numerator2 / denominator;
@@ -438,10 +485,16 @@ namespace Barotrauma
 
         public static Point YX(this Point point)
             => new Point(x: point.Y, y: point.X);
-        
+
+        /// <summary>
+        /// Returns a unit vector rotated by the given angle in radians, where 0 radians points along the positive X-axis (to the right).
+        /// </summary>
         public static Vector2 RotatedUnitXRadians(float radians)
             => new Vector2(MathF.Cos(radians), MathF.Sin(radians));
 
+        /// <summary>
+        /// Returns a unit vector rotated by the given angle in radians, where 0 radians points along the positive Y-axis (up).
+        /// </summary>
         public static Vector2 RotatedUnitYRadians(float radians)
             => RotatedUnitXRadians(radians).YX().FlipX();
 
@@ -1157,6 +1210,19 @@ namespace Barotrauma
             }
 
             return destinationArray;
+        }
+
+        public static float MoveTowards(this float current, float target, float maxStep) => current.CompareTo(target) switch
+        {
+            < 0 => Math.Min(current + maxStep, target),
+              0 => target,
+            > 0 => Math.Max(current - maxStep, target)
+        };
+
+        public static Vector2 MoveTowards(this Vector2 current, Vector2 target, float maxStep)
+        {
+            Vector2 diff = target - current;
+            return current + diff.ClampLength(maxStep);
         }
     }
 

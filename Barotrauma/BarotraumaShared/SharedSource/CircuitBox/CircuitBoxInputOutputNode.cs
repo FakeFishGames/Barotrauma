@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    internal sealed partial class CircuitBoxInputOutputNode : CircuitBoxNode
+    public sealed partial class CircuitBoxInputOutputNode : CircuitBoxNode
     {
         public enum Type
         {

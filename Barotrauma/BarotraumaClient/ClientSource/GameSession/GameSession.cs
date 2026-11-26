@@ -6,7 +6,7 @@ using System;
 
 namespace Barotrauma
 {
-    partial class GameSession
+    public partial class GameSession
     {
         public RoundSummary RoundSummary
         {
@@ -45,6 +45,8 @@ namespace Barotrauma
         private GUIButton crewListButton, commandButton, tabMenuButton;
         private GUIImage talentPointNotification;
 
+        public GUILayoutGroup TopLeftButtonGroup => topLeftButtonGroup;
+
         private GUIComponent deathChoiceInfoFrame, deathChoiceButtonContainer;
         private GUITextBlock respawnInfoText;
         private GUITickBox deathChoiceTickBox;
@@ -72,10 +74,7 @@ namespace Barotrauma
                 AbsoluteSpacing = HUDLayoutSettings.Padding,
                 CanBeFocused = false
             };
-            int buttonHeight = GUI.IntScale(40);
-            Vector2 buttonSpriteSize = GUIStyle.GetComponentStyle("CrewListToggleButton").GetDefaultSprite().size;
-            int buttonWidth = (int)((buttonHeight / buttonSpriteSize.Y) * buttonSpriteSize.X);
-            Point buttonSize = new Point(buttonWidth, buttonHeight);
+            Point buttonSize = GetToggleButtonSize();
             crewListButton = new GUIButton(new RectTransform(buttonSize, parent: topLeftButtonGroup.RectTransform), style: "CrewListToggleButton")
             {
                 ToolTip = TextManager.GetWithVariable("hudbutton.crewlist", "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.CrewOrders)),
@@ -110,6 +109,7 @@ namespace Barotrauma
             deathChoiceInfoFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), parent: topLeftButtonGroup.RectTransform)
                 { MaxSize = new Point(HUDLayoutSettings.ButtonAreaTop.Width / 3, int.MaxValue) }, style: null)
             {
+                IgnoreLayoutGroups = true,
                 CanBeFocused = false,
                 Visible = false
             };
@@ -166,6 +166,14 @@ namespace Barotrauma
             };
 
             prevTopLeftButtonsResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+        }
+
+        public static Point GetToggleButtonSize()
+        {
+            int buttonHeight = GUI.IntScale(40f);
+            Vector2 buttonSpriteSize = GUIStyle.GetComponentStyle("CrewListToggleButton").GetDefaultSprite().size;
+            int buttonWidth = (int)((buttonHeight / buttonSpriteSize.Y) * buttonSpriteSize.X);
+            return new Point(buttonWidth, buttonHeight);
         }
 
         public void AddToGUIUpdateList()
@@ -300,14 +308,16 @@ namespace Barotrauma
             else // "classic" respawn modes
             {
                 //can choose between midround respawning with a penalty or waiting
-                //if we're in a non-outpost level, and either don't have an existing character or have already spawned during the round
+                //if we don't have an existing character or have already spawned during the round
                 //(otherwise, e.g. when joining a campaign in which we have an existing character, we can respawn mid-round "for free" and there's no reason to make a choice)
-                hasRespawnOptions = Level.Loaded?.Type != LevelData.LevelType.Outpost &&
-                                    (GameMain.Client is GameClient client && (client.CharacterInfo == null || client.HasSpawned));
+                hasRespawnOptions = (GameMain.Client is GameClient client && (client.CharacterInfo == null || client.HasSpawned));
             }
             
             // Are the death choice elements shown at all, at least with the text? 
             deathChoiceInfoFrame.Visible = !text.IsNullOrEmpty() || hasRespawnOptions;
+            //set as last child because mods can add new buttons to the TopLeftButtonGroup, and we want these texts to be displayed after any buttons
+            deathChoiceInfoFrame.SetAsLastChild();
+            deathChoiceInfoFrame.IgnoreLayoutGroups = !deathChoiceInfoFrame.Visible;
             if (!deathChoiceInfoFrame.Visible) { return; }
             respawnInfoText.Text = text;
             respawnInfoText.TextColor = textColor;

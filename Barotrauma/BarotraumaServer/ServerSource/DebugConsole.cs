@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -28,6 +29,7 @@ namespace Barotrauma
             /// <summary>
             /// Executed server-side when a client attempts to use the command.
             /// </summary>
+            [MaybeNull, AllowNull]
             public Action<Client, Vector2, string[]> OnClientRequestExecute;
 
             public void ServerExecuteOnClientRequest(Client client, Vector2 cursorWorldPos, string[] args)
@@ -53,6 +55,13 @@ namespace Barotrauma
                     OnClientRequestExecute(client, cursorWorldPos, args);
                 }
             }
+
+            public void Dispose()
+            {
+                OnExecute = null;
+                GetValidArgs = null;
+                OnClientRequestExecute = null;
+            }
         }
 
         public static List<string> QueuedCommands = new List<string>();
@@ -73,6 +82,12 @@ namespace Barotrauma
         private static int memoryIndex = -1;
         private static List<string> commandMemory = new List<string>();
 
+        /// <summary>
+        /// If set to true, disables any fancy console input/output features, such as autocomplete and text coloring. Useful 
+        /// for servers running under a simulated TTY that doesn't support all the TTY features (e.g. pterodactyl).
+        /// </summary>
+        public static bool EnableSimpleIO { get; set; }
+
         public static void UpdateCommandLine(int maxTime)
         {
             Stopwatch sw = new Stopwatch();
@@ -81,7 +96,7 @@ namespace Barotrauma
             int consoleWidth = 0;
             int consoleHeight = 0;
 
-            if(!Console.IsOutputRedirected)
+            if (!Console.IsOutputRedirected && !EnableSimpleIO)
             {
                 consoleWidth = Console.WindowWidth;
                 if (consoleWidth < 5) consoleWidth = 5;
@@ -92,8 +107,7 @@ namespace Barotrauma
             //dequeue messages
             if (queuedMessages.Count > 0)
             {
-
-                if (!Console.IsOutputRedirected)
+                if (!Console.IsOutputRedirected && !EnableSimpleIO)
                 {
                     Console.CursorLeft = 0;
                 }
@@ -114,7 +128,7 @@ namespace Barotrauma
 
                     if (msg.IsCommand) commandMemory.Add(msgTxt);
 
-                    if(!Console.IsOutputRedirected)
+                    if(!Console.IsOutputRedirected && !EnableSimpleIO)
                     {
                         int paddingLen = consoleWidth - (msg.Text.Length % consoleWidth) - 1;
                         msgTxt += new string(' ', paddingLen > 0 ? paddingLen : 0);
@@ -125,7 +139,7 @@ namespace Barotrauma
 
                     if (sw.ElapsedMilliseconds >= maxTime) { break; }
                 }
-                if (!Console.IsOutputRedirected)
+                if (!Console.IsOutputRedirected && !EnableSimpleIO)
                 {
                     RewriteInputToCommandLine(input);
                 }
@@ -135,77 +149,90 @@ namespace Barotrauma
                 Messages.RemoveRange(0, Messages.Count - MaxMessages);
             }
 
-            // No good way to display input when console output is redirected, and can't read from redirected input using KeyAvailable.
-            if(!Console.IsOutputRedirected && !Console.IsInputRedirected)
+            // Can't read from redirected input since KeyAvailable is not supported.
+            if (!Console.IsInputRedirected)
             {
-                //read player input
-                bool rewriteInput = false;
-                while (Console.KeyAvailable)
+                if (Console.IsOutputRedirected || EnableSimpleIO)
                 {
-                    if (sw.ElapsedMilliseconds >= maxTime)
+                    while (Console.KeyAvailable)
                     {
-                        rewriteInput = false;
-                        break;
-                    }
-                    rewriteInput = true;
-                    ConsoleKeyInfo key = Console.ReadKey(true);
-                    switch (key.Key)
-                    {
-                        case ConsoleKey.Enter:
-                            lock (QueuedCommands)
-                            {
-                                QueuedCommands.Add(input);
-                            }
-                            input = "";
-                            memoryIndex = -1;
-                            break;
-                        case ConsoleKey.Backspace:
-                            if (input.Length > 0) input = input.Substring(0, input.Length - 1);
-                            ResetAutoComplete();
-                            memoryIndex = -1;
-                            break;
-                        case ConsoleKey.LeftArrow:
-                            input = AutoComplete(input, -1);
-                            break;
-                        case ConsoleKey.RightArrow:
-                            input = AutoComplete(input, 1);
-                            break;
-                        case ConsoleKey.UpArrow:
-                            memoryIndex--;
-                            if (memoryIndex < 0) memoryIndex = commandMemory.Count - 1;
-                            if (memoryIndex >= commandMemory.Count) memoryIndex = commandMemory.Count - 1;
-                            if (memoryIndex >= 0)
-                            {
-                                input = commandMemory[memoryIndex];
-                            }
-                            break;
-                        case ConsoleKey.DownArrow:
-                            memoryIndex++;
-                            if (memoryIndex < 0) memoryIndex = 0;
-                            if (memoryIndex >= commandMemory.Count) memoryIndex = 0;
-                            if (commandMemory.Count>0)
-                            {
-                                input = commandMemory[memoryIndex];
-                            }
-                            break;
-                        case ConsoleKey.Tab:
-                            if (input.Length > 0)
-                            {
-                                input = AutoComplete(input, 0);
-                                memoryIndex = -1;
-                            }
-                            break;
-                        default:
-                            if (key.KeyChar != 0)
-                            {
-                                input += key.KeyChar;
-                                memoryIndex = -1;
-                            }
-                            ResetAutoComplete();
-                            break;
+                        lock (QueuedCommands)
+                        {
+                            QueuedCommands.Add(Console.ReadLine());
+                        }
                     }
                 }
-                if (rewriteInput) { RewriteInputToCommandLine(input); }
+                else
+                {
+                    //read player input
+                    bool rewriteInput = false;
+                    while (Console.KeyAvailable)
+                    {
+                        if (sw.ElapsedMilliseconds >= maxTime)
+                        {
+                            rewriteInput = false;
+                            break;
+                        }
+                        rewriteInput = true;
+                        ConsoleKeyInfo key = Console.ReadKey(true);
+                        switch (key.Key)
+                        {
+                            case ConsoleKey.Enter:
+                                lock (QueuedCommands)
+                                {
+                                    QueuedCommands.Add(input);
+                                }
+                                input = "";
+                                memoryIndex = -1;
+                                break;
+                            case ConsoleKey.Backspace:
+                                if (input.Length > 0) input = input.Substring(0, input.Length - 1);
+                                ResetAutoComplete();
+                                memoryIndex = -1;
+                                break;
+                            case ConsoleKey.LeftArrow:
+                                input = AutoComplete(input, -1);
+                                break;
+                            case ConsoleKey.RightArrow:
+                                input = AutoComplete(input, 1);
+                                break;
+                            case ConsoleKey.UpArrow:
+                                memoryIndex--;
+                                if (memoryIndex < 0) memoryIndex = commandMemory.Count - 1;
+                                if (memoryIndex >= commandMemory.Count) memoryIndex = commandMemory.Count - 1;
+                                if (memoryIndex >= 0)
+                                {
+                                    input = commandMemory[memoryIndex];
+                                }
+                                break;
+                            case ConsoleKey.DownArrow:
+                                memoryIndex++;
+                                if (memoryIndex < 0) memoryIndex = 0;
+                                if (memoryIndex >= commandMemory.Count) memoryIndex = 0;
+                                if (commandMemory.Count > 0)
+                                {
+                                    input = commandMemory[memoryIndex];
+                                }
+                                break;
+                            case ConsoleKey.Tab:
+                                if (input.Length > 0)
+                                {
+                                    input = AutoComplete(input, 0);
+                                    memoryIndex = -1;
+                                }
+                                break;
+                            default:
+                                if (key.KeyChar != 0)
+                                {
+                                    input += key.KeyChar;
+                                    memoryIndex = -1;
+                                }
+                                ResetAutoComplete();
+                                break;
+                        }
+                    }
+                    if (rewriteInput) { RewriteInputToCommandLine(input); }
+                }
             }
 
             sw.Stop();
@@ -909,41 +936,34 @@ namespace Barotrauma
 
             AssignOnExecute("banaddress", (string[] args) =>
             {
-                if (GameMain.Server == null || args.Length == 0) return;
+                if (GameMain.Server == null || args.Length == 0) { return; }
 
-                if (!(Address.Parse(args[0]).TryUnwrap(out var address))) { return; }
-                
-                ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"? (c to cancel)", (reason) =>
+                if (!Address.Parse(args[0]).TryUnwrap(out var address))
                 {
-                    if (reason == "c" || reason == "C") { return; }
-                    ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\") (c to cancel)", (duration) =>
-                    {
-                        if (duration == "c" || duration == "C") { return; }
-                        TimeSpan? banDuration = null;
-                        if (!string.IsNullOrWhiteSpace(duration))
-                        {
-                            if (!TryParseTimeSpan(duration, out TimeSpan parsedBanDuration))
-                            {
-                                ThrowError("\"" + duration + "\" is not a valid ban duration. Use the format \"[days] d [hours] h\", \"[days] d\" or \"[hours] h\".");
-                                return;
-                            }
-                            banDuration = parsedBanDuration;
-                        }
+                    ThrowError($"Failed to parse {args[0]} as an address or an endpoint. The value should be a Steam ID or an IP address. Steam IDs should start with the STEAM_1: prefix.");
+                    return;
+                }
 
-                        var clients = GameMain.Server.ConnectedClients.Where(c => c.AddressMatches(address)).ToList();
-                        if (clients.Count == 0)
-                        {
-                            GameMain.Server.ServerSettings.BanList.BanPlayer("Unnamed", address, reason, banDuration);
-                        }
-                        else
-                        {
-                            foreach (Client cl in clients)
-                            {
-                                GameMain.Server.BanClient(cl, reason, banDuration);
-                            }
-                        }
-                    });
+                GetBanReasonAndDuration(clientName: args[0], args.Skip(1).ToArray(), (string reason, TimeSpan? banDuration) =>
+                {
+                    Ban(address, reason, banDuration);
                 });
+
+                static void Ban(Address address, string reason, TimeSpan? banDuration)
+                {
+                    var clients = GameMain.Server.ConnectedClients.Where(c => c.AddressMatches(address)).ToList();
+                    if (clients.Count == 0)
+                    {
+                        GameMain.Server.ServerSettings.BanList.BanPlayer("Unnamed", address, reason, banDuration);
+                    }
+                    else
+                    {
+                        foreach (Client cl in clients)
+                        {
+                            GameMain.Server.BanClient(cl, reason, banDuration);
+                        }
+                    }
+                }
             });
 
             commands.Add(new Command("mute", "mute [name]: Prevent the client from speaking through the voice chat.", (string[] args) =>
@@ -1057,7 +1077,7 @@ namespace Barotrauma
                 AchievementManager.CheatsEnabled = true;
                 NewMessage("Enabled cheat commands.", Color.Red);
                 NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
-                GameMain.Server?.UpdateCheatsEnabled();
+                GameMain.Server?.SyncDebugValues();
             }));
             AssignOnClientRequestExecute("enablecheats", (client, cursorPos, args) =>
             {
@@ -1065,7 +1085,7 @@ namespace Barotrauma
                 AchievementManager.CheatsEnabled = true;
                 NewMessage("Cheat commands have been enabled by \"" + client.Name + "\".", Color.Red);
                 NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
-                GameMain.Server?.UpdateCheatsEnabled();
+                GameMain.Server?.SyncDebugValues();
             });
 
 
@@ -1469,7 +1489,7 @@ namespace Barotrauma
                     return;
                 }
 
-                location.ChangeType(GameMain.GameSession.Campaign, locationType);
+                location.ChangeType(GameMain.GameSession.Campaign, locationType, createNetworkEvent: true);
             },
             () =>
             {
@@ -1593,6 +1613,18 @@ namespace Barotrauma
                 }
             }));
 
+            AssignOnClientRequestExecute("startgchelper", static (client, _, _) =>
+            {
+                GCHelper.Start();
+                GameMain.Server.SendConsoleMessage("Server started GC helper", client, Color.Lime);
+            });
+
+            AssignOnClientRequestExecute("gcprint", static (client, _, args) =>
+            {
+                bool shouldPrintFullInfo = args.Length > 0 && bool.TryParse(args[0], out bool b) && b;
+                GameMain.Server.SendConsoleMessage(GCHelper.PrintActiveInfo(fullInfo: shouldPrintFullInfo), client, Color.Lime);
+            });
+
             AssignOnExecute("debugvoip", _ =>
             {
                 VoipServerDecoder.DebugVoip = !VoipServerDecoder.DebugVoip;
@@ -1612,14 +1644,18 @@ namespace Barotrauma
                 (Client client, Vector2 cursorPos, string[] args) =>
                 {
                     if (args.Length < 1) { return; }
-                    if (!(Address.Parse(args[0]).TryUnwrap(out var address))) { return; }
+                    if (!Address.Parse(args[0]).TryUnwrap(out var address))
+                    {
+                        GameMain.Server.SendConsoleMessage($"Failed to parse {args[0]} as an address or an endpoint.  The value should be a Steam ID or an IP address. Steam IDs should start with the STEAM_1: prefix.", client, Color.Red);                        
+                        return; 
+                    }
                     var clients = GameMain.Server.ConnectedClients.Where(c => c.AddressMatches(address)).ToList();
                     TimeSpan? duration = null;
                     if (args.Length > 1)
                     {
                         if (double.TryParse(args[1], out double durationSeconds))
                         {
-                            if (durationSeconds > 0) duration = TimeSpan.FromSeconds(durationSeconds);
+                            if (durationSeconds > 0) { duration = TimeSpan.FromSeconds(durationSeconds); }
                         }
                         else
                         {
@@ -1628,7 +1664,7 @@ namespace Barotrauma
                         }
                     }
                     string reason = "";
-                    if (args.Length > 2) reason = string.Join(" ", args.Skip(2));
+                    if (args.Length > 2) { reason = string.Join(" ", args.Skip(2)); }
 
                     if (clients.Count == 0)
                     {
@@ -1659,7 +1695,7 @@ namespace Barotrauma
                 };
             }));
 
-            commands.Add(new Command("unbanaddress", "unbanaddress [endpoint]: Unban a specific endpoint.", (string[] args) =>
+            commands.Add(new Command("unbanaddress|unbanip", "unbanaddress [endpoint]: Unban a specific endpoint.", (string[] args) =>
             {
                 if (GameMain.Server == null || args.Length == 0) return;
                 if (Endpoint.Parse(args[0]).TryUnwrap(out var endpoint))

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Barotrauma.Networking
 {
-    interface IReadMessage
+    public interface IReadMessage
     {
         bool ReadBoolean();
         void ReadPadBits();

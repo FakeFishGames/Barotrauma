@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    internal partial class ReadyCheck
+    public partial class ReadyCheck
     {
         private static LocalizedString ReadyCheckBody(string name) => string.IsNullOrWhiteSpace(name) ? TextManager.Get("readycheck.serverbody") : TextManager.GetWithVariable("readycheck.body", "[player]", name);
 

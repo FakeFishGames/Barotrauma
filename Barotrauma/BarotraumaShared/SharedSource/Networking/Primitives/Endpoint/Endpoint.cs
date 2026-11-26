@@ -2,7 +2,7 @@
 
 namespace Barotrauma.Networking
 {
-    abstract class Endpoint
+    public abstract class Endpoint
     {
         public abstract string StringRepresentation { get; }
         

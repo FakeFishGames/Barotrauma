@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    class EntityGrid
+    public class EntityGrid
     {
         private List<MapEntity> allEntities;
         private List<MapEntity>[,] entities;

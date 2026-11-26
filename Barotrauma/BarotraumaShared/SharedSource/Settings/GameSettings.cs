@@ -91,11 +91,11 @@ namespace Barotrauma
                     UseDualModeSockets = true,
 #endif
                     DisableInGameHints = false,
+                    AutoOrderModList = true,
                     EnableSubmarineAutoSave = true,
                     Graphics = GraphicsSettings.GetDefault(),
                     Audio = AudioSettings.GetDefault(),
 #if CLIENT
-                    CrossplayChoice = Eos.EosSteamPrimaryLogin.CrossplayChoice.Unknown,
                     DisableGlobalSpamList = false,
                     KeyMap = KeyMapping.GetDefault(),
                     InventoryKeyMap = InventoryKeyMapping.GetDefault()
@@ -115,7 +115,9 @@ namespace Barotrauma
             public static Config FromElement(XElement element, in Config? fallback = null)
             {
                 Config retVal = fallback ?? GetDefault();
-                
+
+                Version configVersion = new Version(element.GetAttributeString("version", "0.0.0"));
+
                 retVal.DeserializeElement(element);
 #if SERVER
                 //server defaults to English, clients get a prompt to select a language
@@ -132,7 +134,7 @@ namespace Barotrauma
                 retVal.Graphics = GraphicsSettings.FromElements(element.GetChildElements("graphicsmode", "graphicssettings"), retVal.Graphics);
                 retVal.Audio = AudioSettings.FromElements(element.GetChildElements("audio"), retVal.Audio);
 #if CLIENT
-                retVal.KeyMap = new KeyMapping(element.GetChildElements("keymapping"), retVal.KeyMap);
+                retVal.KeyMap = new KeyMapping(element.GetChildElements("keymapping"), retVal.KeyMap, configVersion);
                 retVal.InventoryKeyMap = new InventoryKeyMapping(element.GetChildElements("inventorykeymapping"), retVal.InventoryKeyMap);
                 retVal.SavedCampaignSettings = element.GetChildElement("campaignsettings");
                 LoadSubEditorImages(element);
@@ -165,6 +167,7 @@ namespace Barotrauma
             public int CorpsesPerSubDespawnThreshold;
             public bool UseDualModeSockets;
             public bool DisableInGameHints;
+            public bool AutoOrderModList;
             public bool EnableSubmarineAutoSave;
             public Identifier QuickStartSub;
             public string RemoteMainMenuContentUrl;
@@ -180,7 +183,6 @@ namespace Barotrauma
             public readonly int RemoteContentTimeoutMs => (int)(RemoteContentTimeoutSeconds * 1000);
 
 #if CLIENT
-            public Eos.EosSteamPrimaryLogin.CrossplayChoice CrossplayChoice;
             public XElement SavedCampaignSettings;
             public bool DisableGlobalSpamList;
 #endif
@@ -344,8 +346,8 @@ namespace Barotrauma
                         { InputType.ToggleChatMode, Keys.R },
                         { InputType.Command, MouseButton.MiddleMouse },
                         { InputType.ContextualCommand, Keys.LeftShift },
-                        { InputType.PreviousFireMode, MouseButton.MouseWheelDown },
-                        { InputType.NextFireMode, MouseButton.MouseWheelUp },
+                        { InputType.PreviousFireMode, Keys.N},
+                        { InputType.NextFireMode, Keys.M },
 
                         { InputType.TakeHalfFromInventorySlot, Keys.LeftShift },
                         { InputType.TakeOneFromInventorySlot, Keys.LeftControl },
@@ -363,7 +365,9 @@ namespace Barotrauma
                         { InputType.Select, MouseButton.PrimaryMouse },
                         { InputType.Deselect, MouseButton.SecondaryMouse },
                         { InputType.Shoot, MouseButton.PrimaryMouse },
-                        { InputType.ShowInteractionLabels, Keys.LeftAlt }
+                        { InputType.ShowInteractionLabels, Keys.LeftAlt },
+                        { InputType.ScrollUp, MouseButton.MouseWheelUp },
+                        { InputType.ScrollDown, MouseButton.MouseWheelDown }
                 }.ToImmutableDictionary();
 
                 public static KeyMapping GetDefault() => new KeyMapping
@@ -376,7 +380,7 @@ namespace Barotrauma
                         .ToImmutableDictionary()
                 };
 
-                public KeyMapping(IEnumerable<XElement> elements, in KeyMapping? fallback)
+                public KeyMapping(IEnumerable<XElement> elements, in KeyMapping? fallback, Version configVersion)
                 {
                     var defaultBindings = GetDefault().Bindings;
                     Dictionary<InputType, KeyOrMouse> bindings = fallback?.Bindings?.ToMutable() ?? defaultBindings.ToMutable();
@@ -454,6 +458,14 @@ namespace Barotrauma
                         bindings[InputType.RadioVoice] = Keys.None;
                     }
 
+                    //dlc companion update changed fire mode buttons from the mouse wheel, let's default to the new keybinds
+                    if (configVersion < new Version(1, 15, 12) &&
+                        (bindings[InputType.PreviousFireMode] != Keys.N || bindings[InputType.NextFireMode] != Keys.M))
+                    {
+                        bindings[InputType.PreviousFireMode] = Keys.N;
+                        bindings[InputType.NextFireMode] = Keys.M;
+                    }
+
                     Bindings = bindings.ToImmutableDictionary();
                 }
 
@@ -471,7 +483,7 @@ namespace Barotrauma
                 
                 public ImmutableDictionary<InputType, KeyOrMouse> Bindings;
 
-                public LocalizedString KeyBindText(InputType inputType) => Bindings[inputType].Name;
+                public readonly LocalizedString KeyBindText(InputType inputType) => Bindings[inputType].Name;
             }
 
             [StructSerialization.Skip]
@@ -663,7 +675,8 @@ namespace Barotrauma
         public static void SaveCurrentConfig()
         {
             XDocument configDoc = new XDocument();
-            XElement root = new XElement("config"); configDoc.Add(root);
+            XElement root = new XElement("config", new XAttribute("version", GameMain.Version)); 
+            configDoc.Add(root);
             currentConfig.SerializeElement(root);
 
             XElement graphicsElement = new XElement("graphicssettings"); root.Add(graphicsElement);

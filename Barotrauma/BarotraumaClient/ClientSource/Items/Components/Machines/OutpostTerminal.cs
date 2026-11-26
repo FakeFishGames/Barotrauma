@@ -17,8 +17,8 @@ namespace Barotrauma.Items.Components
                 selectionUI = new SubmarineSelection(true, null, GUI.Canvas);
             }
 
-            GuiFrame = selectionUI.GuiFrame;
             selectionUI.RefreshSubmarineDisplay(true, setTransferOptionToTrue: true);
+            GuiFrame = selectionUI.GuiFrame;
             IsActive = true;
             return base.Select(character);
         }

@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Quality : ItemComponent
+    public partial class Quality : ItemComponent
     {
         public const int MaxQuality = 3;
 
@@ -84,7 +84,7 @@ namespace Barotrauma.Items.Components
         {               
             if (submarine?.Info == null || level == null || submarine.Info.Type == SubmarineType.Player) { return 0; }
 
-            float difficultyFactor = MathHelper.Clamp(level.Difficulty, 0.0f, level.LevelData.Biome.ActualMaxDifficulty / 100.0f);
+            float difficultyFactor = MathHelper.Clamp(level.Difficulty / 100.0f, 0.0f, level.LevelData.Biome.ActualMaxDifficulty / 100.0f);
 
             if (level.Type == LevelData.LevelType.Outpost && 
                 level.StartLocation?.Type?.OutpostTeam == CharacterTeamType.FriendlyNPC)

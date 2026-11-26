@@ -5,14 +5,13 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveFindDivingGear : AIObjective
+    public class AIObjectiveFindDivingGear : AIObjective
     {
         public override Identifier Identifier { get; set; } = "find diving gear".ToIdentifier();
         public override string DebugTag => $"{Identifier} ({gearTag})";
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
-        public override bool AbandonWhenCannotCompleteSubObjectives => false;
-        protected override bool AllowWhileHandcuffed => false;
+        protected override bool RequireOneHandAvailable => true;
 
         private readonly Identifier gearTag;
 
@@ -29,6 +28,7 @@ namespace Barotrauma
         public AIObjectiveFindDivingGear(Character character, bool needsDivingSuit, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
             gearTag = needsDivingSuit ? Tags.HeavyDivingGear : Tags.LightDivingGear;
+            AbandonWhenCannotCompleteSubObjectives = false;
         }
 
         protected override void Act(float deltaTime)
@@ -130,6 +130,10 @@ namespace Barotrauma
             }
             if (!findDivingGear)
             {
+                //note: we intentionally don't use Character.CanSpawnMissingItems here,
+                //we want player outpost dwellers to be able to spawn oxygen tanks in an emergency even though they usually can't spawn items from thin air like NPC outpost dwellers
+                bool allowSpawningOxygenTanks = character.TeamID == CharacterTeamType.FriendlyNPC;
+
                 float min = GetMinOxygen(character);
                 if (targetItem.OwnInventory != null && targetItem.OwnInventory.AllItems.None(IsSuitableContainedOxygenSource))
                 {
@@ -151,7 +155,7 @@ namespace Barotrauma
                             }
                         }
                         var container = targetItem.GetComponent<ItemContainer>();                        
-                        var objective = new AIObjectiveContainItem(character, Tags.OxygenSource, container, objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+                        var objective = new AIObjectiveContainItem(character, Tags.OxygenSource, container, objectiveManager, spawnItemIfNotFound: allowSpawningOxygenTanks)
                         {
                             AllowToFindDivingGear = false,
                             AllowDangerousPressure = true,
@@ -175,7 +179,7 @@ namespace Barotrauma
                         // Try to seek any oxygen sources, even if they have minimal amount of oxygen.
                         TryAddSubObjective(ref getOxygen, () =>
                         {
-                            return new AIObjectiveContainItem(character, Tags.OxygenSource, targetItem.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+                            return new AIObjectiveContainItem(character, Tags.OxygenSource, targetItem.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: allowSpawningOxygenTanks)
                             {
                                 AllowToFindDivingGear = false,
                                 AllowDangerousPressure = true,
@@ -260,7 +264,7 @@ namespace Barotrauma
             // The margin helps us to survive, because we might need some oxygen before we can find more oxygen.
             // When we are venturing outside of our sub, let's just suppose that we have enough oxygen with us and optimize it so that we don't keep switching off half used tanks.
             float min = 0.01f;
-            float minOxygen = character.IsInFriendlySub ? MinOxygen : min;
+            float minOxygen = character.IsInSameTeamSub ? MinOxygen : min;
             if (minOxygen > min && character.Inventory.AllItems.Any(i => i.HasTag(Tags.OxygenSource) && i.ConditionPercentage >= minOxygen))
             {
                 // There's a valid oxygen tank in the inventory -> no need to swap the tank too early.

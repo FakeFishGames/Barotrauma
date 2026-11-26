@@ -1,14 +1,17 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
-using Barotrauma.Networking; // used by the server
+using Barotrauma.Plugins;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+#if SERVER
+using Barotrauma.Networking;
+#endif
 
 namespace Barotrauma
 {
-    class AIObjectiveManager
+    public class AIObjectiveManager
     {
         public enum ObjectiveType
         {
@@ -44,6 +47,12 @@ namespace Barotrauma
         public const float RunPriority = 50;
         // Constantly increases the priority of the selected objective, unless overridden
         public const float baseDevotion = 5;
+
+        /// <summary>
+        /// How often do we log an error message about an order that cannot be completed. Logging every frame causes too much spam.
+        /// </summary>
+        private const float OrderCompletionErrorMessageInterval = 10f;
+        private double lastOrderCompletionErrorMessageTime;
 
         /// <summary>
         /// Excluding the current order.
@@ -158,6 +167,7 @@ namespace Barotrauma
             Objectives.Clear();
             FailedAutonomousObjectives = false;
             AddObjective(new AIObjectiveFindSafety(character, this));
+
             var newIdleObjective = new AIObjectiveIdle(character, this);
             if (prevIdleObjective != null)
             {
@@ -176,14 +186,22 @@ namespace Barotrauma
                     Item item = null;
                     if (orderPrefab.MustSetTarget)
                     {
-                        item = orderPrefab.GetMatchingItems(character.Submarine, mustBelongToPlayerSub: false, requiredTeam: character.Info.TeamID, interactableFor: character)?.GetRandomUnsynced();
+                        item = orderPrefab.GetMatchingItems(character.Submarine, mustBelongToPlayerSubOrOutpost: false, requiredTeam: character.Info.TeamID, interactableFor: character)?.GetRandomUnsynced();
+                        //npcs are allowed to operate items in player-owned outposts
+                        if (character.Info.TeamID == CharacterTeamType.FriendlyNPC && Level.IsLoadedTeam1Outpost)
+                        {
+                            item ??= 
+                                orderPrefab
+                                    .GetMatchingItems(character.Submarine, mustBelongToPlayerSubOrOutpost: false, requiredTeam: CharacterTeamType.Team1, interactableFor: character)?
+                                    .GetRandomUnsynced(it => it.Submarine.Info.IsOutpost);
+                        }
                     }
                     var order = new Order(orderPrefab, autonomousObjective.Option, item ?? character.CurrentHull as Entity, orderPrefab.GetTargetItemComponent(item), orderGiver: character);
                     if (order == null) { continue; }
-                    if ((order.IgnoreAtOutpost || autonomousObjective.IgnoreAtOutpost) && 
+                    if ((order.IgnoreAtOutpost || autonomousObjective.IgnoreAtOutpost) &&
                         Level.IsLoadedFriendlyOutpost && character.TeamID != CharacterTeamType.FriendlyNPC && !character.IsFriendlyNPCTurnedHostile)
                     {
-                        if (Submarine.MainSub != null && Submarine.MainSub.DockedTo.None(s => s.TeamID != CharacterTeamType.FriendlyNPC && s.TeamID != character.TeamID))
+                        if (Submarine.MainSub != null && Submarine.MainSub.DockedTo.None(s => s.Info.Type != SubmarineType.Outpost))
                         {
                             continue;
                         }
@@ -199,13 +217,6 @@ namespace Barotrauma
                         objectiveCount++;
                     }
                 }       
-            }
-            else
-            {
-                string warningMsg = character.Info == null ?
-                    $"The character {character.DisplayName} has been set to use human ai, but has no {nameof(CharacterInfo)}. This may cause issues with the AI. Consider adding {nameof(CharacterPrefab.HasCharacterInfo)}=\"True\" to the character config." :
-                    $"The character {character.DisplayName} has been set to use human ai, but has no job. This may cause issues with the AI. Consider configuring some jobs for the character type.";
-                DebugConsole.AddWarning(warningMsg, character.Prefab.ContentPackage);
             }
    
             _waitTimer = Math.Max(_waitTimer, Rand.Range(0.5f, 1f) * objectiveCount);
@@ -242,9 +253,9 @@ namespace Barotrauma
         {
             var previousObjective = CurrentObjective;
             var firstObjective = Objectives.FirstOrDefault();
-            
+
             bool currentObjectiveIsOrder = CurrentOrder != null && firstObjective != null && CurrentOrder.Priority > firstObjective.Priority;
-            
+
             CurrentObjective = currentObjectiveIsOrder ? CurrentOrder : firstObjective;
 
             if (previousObjective == CurrentObjective) { return CurrentObjective; }
@@ -291,9 +302,10 @@ namespace Barotrauma
                 if (orderObjective == null) { return; }
 #if DEBUG
                 // Note: don't automatically remove orders here. Removing orders needs to be done via dismissing.
-                if (!orderObjective.CanBeCompleted)
+                if (!orderObjective.CanBeCompleted && Timing.TotalTime > lastOrderCompletionErrorMessageTime + OrderCompletionErrorMessageInterval)
                 {
                     DebugConsole.NewMessage($"{character.Name}: ORDER {orderObjective.DebugTag}, CANNOT BE COMPLETED.", Color.Red);
+                    lastOrderCompletionErrorMessageTime = Timing.TotalTime;
                 }
 #endif
                 orderObjective.Update(deltaTime);
@@ -374,6 +386,9 @@ namespace Barotrauma
         public void SetForcedOrder(AIObjective objective)
         {
             ForcedOrder = objective;
+            // Re-sort right away, otherwise the new order has no priority calculated yet and the bot keeps
+            // doing its autonomous objectives until the next periodic sort (up to sortObjectiveInterval)
+            SortObjectives();
         }
 
         public void ClearForcedOrder()
@@ -382,14 +397,14 @@ namespace Barotrauma
             SortObjectives();
         }
 
-        public void SetOrder(Order order, bool speak)
+        public AIObjective SetOrder(Order order, bool speak)
         {
             if (character.IsDead)
             {
 #if DEBUG
                 DebugConsole.ThrowError("Attempted to set an order for a dead character");
 #else
-                return;
+                return null;
 #endif
             }
             ClearIgnored();
@@ -460,207 +475,269 @@ namespace Barotrauma
                     character.Speak(msg.Value, delay: 1.0f);
                 }
             }
+            return newCurrentObjective;
         }
 
         /// <summary>
         /// Creates an AI objective based on the order. Note that the method can return null in the case of e.g. Dismissal orders or orders that erroneously target something non-interactable.
         /// </summary>
-        public AIObjective CreateObjective(Order order, float priorityModifier = 1)
+        /// <param name="isSubObjective">Is this a subobjective of some other objective? If so, we won't assume it's an order the bot should dismiss when the objective is completed.</param>
+        public AIObjective CreateObjective(Order order, float priorityModifier = 1, bool isSubObjective = false)
         {
             if (order == null || order.IsDismissal) { return null; }
             AIObjective newObjective;
-            switch (order.Identifier.Value.ToLowerInvariant())
+
+            AIObjective pluginObjective = PluginLoader.LoadedPlugins
+                .Select(static p => p.Data)
+                .SelectMany(static d => d.OrderObjectiveFactories)
+                .Select(f => f.CreateObjectiveFromOrder(this, order, character, priorityModifier))
+                .FirstOrDefault(static o => o != null);
+
+            if (pluginObjective == null)
             {
-                case "follow":
-                    if (order.OrderGiver == null) { return null; }
-                    newObjective = new AIObjectiveGoTo(order.OrderGiver, character, this, repeat: true, priorityModifier: priorityModifier)
-                    {
-                        CloseEnough = Rand.Range(80f, 100f),
-                        CloseEnoughMultiplier = Math.Min(1 + HumanAIController.CountBotsInTheCrew(c => c.ObjectiveManager.HasOrder<AIObjectiveGoTo>(o => o.Target == order.OrderGiver)) * Rand.Range(0.8f, 1f), 4),
-                        ExtraDistanceOutsideSub = 100,
-                        ExtraDistanceWhileSwimming = 100,
-                        AllowGoingOutside = true,
-                        IgnoreIfTargetDead = true,
-                        IsFollowOrder = true,
-                        Mimic = character.IsOnPlayerTeam,
-                        DialogueIdentifier = AIObjectiveGoTo.DialogCannotReachPlace
-                    };
-                    break;
-                case "wait":
-                    newObjective = new AIObjectiveGoTo(order.TargetSpatialEntity ?? character, character, this, repeat: true, priorityModifier: priorityModifier)
-                    {
-                        AllowGoingOutside = true,
-                        IsWaitOrder = true,
-                        DebugLogWhenFails = false,
-                        SpeakIfFails = false,
-                        CloseEnough = 100
-                    };
-                    break;
-                case "return":
-                    newObjective = new AIObjectiveReturn(character, order.OrderGiver, this, priorityModifier: priorityModifier);
-                    newObjective.Completed += () => DismissSelf(order);
-                    break;
-                case "fixleaks":
-                    newObjective = new AIObjectiveFixLeaks(character, this, priorityModifier: priorityModifier, prioritizedHull: order.TargetEntity as Hull);
-                    break;
-                case "chargebatteries":
-                    newObjective = new AIObjectiveChargeBatteries(character, this, order.Option, priorityModifier);
-                    break;
-                case "rescue":
-                    newObjective = new AIObjectiveRescueAll(character, this, priorityModifier);
-                    break;
-                case "repairsystems":
-                case "repairmechanical":
-                case "repairelectrical":
-                    newObjective = new AIObjectiveRepairItems(character, this, priorityModifier: priorityModifier, prioritizedItem: order.TargetEntity as Item)
-                    {
-                        RelevantSkill = order.AppropriateSkill,
-                    };
-                    break;
-                case "pumpwater":
-                    if (order.TargetItemComponent is Pump targetPump)
-                    {
-                        if (!order.TargetItemComponent.Item.IsInteractable(character)) { return null; }
-                        newObjective = new AIObjectiveOperateItem(targetPump, character, this, order.Option, false, priorityModifier: priorityModifier)
+                switch (order.Identifier.Value.ToLowerInvariant())
+                {
+                    case "follow":
+                        if (order.OrderGiver == null) { return null; }
+                        newObjective = new AIObjectiveGoTo(order.OrderGiver, character, this, repeat: true, priorityModifier: priorityModifier)
                         {
-                            Override = order.OrderGiver is { IsCommanding: true }
+                            CloseEnough = Rand.Range(80f, 100f),
+                            CloseEnoughMultiplier = Math.Min(1 + HumanAIController.CountBotsInTheCrew(c => c.ObjectiveManager.HasOrder<AIObjectiveGoTo>(o => o.Target == order.OrderGiver)) * Rand.Range(0.8f, 1f), 4),
+                            ExtraDistanceOutsideSub = 100,
+                            ExtraDistanceWhileSwimming = 100,
+                            AllowGoingOutside = true,
+                            IgnoreIfTargetDead = true,
+                            IsFollowOrder = true,
+                            Mimic = character.IsOnPlayerTeam,
+                            DialogueIdentifier = AIObjectiveGoTo.DialogCannotReachPlace
                         };
-                        newObjective.Completed += () => DismissSelf(order);
-                    }
-                    else
-                    {
-                        newObjective = new AIObjectivePumpWater(character, this, order.Option, priorityModifier: priorityModifier);
-                    }
-                    break;
-                case "extinguishfires":
-                    newObjective = new AIObjectiveExtinguishFires(character, this, priorityModifier);
-                    break;
-                case "fightintruders":
-                    newObjective = new AIObjectiveFightIntruders(character, this, priorityModifier);
-                    break;
-                case "assaultenemy":
-                    newObjective = new AIObjectiveFightIntruders(character, this, priorityModifier)
-                    {
-                        TargetCharactersInOtherSubs = true
-                    };
-                    break;
-                case "steer":
-                    var steering = (order?.TargetEntity as Item)?.GetComponent<Steering>();
-                    if (steering != null) { steering.PosToMaintain = steering.Item.Submarine?.WorldPosition; }
-                    if (order.TargetItemComponent == null) { return null; }
-                    if (!order.TargetItemComponent.Item.IsInteractable(character)) { return null; }
-                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, order.Option,
-                        requireEquip: false, useController: order.UseController, controller: order.ConnectedController, priorityModifier: priorityModifier)
-                    {
-                        Repeat = true,
-                        // Don't override unless it's an order by a player
-                        Override = order.OrderGiver != null && order.OrderGiver.IsCommanding 
-                    };
-                    break;
-                case "setchargepct":
-                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, order.Option, false, priorityModifier: priorityModifier)
-                    {
-                        Override = !character.IsDismissed,
-                        completionCondition = () =>
+                        break;
+                    case "wait":
+                        newObjective = new AIObjectiveGoTo(order.TargetSpatialEntity ?? character, character, this, repeat: true, priorityModifier: priorityModifier)
                         {
-                            if (float.TryParse(order.Option.Value, out float pct))
-                            {
-                                var targetRatio = Math.Clamp(pct, 0f, 1f);
-                                var currentRatio = (order.TargetItemComponent as PowerContainer).RechargeRatio;
-                                return Math.Abs(targetRatio - currentRatio) < 0.05f;
-                            }
-                            return true;
+                            AllowGoingOutside = true,
+                            IsWaitOrder = true,
+                            DebugLogWhenFails = false,
+                            SpeakIfFails = false,
+                            CloseEnough = 100
+                        };
+                        break;
+                    case "return":
+                        newObjective = new AIObjectiveReturn(character, order.OrderGiver, this, priorityModifier: priorityModifier);
+                        //if this is a subobjective of some other objective/order, we should not try to dismiss it -
+                        //there's nothing to dismiss, if this is not an order but something the character was made to do by some other objective
+                        if (!isSubObjective)
+                        {
+                            newObjective.Completed += () => DismissSelf(order);
                         }
-                    };
-                    break;
-                case "getitem":
-                    newObjective = new AIObjectiveGetItem(character, order.TargetEntity as Item ?? order.TargetItemComponent?.Item, this, false, priorityModifier: priorityModifier)
-                    {
-                        MustBeSpecificItem = true
-                    };
-                    break;
-                case "cleanupitems":
-                    if (order.TargetEntity is Item targetItem)
-                    {
-                        if (targetItem.HasTag(Tags.AllowCleanup) && targetItem.ParentInventory == null && targetItem.OwnInventory != null)
+                        break;
+                    case "fixleaks":
+                        newObjective = new AIObjectiveFixLeaks(character, this, priorityModifier: priorityModifier, prioritizedHull: order.TargetEntity as Hull);
+                        break;
+                    case "chargebatteries":
+                        newObjective = new AIObjectiveChargeBatteries(character, this, order.Option, priorityModifier);
+                        break;
+                    case "rescue":
+                        newObjective = new AIObjectiveRescueAll(character, this, priorityModifier);
+                        break;
+                    case "repairsystems":
+                    case "repairmechanical":
+                    case "repairelectrical":
+                        newObjective = new AIObjectiveRepairItems(character, this, priorityModifier: priorityModifier, prioritizedItem: order.TargetEntity as Item)
                         {
-                            // Target all items inside the container
-                            newObjective = new AIObjectiveCleanupItems(character, this, targetItem.OwnInventory.AllItems, priorityModifier);
+                            RelevantSkill = order.AppropriateSkill,
+                        };
+                        break;
+                    case "pumpwater":
+                        if (order.TargetItemComponent is Pump targetPump)
+                        {
+                            if (!order.TargetItemComponent.Item.IsInteractable(character)) { return null; }
+                            newObjective = new AIObjectiveOperateItem(targetPump, character, this, order.Option, false, priorityModifier: priorityModifier)
+                            {
+                                Override = order.OrderGiver is { IsCommanding: true }
+                            };
+                            if (!isSubObjective)
+                            {
+                                newObjective.Completed += () => DismissSelf(order);
+                            }
                         }
                         else
                         {
-                            newObjective = new AIObjectiveCleanupItems(character, this, targetItem, priorityModifier);
+                            newObjective = new AIObjectivePumpWater(character, this, order.Option, priorityModifier: priorityModifier);
                         }
-                    }
-                    else
-                    {
-                        newObjective = new AIObjectiveCleanupItems(character, this, priorityModifier: priorityModifier);
-                    }
-                    break;
-                case "escapehandcuffs":
-                    newObjective = new AIObjectiveEscapeHandcuffs(character, this, priorityModifier: priorityModifier);
-                    break;
-                case "findthieves":
-                    newObjective = new AIObjectiveFindThieves(character, this, priorityModifier: priorityModifier);
-                    break;
-                case "prepareforexpedition":
-                    newObjective = new AIObjectivePrepare(character, this, order.GetTargetItems(order.Option), order.RequireItems)
-                    {
-                        KeepActiveWhenReady = true,
-                        CheckInventory = true,
-                        Equip = false,
-                        FindAllItems = true,
-                        RequireNonEmpty = false
-                    };
-                    break;
-                case "findweapon":
-                    AIObjectivePrepare prepareObjective;
-                    if (order.TargetEntity is Item tItem)
-                    {
-                        prepareObjective = new AIObjectivePrepare(character, this, targetItem: tItem);
-                    }
-                    else
-                    {
-                        prepareObjective = new AIObjectivePrepare(character, this, order.GetTargetItems(order.Option), order.RequireItems)
+                        break;
+                    case "gardening":
+                        if (order.TargetItemComponent is Planter planter)
                         {
-                            CheckInventory = false,
-                            EvaluateCombatPriority = true,
-                            FindAllItems = false,
-                            RequireNonEmpty = true
+                            if (!order.TargetItemComponent.Item.IsInteractable(character)) { return null; }
+                            newObjective = new AIObjectiveGardeningSpecificPlant(character, this, planter, priorityModifier: priorityModifier);
+                            if (!isSubObjective)
+                            {
+                                newObjective.Completed += () => DismissSelf(order);
+                            }
+                        }
+                        else
+                        {
+                            newObjective = new AIObjectiveGardening(character, this, priorityModifier);
+                        }
+                        break;
+                    case "exploreoutside":
+                        newObjective = new AIObjectiveExploreOutside(character, this, priorityModifier);
+                        break;
+                    case "extinguishfires":
+                        newObjective = new AIObjectiveExtinguishFires(character, this, priorityModifier);
+                        break;
+                    case "fightintruders":
+                        newObjective = new AIObjectiveFightIntruders(character, this, priorityModifier);
+                        break;
+                    case "assaultenemy":
+                        newObjective = new AIObjectiveFightIntruders(character, this, priorityModifier)
+                        {
+                            TargetCharactersInOtherSubs = true
                         };
-                    }
-                    prepareObjective.KeepActiveWhenReady = false;
-                    prepareObjective.Equip = true;
-                    newObjective = prepareObjective;
-                    newObjective.Completed += () => DismissSelf(order);
-                    break;
-                case "loaditems":
-                    newObjective = new AIObjectiveLoadItems(character, this, order.Option, order.GetTargetItems(order.Option), order.TargetEntity as Item, priorityModifier);
-                    break;
-                case "deconstructitems":
-                    newObjective = new AIObjectiveDeconstructItems(character, this, priorityModifier);
-                    break;
-                case "inspectnoises":
-                    newObjective = new AIObjectiveInspectNoises(character, this, priorityModifier);
-                    break;
-                default:
-                    if (order.TargetItemComponent == null) { return null; }
-                    if (!order.TargetItemComponent.Item.IsInteractable(character)) { return null; }
-                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, order.Option,
-                        requireEquip: false, useController: order.UseController, controller: order.ConnectedController, priorityModifier: priorityModifier)
-                    {
-                        Repeat = true,
-                        // Don't override unless it's an order by a player
-                        Override = order.OrderGiver != null && order.OrderGiver.IsCommanding
-                    };
-                    if (newObjective.Abandon) { return null; }
-                    break;
+                        break;
+                    case "steer":
+                        var steering = (order?.TargetEntity as Item)?.GetComponent<Steering>();
+                        if (steering != null) { steering.PosToMaintain = steering.Item.Submarine?.WorldPosition; }
+                        if (order.TargetItemComponent == null) { return null; }
+                        if (!order.TargetItemComponent.Item.IsInteractable(character)) { return null; }
+                        newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, order.Option,
+                            requireEquip: false, useController: order.UseController, controller: order.ConnectedController, priorityModifier: priorityModifier)
+                        {
+                            Repeat = true,
+                            // Don't override unless it's an order by a player
+                            Override = order.OrderGiver != null && order.OrderGiver.IsCommanding
+                        };
+                        break;
+                    case "setchargepct":
+                        newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, order.Option, false, priorityModifier: priorityModifier)
+                        {
+                            Override = !character.IsDismissed,
+                            completionCondition = () =>
+                            {
+                                if (float.TryParse(order.Option.Value, out float pct))
+                                {
+                                    var targetRatio = Math.Clamp(pct, 0f, 1f);
+                                    var currentRatio = (order.TargetItemComponent as PowerContainer).RechargeRatio;
+                                    return Math.Abs(targetRatio - currentRatio) < 0.05f;
+                                }
+                                return true;
+                            }
+                        };
+                        break;
+                    case "getitem":
+                        newObjective = new AIObjectiveGetItem(character, order.TargetEntity as Item ?? order.TargetItemComponent?.Item, this, false, priorityModifier: priorityModifier)
+                        {
+                            MustBeSpecificItem = true
+                        };
+                        break;
+                    case "cleanupitems":
+                        if (order.TargetEntity is Item targetItem)
+                        {
+                            if (targetItem.HasTag(Tags.AllowCleanup) && targetItem.ParentInventory == null && targetItem.OwnInventory != null)
+                            {
+                                // Target all items inside the container
+                                newObjective = new AIObjectiveCleanupItems(character, this, targetItem.OwnInventory.AllItems, priorityModifier);
+                            }
+                            else
+                            {
+                                newObjective = new AIObjectiveCleanupItems(character, this, targetItem, priorityModifier);
+                            }
+                        }
+                        else
+                        {
+                            newObjective = new AIObjectiveCleanupItems(character, this, priorityModifier: priorityModifier);
+                        }
+                        break;
+                    case "escapehandcuffs":
+                        newObjective = new AIObjectiveEscapeHandcuffs(character, this, priorityModifier: priorityModifier);
+                        break;
+                    case "findthieves":
+                        newObjective = new AIObjectiveFindThieves(character, this, priorityModifier: priorityModifier);
+                        break;
+                    case "prepareforexpedition":
+                        newObjective = new AIObjectivePrepare(character, this, order.GetTargetItems(order.Option), order.RequireItems)
+                        {
+                            KeepActiveWhenReady = true,
+                            CheckInventory = true,
+                            Equip = false,
+                            Wear = true,
+                            FindAllItems = true,
+                            RequireNonEmpty = false
+                        };
+                        break;
+                    case "prepareforboarding":
+                        newObjective = new AIObjectivePrepare(character, this, order.GetTargetItems(order.Option), order.RequireItems)
+                        {
+                            KeepActiveWhenReady = false,
+                            CheckInventory = true,
+                            Equip = false,
+                            Wear = true,
+                            FindAllItems = true,
+                            RequireNonEmpty = false
+                        };
+                        break;
+                    case "findweapon":
+                        AIObjectivePrepare prepareObjective;
+                        if (order.TargetEntity is Item tItem &&
+                            tItem.GetComponent<Pickable>() != null)
+                        {
+                            prepareObjective = new AIObjectivePrepare(character, this, targetItem: tItem);
+                        }
+                        else
+                        {
+                            prepareObjective = new AIObjectivePrepare(character, this, order.GetTargetItems(order.Option), order.RequireItems)
+                            {
+                                CheckInventory = false,
+                                EvaluateCombatPriority = true,
+                                FindAllItems = false,
+                                RequireNonEmpty = true
+                            };
+                        }
+                        prepareObjective.KeepActiveWhenReady = false;
+                        prepareObjective.Equip = true;
+                        newObjective = prepareObjective;
+                        if (!isSubObjective)
+                        {
+                            newObjective.Completed += () => DismissSelf(order);
+                        }
+                        newObjective.Completed += () => DismissSelf(order);
+                        break;
+                    case "loaditems":
+                    case "refuelitems":
+                        newObjective = new AIObjectiveLoadItems(character, this, order.Option, order.GetTargetItems(order.Option), order.TargetEntity as Item, priorityModifier);
+                        break;
+                    case "deconstructitems":
+                        newObjective = new AIObjectiveDeconstructItems(character, this, priorityModifier);
+                        break;
+                    case "inspectnoises":
+                        newObjective = new AIObjectiveInspectNoises(character, this, priorityModifier);
+                        break;
+                    default:
+                        if (order.TargetItemComponent == null) { return null; }
+                        if (!order.TargetItemComponent.Item.IsInteractable(character)) { return null; }
+                        newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, order.Option,
+                            requireEquip: false, useController: order.UseController, controller: order.ConnectedController, priorityModifier: priorityModifier)
+                        {
+                            Repeat = true,
+                            // Don't override unless it's an order by a player
+                            Override = order.OrderGiver != null && order.OrderGiver.IsCommanding
+                        };
+                        if (newObjective.Abandon) { return null; }
+                        break;
+                }
             }
+            else
+            {
+                newObjective = pluginObjective;
+            }
+
             if (newObjective != null)
             {
                 newObjective.Identifier = order.Identifier;
             }
             newObjective.IgnoreAtOutpost = order.IgnoreAtOutpost;
+            newObjective.IgnoreAtOwnOutpost = order.IgnoreAtOwnOutpost;
             return newObjective;
         }
 

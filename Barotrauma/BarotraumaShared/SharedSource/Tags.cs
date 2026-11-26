@@ -23,6 +23,7 @@ public static class Tags
     public static readonly Identifier FPGACircuit = "fpgacircuit".ToIdentifier();
     public static readonly Identifier RedWire = new Identifier("redwire");
 
+    public static readonly Identifier AnyLocation = new Identifier("any");
     public static readonly Identifier AnyOutpost = new Identifier("anyoutpost");
 
     /// <summary>
@@ -44,10 +45,18 @@ public static class Tags
     public static readonly Identifier FireExtinguisher = "fireextinguisher".ToIdentifier();
     public static readonly Identifier FallbackLocker = "locker".ToIdentifier();
     public static readonly Identifier DontTakeItems = "donttakeitems".ToIdentifier();
+    /// <summary>
+    /// Similar to DontTakeItems, bots won't take items from containers with this tag, except in
+    /// an emergency (unlike DontTakeItems), e.g. taking an oxygen tank when suffocating.
+    /// Can be used to prevent e.g. bots from taking partially empty oxygen tanks from devices that use the oxygen as fuel;
+    /// in such cases, when the tank has become empty it will still be removed with the refueling action.
+    /// </summary>
+    public static readonly Identifier DontTakeItemsUnlessEmergency = "donttakeitemsunlessemergency".ToIdentifier();
     public static readonly Identifier ToolItem = "tool".ToIdentifier();
     public static readonly Identifier LogicItem = "logic".ToIdentifier();
     public static readonly Identifier NavTerminal = "navterminal".ToIdentifier();
     public static readonly Identifier IdCardTag = "identitycard".ToIdentifier();
+    public static readonly Identifier OutpostNPCIdCardTag = "outpostnpc".ToIdentifier();
     public static readonly Identifier WireItem = "wire".ToIdentifier();
     public static readonly Identifier ChairItem = "chair".ToIdentifier();
     public static readonly Identifier ArtifactHolder = "artifactholder".ToIdentifier();
@@ -61,6 +70,7 @@ public static class Tags
     public static readonly Identifier DontDeconstructThis = "dontdeconstructthis".ToIdentifier();
 
     public static readonly Identifier AssaultEnemyOrder = "assaultenemy".ToIdentifier();
+    public static readonly Identifier FindWeaponOrder = "findweapon".ToIdentifier();
 
     public static readonly Identifier Poison = "poison".ToIdentifier();
     public static readonly Identifier Stun = "stun".ToIdentifier();
@@ -83,6 +93,8 @@ public static class Tags
     public static readonly Identifier MobileRadio = "mobileradio".ToIdentifier();
 
     public static readonly Identifier Scooter = "scooter".ToIdentifier();
+
+    public static readonly Identifier Camera = "camera".ToIdentifier();
 
     public static readonly Identifier Submarine = "submarine".ToIdentifier();
     public static readonly Identifier Enemy = "enemy".ToIdentifier();
@@ -166,8 +178,19 @@ public static class Tags
     public static readonly Identifier Provocative = "provocative".ToIdentifier();
 
     /// <summary>
+    /// Tag of the event that's used to notify the players about the outpost considering your team hostile.
+    /// </summary>
+    public static readonly Identifier CrewHostileAnnouncementEventTag = "crewhostileannouncement".ToIdentifier();
+
+    /// <summary>
     /// Tag used on status effects that mark the entity as being on fire.
     /// </summary>
     public static readonly Identifier OnFireStatusEffectTag = "onfire".ToIdentifier();
+
+    public static readonly Identifier Seed = "seed".ToIdentifier();
+
+    public static readonly Identifier ProcedurallyGeneratedOutpostTag = "procedurallygenerated".ToIdentifier();
+
+    public static readonly Identifier DisallowInfesting = "disallowinfesting".ToIdentifier();
 }
 

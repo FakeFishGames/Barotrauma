@@ -32,8 +32,19 @@ namespace Barotrauma.Items.Components
         public void ServerEventRead(IReadMessage msg, Client c)
         {
             Vector2 simPosition = new Vector2(msg.ReadSingle(), msg.ReadSingle());
-
+            float newSpriteDepth = msg.ReadSingle();
+            bool newHorizontalFlipState = msg.ReadBoolean();
+                
             if (!item.CanClientAccess(c) || !Attachable || attached || !MathUtils.IsValid(simPosition)) { return; }
+
+            if (AllowInGameSpriteDepthEditing)
+            {
+                item.SpriteDepth = MathHelper.Clamp(newSpriteDepth, MinSpriteDepth, MaxSpriteDepth);
+            }
+            if (AllowInGameFlipping)
+            {
+                currentHorizontalFlipState = newHorizontalFlipState;
+            }
 
             Vector2 offset = ConvertUnits.ToDisplayUnits(simPosition - c.Character.SimPosition);
             if (!IsWithinAttachReach(offset))
@@ -47,10 +58,16 @@ namespace Barotrauma.Items.Components
             //don't find the new hull in SetTransform, because that'd also potentially change the submarine (teleport the item outside if it's attached outside)
             //instead just find the hull, so the item is considered to be in the right hull
             item.CurrentHull = Hull.FindHull(item.WorldPosition, item.CurrentHull);
-            AttachToWall();
+            
+            // AttachToWall may attach a different item than this one (eg. with catalog blueprints), and that's the one we need to sync the attach state for
+            Item attachedItem = AttachToWall();
+
             OnUsed.Invoke(new ItemUseInfo(item, c.Character));
 
-            item.CreateServerEvent(this, new AttachEventData(simPosition, c.Character));
+            if (attachedItem.GetComponent<Holdable>() is { } attachedHoldable)
+            {
+                attachedItem.CreateServerEvent(attachedHoldable, new AttachEventData(attachedItem.SimPosition, c.Character));
+            }
             c.Character.Inventory?.CreateNetworkEvent();
 
             GameServer.Log(GameServer.CharacterLogName(c.Character) + " attached " + item.Name + " to a wall", ServerLog.MessageType.ItemInteraction);

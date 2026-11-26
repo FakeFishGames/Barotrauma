@@ -3,7 +3,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
     [RequiredByCorePackage]
-    sealed class UpgradeModulesFile : GenericPrefabFile<UpgradeContentPrefab>
+    public sealed class UpgradeModulesFile : GenericPrefabFile<UpgradeContentPrefab>
     {
         public UpgradeModulesFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

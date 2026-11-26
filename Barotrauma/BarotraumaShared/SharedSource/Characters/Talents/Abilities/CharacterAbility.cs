@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace Barotrauma.Abilities
 {
-    abstract class CharacterAbility
+    public abstract class CharacterAbility
     {
         public CharacterAbilityGroup CharacterAbilityGroup { get; }
         public CharacterTalent CharacterTalent { get; }
@@ -13,6 +13,12 @@ namespace Barotrauma.Abilities
 
         public virtual bool AllowClientSimulation => false;
         public virtual bool AppliesEffectOnIntervalUpdate => false;
+
+        /// <summary>
+        /// Does the ability do nothing but modify the <see cref="AbilityObject"/> passed to it?
+        /// Only these abilities are applied when previewing talents (see <see cref="Character.PreviewTalentEffects"/>).
+        /// </summary>
+        public virtual bool OnlyModifiesAbilityObject => false;
 
         private const float DefaultEffectTime = 1.0f;
 

@@ -1,5 +1,4 @@
-#nullable enable
-using Barotrauma.Extensions;
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +6,9 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Handles reassigning <see cref="Entity.ID">Entity IDs</see> so they don't overlap between submarines and outposts.
+    /// </summary>
     public sealed class IdRemap
     {
         public static readonly IdRemap DiscardId = new IdRemap(null, -1);
@@ -16,6 +18,8 @@ namespace Barotrauma
         private readonly List<Range<int>>? srcRanges;
         private readonly int destOffset;
 
+        /// <param name="parentElement">The XML element that contains the entities we intend to spawn and whose IDs may need to be reassigned.</param>
+        /// <param name="offset">Initial offset (the point at which we know free IDs to be available).</param>
         public IdRemap(XElement? parentElement, int offset)
         {
             destOffset = offset;
@@ -88,6 +92,11 @@ namespace Barotrauma
             return GetOffsetId(element.GetAttributeInt("ID", 0));
         }
 
+        /// <summary>
+        /// Shifts the specific ID so it's within the range of free IDs allotted for this IdRemap instance (e.g. the range of IDs we're intending to use for a sub that's being loaded).
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public ushort GetOffsetId(int id)
         {
             if (id <= 0) //Input cannot be remapped because it's negative

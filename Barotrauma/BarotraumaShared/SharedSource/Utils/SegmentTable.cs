@@ -79,7 +79,7 @@ namespace Barotrauma.Networking;
 [NetworkSerialize]
 public readonly record struct Segment<T>(T Identifier, int Pointer) : INetSerializableStruct where T : struct;
 
-readonly ref struct SegmentTableWriter<T> where T : struct
+public readonly ref struct SegmentTableWriter<T> where T : struct
 {
     private readonly IWriteMessage message;
     private readonly List<Segment<T>> segments;
@@ -159,7 +159,7 @@ readonly ref struct SegmentTableReader<T> where T : struct
         {
             if (BitPosition > lengthBits)
             {
-                throw new Exception($"Tried to read too much data from segment.");
+                throw new Exception($"Tried to read too much data from segment (length in bits: {lengthBits}, bit position: {BitPosition}).");
             }
         }
         
@@ -314,10 +314,17 @@ readonly ref struct SegmentTableReader<T> where T : struct
                 }
                 else
                 {
-                    throw new Exception(
-                        $"Exception thrown while reading segment {segment.Identifier} at position {segment.Pointer}." +
-                        (prevSegments.Any() ? $" Previous segments: {string.Join(", ", prevSegments)}." : ""),
-                        e);
+                    string exceptionMessage = $"Exception thrown while reading segment {segment.Identifier} at position {segment.Pointer}." +
+                                              (prevSegments.Any() ? $" Previous segments: {string.Join(", ", prevSegments)}." : "");
+
+                    if (e is MalformedDataException)
+                    {
+                        // throw another MalformedDataException since we have special handling for it
+                        // higher up in the networking layers (kick the client)
+                        throw new MalformedDataException(exceptionMessage, e);
+                    }
+
+                    throw new Exception(exceptionMessage, e);
                 }
             }
         }

@@ -16,7 +16,10 @@ namespace Barotrauma
             {
                 if (modProject.IsCore) { throw new ArgumentException("ModProject must not be a core package"); }
 
-                string fileListPath = Path.Combine(directory, ToolBox.RemoveInvalidFileNameChars(modProject.Name), ContentPackage.FileListFileName)
+                //Windows silently drops trailing periods and spaces from directory names, strip them so the returned path matches the one the package gets loaded from
+                string dirName = ToolBox.RemoveInvalidFileNameChars(modProject.Name).TrimEnd('.', ' ');
+                if (string.IsNullOrWhiteSpace(dirName)) { throw new ArgumentException($"Invalid mod name \"{modProject.Name}\""); }
+                string fileListPath = Path.Combine(directory, dirName, ContentPackage.FileListFileName)
                     .CleanUpPathCrossPlatform(correctFilenameCase: false);
                 modProject.Save(fileListPath);
                 Refresh(); EnabledPackages.DisableRemovedMods();

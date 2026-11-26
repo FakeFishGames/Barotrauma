@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class OutpostGenerationParams : PrefabWithUintIdentifier, ISerializableEntity
+    public class OutpostGenerationParams : PrefabWithUintIdentifier, ISerializableEntity
     {
         public readonly static PrefabCollection<OutpostGenerationParams> OutpostParams = new PrefabCollection<OutpostGenerationParams>();
         
@@ -74,6 +74,13 @@ namespace Barotrauma
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Should this outpost always be destructible, regardless if damaging outposts is allowed by the server?"), Editable]
         public bool AlwaysDestructible
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should all structures have their ai target forcefully turned on?"), Editable]
+        public bool EnableAITargetForAllStructures
         {
             get;
             set;
@@ -156,6 +163,24 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes, description: "If set, a fully pre-built outpost with this tag will be used instead of generating the outpost."), Editable]
         public Identifier OutpostTag { get; set; }
 
+        [Serialize("", IsPropertySaveable.Yes, description: "If set, an outpost with this tag will be used as the entrance to the outpost (i.e. the outpost that you dock with in the normal level to enter the outpost level)."), Editable]
+        public Identifier EntranceTag { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: $"If enabled, the full outpost is generated in the levels between locations, instead of just the entrance (see {nameof(EntranceTag)})."), Editable]
+        public bool GenerateFullOutpostInsteadOfEntrance { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should NPCs be spawned in the outpost? Requires NPCs to be defined in the outpost generation parameters.")]
+        public bool SpawnNPCs
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Events that always automatically trigger in these types of outposts.
+        /// </summary>
+        public ImmutableHashSet<Identifier> TriggerEvents { get; set; } = ImmutableHashSet<Identifier>.Empty;
+
         public class ModuleCount : ISerializableEntity
         {
             public Identifier Identifier;
@@ -168,12 +193,20 @@ namespace Barotrauma
 
             [Serialize(0.0f, IsPropertySaveable.Yes, description: "Minimum difficulty of the current level for the module to appear in the outpost."), Editable]
             public float MinDifficulty { get; set; }
-            
+
             [Serialize(100.0f, IsPropertySaveable.Yes, description: "Maximum difficulty of the current level for the module to appear in the outpost."), Editable]
             public float MaxDifficulty { get; set; }
 
             [Serialize(1.0f, IsPropertySaveable.Yes, description: "Probability for this type of module to be included in the outpost."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
             public float Probability { get; set; }
+
+            [Serialize(OutpostModuleInfo.GapPosition.None, IsPropertySaveable.Yes, description: "Which side of the outpost should the module be attached to? Can be used to ensure that some module (e.g. a module with a turret) is spawned at the very edge of the outpost.")]
+            public OutpostModuleInfo.GapPosition OutpostSideToAttachTo { get; set; }
+
+            [Serialize(false, IsPropertySaveable.Yes, description:
+                "When enabled, the module must be placed so there's no other module right below it." +
+                " Useful to ensure turrets don't get placed somewhere high up in the outpost, where their coverage would get blocked by some module below them.")]
+            public bool RequireDownwardsVisibility { get; set; }
 
             [Serialize("", IsPropertySaveable.Yes), Editable]
             public Identifier RequiredFaction { get; set; }
@@ -195,6 +228,12 @@ namespace Barotrauma
                 Count = count;
                 RequiredFaction = Identifier.Empty;
             }
+
+            public override string ToString()                
+            {
+                string outpostSideStr = OutpostSideToAttachTo == OutpostModuleInfo.GapPosition.None ? string.Empty : $", {OutpostSideToAttachTo}";
+                return $"{nameof(ModuleCount)} ({Name}{outpostSideStr})";
+            }
         }
 
         private readonly List<ModuleCount> moduleCounts = new List<ModuleCount>();
@@ -206,28 +245,55 @@ namespace Barotrauma
 
         private class NpcCollection : IReadOnlyList<HumanPrefab>
         {
+            public enum FactionType
+            {
+                Either,
+                Primary, 
+                Secondary
+            }
+
             private class Entry
             {
                 private readonly HumanPrefab humanPrefab = null;
                 public readonly Identifier SetIdentifier = Identifier.Empty;
                 public readonly Identifier NpcIdentifier = Identifier.Empty;
 
+                /// <summary>
+                /// If set, this faction must be present in the outpost for the NPC to spawn. 
+                /// <see cref="FactionType"/> determines if the faction needs to be the primary one, the secondary one or either.
+                /// </summary>
                 public readonly Identifier FactionIdentifier = Identifier.Empty;
+
+                /// <summary>
+                /// Determines whether <see cref="FactionIdentifier"/> needs to match the primary faction, the secondary faction or either.
+                /// </summary>
+                public readonly FactionType FactionType = FactionType.Either;
+
+                /// <summary>
+                /// If the population of the outpost has been reduced from the initial population (e.g. due to the DLC or some mod reducing the population in some custom way),
+                /// some of the NPCs defined in the outpost generation parameters will not spawn. This field can be used to prioritize certain NPCs, making it e.g. the
+                /// outpost manager and service-offering characters be removed from the outpost last.
+                /// </summary>
+                public readonly int SpawnPriority = 0;
 
                 public readonly ContentPackage ContentPackage;
                 
-                public Entry(HumanPrefab humanPrefab, Identifier factionIdentifier, ContentPackage contentPackage)
+                public Entry(HumanPrefab humanPrefab, Identifier factionIdentifier, FactionType factionType, int spawnPriority, ContentPackage contentPackage)
                 {
                     this.humanPrefab = humanPrefab;
                     FactionIdentifier = factionIdentifier;
+                    FactionType = factionType;
+                    SpawnPriority = spawnPriority;
                     ContentPackage = contentPackage;
                 }
 
-                public Entry(Identifier setIdentifier, Identifier npcIdentifier, Identifier factionIdentifier, ContentPackage contentPackage)
+                public Entry(Identifier setIdentifier, Identifier npcIdentifier, Identifier factionIdentifier, FactionType factionType, int spawnPriority, ContentPackage contentPackage)
                 {
                     SetIdentifier = setIdentifier;
                     NpcIdentifier = npcIdentifier;
                     FactionIdentifier = factionIdentifier;
+                    FactionType = factionType;
+                    SpawnPriority = spawnPriority;
                     ContentPackage = contentPackage;
                 }
                 
@@ -235,14 +301,20 @@ namespace Barotrauma
                     => humanPrefab ?? NPCSet.Get(SetIdentifier, NpcIdentifier, contentPackageToLogInError: ContentPackage);
             }
 
-            private readonly List<Entry> entries = new List<Entry>();
+            private readonly List<Entry> entries = [];
 
-            public void Add(HumanPrefab humanPrefab, Identifier factionIdentifier, ContentPackage contentPackage)
-                => entries.Add(new Entry(humanPrefab, factionIdentifier, contentPackage));
-            
-            
-            public void Add(Identifier setIdentifier, Identifier npcIdentifier, Identifier factionIdentifier, ContentPackage contentPackage)
-                => entries.Add(new Entry(setIdentifier, npcIdentifier, factionIdentifier, contentPackage));
+            public void Add(HumanPrefab humanPrefab, Identifier factionIdentifier, FactionType factionType, int spawnPriority, ContentPackage contentPackage)
+            {
+                entries.Add(new Entry(humanPrefab, factionIdentifier, factionType, spawnPriority, contentPackage));
+                entries.Sort((a, b) => b.SpawnPriority.CompareTo(a.SpawnPriority));
+            }
+
+
+            public void Add(Identifier setIdentifier, Identifier npcIdentifier, Identifier factionIdentifier, FactionType factionType, int spawnPriority, ContentPackage contentPackage)
+            {
+                entries.Add(new Entry(setIdentifier, npcIdentifier, factionIdentifier, factionType, spawnPriority, contentPackage));
+                entries.Sort((a, b) => b.SpawnPriority.CompareTo(a.SpawnPriority));
+            }
 
             public IEnumerator<HumanPrefab> GetEnumerator()
             {
@@ -255,17 +327,31 @@ namespace Barotrauma
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-            public IEnumerable<HumanPrefab> GetByFaction(IEnumerable<FactionPrefab> factions)
+            public IEnumerable<HumanPrefab> GetByFaction(FactionPrefab faction, FactionPrefab secondaryFaction)
             {
                 foreach (var entry in entries)
                 {
-                    if (entry.FactionIdentifier == Identifier.Empty || factions.Any(f => f.Identifier == entry.FactionIdentifier))
+                    if (entry.FactionIdentifier != Identifier.Empty)
                     {
-                        if (entry.HumanPrefab != null)
+                        switch (entry.FactionType)
                         {
-                            yield return entry.HumanPrefab;
+                            case FactionType.Either:
+                                if (entry.FactionIdentifier != faction?.Identifier && entry.FactionIdentifier != secondaryFaction?.Identifier) { continue; }
+                                break;
+                            case FactionType.Primary:
+                                if (entry.FactionIdentifier != faction?.Identifier) { continue; }
+                                break;
+                            case FactionType.Secondary:
+                                if (entry.FactionIdentifier != secondaryFaction?.Identifier) { continue; }
+                                break;
                         }
                     }
+                    
+                    if (entry.HumanPrefab != null)
+                    {
+                        yield return entry.HumanPrefab;
+                    }
+                    
                 }
             }
 
@@ -303,7 +389,8 @@ namespace Barotrauma
 
             OutpostFilePath = element.GetAttributeContentPath(nameof(OutpostFilePath));
             OutpostTag = element.GetAttributeIdentifier(nameof(OutpostTag), Identifier.Empty);
-            
+            TriggerEvents = element.GetAttributeIdentifierImmutableHashSet(nameof(TriggerEvents), ImmutableHashSet<Identifier>.Empty);
+
             var humanPrefabCollections = new List<NpcCollection>();
             foreach (var subElement in element.Elements())
             {
@@ -334,13 +421,24 @@ namespace Barotrauma
                         {
                             Identifier from = npcElement.GetAttributeIdentifier("from", Identifier.Empty);
                             Identifier faction = npcElement.GetAttributeIdentifier("faction", Identifier.Empty);
+                            NpcCollection.FactionType factionType = npcElement.GetAttributeEnum("factiontype", NpcCollection.FactionType.Either);
+                            int spawnPriority = npcElement.GetAttributeInt("spawnpriority", 0);
                             if (from != Identifier.Empty)
                             {
-                                newCollection.Add(from, npcElement.GetAttributeIdentifier("identifier", Identifier.Empty), faction, npcElement.ContentPackage);
+                                newCollection.Add(
+                                    from, 
+                                    npcElement.GetAttributeIdentifier("identifier", Identifier.Empty), 
+                                    faction, factionType, 
+                                    spawnPriority, 
+                                    npcElement.ContentPackage);
                             }
                             else
                             {
-                                newCollection.Add(new HumanPrefab(npcElement, file, npcSetIdentifier: from), faction, npcElement.ContentPackage);
+                                newCollection.Add(
+                                    new HumanPrefab(npcElement, file, npcSetIdentifier: from), 
+                                    faction, factionType, 
+                                    spawnPriority, 
+                                    npcElement.ContentPackage);
                             }
                         }
                         humanPrefabCollections.Add(newCollection);
@@ -396,13 +494,13 @@ namespace Barotrauma
             }
         }
 
-        public IReadOnlyList<HumanPrefab> GetHumanPrefabs(IEnumerable<FactionPrefab> factions, Submarine sub, Rand.RandSync randSync)
+        public IReadOnlyList<HumanPrefab> GetHumanPrefabs(FactionPrefab faction, FactionPrefab secondaryFaction, Submarine sub, Rand.RandSync randSync)
         {
             if (!humanPrefabCollections.Any()) { return Array.Empty<HumanPrefab>(); }
 
             var collection = humanPrefabCollections.GetRandom(randSync);
-            return collection
-                .GetByFaction(factions)
+            return collection                
+                .GetByFaction(faction, secondaryFaction)
                 .Where(humanPrefab => !humanPrefab.RequireSpawnPointTag || WayPoint.WayPointList.Any(wp => wp.Submarine == sub && humanPrefab.GetSpawnPointTags().Any(tag => wp.Tags.Contains(tag))))
                 .ToImmutableList();
         }
@@ -433,7 +531,7 @@ namespace Barotrauma
                     {
                         if (prefab?.CampaignInteractionType == CampaignMode.InteractionType.Store)
                         {
-                            storeIdentifiers.Add(prefab.Identifier);
+                            storeIdentifiers.Add(prefab.GetStoreIdentifier());
                         }
                     }
                 }
@@ -443,5 +541,7 @@ namespace Barotrauma
         }
 
         public override void Dispose() { }
+
+        public override string ToString() => $"{nameof(OutpostGenerationParams)} ({Identifier})";
     }
 }

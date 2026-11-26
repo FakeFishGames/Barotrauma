@@ -17,13 +17,12 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 //don't consider the items to belong in the outpost to prevent the stealing icon from showing
-                item.SpawnedInCurrentOutpost = false;
+                item.SpawnedInNonPlayerOutpostOrSubmarine = false;
             }
         }
 
-        public override void Update(float deltaTime)
+        protected override void UpdateGameModeSpecific(float deltaTime)
         {
-            base.Update(deltaTime);
             Tutorial.Update();
         }
     }

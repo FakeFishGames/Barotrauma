@@ -8,6 +8,7 @@ namespace Barotrauma
         public CapitalizeLString(LocalizedString nStr) { nestedStr = nStr; }
         
         public override bool Loaded => nestedStr.Loaded;
+        public override bool UsingDefaultLanguageAsFallback => nestedStr.UsingDefaultLanguageAsFallback;
         public override void RetrieveValue()
         {
             string str = nestedStr.Value;

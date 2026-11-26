@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class PriceInfo
+    public class PriceInfo
     {
         public int Price { get; }
         public bool CanBeBought { get; }
@@ -51,6 +51,23 @@ namespace Barotrauma
         /// </summary>
         public Identifier RequiredFaction { get; private set; }
 
+        private const int NoLifetimeLimit = -1;
+
+        /// <summary>
+        /// Total number of the item the store will ever sell (add to the world).
+        /// The store stocks up to <see cref="MaxAvailableAmount"/> of the item at
+        /// a time and restocks it only until it has sold this many in total, after
+        /// which the item is gone from the store for good.
+        /// Items sold back to the store do return to its supply.
+        /// A value of -1 means no limit, which is the default.
+        /// </summary>
+        public int LifetimeAvailable { get; } = NoLifetimeLimit;
+
+        /// <summary>
+        /// Is the total number of the item the store can sell limited (see <see cref="LifetimeAvailable"/>)?
+        /// </summary>
+        public bool HasLifetimeLimit => LifetimeAvailable >= 0;
+
         private readonly Dictionary<Identifier, float> minReputation = new Dictionary<Identifier, float>();
 
         /// <summary>
@@ -79,10 +96,11 @@ namespace Barotrauma
 
         public PriceInfo(int price, bool canBeBought,
             int minAmount = 0, int maxAmount = 0, bool canBeSpecial = true, int minLevelDifficulty = 0, float buyingPriceMultiplier = 1f,
-            bool displayNonEmpty = false, bool requiresUnlock = false, string storeIdentifier = null)
+            bool displayNonEmpty = false, bool requiresUnlock = false, string storeIdentifier = null, int lifetimeAvailable = NoLifetimeLimit)
         {
             Price = price;
             CanBeBought = canBeBought;
+            LifetimeAvailable = lifetimeAvailable;
             MinAvailableAmount = Math.Min(minAmount, CargoManager.MaxQuantity);
             MaxAvailableAmount = Math.Max(Math.Min(maxAmount, CargoManager.MaxQuantity), minAmount);
             BuyingPriceMultiplier = buyingPriceMultiplier;
@@ -117,17 +135,18 @@ namespace Barotrauma
             int maxAmount = GetMaxAmount(element, defaultValue: DefaultMaxAmount);
             int minLevelDifficulty = GetMinLevelDifficulty(element, 0);
             bool canBeSpecial = element.GetAttributeBool("canbespecial", true);
-            float buyingPriceMultiplier = element.GetAttributeFloat("buyingpricemultiplier", 1f);
+            float buyingPriceMultiplier = element.GetAttributeFloat(1.0f, "buyingpricemultiplier", "buyingpricemodifier");
             bool displayNonEmpty = element.GetAttributeBool("displaynonempty", false);
             bool soldByDefault = GetSold(element, element.GetAttributeBool("soldbydefault", true));
             bool requiresUnlock = element.GetAttributeBool("requiresunlock", false);
             Identifier requiredFactionByDefault = element.GetAttributeIdentifier(nameof(RequiredFaction), Identifier.Empty);
+            int lifetimeAvailable = GetLifetimeAvailable(element);
             foreach (XElement childElement in element.GetChildElements("price"))
             {
                 float priceMultiplier = childElement.GetAttributeFloat("multiplier", 1.0f);
                 bool sold = GetSold(childElement, soldByDefault); 
                 int storeMinLevelDifficulty = GetMinLevelDifficulty(childElement, minLevelDifficulty);
-                float storeBuyingMultiplier = childElement.GetAttributeFloat("buyingpricemultiplier", buyingPriceMultiplier);
+                float storeBuyingMultiplier = childElement.GetAttributeFloat(buyingPriceMultiplier, "buyingpricemultiplier", "buyingpricemodifier");
                 string backwardsCompatibleIdentifier = childElement.GetAttributeString("locationtype", "");
                 if (!string.IsNullOrEmpty(backwardsCompatibleIdentifier))
                 {
@@ -144,7 +163,8 @@ namespace Barotrauma
                     buyingPriceMultiplier: storeBuyingMultiplier,
                     displayNonEmpty: displayNonEmpty,
                     requiresUnlock: requiresUnlock,
-                    storeIdentifier: storeIdentifier)
+                    storeIdentifier: storeIdentifier,
+                    lifetimeAvailable: GetLifetimeAvailable(childElement, lifetimeAvailable))
                 {
                     RequiredFaction = childElement.GetAttributeIdentifier(nameof(RequiredFaction), requiredFactionByDefault)
                 };
@@ -160,7 +180,8 @@ namespace Barotrauma
                 minLevelDifficulty: minLevelDifficulty,
                 buyingPriceMultiplier: buyingPriceMultiplier,
                 displayNonEmpty: displayNonEmpty,
-                requiresUnlock: requiresUnlock)
+                requiresUnlock: requiresUnlock,
+                lifetimeAvailable: lifetimeAvailable)
             {
                 RequiredFaction = requiredFactionByDefault
             };
@@ -200,6 +221,9 @@ namespace Barotrauma
 
         public static int GetMinLevelDifficulty(XElement element, int defaultValue = 0) => 
             element?.GetAttributeInt("minleveldifficulty", defaultValue) ?? defaultValue;
+
+        private static int GetLifetimeAvailable(XElement element, int defaultValue = NoLifetimeLimit) =>
+            element?.GetAttributeInt("lifetimeavailable", defaultValue) ?? defaultValue;
 
         public static string GetStoreIdentifier(XElement element, string defaultValue = "unknown") => 
             element?.GetAttributeString("storeidentifier", defaultValue) ?? defaultValue;

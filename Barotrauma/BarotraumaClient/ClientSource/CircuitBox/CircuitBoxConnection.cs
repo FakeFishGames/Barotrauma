@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    internal abstract partial class CircuitBoxConnection
+    public abstract partial class CircuitBoxConnection
     {
         public string Name => Connection.Name;
 

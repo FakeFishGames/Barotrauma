@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    abstract partial class CampaignMode : GameMode
+    public abstract partial class CampaignMode : GameMode
     {
         public bool MirrorLevel
         {

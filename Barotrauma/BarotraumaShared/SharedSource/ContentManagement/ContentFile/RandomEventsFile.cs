@@ -3,7 +3,7 @@
 namespace Barotrauma
 {
     [RequiredByCorePackage]
-    sealed class RandomEventsFile : ContentFile
+    public sealed class RandomEventsFile : ContentFile
     {
         public RandomEventsFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

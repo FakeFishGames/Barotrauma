@@ -9,14 +9,13 @@ using System.Diagnostics;
 
 namespace Barotrauma
 {
-    class AIObjectiveGetItem : AIObjective
+    public class AIObjectiveGetItem : AIObjective
     {
         public override Identifier Identifier { get; set; } = "get item".ToIdentifier();
         public override string DebugTag => $"{Identifier} ({(IdentifiersOrTags == null || IdentifiersOrTags.None() ? "none" : string.Join(", ", IdentifiersOrTags))})";
 
-        public override bool AbandonWhenCannotCompleteSubObjectives => false;
         public override bool AllowMultipleInstances => true;
-        protected override bool AllowWhileHandcuffed => false;
+        protected override bool RequireOneHandAvailable => true;
 
         public HashSet<Item> ignoredItems = new HashSet<Item>();
 
@@ -44,6 +43,10 @@ namespace Barotrauma
         public ImmutableHashSet<Identifier> ignoredIdentifiersOrTags;
         private AIObjectiveGoTo goToObjective;
         private float currItemPriority;
+        /// <summary>
+        /// Set if the objective failed because the character is missing the limbs (hands) required to equip the item
+        /// </summary>
+        private Item itemMissingLimbsToEquip;
         private readonly bool checkInventory;
 
         public const float DefaultReach = 100;
@@ -77,11 +80,28 @@ namespace Barotrauma
         public bool AllowVariants { get; set; }
         public bool Equip { get; set; }
         public bool Wear { get; set; }
+        /// <summary>
+        /// Should the items the character has to unequip to equip the target item be equipped back later (<see cref="AIController.ReequipUnequipped"/>)?
+        /// Should be disabled if the target item is meant to permanently replace them (e.g. a uniform).
+        /// </summary>
+        public bool StoreUnequipped { get; set; } = true;
         public bool RequireNonEmpty { get; set; }
         public bool EvaluateCombatPriority { get; set; }
-        public bool CheckPathForEachItem { get; set; }
+
+        /// <summary>
+        /// Should the objective go through all items it can find, trying to choose the best one 
+        /// (i.e. the one that's easiest to reach and best for combat when <see cref="EvaluateCombatPriority"/> is true),
+        /// or settle for the first suitable item it can find?
+        /// </summary>
+        public bool EvaluateAllItems { get; set; }
         public bool SpeakIfFails { get; set; }
-        public string CannotFindDialogueIdentifierOverride { get; set; }
+
+        /// <summary>
+        /// How often the both can say the line about failing to find the item(s)
+        /// </summary>
+        public float MinSpeakInterval = 20.0f;
+
+        public Identifier CannotFindDialogueIdentifierOverride { get; set; }
         public Func<bool> CannotFindDialogueCondition { get; set; }
 
         private int _itemCount = 1;
@@ -110,6 +130,7 @@ namespace Barotrauma
             originalTarget = targetItem;
             this.targetItem = targetItem;
             moveToTarget = targetItem?.GetRootInventoryOwner();
+            AbandonWhenCannotCompleteSubObjectives = false;
         }
 
         public AIObjectiveGetItem(Character character, Identifier identifierOrTag, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
@@ -124,6 +145,7 @@ namespace Barotrauma
             this.checkInventory = checkInventory;
             IdentifiersOrTags = ParseGearTags(identifiersOrTags).ToImmutableHashSet();
             ignoredIdentifiersOrTags = ParseIgnoredTags(identifiersOrTags).ToImmutableHashSet();
+            AbandonWhenCannotCompleteSubObjectives = false;
         }
 
         public static IEnumerable<Identifier> ParseGearTags(IEnumerable<Identifier> identifiersOrTags)
@@ -186,7 +208,7 @@ namespace Barotrauma
         {
             if (IdentifiersOrTags != null)
             {
-                if (checkInventory)
+                if (checkInventory && !EvaluateAllItems)
                 {
                     if (CheckInventory())
                     {
@@ -309,7 +331,7 @@ namespace Barotrauma
                 Inventory itemInventory = targetItem.ParentInventory;
                 var slots = itemInventory?.FindIndices(targetItem);
                 var droppedStack = TargetItem.DroppedStack.ToList();
-                if (HumanAIController.TakeItem(targetItem, character.Inventory, Equip, Wear, storeUnequipped: true, targetTags: IdentifiersOrTags))
+                if (HumanAIController.TakeItem(targetItem, character.Inventory, Equip, Wear, storeUnequipped: StoreUnequipped, targetTags: IdentifiersOrTags))
                 {
                     if (TakeWholeStack)
                     {
@@ -382,6 +404,10 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.NewMessage($"{character.Name}: Failed to equip/move the item '{targetItem.Name}' into the character inventory. Aborting.", Color.Red);
 #endif
+                    if (IsMissingLimbsToEquip(targetItem))
+                    {
+                        itemMissingLimbsToEquip = targetItem;
+                    }
                     Abandon = true;
                 }
             }
@@ -390,7 +416,7 @@ namespace Barotrauma
                 TryAddSubObjective(ref goToObjective,
                     constructor: () =>
                     {
-                        return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: AllowToFindDivingGear, closeEnough: DefaultReach)
+                        return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: AllowToFindDivingGear, minimumCloseEnoughDistance: DefaultReach)
                         {
                             IsFindDivingGearSubObjective = IsFindDivingGearSubObjective,
                             // If the root container changes, the item is no longer where it was (taken by someone -> need to find another item)
@@ -444,7 +470,7 @@ namespace Barotrauma
                 StopWatch.Restart();
             }
             float priority = objectiveManager.GetCurrentPriority();
-            bool checkPath = CheckPathForEachItem || priority >= AIObjectiveManager.RunPriority || ItemCount > 1;
+            bool checkPath = EvaluateAllItems || priority >= AIObjectiveManager.RunPriority || ItemCount > 1;
             // Reset if the character has switched subs.
             if (itemList != null && !character.Submarine.IsEntityFoundOnThisSub(itemList.FirstOrDefault(), includingConnectedSubs: true))
             {
@@ -478,6 +504,7 @@ namespace Barotrauma
                 if (item.Container != null)
                 {
                     if (item.Container.HasTag(Tags.DontTakeItems)) { continue; }
+                    if (item.Container.HasTag(Tags.DontTakeItemsUnlessEmergency) && !AllowStealing) { continue; }
                     if (ignoredItems.Contains(item.Container)) { continue; }
                     if (ignoredContainerIdentifiers != null)
                     {
@@ -488,6 +515,11 @@ namespace Barotrauma
                 if (item.ParentInventory is ItemInventory itemInventory)
                 {
                     if (!itemInventory.Container.HasRequiredItems(character, addMessage: false)) { continue; }
+                    if (ignoredContainerIdentifiers != null)
+                    {
+                        if (ignoredContainerIdentifiers.Any(itemInventory.Container.Item.HasIdentifierOrTag)) { continue; }
+                    }
+
                 }
                 float itemPriority = item.Prefab.BotPriority;
                 if (GetItemPriority != null)
@@ -541,8 +573,8 @@ namespace Barotrauma
                         }
                         else
                         {
-                            // The combat factor of items with zero combat priority is not allowed to be greater than 0.1f
-                            combatFactor = Math.Min(AIObjectiveCombat.GetLethalDamage(mw) / 1000, 0.1f);
+                            //disregard items with 0 combat priority
+                            continue;
                         }
                     }
                     else if (rw != null)
@@ -553,7 +585,8 @@ namespace Barotrauma
                         }
                         else
                         {
-                            combatFactor = Math.Min(AIObjectiveCombat.GetLethalDamage(rw) / 1000, 0.1f);
+                            //disregard items with 0 combat priority
+                            continue;
                         }
                     }
                     else
@@ -620,7 +653,7 @@ namespace Barotrauma
                 }
                 if (itemCandidates.FirstOrDefault() is var itemCandidate)
                 {
-                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, character.GetRelativeSimPosition(itemCandidate.item), character.Submarine, errorMsgStr: $"AIObjectiveGetItem {character.DisplayName}", nodeFilter: node => node.Waypoint.CurrentHull != null);
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, character.GetRelativeSimPosition(itemCandidate.item), character.Submarine, errorMsgStr: $"AIObjectiveGetItem {character.DisplayName}", nodeFilter: node => node.Waypoint.CurrentHull != null, startHull: character.CurrentHull);
                     if (path.Unreachable)
                     {
                         // Remove the invalid candidates and continue on the next frame.
@@ -654,7 +687,8 @@ namespace Barotrauma
                             targetItem = spawnedItem; 
                             if (character.TeamID == CharacterTeamType.FriendlyNPC && (character.Submarine?.Info.IsOutpost ?? false))
                             {
-                                spawnedItem.SpawnedInCurrentOutpost = true;
+                                spawnedItem.SpawnedInNonPlayerOutpostOrSubmarine = true;
+                                spawnedItem.AllowStealing = character.Submarine.Info.OutpostGenerationParams?.AllowStealing ?? false;
                             }
                         });
                     }
@@ -675,13 +709,12 @@ namespace Barotrauma
 
         /// <summary>
         /// Returns the "best" item to spawn when using <see cref="spawnItemIfNotFound"/> and there's multiple suitable items.
-        /// Best in this context is the one that's sold at the lowest price in stores (usually the most "basic" item)
+        /// Best in this context is the one that there's the most of available in stores on average.
         /// </summary>
-        /// <returns></returns>
         private ItemPrefab FindItemToSpawn()
         {
             ItemPrefab bestItem = null;
-            float lowestCost = float.MaxValue;
+            float bestAvailability = 0;
             foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
             {
                 if (prefab is not ItemPrefab itemPrefab) { continue; }
@@ -692,13 +725,13 @@ namespace Barotrauma
                         // If an item with infinite spawns is defined, let's use it.
                         return itemPrefab;
                     }
-                    float cost = itemPrefab.DefaultPrice != null && itemPrefab.CanBeBought ?
-                        itemPrefab.DefaultPrice.Price :
-                        float.MaxValue;
-                    if (cost < lowestCost || bestItem == null)
+                    float availability = itemPrefab.DefaultPrice != null && itemPrefab.CanBeBought ?
+                        itemPrefab.GetAverageAvailability(Level.Loaded?.Difficulty ?? 0.0f) :
+                        0;
+                    if (availability > bestAvailability || bestItem == null)
                     {
                         bestItem = itemPrefab;
-                        lowestCost = cost;
+                        bestAvailability = availability;
                     }
                 }
             }
@@ -759,6 +792,7 @@ namespace Barotrauma
             isDoneSeeking = false;
             currentSearchIndex = 0;
             currItemPriority = 0;
+            itemMissingLimbsToEquip = null;
         }
 
         protected override void OnAbandon()
@@ -776,12 +810,53 @@ namespace Barotrauma
         private void SpeakCannotFind()
         {
             if (!SpeakIfFails) { return; }
-            if (!character.IsOnPlayerTeam) { return; }
+            if (!character.IsOnFriendlyTeam(CharacterTeamType.Team1)) { return; }
             if (objectiveManager.CurrentOrder != objectiveManager.CurrentObjective) { return; }
             if (CannotFindDialogueCondition != null && !CannotFindDialogueCondition()) { return; }
-            LocalizedString msg = TextManager.Get(CannotFindDialogueIdentifierOverride, "dialogcannotfinditem");
+            if (itemMissingLimbsToEquip != null)
+            {
+                // The item was found but can't be equipped due to missing hands -> don't claim the item can't be found
+                Identifier missingLimbsDialogueIdentifier = "dialogcannotequipmissinglimbs".ToIdentifier();
+                LocalizedString missingLimbsMsg = TextManager.GetWithVariable(missingLimbsDialogueIdentifier, "[itemname]".ToIdentifier(), itemMissingLimbsToEquip.Name);
+                if (missingLimbsMsg.IsNullOrEmpty() || !missingLimbsMsg.Loaded) { return; }
+                character.Speak(missingLimbsMsg.Value, identifier: missingLimbsDialogueIdentifier, minDurationBetweenSimilar: MinSpeakInterval);
+                return;
+            }
+            LocalizedString msg = TextManager.Get(CannotFindDialogueIdentifierOverride, "dialogcannotfinditem".ToIdentifier());
             if (msg.IsNullOrEmpty() || !msg.Loaded) { return; }
-            character.Speak(msg.Value, identifier: "dialogcannotfinditem".ToIdentifier(), minDurationBetweenSimilar: 20.0f);
+            character.Speak(msg.Value, identifier: "dialogcannotfinditem".ToIdentifier(), minDurationBetweenSimilar: MinSpeakInterval);
+        }
+
+        /// <summary>
+        /// Can the item only be equipped in hand slots the character can't use due to missing (severed) hands?
+        /// Mirrors the severed hand checks in CharacterInventory.TryPutItem.
+        /// </summary>
+        private bool IsMissingLimbsToEquip(Item item)
+        {
+            bool hasRightHand = character.AnimController.GetLimb(LimbType.RightHand) != null;
+            bool hasLeftHand = character.AnimController.GetLimb(LimbType.LeftHand) != null;
+            if (hasRightHand && hasLeftHand) { return false; }
+
+            bool requiresMissingHand = false;
+            foreach (InvSlotType slotType in item.AllowedSlots)
+            {
+                if (slotType.HasFlag(InvSlotType.Any)) { continue; }
+                bool isHandSlot = slotType.HasFlag(InvSlotType.RightHand) || slotType.HasFlag(InvSlotType.LeftHand);
+                // When not allowed to wear, the bot only tries the hand slots
+                if (!Wear && !isHandSlot) { continue; }
+                bool missingRightHand = slotType.HasFlag(InvSlotType.RightHand) && !hasRightHand && !slotType.HasFlag(InvSlotType.RightHandProsthetic);
+                bool missingLeftHand = slotType.HasFlag(InvSlotType.LeftHand) && !hasLeftHand && !slotType.HasFlag(InvSlotType.LeftHandProsthetic);
+                if (missingRightHand || missingLeftHand)
+                {
+                    requiresMissingHand = true;
+                }
+                else
+                {
+                    // There's a slot the item could be equipped in, so missing limbs weren't the problem
+                    return false;
+                }
+            }
+            return requiresMissingHand;
         }
     }
 }

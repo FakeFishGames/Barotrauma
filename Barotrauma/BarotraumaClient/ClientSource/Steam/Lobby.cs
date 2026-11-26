@@ -95,11 +95,6 @@ namespace Barotrauma.Steam
                 ? steamId.StringRepresentation
                 : throw new InvalidOperationException("Steamworks not initialized"));
 
-            if (EosInterface.IdQueries.GetLoggedInPuids() is { Length: > 0 } puids)
-            {
-                currentLobby?.SetData("EosEndpoint", puids[0].Value);
-            }
-
             DebugConsole.Log("Lobby updated!");
         }
 

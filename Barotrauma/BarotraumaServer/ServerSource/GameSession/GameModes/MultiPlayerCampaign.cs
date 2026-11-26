@@ -9,14 +9,24 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class MultiPlayerCampaign : CampaignMode
+    public partial class MultiPlayerCampaign : CampaignMode
     {
         private readonly List<CharacterCampaignData> characterData = new List<CharacterCampaignData>();
         private readonly Dictionary<ushort, Wallet> walletsToCheck = new Dictionary<ushort, Wallet>();
         private readonly HashSet<NetWalletTransaction> transactions = new HashSet<NetWalletTransaction>();
         private const float clientCheckInterval = 10;
         private float clientCheckTimer = clientCheckInterval;
-        
+
+        /// <summary>
+        /// Have the stores at the current location changed since the last save (which is where the clients normally get them from)?
+        /// </summary>
+        private bool storesChangedSinceSave;
+
+        /// <summary>
+        /// Should the stores at the current location be sent to the clients on the next update?
+        /// </summary>
+        private bool storeSyncPending;
+
         /// <summary>
         /// Temporary backup storage for characters that have been overwritten by SaveSingleCharacter, this will be gone
         /// once the round ends or the server closes. Currently needed to enable the console command "revive" in ironman mode.
@@ -122,7 +132,7 @@ namespace Barotrauma
         {
             if (string.IsNullOrWhiteSpace(savePath)) { return; }
 
-            GameMain.GameSession = new GameSession(new SubmarineInfo(subPath), Option.None, CampaignDataPath.CreateRegular(savePath), GameModePreset.MultiPlayerCampaign, startingSettings, seed);
+            GameMain.GameSession = new GameSession(new SubmarineInfo(subPath), CampaignDataPath.CreateRegular(savePath), GameModePreset.MultiPlayerCampaign, startingSettings, seed);
             GameMain.NetLobbyScreen.ToggleCampaignMode(true);
             SaveUtil.SaveGame(GameMain.GameSession.DataPath);
 
@@ -334,7 +344,7 @@ namespace Barotrauma
                 CrewManager.RemoveCharacterInfo(cd.CharacterInfo);
             }
 
-            SavePets();
+            SaveCreatures();
 
             //remove all items that are in someone's inventory
             foreach (Character c in Character.CharacterList)
@@ -342,7 +352,7 @@ namespace Barotrauma
                 if (c.Inventory == null) { continue; }
                 if (Level.Loaded.Type == LevelData.LevelType.Outpost && c.Submarine != Level.Loaded.StartOutpost)
                 {
-                    Map.CurrentLocation.RegisterTakenItems(c.Inventory.AllItems.Where(it => it.SpawnedInCurrentOutpost && it.OriginalModuleIndex > 0));
+                    Map.CurrentLocation.RegisterTakenItems(c.Inventory.AllItems.Where(it => it.SpawnedInNonPlayerOutpostOrSubmarine));
                 }
 
                 if (c.Info != null && c.IsBot)
@@ -351,14 +361,12 @@ namespace Barotrauma
                     c.Info.HealthData = new XElement("health");
                     c.CharacterHealth.Save(c.Info.HealthData);
                     c.Info.InventoryData = new XElement("inventory");
-                    c.SaveInventory();
+                    c.SaveInventory(removeStolenItemsOnOutpost: true);
                     c.Info.SaveOrderData();
                 }
 
                 c.Inventory.DeleteAllItems();
             }
-
-            SaveActiveOrders();
         }
 
         public void MoveDiscardedCharacterBalancesToBank()
@@ -380,29 +388,10 @@ namespace Barotrauma
         {
             IncrementAllLastUpdateIds();
 
-            switch (transitionType)
-            {
-                case TransitionType.None:
-                    throw new InvalidOperationException("Level transition failed (no transitions available).");
-                case TransitionType.ReturnToPreviousLocation:
-                    //deselect destination on map
-                    map.SelectLocation(-1);
-                    break;
-                case TransitionType.ProgressToNextLocation:
-                    Map.MoveToNextLocation();
-                    TotalPassedLevels++;
-                    break;
-                case TransitionType.End:
-                    EndCampaign();
-                    IsFirstRound = true;
-                    break;
-                case TransitionType.ProgressToNextEmptyLocation:
-                    Map.Visit(Map.CurrentLocation);
-                    TotalPassedLevels++;
-                    break;
-            }
-
-            Map.ProgressWorld(this, transitionType, GameMain.GameSession.RoundDuration);
+            //store the currently active missions at this point so we can communicate their states to clients, they're cleared in EndRound
+            List<Mission> missions = GameMain.GameSession.Missions.ToList();
+            //store the location of the round for progressing the world (the transition may change the location)
+            Location roundLocation = Map.CurrentLocation;
 
             bool success = GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
             if (success)
@@ -417,19 +406,45 @@ namespace Barotrauma
                 // Event history must be registered before ending the round or it will be cleared
                 GameMain.GameSession.EventManager.StoreEventDataAtRoundEnd();
             }
-
-            //store the currently active missions at this point so we can communicate their states to clients, they're cleared in EndRound
-            List<Mission> missions = GameMain.GameSession.Missions.ToList();
-
             GameMain.GameSession.EndRound("", transitionType);
-            
+
+            switch (transitionType)
+            {
+                case TransitionType.None:
+                    throw new InvalidOperationException("Level transition failed (no transitions available).");
+                case TransitionType.ReturnToPreviousLocation:
+                case TransitionType.SaveAndReturnToSameLocation:
+                    //deselect destination on map
+                    Map.Visit(Map.CurrentLocation);
+                    map.SelectLocation(-1);
+                    break;
+                case TransitionType.ProgressToNextLocation:
+                    Map.MoveToNextLocation();
+                    TotalPassedLevels++;
+                    break;
+                case TransitionType.End:
+                    EndCampaign();
+                    IsFirstRound = true;
+                    break;
+                case TransitionType.ProgressToNextEmptyLocation:
+                    Map.Visit(Map.CurrentLocation);
+                    TotalPassedLevels++;
+                    break;
+                case TransitionType.TeleportToLocation:
+                    Map.SelectLocation(Map.LocationToTeleportTo);
+                    Map.MoveToNextLocation(teleportDirectlyToSelectedLocation: true);
+                    Map.LocationToTeleportTo = null;
+                    break;
+            }
+
+            Map.ProgressWorld(this, transitionType, GameMain.GameSession.RoundDuration, roundLocation, missions);
+                        
             //--------------------------------------
 
             if (success)
             {
                 SavePlayers();
                 yield return CoroutineStatus.Running;
-                LeaveUnconnectedSubs(leavingSub);
                 NextLevel = newLevel;
                 GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
                 SaveUtil.SaveGame(GameMain.GameSession.DataPath);
@@ -547,21 +562,25 @@ namespace Barotrauma
             return assignedJobs;
         }
 
-        public override void Update(float deltaTime)
+        protected override void UpdateGameModeSpecific(float deltaTime)
         {
             if (CoroutineManager.IsCoroutineRunning("LevelTransition")) { return; }
 
             Map?.Radiation?.UpdateRadiation(deltaTime);
 
-            base.Update(deltaTime);
+            base.UpdateGameModeSpecific(deltaTime);
 
             MedicalClinic?.Update(deltaTime);
 
             if (Level.Loaded != null)
             {
-                if (Level.Loaded.Type == LevelData.LevelType.LocationConnection)
+                var transitionType = GetAvailableTransition(out _, out Submarine leavingSub); 
+                if (transitionType == TransitionType.TeleportToLocation)
                 {
-                    var transitionType = GetAvailableTransition(out _, out Submarine leavingSub); 
+                    LoadNewLevel();
+                }
+                else if (Level.Loaded.Type == LevelData.LevelType.LocationConnection)
+                {
                     if (transitionType == TransitionType.End ||
                         (Level.Loaded.IsEndBiome && transitionType == TransitionType.ProgressToNextLocation))
                     {
@@ -569,11 +588,11 @@ namespace Barotrauma
                     }
                     else if (GameMain.Server.ConnectedClients.Count == 0 || GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead))
                     {
-                        if (transitionType == TransitionType.ProgressToNextLocation && Level.Loaded.EndOutpost != null && Level.Loaded.EndOutpost.DockedTo.Contains(leavingSub))
+                        if (ShouldLoadNextLocation(transitionType, leavingSub))
                         {
                             LoadNewLevel();
                         }
-                        else if (transitionType == TransitionType.ReturnToPreviousLocation && Level.Loaded.StartOutpost != null && Level.Loaded.StartOutpost.DockedTo.Contains(leavingSub))
+                        else if (ShouldLoadPreviousLocation(transitionType, leavingSub))
                         {
                             LoadNewLevel();
                         }
@@ -581,20 +600,73 @@ namespace Barotrauma
                 }
                 else if (Level.Loaded.IsEndBiome)
                 {
-                    var transitionType = GetAvailableTransition(out _, out Submarine leavingSub);
                     if (transitionType == TransitionType.ProgressToNextLocation)
                     {
                         LoadNewLevel();
                     }
                 }
-                else if (Level.Loaded.Type == LevelData.LevelType.Outpost)
-                {
-                    KeepCharactersCloseToOutpost(deltaTime);
-                }
             }
 
             UpdateClientsToCheck(deltaTime);
             UpdateWallets();
+
+            if (storeSyncPending)
+            {
+                storeSyncPending = false;
+                SendStores(GameMain.Server.ConnectedClients);
+            }
+        }
+
+        /// <summary>
+        /// Tells the client its store changes were rejected, so it knows its state is now out of sync.
+        /// </summary>
+        private static void SendStoreChangesRejected(Client client, NetFlags rejectedFlags)
+        {
+            IWriteMessage msg = new WriteOnlyMessage().WithHeader(ServerPacketHeader.STORE_CHANGES_REJECTED);
+            msg.WriteUInt16((UInt16)rejectedFlags);
+            GameMain.Server?.ServerPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
+        }
+
+        public void NotifyStoresChanged(Location location)
+        {
+            if (location != map?.CurrentLocation) { return; }
+            storesChangedSinceSave = true;
+            // Between rounds, the clients get the stores when they join the next round (see SendStoresIfChangedSinceSave)
+            if (GameMain.GameSession is { IsRunning: true })
+            {
+                storeSyncPending = true;
+            }
+        }
+
+        /// <summary>
+        /// Sends the stores to a client that has just joined the round, if they've changed since the save the client loaded the campaign from.
+        /// </summary>
+        public void SendStoresIfChangedSinceSave(Client client)
+        {
+            if (!storesChangedSinceSave) { return; }
+            SendStores(new[] { client });
+        }
+
+        /// <summary>
+        /// Sends the whole state of the stores at the current location, in the save format.
+        /// </summary>
+        private void SendStores(IEnumerable<Client> clients)
+        {
+            if (map?.CurrentLocation is not Location location) { return; }
+
+            var storesElement = new XElement("stores");
+            location.SaveStores(storesElement);
+
+            IWriteMessage msg = new WriteOnlyMessage().WithHeader(ServerPacketHeader.STORES);
+            msg.WriteByte(CampaignID);
+            // The save these stores are more recent than, so the client can tell if loading a save would overwrite them
+            msg.WriteUInt16(LastSaveID);
+            msg.WriteUInt16((UInt16)map.CurrentLocationIndex);
+            msg.WriteString(storesElement.ToString(SaveOptions.DisableFormatting));
+            foreach (Client client in clients)
+            {
+                GameMain.Server?.ServerPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
+            }
         }
 
         private void UpdateClientsToCheck(float deltaTime)
@@ -836,6 +908,7 @@ namespace Barotrauma
         {
             UInt16 currentLocIndex  = msg.ReadUInt16();
             UInt16 selectedLocIndex = msg.ReadUInt16();
+            UInt16 locationToTeleportToIndex = msg.ReadUInt16();
 
             byte selectedMissionCount = msg.ReadByte();
             List<int> selectedMissionIndices = new List<int>();
@@ -879,8 +952,11 @@ namespace Barotrauma
                 if (Entity.FindEntityByID(itemToRemoveID) is not Item itemToRemove) { continue; }
                 purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
             }
-
-            if (purchasedUpgradeCount > 0 || purchasedItemSwapCount > 0)
+            bool itemSwapsChanged =
+                purchasedItemSwaps.Count != UpgradeManager.PurchasedItemSwaps.Count ||
+                    //if the lengths are equal, check that the purchased swaps match too
+                    !purchasedItemSwaps.All(UpgradeManager.PurchasedItemSwaps.Contains);
+            if (purchasedUpgradeCount > 0 || itemSwapsChanged)
             {
                 //if the client attempted to purchase something, increment flag regardless of whether the upgrades were actually purchased or not
                 //so we can sync the correct state in case the client incorrectly assumed they can buy something (e.g. lost permissions just as they were purchasing)
@@ -900,10 +976,9 @@ namespace Barotrauma
 
             Wallet personalWallet = GetWallet(sender);
             personalWallet?.ForceUpdate();
-            if (AllowedToManageWallets(sender))
-            {
-                Bank.ForceUpdate();
-            }
+            //sync the bank regardless of the sender's permissions, a client without permissions may have incorrectly
+            //deducted money from the bank client-side (e.g. if their view of other clients' permissions was out of sync)
+            Bank.ForceUpdate();
 
             if (purchasedHullRepairs && !PurchasedHullRepairs)
             {
@@ -940,18 +1015,29 @@ namespace Barotrauma
 
             if (currentLocIndex < Map.Locations.Count && Map.AllowDebugTeleport)
             {
-                Map.SetLocation(currentLocIndex);
+                if (map.CurrentLocationIndex != currentLocIndex)
+                {
+                    Map.ProgressWorld(this);
+                    Map.Radiation?.OnStep(1);
+                    Map.SetLocation(currentLocIndex);
+                    Map.Visit(Map.CurrentLocation);
+                }
             }
 
             if (AllowedToManageCampaign(sender, ClientPermissions.ManageMap))
             {
+                if (locationToTeleportToIndex < map.Locations.Count)
+                {
+                    Map.LocationToTeleportTo = map.Locations[locationToTeleportToIndex];
+                }
                 Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
                 if (Map.SelectedLocation == null) { Map.SelectRandomLocation(preferUndiscovered: true); }
                 if (Map.SelectedConnection != null) { Map.SelectMission(selectedMissionIndices); }
                 CheckTooManyMissions(Map.CurrentLocation, sender);
             }
 
-            if (HasCampaignInteractionAvailable(sender, InteractionType.Store))
+            NetFlags rejectedStoreFlags = 0;
+            if (HasCampaignInteractionAvailable(sender.Character, InteractionType.Store))
             {
                 var prevBuyCrateItems = new Dictionary<Identifier, List<PurchasedItem>>();
                 foreach (var kvp in CargoManager.ItemsInBuyCrate)
@@ -969,7 +1055,13 @@ namespace Barotrauma
                 {
                     foreach (var item in store.Value.ToList())
                     {
-                        if (map?.CurrentLocation?.Stores == null || !map.CurrentLocation.Stores.ContainsKey(store.Key)) { continue; }
+                        if (map?.CurrentLocation?.Stores == null || !map.CurrentLocation.Stores.ContainsKey(store.Key))
+                        {
+                            DebugConsole.AddWarning($"Client {sender.Name} tried to add items to the buy crate of the store '{store.Key}', which doesn't exist at the current location.");
+                            // Make the client get the server's buy crate, so the rejected items don't linger on its end
+                            rejectedStoreFlags |= NetFlags.ItemsInBuyCrate;
+                            continue;
+                        }
                         int availableQuantity = map.CurrentLocation.Stores[store.Key].Stock.Find(s => s.ItemPrefab == item.ItemPrefab)?.Quantity ?? 0;
                         int alreadyPurchasedQuantity = 
                             CargoManager.GetBuyCrateItem(store.Key, item.ItemPrefab)?.Quantity ?? 0 +
@@ -1024,6 +1116,14 @@ namespace Barotrauma
                 {
                     var storeId = kvp.Key;
                     var purchasedItemList = kvp.Value;
+                    // The store identifier comes from the client, so check it exists (it always should)
+                    if (map.CurrentLocation.GetStore(storeId) is not Location.StoreInfo store)
+                    {
+                        DebugConsole.AddWarning($"Client {sender.Name} tried to purchase items from the store '{storeId}', which doesn't exist at the current location.");
+                        // Make the client get the server's purchased items, so the rejected purchases don't linger on its end (and get applied later)
+                        rejectedStoreFlags |= NetFlags.PurchasedItems;
+                        continue;
+                    }
                     foreach (var purchasedItem in purchasedItemList)
                     {
                         int desiredQuantity = purchasedItem.Quantity;
@@ -1032,7 +1132,7 @@ namespace Barotrauma
                         {
                             desiredQuantity -= alreadyPurchased.Quantity;
                         }
-                        int availableQuantity = map.CurrentLocation.Stores[storeId].Stock.Find(s => s.ItemPrefab == purchasedItem.ItemPrefab)?.Quantity ?? 0;
+                        int availableQuantity = store.Stock.Find(s => s.ItemPrefab == purchasedItem.ItemPrefab)?.Quantity ?? 0;
                         purchasedItem.Quantity = Math.Min(desiredQuantity, availableQuantity);
                     }
                     CargoManager.PurchaseItems(storeId, purchasedItemList, removeFromCrate: false, client: sender);
@@ -1123,55 +1223,48 @@ namespace Barotrauma
                     bool predicate(SoldItem i) => allowedToSellInventoryItems != (i.Origin == SoldItem.SellOrigin.Character);
                 }
             }
-
-            if ((purchasedUpgrades.Any() || purchasedItemSwaps.Any()) &&
-                HasCampaignInteractionAvailable(sender, InteractionType.Upgrade))
+            else if (HasItems(buyCrateItems) || HasItems(subSellCrateItems) || HasItems(purchasedItems) || HasItems(soldItems))
             {
-                var characterList = GameSession.GetSessionCrewCharacters(CharacterType.Both);
-                foreach (var (prefab, category, _) in purchasedUpgrades)
+                // The client's store changes were ignored, but it has already applied them on its end. Make it get the server's state,
+                // otherwise the rejected changes linger on the client and get applied the next time it sends them.
+                rejectedStoreFlags = NetFlags.ItemsInBuyCrate | NetFlags.ItemsInSellFromSubCrate | NetFlags.PurchasedItems | NetFlags.SoldItems;
+            }
+            static bool HasItems<T>(Dictionary<Identifier, List<T>> itemsPerStore) => itemsPerStore.Values.Any(items => items.Any());
+            if (rejectedStoreFlags != 0)
+            {
+                SendStoreChangesRejected(sender, rejectedStoreFlags);
+            }
+
+            if (HasCampaignInteractionAvailable(sender.Character, InteractionType.Upgrade))
+            {
+                if (purchasedUpgrades.Any())
                 {
-                    UpgradeManager.TryPurchaseUpgrade(prefab, category, client: sender);
-                    // unstable logging
-                    int price = prefab.Price.GetBuyPrice(prefab, UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation, characterList);
-                    int level = UpgradeManager.GetUpgradeLevel(prefab, category);
-                    GameServer.Log($"SERVER: Purchased level {level} {category.Identifier}.{prefab.Identifier} for {price}", ServerLog.MessageType.ServerMessage);
-                }
-                foreach (var purchasedItemSwap in purchasedItemSwaps)
-                {
-                    if (purchasedItemSwap.ItemToInstall == null)
+                    var characterList = GameSession.GetSessionCrewCharacters(CharacterType.Both);
+                    foreach (var (prefab, category, _) in purchasedUpgrades)
                     {
-                        UpgradeManager.CancelItemSwap(purchasedItemSwap.ItemToRemove, client: sender);
+                        UpgradeManager.TryPurchaseUpgrade(prefab, category, client: sender);
+                        // unstable logging
+                        int price = prefab.Price.GetBuyPrice(prefab, UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation, characterList);
+                        int level = UpgradeManager.GetUpgradeLevel(prefab, category);
                     }
-                    else
-                    {
-                        UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, client: sender);
-                    }
                 }
-                foreach (Item item in Item.ItemList)
+                if (itemSwapsChanged)
                 {
-                    if (item.PendingItemSwap != null && !purchasedItemSwaps.Any(it => it.ItemToRemove == item))
+                    foreach (var purchasedItemSwap in purchasedItemSwaps)
                     {
-                        UpgradeManager.CancelItemSwap(item);
-                        item.PendingItemSwap = null;
+                        UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, isNetworkMessage: true, client: sender);
+                    }
+                    foreach (Item item in Item.ItemList)
+                    {
+                        // Cancel item swaps the client has cancelled
+                        if (item.PendingItemSwap != null && purchasedItemSwaps.All(it => it.ItemToRemove != item))
+                        {
+                            UpgradeManager.CancelItemSwap(item, force: false, client: sender);
+                            item.PendingItemSwap = null;
+                        }
                     }
                 }
             }
-        }
-
-        private bool HasCampaignInteractionAvailable(Client sender, InteractionType interactionType)
-        {
-            if (sender.Character == null || sender.Character.IsIncapacitated) { return false; }
-            if (GameMain.Server?.ServerSettings is { AllowRemoteCampaignInteractions: true }) { return true; }
-            foreach (var otherCharacter in Character.CharacterList)
-            {
-                if (otherCharacter.CampaignInteractionType != interactionType) { continue; }
-                //larger-than default maximum distance to give legit clients some leeway if their position is a bit off
-                if (sender.Character.CanInteractWith(otherCharacter, maxDist: 250.0f))
-                {
-                    return true;
-                }
-            }
-            return false;
         }
 
         public void ServerReadMoney(IReadMessage msg, Client sender)
@@ -1306,21 +1399,24 @@ namespace Barotrauma
 
             if (location != null)
             {
-                if (fireCharacter && AllowedToManageCampaign(sender, ClientPermissions.ManageHires) && HasCampaignInteractionAvailable(sender, InteractionType.Crew))
+                if (fireCharacter)
                 {
-                    firedCharacter = CrewManager.GetCharacterInfos(includeReserveBench: true).FirstOrDefault(info => info.ID == firedIdentifier);
-                    if (firedCharacter != null && (firedCharacter.Character?.IsBot ?? true))
+                    if (AllowedToManageCampaign(sender, ClientPermissions.ManageHires) && HasCampaignInteractionAvailable(sender.Character, InteractionType.Crew))
                     {
-                        CrewManager.FireCharacter(firedCharacter);
+                        firedCharacter = CrewManager.GetCharacterInfos(includeReserveBench: true).FirstOrDefault(info => info.ID == firedIdentifier);
+                        if (firedCharacter != null && (firedCharacter.Character?.IsBot ?? true))
+                        {
+                            CrewManager.FireCharacter(firedCharacter);
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError($"Tried to fire an invalid character ({firedIdentifier})");
+                        }
                     }
                     else
                     {
-                        DebugConsole.ThrowError($"Tried to fire an invalid character ({firedIdentifier})");
+                        GameServer.Log($"{sender.Name} attempted to fire a character without having access to an appropriate NPC.", ServerLog.MessageType.Error);
                     }
-                }
-                else
-                {
-                    GameServer.Log($"{sender.Name} attempted to fire a character without having access to an appropriate NPC.", ServerLog.MessageType.Error);
                 }
 
                 if (renameCharacter)
@@ -1336,7 +1432,7 @@ namespace Barotrauma
                         {
                             characterInfo = location.HireManager.AvailableCharacters.FirstOrDefault(info => info.ID == renamedIdentifier);
                         }
-                        if (characterInfo != null && characterInfo != sender.CharacterInfo && !HasCampaignInteractionAvailable(sender, InteractionType.Crew))
+                        if (characterInfo != null && characterInfo != sender.CharacterInfo && !HasCampaignInteractionAvailable(sender.Character, InteractionType.Crew))
                         {
                             GameServer.Log($"{sender.Name} attempted to rename a character without having access to an appropriate NPC.", ServerLog.MessageType.Error);
                             characterInfo = null;
@@ -1373,7 +1469,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (location.HireManager != null && HasCampaignInteractionAvailable(sender, InteractionType.Crew))
+                if (location.HireManager != null && HasCampaignInteractionAvailable(sender.Character, InteractionType.Crew))
                 {
                     if (validateHires)
                     {
@@ -1436,7 +1532,6 @@ namespace Barotrauma
         /// <summary>
         /// Notifies the clients of the current bot situation like syncing pending and available hires
         /// </summary>
-        /// <param name="hiredCharacters">Inform the clients that these characters have been hired.</param>
         /// <param name="firedCharacter">Inform the clients that this character has been fired.</param>
         /// <remarks>
         /// It might be obsolete to sync available hires. I found that the available hires are always the same between
@@ -1445,10 +1540,10 @@ namespace Barotrauma
         /// </remarks>
         public void SendCrewState((ushort id, string newName) renamedCrewMember = default, CharacterInfo firedCharacter = null, bool createNotification = true)
         {
-            List<CharacterInfo> availableHires = new List<CharacterInfo>();
-            List<CharacterInfo> pendingHires = new List<CharacterInfo>();
+            List<CharacterInfo> availableHires = [];
+            List<CharacterInfo> pendingHires = [];
 
-            if (map.CurrentLocation != null && map.CurrentLocation.Type.HasHireableCharacters)
+            if (map.CurrentLocation != null && map.CurrentLocation.HasHireableCharacters())
             {
                 availableHires = map.CurrentLocation.GetHireableCharacters().ToList();
                 pendingHires = map.CurrentLocation?.HireManager.PendingHires;
@@ -1504,7 +1599,7 @@ namespace Barotrauma
             }
         }
 
-        public override bool TryPurchase(Client client, int price)
+        protected override bool TryDeductFunds(Client client, int price)
         {
             //disconnected clients can never purchase anything
             //(can happen e.g. if someone starts a vote to buy something and then disconnects)
@@ -1530,7 +1625,7 @@ namespace Barotrauma
                 int remainder = price - balance;
                 if (balance > 0) { wallet.Deduct(balance); }
                 Bank.Deduct(remainder);
-                return true ;
+                return true;
             }
 
             return false;
@@ -1567,8 +1662,6 @@ namespace Barotrauma
                 new XAttribute("purchaseditemrepairs", PurchasedItemRepairsInLatestSave),
                 new XAttribute("cheatsenabled", CheatsEnabled));
 
-            DebugConsole.NewMessage("Saved PurchasedHullRepairs: "+ PurchasedHullRepairs+" (in last save "+PurchasedHullRepairsInLatestSave+")", Color.Magenta);
-
             modeElement.Add(Settings.Save());
             modeElement.Add(SaveStats());
             if (GameMain.Server?.TraitorManager is TraitorManager traitorManager)
@@ -1579,7 +1672,8 @@ namespace Barotrauma
 
             if (GameMain.GameSession?.EventManager != null)
             {
-                modeElement.Add(GameMain.GameSession?.EventManager.Save());
+                modeElement.Add(GameMain.GameSession.EventManager.Save());
+                modeElement.Add(GameMain.GameSession.EventManager.EventLog.Save());
             }
 
             foreach ((CharacterTeamType team, Identifier unlockedRecipe) in GameMain.GameSession.UnlockedRecipes)
@@ -1595,17 +1689,13 @@ namespace Barotrauma
             CargoManager?.SavePurchasedItems(modeElement);
             UpgradeManager?.Save(modeElement);
 
-            if (petsElement != null)
+            if (creaturesElement != null)
             {
-                modeElement.Add(petsElement);
+                modeElement.Add(creaturesElement);
             }
 
             // save bots
-            var crewManagerElement = CrewManager.SaveMultiplayer(modeElement);
-            if (ActiveOrdersElement != null)
-            {
-                crewManagerElement.Add(ActiveOrdersElement);
-            }
+            CrewManager.SaveMultiplayer(modeElement);
 
             XElement savedExperiencePointsElement = new XElement("SavedExperiencePoints");
             foreach (var savedExperiencePoint in savedExperiencePoints)
@@ -1644,7 +1734,13 @@ namespace Barotrauma
             }
 
             lastSaveID++;
+            storesChangedSinceSave = false;
             DebugConsole.Log("Campaign saved, save ID " + lastSaveID);
+
+            foreach (var hook in PluginData.GetHooks<PluginCampaignSaveDelegate>())
+            {
+                hook(this, modeElement);
+            }
         }
 
         /// <summary>

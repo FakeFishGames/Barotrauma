@@ -17,7 +17,7 @@ using Barotrauma.IO;
 
 namespace Barotrauma
 {
-    class ParticleEditorScreen : EditorScreen
+    public class ParticleEditorScreen : EditorScreen
     {
         private GUIComponent rightPanel, leftPanel;
         private GUIListBox prefabList;

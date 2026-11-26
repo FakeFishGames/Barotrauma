@@ -67,7 +67,7 @@ namespace Barotrauma
             return counter >= Amount;
         }
 
-        public override void Reset()
+        public override void Reset(bool shouldEndConversations = true)
         {
             counter = 0;
         }

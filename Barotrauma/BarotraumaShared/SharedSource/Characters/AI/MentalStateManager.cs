@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class MentalStateManager
+    public partial class MentalStateManager
     {
         private float mentalStateTimer;
         private const float MentalStateInterval = 7.5f;

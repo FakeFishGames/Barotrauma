@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class BrokenItemSprite
+    public class BrokenItemSprite
     {
         //sprite will be rendered if the condition of the item is below this
         public readonly float MaxConditionPercentage;
@@ -27,7 +27,7 @@ namespace Barotrauma
         }
     }
 
-    class ContainedItemSprite
+    public class ContainedItemSprite
     {
         public enum DecorativeSpriteBehaviorType
         {
@@ -264,7 +264,12 @@ namespace Barotrauma
         }
         public LocalizedString GetTooltip(Character character)
         {
+            bool showContentPackage = ContentPackage != null && ContentPackage != GameMain.VanillaContent;
             LocalizedString tooltip = $"‖color:{XMLExtensions.ToStringHex(GUIStyle.TextColorBright)}‖{Name}‖color:end‖";
+            if (showContentPackage)
+            {
+                tooltip += GetContentPackageTooltipLine();
+            }
             if (!Description.IsNullOrEmpty())
             {
                 tooltip += $"\n{Description}";
@@ -278,6 +283,9 @@ namespace Barotrauma
                 tooltip += GetSkillRequirementHints(character);
             }
             return tooltip;
+
+            string GetContentPackageTooltipLine()
+                => $"\n‖color:{ContentPackage.GetAccentColor().ToStringHex()}‖{ContentPackage.Name}‖color:end‖";
         }
 
         public override void UpdatePlacing(Camera cam)

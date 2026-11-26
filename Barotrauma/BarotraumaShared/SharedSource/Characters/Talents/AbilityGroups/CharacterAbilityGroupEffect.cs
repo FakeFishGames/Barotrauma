@@ -2,7 +2,7 @@
 
 namespace Barotrauma.Abilities
 {
-    class CharacterAbilityGroupEffect : CharacterAbilityGroup
+    public class CharacterAbilityGroupEffect : CharacterAbilityGroup
     {
         public CharacterAbilityGroupEffect(AbilityEffectType abilityEffectType, CharacterTalent characterTalent, ContentXElement abilityElementGroup) :
             base(abilityEffectType, characterTalent, abilityElementGroup) { }
@@ -26,6 +26,26 @@ namespace Barotrauma.Abilities
             if (abilities.Count > 0)
             {
                 timesTriggered++;
+            }
+        }
+
+        /// <summary>
+        /// Same as <see cref="CheckAbilityGroup"/>, but without side effects: only the abilities that just modify the ability object are applied, and this doesn't count as a trigger.
+        /// </summary>
+        public void PreviewAbilityGroup(AbilityObject abilityObject)
+        {
+            if (!IsActive) { return; }
+
+            if (IsOverTriggerCount) { return; }
+
+            List<CharacterAbility> abilities = IsApplicable(abilityObject) ? characterAbilities : fallbackAbilities;
+
+            foreach (CharacterAbility characterAbility in abilities)
+            {
+                if (characterAbility.OnlyModifiesAbilityObject && characterAbility.IsViable())
+                {
+                    characterAbility.ApplyAbilityEffect(abilityObject);
+                }
             }
         }
 

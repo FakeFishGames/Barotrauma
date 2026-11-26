@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    class CameraTransition
+    public class CameraTransition
     {
         private static List<CameraTransition> activeTransitions = new List<CameraTransition>();
 
@@ -25,6 +25,12 @@ namespace Barotrauma
         public readonly float PanDuration;
         public readonly bool FadeOut;
         public readonly bool LosFadeIn;
+
+        /// <summary>
+        /// If true, the line of sight is not faded in during the pan and stays disabled during <see cref="EndWaitDuration"/>,
+        /// only being enabled once the whole transition is over.
+        /// </summary>
+        public bool LosOffDuringEndWait;
 
         private readonly CoroutineHandle updateCoroutine;
 
@@ -171,7 +177,7 @@ namespace Barotrauma
                 {
                     if (FadeOut) { GUI.ScreenOverlayColor = Color.Lerp(Color.TransparentBlack, Color.Black, ((clampedTimer / PanDuration) - 0.9f) * 10.0f); }
                 }
-                if (LosFadeIn && clampedTimer / PanDuration > 0.8f)
+                if (LosFadeIn && !LosOffDuringEndWait && clampedTimer / PanDuration > 0.8f)
                 {
                     if (!GameMain.DevMode)
                     {
@@ -191,6 +197,9 @@ namespace Barotrauma
             {
                 cam.Translate(endPos - cam.Position);
                 cam.Zoom = endZoom;
+#if CLIENT
+                if (LosOffDuringEndWait) { GameMain.LightManager.LosEnabled = false; }
+#endif
                 endTimer += DeltaTime;
                 yield return CoroutineStatus.Running;
             }
@@ -201,6 +210,10 @@ namespace Barotrauma
             GUI.ScreenOverlayColor = Color.TransparentBlack;
             if (!GameMain.DevMode)
             {
+                if (LosOffDuringEndWait)
+                {
+                    Lights.LightManager.ViewTarget = prevControlled ?? (targetEntity as Entity);
+                }
                 GameMain.LightManager.LosEnabled = true;
                 GameMain.LightManager.LosAlpha = 1f;
             }
@@ -212,6 +225,11 @@ namespace Barotrauma
             }
 
             yield return CoroutineStatus.Success;
+        }
+
+        public static void CleanUpStaticReferences()
+        {
+            activeTransitions.Clear();
         }
     }
 }

@@ -1,11 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
 {
     class ShipGlobalIssueRepairSystems : ShipGlobalIssue
     {
-        readonly List<Item> itemsNeedingRepair = new List<Item>();
+        readonly List<Item> itemsNeedingRepair = [];
 
         public ShipGlobalIssueRepairSystems(ShipCommandManager shipCommandManager) : base(shipCommandManager) { }
 
@@ -15,20 +17,63 @@ namespace Barotrauma
 
             foreach (Item item in shipCommandManager.CommandedSubmarine.GetItems(true))
             {
-                if (!AIObjectiveRepairItems.ViableForRepair(item, shipCommandManager.character, shipCommandManager.character.AIController as HumanAIController)) { continue; }
+                if (!AIObjectiveRepairItems.ViableForRepair(item, shipCommandManager.Commander, shipCommandManager.Commander.AIController as HumanAIController)) 
+                { 
+                    continue; 
+                }
                 if (AIObjectiveRepairItems.NearlyFullCondition(item)) { continue; }
                 itemsNeedingRepair.Add(item);
-                // merged this logic with AIObjectiveRepairItems 
+                int i = 0;
+                while (i < itemsNeedingRepair.Count)
+                {
+                    if (itemsNeedingRepair[i].ConditionPercentage > item.ConditionPercentage)
+                    {
+                        break;
+                    }
+                    i++;
+                }
+                itemsNeedingRepair.Insert(i, item);
             }
 
+            GlobalImportance = 0.0f;
             if (itemsNeedingRepair.Any())
             {
-                itemsNeedingRepair.Sort((x, y) => y.ConditionPercentage.CompareTo(x.ConditionPercentage));
-                float modifiedPercentage = itemsNeedingRepair.TakeLast(3).Average(x => x.ConditionPercentage) * 0.6f + itemsNeedingRepair.TakeLast(10).Average(x => x.ConditionPercentage) * 0.4f;
-                // calculate a modified percentage with the most damaged items, with 60% the weight given to the top 3 damaged and the remaining given to top 10
-                GlobalImportance = 100 - modifiedPercentage;
+                const int MaxItemsToConsider = 10;
+
+                for (int i = 0; i < MaxItemsToConsider && i < itemsNeedingRepair.Count; i++)
+                {
+                    Item item = itemsNeedingRepair[i];
+
+                    float itemPriority;
+                    //highest prio to junction boxes and reactors, keeping the sub/outpost powerer is important
+                    if (item.GetComponent<PowerTransfer>() != null ||
+                        item.GetComponent<Reactor>() != null)
+                    {
+                        itemPriority = 50.0f;
+                    }
+                    //medium prio for loaders, so the sub/outpost can keep firing
+                    else if (item.HasTag(Tags.TurretAmmoSource))
+                    {
+                        itemPriority = 30.0f;
+                    }
+                    //somewhat high prio to batteries and supercapacitors, needed by weapons and potentially other systems
+                    else if (item.GetComponent<PowerContainer>() != null)
+                    {
+                        itemPriority = 25.0f;
+                    }
+                    //repairing doors between rooms isn't that urgent
+                    //(and there seem to often be lots of broken doors during outpost or sub-vs-sub combat when piercing ammo is involved)
+                    else if (item.GetComponent<Door>() is { LinkedGap.IsRoomToRoom: true })
+                    {
+                        itemPriority = 2.0f;
+                    }
+                    else
+                    {
+                        itemPriority = 10.0f;
+                    }
+                    GlobalImportance += MathHelper.Lerp(itemPriority, 0.0f, item.ConditionPercentage / 100.0f);
+                }
             }
-            // this system works reasonably well, though it could give extra importance to repairing critical items like reactors and junction boxes
         }
     }
 

@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Version>1.27.0.2</Version>
+    <AssemblyName>HomeAndHarborServer</AssemblyName>
+    <Authors>FakeFish, Undertow Games</Authors>
+    <OutputPath>..\..\..\Barotrauma\bin\$(Configuration)Windows\$(TargetFramework)\DLC\Home &amp; Harbor\Windows</OutputPath>
+    <DefineConstants>$(DefineConstants);SERVER</DefineConstants>
+  </PropertyGroup>
+  <Import Project="..\SharedSource\DLCShared.projitems" Label="Shared" />
+  <Import Project="..\SharedSource\Content.props" />
+  <ItemGroup Label="BarotraumaMetadata">
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>RepositoryUrl</_Parameter1>
+      <_Parameter2>https://github.com/FakeFishGames/Barotrauma</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>GameVersion</_Parameter1>
+      <_Parameter2>1.15.1.0</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Barotrauma\BarotraumaServer\WindowsServer.csproj" AdditionalProperties="Configuration=$(DepBuildConfiguration)">
+        <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\BarotraumaLibs\BarotraumaCore\BarotraumaCore.csproj" AdditionalProperties="Configuration=$(DepBuildConfiguration)">
+        <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\Concentus\CSharp\Concentus\Concentus.NetStandard.csproj" AdditionalProperties="Configuration=$(DepBuildConfiguration)">
+        <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Win64.csproj" AdditionalProperties="Configuration=$(DepBuildConfiguration)">
+        <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\Farseer Physics Engine 3.5\Farseer.NetStandard.csproj" AdditionalProperties="Configuration=$(DepBuildConfiguration)">
+        <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\GameAnalytics\GA_SDK_NETSTANDARD\GA_SDK_NETSTANDARD.csproj" AdditionalProperties="Configuration=$(DepBuildConfiguration)">
+        <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\Lidgren.Network\Lidgren.NetStandard.csproj" AdditionalProperties="Configuration=$(DepBuildConfiguration)">
+        <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\MonoGame.Framework\Src\MonoGame.Framework\MonoGame.Framework.Windows.NetStandard.csproj" AdditionalProperties="Configuration=$(DepBuildConfiguration)">
+        <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\SharpFont\Source\SharpFont\SharpFont.NetStandard.csproj" AdditionalProperties="Configuration=$(DepBuildConfiguration)">
+        <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\XNATypes\XNATypes.csproj" AdditionalProperties="Configuration=$(DepBuildConfiguration)">
+        <Private>False</Private>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

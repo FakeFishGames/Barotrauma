@@ -2,7 +2,7 @@
 {
 #if CLIENT
     [NotSyncedInMultiplayer]
-    sealed class BackgroundCreaturePrefabsFile : GenericPrefabFile<BackgroundCreaturePrefab>
+    public sealed class BackgroundCreaturePrefabsFile : GenericPrefabFile<BackgroundCreaturePrefab>
     {
         public BackgroundCreaturePrefabsFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 
@@ -18,7 +18,7 @@
     }
 #else
     [NotSyncedInMultiplayer]
-    sealed class BackgroundCreaturePrefabsFile : OtherFile
+    public sealed class BackgroundCreaturePrefabsFile : OtherFile
     {
         public BackgroundCreaturePrefabsFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path)
         {

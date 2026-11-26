@@ -1,14 +1,25 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
 {
-    abstract class BinaryOptionAction : EventAction
+    public abstract class BinaryOptionAction : EventAction
     {
         public SubactionGroup Success = null;
         public SubactionGroup Failure = null;
         protected bool? succeeded = null;
+
+        public override Mission ParentMission 
+        { 
+            get => base.ParentMission;
+            set
+            {
+                Success?.Actions.ForEach(subAction => subAction.ParentMission = value);
+                Failure?.Actions.ForEach(subAction => subAction.ParentMission = value);
+                base.ParentMission = value;
+            }
+        }
 
         public BinaryOptionAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
         {
@@ -86,10 +97,10 @@ namespace Barotrauma
             return false;
         }
 
-        public override void Reset()
+        public override void Reset(bool shouldEndConversations = true)
         {
-            Success?.Reset();
-            Failure?.Reset(); 
+            Success?.Reset(shouldEndConversations);
+            Failure?.Reset(shouldEndConversations); 
             succeeded = null;
         }
 

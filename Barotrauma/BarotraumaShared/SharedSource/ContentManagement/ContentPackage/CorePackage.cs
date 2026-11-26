@@ -1,9 +1,6 @@
-using Barotrauma.Extensions;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Reflection;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -42,6 +39,8 @@ namespace Barotrauma
             AssertCondition(!missingFileTypes.Any(),
                     "Core package requires at least one of the following content types: " +
                             string.Join(", ", missingFileTypes.Select(t => t.Type.Name)));
+
+            AssertCondition(!Dependencies.Any(), "Core packages can't contain any dependencies");
         }
     }
 }

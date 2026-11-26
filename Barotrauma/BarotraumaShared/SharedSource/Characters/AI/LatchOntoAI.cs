@@ -10,7 +10,7 @@ using Voronoi2;
 
 namespace Barotrauma
 {
-    class LatchOntoAI
+    public class LatchOntoAI
     {
         const float RaycastInterval = 5.0f;
         private float raycastTimer;
@@ -363,6 +363,11 @@ namespace Barotrauma
                 {
                     DeattachFromBody(reset: true);
                 }
+            }
+
+            if (IsAttached)
+            {
+                character.ApplyStatusEffects(ActionType.OnLatched, deltaTime);
             }
         }
 

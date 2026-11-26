@@ -5,11 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class ItemLabel : ItemComponent, IDrawableComponent, IHasExtraTextPickerEntries
+    public partial class ItemLabel : ItemComponent, IDrawableComponent, IHasExtraTextPickerEntries
     {
         private GUITextBlock textBlock;
 
@@ -109,7 +108,7 @@ namespace Barotrauma.Items.Components
         }
 
         private bool scrollable;
-        [Serialize(false, IsPropertySaveable.Yes, description: "Should the text scroll horizontally across the item if it's too long to be displayed all at once.")]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Should the text scroll horizontally across the item if it's too long to be displayed all at once.")]
         public bool Scrollable
         {
             get { return scrollable; }

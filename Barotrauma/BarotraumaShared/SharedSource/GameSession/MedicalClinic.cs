@@ -9,7 +9,7 @@ using Barotrauma.Networking;
 
 namespace Barotrauma
 {
-    internal sealed partial class MedicalClinic
+    public sealed partial class MedicalClinic
     {
         private const int RateLimitMaxRequests = 20,
                           RateLimitExpiry = 5;
@@ -192,6 +192,9 @@ namespace Barotrauma
 
         private HealRequestResult HealAllPending(bool force = false, Client? client = null)
         {
+            // The panel refresh is slow enough that it's possible there's a dead character in the list, so prune those first
+            RemoveInvalidPendingHeals();
+
             int totalCost = GetTotalCost();
             if (!force)
             {
@@ -219,6 +222,12 @@ namespace Barotrauma
         private void ClearPendingHeals()
         {
             PendingHeals.Clear();
+        }
+
+        private bool RemoveInvalidPendingHeals()
+        {
+            ImmutableArray<CharacterInfo> crew = GetCrewCharacters();
+            return PendingHeals.RemoveAll(member => member.FindCharacterInfo(crew) is null) > 0;
         }
 
         private void AddEverythingToPending()
@@ -332,7 +341,7 @@ namespace Barotrauma
             }
 #endif
 
-            return Character.CharacterList.Where(static c => c.Info != null && c.TeamID == CharacterTeamType.Team1).Select(static c => c.Info).ToImmutableArray();
+            return Character.CharacterList.Where(static c => c.Info != null && !c.IsDead && c.TeamID == CharacterTeamType.Team1).Select(static c => c.Info).ToImmutableArray();
         }
 
 #if DEBUG && CLIENT

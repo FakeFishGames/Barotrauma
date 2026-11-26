@@ -11,7 +11,7 @@ namespace Barotrauma
     /// <summary>
     /// The "HR manager" UI, which is used to hire/fire characters and rename crewmates.
     /// </summary>
-    class HRManagerUI
+    public class HRManagerUI
     {
         private CampaignMode campaign => campaignUI.Campaign;
         private readonly CampaignUI campaignUI;
@@ -224,7 +224,9 @@ namespace Barotrauma
                 TextGetter = () => 
                 {
                     int crewSize = campaign?.CrewManager?.GetCharacterInfos()?.Count() ?? 0;
-                    return $"{crewSize}/{CrewManager.MaxCrewSize}";
+                    return TextManager.GetWithVariables("crewsize",
+                        ("[current]", crewSize.ToString()),
+                        ("[max]", CrewManager.MaxCrewSize.ToString()));
                 }
             };
             crewList = new GUIListBox(new RectTransform(new Vector2(1.0f, 8 * height), pendingAndCrewGroup.RectTransform))
@@ -375,21 +377,18 @@ namespace Barotrauma
             if (sortingMethod == SortingMethod.AlphabeticalAsc)
             {
                 list.Content.RectTransform.SortChildren((x, y) =>
-                    CompareReputationRequirement(x.GUIComponent, y.GUIComponent) ??
                     ((InfoSkill)x.GUIComponent.UserData).CharacterInfo.Name.CompareTo(((InfoSkill)y.GUIComponent.UserData).CharacterInfo.Name));
             }
             else if (sortingMethod == SortingMethod.JobAsc)
             {
                 SortCharacters(list, SortingMethod.AlphabeticalAsc);
                 list.Content.RectTransform.SortChildren((x, y) =>
-                    CompareReputationRequirement(x.GUIComponent, y.GUIComponent) ??
                     string.Compare(((InfoSkill)x.GUIComponent.UserData).CharacterInfo.Job.Name.Value, ((InfoSkill)y.GUIComponent.UserData).CharacterInfo.Job.Name.Value, StringComparison.Ordinal));
             }
             else if (sortingMethod == SortingMethod.PriceAsc || sortingMethod == SortingMethod.PriceDesc)
             {
                 SortCharacters(list, SortingMethod.AlphabeticalAsc);
                 list.Content.RectTransform.SortChildren((x, y) =>
-                    CompareReputationRequirement(x.GUIComponent, y.GUIComponent) ??
                     ((InfoSkill)x.GUIComponent.UserData).CharacterInfo.Salary.CompareTo(((InfoSkill)y.GUIComponent.UserData).CharacterInfo.Salary));
                 if (sortingMethod == SortingMethod.PriceDesc) { list.Content.RectTransform.ReverseChildren(); }
             }
@@ -397,14 +396,27 @@ namespace Barotrauma
             {
                 SortCharacters(list, SortingMethod.AlphabeticalAsc);
                 list.Content.RectTransform.SortChildren((x, y) =>
-                    CompareReputationRequirement(x.GUIComponent, y.GUIComponent) ??
                     ((InfoSkill)x.GUIComponent.UserData).SkillLevel.CompareTo(((InfoSkill)y.GUIComponent.UserData).SkillLevel));
                 if (sortingMethod == SortingMethod.SkillDesc) { list.Content.RectTransform.ReverseChildren(); }
             }
-            
+
             // Always apply this in the end to group by reserve bench status (does nothing if there are no reserve benched bots)
+
             list.Content.RectTransform.SortChildren((x, y) =>
-                    ((InfoSkill)x.GUIComponent.UserData).CharacterInfo.BotStatus.CompareTo(((InfoSkill)y.GUIComponent.UserData).CharacterInfo.BotStatus));
+                CompareReserveBenchStatus(x.GUIComponent, y.GUIComponent) ??
+                CompareReputationRequirement(x.GUIComponent, y.GUIComponent) ??
+                0);
+
+            int? CompareReserveBenchStatus(GUIComponent c1, GUIComponent c2)
+            {
+                CharacterInfo info1 = ((InfoSkill)c1.UserData).CharacterInfo;
+                CharacterInfo info2 = ((InfoSkill)c2.UserData).CharacterInfo;
+                if (info1.BotStatus == BotStatus.ActiveService && info2.BotStatus == BotStatus.ActiveService)
+                {
+                    return null;
+                }
+                return info1.BotStatus.CompareTo(info2.BotStatus);
+            }
 
             int? CompareReputationRequirement(GUIComponent c1, GUIComponent c2)
             {
@@ -412,13 +424,17 @@ namespace Barotrauma
                 CharacterInfo info2 = ((InfoSkill)c2.UserData).CharacterInfo;
                 float requirement1 = EnoughReputationToHire(info1) ? 0 : info1.MinReputationToHire.reputation;
                 float requirement2 = EnoughReputationToHire(info2) ? 0 : info2.MinReputationToHire.reputation;
-                if (MathUtils.NearlyEqual(requirement1, 0.0f) && MathUtils.NearlyEqual(requirement2, 0.0f))
+
+                bool hasRequirement1 = MathUtils.NearlyEqual(requirement1, 0.0f);
+                bool hasRequirement2 = MathUtils.NearlyEqual(requirement2, 0.0f);
+
+                if (hasRequirement1 == hasRequirement2)
                 {
                     return null;
                 }
                 else
                 {
-                    return requirement1.CompareTo(requirement2);
+                    return hasRequirement2.CompareTo(hasRequirement1);
                 }
             }
         }
@@ -477,16 +493,21 @@ namespace Barotrauma
             const float buttonWidth = 0.12f;
             
             GUITextBlock jobBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), nameAndJobGroup.RectTransform),
-                characterInfo.Title ?? characterInfo.Job.Name, textColor: Color.White, font: GUIStyle.SmallFont, textAlignment: Alignment.TopLeft)
+                characterInfo.Title.IsNullOrEmpty() ? characterInfo.Job.Name : characterInfo.Title, textColor: Color.White, font: GUIStyle.SmallFont, textAlignment: Alignment.TopLeft)
             {
                 CanBeFocused = false
             };
             if (!characterInfo.MinReputationToHire.factionId.IsEmpty)
             {
-                var faction = campaign.Factions.Find(f => f.Prefab.Identifier == characterInfo.MinReputationToHire.factionId);
+                var faction = campaign.GetFaction(characterInfo.MinReputationToHire.factionId);
                 if (faction != null)
                 {
                     jobBlock.TextColor = faction.Prefab.IconColor;
+                }
+                if (!EnoughReputationToHire(characterInfo))
+                {
+                    nameBlock.TextColor *= 0.7f;
+                    jobBlock.TextColor *= 0.7f;
                 }
             }
             var fullJobText = jobBlock.Text;
@@ -504,7 +525,15 @@ namespace Barotrauma
                 {
                     CanBeFocused = false
                 };
-                if (jobColor.HasValue) { skillIcon.Color = jobColor.Value; }
+                //skills with their own icon style use a fixed color, others are colored by the job
+                if (skill.IconColor.HasValue)
+                {
+                    skillIcon.Color = skill.IconColor.Value;
+                }
+                else if (jobColor.HasValue)
+                {
+                    skillIcon.Color = jobColor.Value;
+                }
             }
             
             if (!hideSalary)
@@ -832,13 +861,16 @@ namespace Barotrauma
             GUILayoutGroup skillLevelGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.2f, 1.0f), skillGroup.RectTransform));
             var characterSkills = characterInfo.Job.GetSkills();
             blockHeight = 1.0f / characterSkills.Count();
-            foreach (Skill skill in characterSkills)
+            foreach (Skill skill in characterSkills.OrderByDescending(static skill => skill.Level))
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, blockHeight), skillNameGroup.RectTransform), TextManager.Get("SkillName." + skill.Identifier), font: GUIStyle.SmallFont);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, blockHeight), skillNameGroup.RectTransform), TextManager.Get("SkillName." + skill.Identifier), font: GUIStyle.SmallFont)
+                {
+                    ToolTip = skill.Description
+                };
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, blockHeight), skillLevelGroup.RectTransform), ((int)skill.Level).ToString(), textAlignment: Alignment.Right);
             }
 
-            if (characterInfo.MinReputationToHire.reputation > 0.0f)
+            if (!characterInfo.MinReputationToHire.factionId.IsEmpty)
             {
                 var repStr = TextManager.GetWithVariables(
                     "campaignstore.reputationrequired",

@@ -15,7 +15,7 @@ namespace Barotrauma
     /// Created by Markus Isberg on 11th of March 2020 for the submarine editor.
     /// "Implementing a global undo and redo with Memento pattern proved too difficult of a task for me so I implemented it with this pattern instead."
     /// </remarks>
-    internal abstract partial class Command
+    public abstract partial class Command
     {
         /// <summary>
         /// A method that should apply a new state on an object or perform an action

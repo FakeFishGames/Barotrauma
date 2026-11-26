@@ -204,7 +204,7 @@ namespace Barotrauma
             }
         }
 
-        private static SubmarineInfo GetRandomBeaconByTags(ImmutableArray<Identifier> tags, LevelData levelData)
+        public static SubmarineInfo GetRandomBeaconByTags(ImmutableArray<Identifier> tags, LevelData levelData)
         {
             return GetRandomSubmarineByTagsAndDifficulty(
                 tags,

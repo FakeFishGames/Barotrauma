@@ -4,7 +4,7 @@ using System;
 
 namespace Barotrauma
 {
-    internal class CircuitBoxSelectable
+    public class CircuitBoxSelectable
     {
         public bool IsSelected;
         public ushort SelectedBy;

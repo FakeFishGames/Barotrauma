@@ -12,7 +12,7 @@ using Voronoi2;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Projectile : ItemComponent, IServerSerializable
+    public partial class Projectile : ItemComponent, IServerSerializable
     {
         private static readonly ImmutableArray<float> spreadPool;
         static Projectile()
@@ -64,6 +64,7 @@ namespace Barotrauma.Items.Components
         {
             Structure,
             Limb,
+            Character,
             Item,
             Submarine,
             LevelWall,
@@ -78,8 +79,12 @@ namespace Barotrauma.Items.Components
 
         private byte spreadIndex;
 
-        //continuous collision detection is used while the projectile is moving faster than this
-        const float ContinuousCollisionThreshold = 5.0f;
+        private int currentHitScanIndex;
+
+        /// <summary>
+        /// Continuous collision detection is used while the projectile is moving faster than this.
+        /// </summary>
+        protected const float ContinuousCollisionThreshold = 5.0f;
 
         private Joint stickJoint;
         private Vector2 jointAxis;
@@ -226,6 +231,28 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        public const float HitScanAbsoluteMaxRange = 50000.0f;
+        [Serialize(HitScanAbsoluteMaxRange, IsPropertySaveable.No, description: $"How far from the launch point can the hitscan projectile still do damage? Default: 50000 (pixels), which is also the max value. On non-hitscan projectiles, use {nameof(DeactivationTime)}")]
+        public float HitScanMaxRange
+        {
+            get;
+            set;
+        }
+
+        [Serialize(-1, IsPropertySaveable.No, description: "How many walls or doors the projectile can hit before it stops. If not set, defaults to MaxTargetsToHit.")]
+        public int MaxStructuresToHit
+        {
+            get;
+            set;
+        }
+
+        [Serialize(-1, IsPropertySaveable.No, description: "How many characters the projectile can hit before it stops. If not set, defaults to MaxTargetsToHit.")]
+        public int MaxCharactersToHit
+        {
+            get;
+            set;
+        }
+
         [Serialize(false, IsPropertySaveable.No, description: "Should the item be deleted when it hits something.")]
         public bool RemoveOnHit
         {
@@ -254,9 +281,14 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        private float deactivationTimer;
+        protected float deactivationTimer;
 
-        [Serialize(0f, IsPropertySaveable.No)]
+        /// <summary>
+        /// The time remaining for the projectile to become inactive (see <see cref="DeactivationTime"/>)
+        /// </summary>
+        public float DeactivationTimer => deactivationTimer;
+
+        [Serialize(0f, IsPropertySaveable.No, description: "If set, the projectile will stop behaving as a projectile (no longer damages things on impact) after this time has passed since it was launched. In seconds. Only applies to non-hitscan projectiles. On hitscan projectiles, use {nameof(HitScanMaxRange)}.")]
         public float DeactivationTime
         {
             get;
@@ -300,6 +332,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, IsPropertySaveable.No, description: $"Similar to {nameof(IgnoreProjectilesWhileActive)}, but makes the projectile only ignore collisions with projectiles of the same type.")]
+        public bool IgnoreProjectilesOfSameTypeWhileActive
+        {
+            get;
+            set;
+        }
+
         public Body StickTarget 
         { 
             get; 
@@ -321,6 +360,30 @@ namespace Barotrauma.Items.Components
         }
 
         public bool IsStuckToTarget => StickTarget != null;
+
+        private bool projectileActive;
+
+        /// <summary>
+        /// Is the projectile currently active, i.e. will the projectile do damage when it hits something. Can be used by status effects.
+        /// </summary>
+        public bool ProjectileActive
+        {
+            get => projectileActive;
+            set
+            {
+                if (value == projectileActive) { return; }
+                projectileActive = value;
+                if (projectileActive)
+                {
+                    IsActive = true;
+                    EnableProjectileCollisions();
+                }
+                else
+                {
+                    DisableProjectileCollisions();
+                }
+            }
+        }
 
         private Category originalCollisionCategories;
         private Category originalCollisionTargets;
@@ -407,10 +470,6 @@ namespace Barotrauma.Items.Components
             //set the rotation of the projectile again because dropping the projectile in Use
             //resets the rotation and moves it to the position of the parent item
             Item.SetTransform(simPosition, GetLaunchRotation(rotation), findNewHull: false);
-            if (DeactivationTime > 0)
-            {
-                deactivationTimer = DeactivationTime;
-            }
         }
 
         public void Shoot(Character user, Vector2 weaponPos, Vector2 spawnPos, float rotation, List<Body> ignoredBodies, bool createNetworkEvent, float damageMultiplier = 1f, float launchImpulseModifier = 0f)
@@ -452,6 +511,12 @@ namespace Barotrauma.Items.Components
             //can't launch if already launched
             if (StickTarget != null || IsActive) { return false; }
 
+            if (item.GetComponent<Throwable>() is { } throwable && throwable.CurrentThrower != null)
+            {
+                character = throwable.CurrentThrower;
+                IgnoredBodies.AddRange(character.AnimController.Limbs.Select(l => l.body.FarseerBody));
+            }
+
 #if SERVER
             var owner = GameMain.Server.ConnectedClients.FirstOrDefault(c => c.Character == User);
             if (owner != null)
@@ -488,6 +553,7 @@ namespace Barotrauma.Items.Components
                 item.Submarine = initialSubmarine;
                 if (Hitscan)
                 {
+                    currentHitScanIndex = i;
                     DoHitscan(launchDir);
                     if (i < HitScanCount - 1)
                     {
@@ -504,6 +570,13 @@ namespace Barotrauma.Items.Components
             }
             User = character;
             ApplyStatusEffects(ActionType.OnUse, 1.0f, User, user: User);
+#if SERVER
+            //brief delay before we start syncing a launched projectile - otherwise they seem to rubberband a bit backwards after being fired,
+            //due to the client-side prediction and the positions reported by the server being a bit behind because of latency
+            //  this workaround means that there is still some rubberbanding, but most often at a point where the projectile 
+            //  has already hit something or is further from the character, making it much less noticeable.
+            item.DelayPositionUpdates(time: 1.0f);
+#endif
             return true;
         }
 
@@ -523,7 +596,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null) => Use(character);
 
-        private void DoLaunch(Vector2 impulse)
+        protected virtual void DoLaunch(Vector2 impulse)
         {
             hits.Clear();
 
@@ -544,7 +617,7 @@ namespace Barotrauma.Items.Components
                 //in case a client failed to launch the projectile for some reason
                 CoroutineManager.Invoke(() =>
                 {
-                    if (item.Removed) { return; }
+                    if (item.Removed || prevInventory.Owner is { Removed: true }) { return; }
                     prevInventory.CreateNetworkEvent();
                 }, delay: CorrectionDelay / 2);
             }
@@ -579,6 +652,11 @@ namespace Barotrauma.Items.Components
 
             IsActive = true;
 
+            if (DeactivationTime > 0)
+            {
+                deactivationTimer = DeactivationTime;
+            }
+
             if (stickJoint == null) { return; }
 
             StickTarget = null;            
@@ -599,23 +677,24 @@ namespace Barotrauma.Items.Components
             //uses it to determine the direction from which the projectile hit
             item.body.LinearVelocity = dir;
             IsActive = true;
-
+            
+            float rayLength = Math.Min(HitScanMaxRange, HitScanAbsoluteMaxRange);
             Vector2 rayStart = simPositon;
-            Vector2 rayEnd = rayStart + dir * 500.0f;
+            Vector2 rayEnd = rayStart + dir * ConvertUnits.ToSimUnits(rayLength);
 
             float worldDist = 1000.0f;
 #if CLIENT
             worldDist = Screen.Selected?.Cam?.WorldView.Width ?? GameMain.GraphicsWidth;
 #endif
-            Vector2 rayEndWorld = rayStartWorld + dir * worldDist;
+            Vector2 rayEndWorld = rayStartWorld + dir * Math.Min(rayLength, worldDist);
 
-            List<HitscanResult> hits = new List<HitscanResult>();
-            hits.AddRange(DoRayCast(rayStart, rayEnd, submarine: item.Submarine));
+            List<HitscanResult> rayCastHits = new List<HitscanResult>();
+            rayCastHits.AddRange(DoRayCast(rayStart, rayEnd, submarine: item.Submarine));
 
             if (item.Submarine != null)
             {
                 //shooting indoors, do a hitscan outside as well
-                hits.AddRange(DoRayCast(rayStart + item.Submarine.SimPosition, rayEnd + item.Submarine.SimPosition, submarine: null));
+                rayCastHits.AddRange(DoRayCast(rayStart + item.Submarine.SimPosition, rayEnd + item.Submarine.SimPosition, submarine: null));
                 //do a hitscan in other subs' coordinate spaces
                 RayCastInOtherSubs(rayStart + item.Submarine.SimPosition, rayEnd + item.Submarine.SimPosition);
             }
@@ -641,22 +720,21 @@ namespace Barotrauma.Items.Components
                             inSubHits[i].Fraction,
                             sub: null);
                     }
-                    hits.AddRange(inSubHits);
+                    rayCastHits.AddRange(inSubHits);
                 }
             }
 
-            int hitCount = 0;
             Vector2 lastHitPos = item.WorldPosition;
-            hits = hits.OrderBy(h => h.Fraction).ToList();
-            for (int i = 0; i < hits.Count; i++)
+            rayCastHits = rayCastHits.OrderBy(h => h.Fraction).ToList();
+            for (int i = 0; i < rayCastHits.Count; i++)
             {
-                var h = hits[i];
-                item.SetTransform(h.Point, rotation, forceSubmarine: h.Submarine);
+                var hit = rayCastHits[i];
+                item.SetTransform(hit.Point, rotation, forceSubmarine: hit.Submarine);
                 item.UpdateTransform();
-                if (HandleProjectileCollision(h.Fixture, h.Normal, Vector2.Zero))
+                if (HandleProjectileCollision(hit.Fixture, hit.Normal, Vector2.Zero))
                 {
-                    hitCount++;
-                    if (hitCount >= MaxTargetsToHit || i == hits.Count - 1)
+                    hits.Add(hit.Fixture.Body);
+                    if (MaxTargetsToHitReached(hits) || i == rayCastHits.Count - 1)
                     {
                         LaunchProjSpecific(rayStartWorld, item.WorldPosition);
                         break;
@@ -664,7 +742,7 @@ namespace Barotrauma.Items.Components
                 }
             }
             //the raycast didn't hit anything (or didn't hit enough targets to stop the projectile) -> the projectile flew somewhere outside the level and is permanently lost
-            if (hitCount < MaxTargetsToHit)
+            if (!MaxTargetsToHitReached(hits))
             {
                 item.body.SetTransformIgnoreContacts(item.body.SimPosition, rotation);
                 LaunchProjSpecific(rayStartWorld, rayEndWorld);
@@ -677,7 +755,10 @@ namespace Barotrauma.Items.Components
                     if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
                     {
                         //clients aren't allowed to remove items by themselves, so lets hide the projectile until the server tells us to remove it
-                        item.HiddenInGame = Hitscan;
+                        if (Hitscan)
+                        {
+                            HideItem();
+                        }                        
                     }
                     else
                     {
@@ -862,7 +943,7 @@ namespace Barotrauma.Items.Components
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, useTarget: useTarget, user: _user);
             }
 
-            if (item.body != null && item.body.FarseerBody.IsBullet)
+            if (item.body != null && item.BodyType == BodyType.Dynamic && item.body.FarseerBody.IsBullet)
             {
                 if (item.body.LinearVelocity.LengthSquared() < ContinuousCollisionThreshold * ContinuousCollisionThreshold)
                 {
@@ -920,7 +1001,7 @@ namespace Barotrauma.Items.Components
             if (IgnoredBodies != null && IgnoredBodies.Contains(target.Body)) { return false; }
             if (originalCollisionCategories == Category.None && originalCollisionTargets == Category.None) { return false; }
             //ignore character colliders (the projectile only hits limbs)
-            if (target.CollisionCategories == Physics.CollisionCharacter && target.Body.UserData is Character)
+            if (ShouldIgnoreCharacterFixture(target))
             {
                 return false;
             }
@@ -943,6 +1024,11 @@ namespace Barotrauma.Items.Components
             }
             else if (target.Body.UserData is Item item)
             {
+                if (IgnoreProjectilesOfSameTypeWhileActive && item.Prefab == this.item.Prefab)
+                {
+                    return false;
+                }
+
                 if (item.Condition <= 0.0f) { return false; }
                 if (!item.Prefab.DamagedByProjectiles)
                 {
@@ -959,7 +1045,7 @@ namespace Barotrauma.Items.Components
             }
 
             //ignore character colliders (the projectile only hits limbs)
-            if (target.CollisionCategories == Physics.CollisionCharacter && target.Body.UserData is Character)
+            if (ShouldIgnoreCharacterFixture(target))
             {
                 return false;
             }
@@ -971,7 +1057,7 @@ namespace Barotrauma.Items.Components
             {
                 item.body.FarseerBody.ResetDynamics();
             }
-            if (hits.Count >= MaxTargetsToHit || target.Body.UserData is VoronoiCell)
+            if (MaxTargetsToHitReached(hits) || target.Body.UserData is VoronoiCell)
             {
                 DisableProjectileCollisions();
                 return true;
@@ -980,6 +1066,14 @@ namespace Barotrauma.Items.Components
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Is the target fixture a character collider we should ignore a collision with? Projectiles only hit character colliders when <see cref="Ragdoll.SimplePhysicsEnabled"/> is on, otherwise they must hit the actual limbs.
+        /// </summary>
+        private bool ShouldIgnoreCharacterFixture(Fixture fixture)
+        {
+            return fixture.CollisionCategories == Physics.CollisionCharacter && fixture.Body.UserData is Character { AnimController.SimplePhysicsEnabled: false };
         }
 
         private bool ShouldIgnoreCharacterCollision(Character character)
@@ -1068,12 +1162,25 @@ namespace Barotrauma.Items.Components
         private readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
         private Fixture lastTarget;
 
+        private bool MaxTargetsToHitReached(IEnumerable<Body> hits)
+        {
+            if (MaxCharactersToHit > 0)
+            {
+                if (hits.Count(body => body.UserData is Limb or Character) >= MaxCharactersToHit) { return true; }
+            }
+            if (MaxStructuresToHit > 0)
+            {
+                if (hits.Count(body => body.UserData is Structure || (body.UserData is Item hitItem && hitItem.GetComponent<Door>() != null)) >= MaxStructuresToHit) { return true; }
+            }
+            return hits.Count() >= MaxTargetsToHit;
+        }
+
         private bool HandleProjectileCollision(Fixture target, Vector2 collisionNormal, Vector2 velocity)
         {
             if (User != null && User.Removed) { User = null; }
             if (IgnoredBodies != null && IgnoredBodies.Contains(target.Body)) { return false; }
             //ignore character colliders (the projectile only hits limbs)
-            if (target.CollisionCategories == Physics.CollisionCharacter && target.Body.UserData is Character)
+            if (ShouldIgnoreCharacterFixture(target))
             {
                 return false;
             }
@@ -1173,26 +1280,26 @@ namespace Barotrauma.Items.Components
                         // Apply the status effects defined in the limb's attack that was hit
                         foreach (var effect in attack.StatusEffects)
                         {
-                            if (effect.type == ActionType.OnImpact)
+                            if (effect.Type == ActionType.OnImpact)
                             {
                                 if (effect.HasTargetType(StatusEffect.TargetType.This))
                                 {
-                                    effect.Apply(effect.type, 1.0f, User, User);
+                                    effect.Apply(effect.Type, 1.0f, User, User);
                                 }
                                 if (effect.HasTargetType(StatusEffect.TargetType.Character) || effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                                 {
-                                    effect.Apply(effect.type, 1.0f, targetLimb.character, targetLimb.character);
+                                    effect.Apply(effect.Type, 1.0f, targetLimb.character, targetLimb.character);
                                 }
                                 if (effect.HasTargetType(StatusEffect.TargetType.Limb))
                                 {
-                                    effect.Apply(effect.type, 1.0f, targetLimb.character, targetLimb);
+                                    effect.Apply(effect.Type, 1.0f, targetLimb.character, targetLimb);
                                 }
                                 if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                                     effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                                 {
                                     targets.Clear();
                                     effect.AddNearbyTargets(targetLimb.WorldPosition, targets);
-                                    effect.Apply(effect.type, 1.0f, targetLimb.character, targets);
+                                    effect.Apply(effect.Type, 1.0f, targetLimb.character, targets);
                                 }
                             }
                         }
@@ -1218,7 +1325,7 @@ namespace Barotrauma.Items.Components
             target.Body.ApplyLinearImpulse(velocity * item.body.Mass);
             target.Body.LinearVelocity = target.Body.LinearVelocity.ClampLength(NetConfig.MaxPhysicsBodyVelocity * 0.5f);
 
-            if (hits.Count >= MaxTargetsToHit || hits.LastOrDefault()?.UserData is VoronoiCell)
+            if (MaxTargetsToHitReached(hits) || hits.LastOrDefault()?.UserData is VoronoiCell)
             {
                 DisableProjectileCollisions();
             }
@@ -1279,8 +1386,8 @@ namespace Barotrauma.Items.Components
 
             if (RemoveOnHit)
             {
-                removePending = true;
-                item.HiddenInGame = true;
+                removePending = true; 
+                HideItem();
                 item.body.FarseerBody.Enabled = false;
                 //delete with a brief delay so we don't delete the item
                 //before a client has managed to launch it (can happen with hitscan projectile)
@@ -1294,6 +1401,19 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        private void HideItem()
+        {
+            if (!item.HiddenInGame)
+            {
+                item.HiddenInGame = true;
+                //reset after 1 sec in case the client incorrectly predicted the hit, and the projectile actually didn't get removed server-side
+                if (GameMain.NetworkMember is { IsClient: true })
+                {
+                    CoroutineManager.Invoke(() => { item.HiddenInGame = false; }, delay: 1.0f);
+                }
+            }
+        }
+
         private float GetLightTargetMassThreshold()
         {
             return LightTargetMassThreshold < 0 ? item.body.Mass * 0.5f : LightTargetMassThreshold;
@@ -1301,11 +1421,13 @@ namespace Barotrauma.Items.Components
 
         private void EnableProjectileCollisions()
         {
+            projectileActive = true;
             if (item.body.CollisionCategories != Category.None)
             {
                 item.body.CollisionCategories = Physics.CollisionProjectile;
                 item.body.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking;
             }
+            //note that we don't need to take IgnoreProjectilesOfSameTypeWhileActive into account here, we filter out the collisions with projectiles of the same type in OnProjectileCollision
             if (item.Prefab.DamagedByProjectiles && !IgnoreProjectilesWhileActive)
             {
                 if (item.body.CollisionCategories == Category.None) { item.body.CollisionCategories = Physics.CollisionCharacter; }
@@ -1315,6 +1437,7 @@ namespace Barotrauma.Items.Components
 
         private void DisableProjectileCollisions()
         {
+            projectileActive = false;
             if (item?.body?.FarseerBody == null) { return; }
             item.body.FarseerBody.OnCollision -= OnProjectileCollision;
             if (originalCollisionCategories != Category.None && originalCollisionTargets != Category.None)
@@ -1335,7 +1458,12 @@ namespace Barotrauma.Items.Components
                     item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
                 }
             }
-            IgnoredBodies?.Clear();
+            if (!Hitscan || 
+                //only reset the ignored bodies on the last hitscan hit so e.g. shotguns don't start hitting you after the first hitscan fired by the shot
+                currentHitScanIndex >= HitScanCount - 1)
+            {
+                IgnoredBodies?.Clear();
+            }
         }
 
         public bool IsAttachedTo(PhysicsBody body)

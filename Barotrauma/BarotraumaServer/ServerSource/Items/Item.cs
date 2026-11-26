@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -136,6 +137,15 @@ namespace Barotrauma
                         msg.WriteSingle(value);
                     }
                     break;
+                case FlipItemEventData flipItemEventData:
+                    msg.WriteBoolean(flipItemEventData.FlipX);
+                    msg.WriteBoolean(flipItemEventData.FlipY);
+                    break;
+                case SayMessageEventData sayMessageEventData:
+                    msg.WriteString(sayMessageEventData.Message);
+                    msg.WriteBoolean(sayMessageEventData.SayInRadio);
+                    msg.WriteByte(sayMessageEventData.IgnoredClient?.SessionId ?? 0);
+                    break;
                 case UpgradeEventData upgradeEventData:
                     var upgrade = upgradeEventData.Upgrade;
                     var upgradeTargets = upgrade.TargetComponents;
@@ -239,6 +249,27 @@ namespace Barotrauma
                     }
                     Combine(combineTarget, c.Character);
                     break;
+                case EventType.SetTags:
+                    int tagCount = msg.ReadByte();
+                    var newTags = new List<Identifier>(tagCount);
+                    for (int i = 0; i < tagCount; i++)
+                    {
+                        newTags.Add(msg.ReadIdentifier());
+                    }
+                    //only tags selectable for this item are applied (player-owned sub/outpost, tags of the correct category)
+                    if (ContainerTagPrefab.CanChangeTags(this, c) && ContainerTagPrefab.SetTags(this, newTags))
+                    {
+                        var selectedTags = ContainerTagPrefab.GetSelectableTags(this)
+                            .Where(t => HasTag(t.Identifier))
+                            .Select(t => t.Identifier);
+                        GameServer.Log($"{GameServer.CharacterLogName(c.Character)} set the container tags of '{Name}' to '{string.Join(", ", selectedTags)}'.", ServerLog.MessageType.ItemInteraction);
+                    }
+                    else
+                    {
+                        // Rejected, or the client's tags were out of sync, so correct them
+                        ContainerTagPrefab.SyncTags(this);
+                    }
+                    break;
             }
         }
 
@@ -274,8 +305,9 @@ namespace Barotrauma
 
             msg.WriteBoolean(OnInsertedEffectsAppliedOnPreviousRound);
             msg.WriteByte(body == null ? (byte)0 : (byte)body.BodyType);
-            msg.WriteBoolean(SpawnedInCurrentOutpost);
+            msg.WriteBoolean(SpawnedInNonPlayerOutpostOrSubmarine);
             msg.WriteBoolean(AllowStealing);
+            msg.WriteBoolean(AllowSellingIfSpawnedInCurrentOutpost);
             msg.WriteRangedInteger(Quality, 0, Items.Components.Quality.MaxQuality);
 
             byte teamID = 0;
@@ -302,6 +334,7 @@ namespace Barotrauma
             if (hasIdCard)
             {
                 msg.WriteInt32(idCardComponent.SubmarineSpecificID);
+                msg.WriteBoolean(idCardComponent.RestrictToSpecificSubmarine);
                 msg.WriteString(idCardComponent.OwnerName);
                 msg.WriteString(idCardComponent.OwnerTags);
                 msg.WriteByte((byte)Math.Max(0, idCardComponent.OwnerBeardIndex + 1));
@@ -397,6 +430,17 @@ namespace Barotrauma
                 }
                 return PositionUpdateInterval;
             }
+        }
+
+        public float DelayPositionUpdatesUntil { get; private set; }
+
+        /// <summary>
+        /// Will make the server not send any position updates for this item until the specified time has passed.
+        /// </summary>
+        public void DelayPositionUpdates(float time)
+        {
+            if (GameMain.Server == null) { return; }
+            DelayPositionUpdatesUntil = (float)NetTime.Now + time;            
         }
 
         public void ServerWritePosition(ReadWriteMessage tempBuffer, Client c)

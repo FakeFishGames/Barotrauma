@@ -3,15 +3,14 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
-    class LimbPos : ISerializableEntity
+    public class LimbPos : ISerializableEntity
     {
         [Editable]
         public LimbType LimbType { get; set; }
@@ -33,7 +32,7 @@ namespace Barotrauma.Items.Components
         }
     }
 
-    partial class Controller : ItemComponent, IServerSerializable
+    public partial class Controller : ItemComponent, IServerSerializable
     {
         //where the limbs of the user should be positioned when using the controller
         private readonly List<LimbPos> limbPositions = new List<LimbPos>();
@@ -286,6 +285,11 @@ namespace Barotrauma.Items.Components
         }
 
         /// <summary>
+        /// Permanent id that can be used to identify the controller between save and loads.
+        /// </summary>
+        public int PermanentSaveId { get; private set; }
+
+        /// <summary>
         /// Used to determine how fast the character is teleported
         /// to the item when they first select the controller.
         /// Only relevant for <see cref="ForceUserToStayAttached" />
@@ -321,6 +325,8 @@ namespace Barotrauma.Items.Components
             {
                 DebugConsole.ThrowError($"Error - Controller has a {nameof(SpawnItemOnSelected)} but no ItemContainer defined");
             }
+
+            PermanentSaveId = Random.Shared.Next(int.MinValue, int.MaxValue);
         }
 
         /// <summary>
@@ -525,6 +531,13 @@ namespace Barotrauma.Items.Components
                 return true;
             }
 
+            // Clients don't keep track of spawnedItemOnSelected, so they can incorrectly kick out the character and
+            // cause desync in some cases (like thinking there's no space in the controller)
+            if (GameMain.NetworkMember is { IsClient: true })
+            {
+                return true;
+            }
+
             if (containerToSpawnOnSelectedItem.Inventory.AllItems.Any(item => item == spawnedItemOnSelected))
             {
                 return true;
@@ -653,7 +666,8 @@ namespace Barotrauma.Items.Components
             {
                 Lights.LightManager.ViewTarget = focusTarget;
                 cam.TargetPos = focusTarget.WorldPosition;
-                cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (focusTarget as Item).Prefab.OffsetOnSelected * focusTarget.OffsetOnSelectedMultiplier, deltaTime * 10.0f);
+                float offset = focusTarget.Prefab.OffsetOnSelected * focusTarget.OffsetOnSelectedMultiplier * focusTarget.GetOffsetOnSelectedMultiplierFromComponents();
+                cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, offset, deltaTime * 10.0f);
                 HideHUDs(true);
             }
 #endif
@@ -705,7 +719,7 @@ namespace Barotrauma.Items.Components
                     return recipientPanel.Item;
                 }
             }
-                        
+
             return null;
         }
 
@@ -775,6 +789,17 @@ namespace Barotrauma.Items.Components
             {
                 HideHUDs(false);
             }
+
+            if (!IsOutOfPower())
+            {
+                //send a signal with a null user to communicate to turrets etc that no-one is using the turret any longer
+                var positionOut = item.Connections?.Find(c => c.Name == "position_out");
+                if (positionOut != null)
+                {
+                    item.SendSignal(new Signal(MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture), sender: null), positionOut);
+                }
+            }
+
 #if SERVER
             item.CreateServerEvent(this);
 #endif
@@ -801,7 +826,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 // Prevent user from kicking character out if they are holding another character
-                if (AllowPuttingInOtherCharacters && CanPutSelectedCharacter(activator.SelectedCharacter))
+                if (AllowPuttingInOtherCharacters && CanPutSelectedCharacterInside(activator.SelectedCharacter))
                 {
                     return false;
                 }
@@ -833,8 +858,14 @@ namespace Barotrauma.Items.Components
                 }
                 return AllowSelectingWhenSelectedByOther;
             }
-            else if (AllowPuttingInOtherCharacters && CanPutSelectedCharacter(activator.SelectedCharacter))
+            else if (AllowPuttingInOtherCharacters && CanPutSelectedCharacterInside(activator.SelectedCharacter))
             {
+                // Server should handle the logic here, otherwise a misprediction can cause a desync (e.g. server refusing to put character but character still goes in client-side)
+                if (GameMain.NetworkMember is { IsClient: true })
+                {
+                    return false;
+                }
+
                 // Stun pets longer so they don't immediately get out of the controller
                 if (activator.SelectedCharacter.IsPet)
                 {
@@ -923,7 +954,7 @@ namespace Barotrauma.Items.Components
             UpdateMsg();
 #endif
 
-            bool canPutCharacter = AllowPuttingInOtherCharacters && CanPutSelectedCharacter(character.SelectedCharacter, addMessage);
+            bool canPutCharacter = AllowPuttingInOtherCharacters && CanPutSelectedCharacterInside(character.SelectedCharacter, addMessage);
             bool canKickCharacter = SelectingKicksCharacterOut && User != null && !User.Removed;
             bool canUseController = CanBeSelectedByCharacters;
 
@@ -947,7 +978,9 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            if (IsSpawnContainerFull())
+            // The container only needs space for the item spawned when a character enters the controller,
+            // taking a character out (e.g. when a deconstructor's input slots are full) doesn't need any
+            if (!canKickCharacter && IsSpawnContainerFull())
             {
 #if CLIENT
                 if (addMessage)
@@ -969,12 +1002,17 @@ namespace Barotrauma.Items.Components
             return base.HasAccess(character);
         }
 
-        private bool CanPutSelectedCharacter(Character character, bool showMessage = false)
+        /// <summary>
+        /// Can another character put the selected character inside this one?
+        /// </summary>
+        /// <returns></returns>
+        private bool CanPutSelectedCharacterInside(Character character, bool showMessage = false)
         {
             if (character == null)
             {
                 return false;
             }
+            if (character.AnimController.RagdollParams.CanEnterSubmarine != CanEnterSubmarine.True) { return false; }
 
             if (!character.IsContainable)
             {
@@ -987,9 +1025,8 @@ namespace Barotrauma.Items.Components
 
                 return false;
             }
-
             if (character.IsKnockedDownOrRagdolled) { return true; }
-            if (character.LockHands) { return true; }
+            if (character.BothHandsDisabled) { return true; }
             if (character.IsPet) 
             { 
                 return true; 
@@ -1002,12 +1039,17 @@ namespace Barotrauma.Items.Components
 
         public override XElement Save(XElement parentElement)
         {
-            return SaveLimbPositions(base.Save(parentElement));
+            XElement element = SaveLimbPositions(base.Save(parentElement));
+            element.Add(new XAttribute(nameof(PermanentSaveId), PermanentSaveId));
+            return element;
         }
 
         public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
             base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
+
+            PermanentSaveId = componentElement.GetAttributeInt(nameof(PermanentSaveId), PermanentSaveId);
+
             if (GameMain.GameSession?.GameMode?.Preset == GameModePreset.TestMode)
             {
                 LoadLimbPositions(componentElement);

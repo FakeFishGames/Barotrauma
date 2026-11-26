@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -47,6 +47,10 @@ namespace Barotrauma
                 {
                     names.UnionWith(altNames);
                 }
+                if (type.GetCustomAttribute<TypePreviouslyKnownAs>() is { } knownAsAttribute)
+                {
+                    names.Add(knownAsAttribute.PreviousName.RemoveFromEnd("File").ToIdentifier());
+                }
 
                 Names = names.ToImmutableHashSet();
             }
@@ -58,8 +62,23 @@ namespace Barotrauma
             public ContentFile? CreateInstance(ContentPackage contentPackage, ContentPath path) =>
                 (ContentFile?)Activator.CreateInstance(Type, contentPackage, path);
         }
-        
-        public readonly static ImmutableHashSet<TypeInfo> Types;
+
+        public static readonly ImmutableHashSet<TypeInfo> Types;
+
+        /// <summary>
+        /// The maximum number of instances of this content file type that can be loaded in a single content package.
+        /// Used currently by plugin content type since having multiple plugin instances per content package would
+        /// cause issues and there's no real reason to have more than one.
+        /// </summary>
+        public virtual int MaxAllowedInstances
+            => int.MaxValue;
+
+        /// <summary>
+        /// Can content packages containing this content file be downloaded by clients when joining a server?
+        /// </summary>
+        public virtual bool CanBeDownloadedFromServer
+            => true;
+
         static ContentFile()
         {
             Types = ReflectionUtils.GetDerivedNonAbstract<ContentFile>()
@@ -88,14 +107,17 @@ namespace Barotrauma
         {
             static Result<ContentFile, ContentPackage.LoadError> fail(string error, Exception? exception = null)
                 => Result<ContentFile, ContentPackage.LoadError>.Failure(new ContentPackage.LoadError(error, exception));
-            
+
             Identifier elemName = element.NameAsIdentifier();
-            var type = Types.FirstOrDefault(t => t.Names.Contains(elemName));
+
+            // first check vanilla types
+            var type = Types.FirstOrDefault(t => t.Names.Contains(elemName))
+                       // check if the given type is implemented in a plugin already
+                       ?? PluginData.AllDynamicTypes.FirstOrDefault(t => t.Names.Contains(elemName))
+                       // if the type is still not found, we assume it will be implemented by a plugin so assign it to DynamicallyLoadedFile
+                       ?? Types.First(static t => t.Type == typeof(DynamicallyLoadedFile));
+
             var filePath = element.GetAttributeContentPath("file", contentPackage);
-            if (type is null)
-            {
-                return fail($"Invalid content type \"{elemName}\"");
-            }
             if (filePath is null)
             {
                 return fail($"No content path defined for file of type \"{elemName}\"");
@@ -110,7 +132,13 @@ namespace Barotrauma
                     return fail($"Failed to load file \"{filePath}\" of type \"{elemName}\": file not found.");
                 }
 
-                var file = type.CreateInstance(contentPackage, filePath);
+                ContentFile? file =
+                    type.Type == typeof(DynamicallyLoadedFile)
+                        // exception for dynamically loaded files since they take an extra parameter
+                        ? new DynamicallyLoadedFile(elemName.ToString(), contentPackage, filePath)
+                        // use reflection for everything else
+                        : type.CreateInstance(contentPackage, filePath);
+
                 if (file is null) { return fail($"Content type {type.Type.Name} is not implemented correctly"); }
 
                 if (errorCatcher.Errors.Any())
@@ -147,6 +175,6 @@ namespace Barotrauma
             return Md5Hash.CalculateForFile(Path.Value, Md5Hash.StringHashOptions.IgnoreWhitespace);
         }
 
-        public bool NotSyncedInMultiplayer => Types.Any(t => t.Type == GetType() && t.NotSyncedInMultiplayer);
+        public virtual bool NotSyncedInMultiplayer => Types.Any(t => t.Type == GetType() && t.NotSyncedInMultiplayer);
     }
 }

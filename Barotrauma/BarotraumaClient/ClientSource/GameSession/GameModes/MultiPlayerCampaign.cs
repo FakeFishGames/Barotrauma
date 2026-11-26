@@ -34,6 +34,11 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Stores received from the server that are more recent than a save we don't have yet, applied once that save has been loaded (see <see cref="ApplyPendingStores"/>).
+        /// </summary>
+        private (UInt16 SaveID, UInt16 LocationIndex, XElement StoresElement)? pendingStores;
+
         public Wallet PersonalWallet => Character.Controlled?.Wallet ?? Wallet.Invalid;
         public override Wallet Wallet => GetWallet();
 
@@ -229,7 +234,7 @@ namespace Barotrauma
                 overlayColor = Color.LightGray;
                 overlaySprite = Map.CurrentLocation.Type.GetPortrait(Map.CurrentLocation.PortraitId);
 
-                var outpost = GameMain.GameSession.Level.StartOutpost;
+                var outpost = GameMain.GameSession.Level.StartOutpost ?? Submarine.MainSub;
                 var borders = outpost.GetDockedBorders();
                 borders.Location += outpost.WorldPosition.ToPoint();
                 GameMain.GameScreen.Cam.Position = new Vector2(borders.X + borders.Width / 2, borders.Y - borders.Height / 2);
@@ -374,17 +379,25 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public override void Update(float deltaTime)
+        protected override void UpdateGameModeSpecific(float deltaTime)
         {
             if (CoroutineManager.IsCoroutineRunning("LevelTransition") || Level.Loaded == null) { return; }
+
+            base.UpdateGameModeSpecific(deltaTime);
+
+            // The server rejects purchases when there's no merchant in range, so close the store instead of letting them just fail without feedback
+            if (ShowCampaignUI && CampaignUI?.SelectedTab == InteractionType.Store &&
+                // Use a slightly shorter distance than the server, so the store closes before the server would start rejecting
+                !HasCampaignInteractionAvailable(Character.Controlled, InteractionType.Store, MaxCampaignInteractionDistance * 0.9f))
+            {
+                ShowCampaignUI = false;
+            }
 
             if (ShowCampaignUI || ForceMapUI)
             {
                 if (CampaignUI == null) { InitCampaignUI(); }
                 Character.DisableControls = true;                
             }
-
-            base.Update(deltaTime);
 
             SlideshowPlayer?.UpdateManually(deltaTime);
 
@@ -409,31 +422,8 @@ namespace Barotrauma
 
             if (Level.Loaded.Type == LevelData.LevelType.Outpost)
             {
-                if (wasDocked)
-                {
-                    var connectedSubs = Submarine.MainSub.GetConnectedSubs();
-                    bool isDocked = Level.Loaded.StartOutpost != null && connectedSubs.Contains(Level.Loaded.StartOutpost);
-                    if (!isDocked)
-                    {
-                        //undocked from outpost, need to choose a destination
-                        ForceMapUI = true; 
-                        if (CampaignUI == null) { InitCampaignUI(); }
-                        CampaignUI.SelectTab(InteractionType.Map);
-                    }
-                }
-                //end biome is handled by the server (automatic transition without a map screen when the end of the level is reached)
-                else if (!Level.Loaded.IsEndBiome)
-                {
-                    //wasn't initially docked (sub doesn't have a docking port?)
-                    // -> choose a destination when the sub is far enough from the start outpost
-                    if (!Submarine.MainSub.AtStartExit)
-                    {
-                        ForceMapUI = true;
-                        if (CampaignUI == null) { InitCampaignUI(); }
-                        CampaignUI.SelectTab(InteractionType.Map);
-                    }
-                }
-
+                //note that we don't force the map to open if the sub leaves the bounds of the level, like we do in single player
+                //that'd be problematic in MP because it doesn't pause the game, and not every player has access to use the map
                 if (CampaignUI == null) { InitCampaignUI(); }
             }
             else
@@ -502,6 +492,7 @@ namespace Barotrauma
 
             msg.WriteUInt16(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
             msg.WriteUInt16(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
+            msg.WriteUInt16(map.LocationToTeleportTo == null ? UInt16.MaxValue : (UInt16)map.Locations.IndexOf(map.LocationToTeleportTo));
 
             var selectedMissionIndices = map.GetSelectedMissionIndices();
             msg.WriteByte((byte)selectedMissionIndices.Count());
@@ -551,7 +542,7 @@ namespace Barotrauma
             {
                 string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer);
 
-                GameMain.GameSession = new GameSession(null, Option.None, CampaignDataPath.CreateRegular(savePath), GameModePreset.MultiPlayerCampaign, CampaignSettings.Empty, mapSeed);
+                GameMain.GameSession = new GameSession(submarineInfo: null!, CampaignDataPath.CreateRegular(savePath), GameModePreset.MultiPlayerCampaign, CampaignSettings.Empty, mapSeed);
                 campaign = (MultiPlayerCampaign)GameMain.GameSession.GameMode;
                 campaign.CampaignID = campaignID;
                 GameMain.NetLobbyScreen.ToggleCampaignMode(true);
@@ -610,6 +601,16 @@ namespace Barotrauma
                     campaign.Map.AllowDebugTeleport = allowDebugTeleport;
                     campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
                     campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
+                    //make the missions match the server's list exactly (including the order and any actual duplicates), because missions are selected by their index:
+                    //reuse existing missions that match the ones received from the server, unlock the missing ones and drop the ones the server doesn't have
+                    List<Mission> unmatchedMissions = campaign.Map.CurrentLocation.AvailableMissions.ToList();
+                    List<Mission> missions = new List<Mission>();
+                    Mission takeExistingMission(MissionPrefab prefab, Location destination)
+                    {
+                        Mission existingMission = unmatchedMissions.FirstOrDefault(m => m.Prefab == prefab && m.Locations[1] == destination);
+                        unmatchedMissions.Remove(existingMission);
+                        return existingMission;
+                    }
                     foreach (var availableMission in availableMissions)
                     {
                         MissionPrefab missionPrefab = MissionPrefab.Prefabs.Find(mp => mp.Identifier == availableMission.Identifier);
@@ -620,7 +621,9 @@ namespace Barotrauma
                         }
                         if (availableMission.ConnectionIndex == 255)
                         {
-                            campaign.Map.CurrentLocation.UnlockMission(missionPrefab);
+                            missions.Add(
+                                takeExistingMission(missionPrefab, campaign.Map.CurrentLocation) ??
+                                campaign.Map.CurrentLocation.ForceUnlockMission(missionPrefab));
                         }
                         else
                         {
@@ -630,9 +633,16 @@ namespace Barotrauma
                                 continue;
                             }
                             LocationConnection connection = campaign.Map.CurrentLocation.Connections[availableMission.ConnectionIndex];
-                            campaign.Map.CurrentLocation.UnlockMission(missionPrefab, connection);
+                            missions.Add(
+                                takeExistingMission(missionPrefab, connection.OtherLocation(campaign.Map.CurrentLocation)) ??
+                                campaign.Map.CurrentLocation.ForceUnlockMission(missionPrefab, connection));
                         }
                     }
+                    if (missions.Contains(null))
+                    {
+                        DebugConsole.ThrowError($"Error when receiving campaign data from the server: failed to unlock some of the missions in the location {campaign.Map.CurrentLocation.DisplayName}. This may cause issues with selecting missions.");
+                    }
+                    campaign.Map.CurrentLocation.SetAvailableMissions(missions.Where(m => m != null));
                     campaign.Map.SelectMission(selectedMissionIndices);
                     ReadStores(msg, apply: true);
                 }
@@ -712,11 +722,11 @@ namespace Barotrauma
                     UInt16 itemToRemoveID = msg.ReadUInt16();
                     Identifier itemToInstallIdentifier = msg.ReadIdentifier();
                     ItemPrefab itemToInstall = itemToInstallIdentifier.IsEmpty ? null : ItemPrefab.Find(string.Empty, itemToInstallIdentifier);
-                    if (!(Entity.FindEntityByID(itemToRemoveID) is Item itemToRemove)) { continue; }
+                    if (Entity.FindEntityByID(itemToRemoveID) is not Item itemToRemove) { continue; }
                     purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
                 }
 
-                if (!Submarine.Unloading && !(Submarine.MainSub is { Loading: true }) && 
+                if (!Submarine.Unloading && Submarine.MainSub is not { Loading: true } && 
                     ShouldApply(NetFlags.UpgradeManager, id, requireUpToDateSave: true))
                 {
                     UpgradeStore.WaitForServerUpdate = false;
@@ -724,22 +734,24 @@ namespace Barotrauma
                     campaign.UpgradeManager.PurchasedUpgrades.Clear();
                     foreach (var purchasedItemSwap in purchasedItemSwaps)
                     {
-                        if (purchasedItemSwap.ItemToInstall == null)
-                        {
-                            campaign.UpgradeManager.CancelItemSwap(purchasedItemSwap.ItemToRemove, force: true);
-                        }
-                        else
-                        {
-                            campaign.UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, isNetworkMessage: true);
-                        }
+                        UpgradeManager.DebugLog($"CLIENT (msg): Purchasing item swap to replace \"{purchasedItemSwap.ItemToRemove?.Prefab.Name}\" with \"{purchasedItemSwap.ItemToInstall?.Name}\"");
+                        campaign.UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, isNetworkMessage: true);
                     }
+
+                    // Drop swaps the server no longer has (e.g. cancelled by another client). 
+                    // Must happen before resetting PendingItemSwap below, otherwise the stale swaps would keep the items' pending swaps alive.
+                    campaign.UpgradeManager.PurchasedItemSwaps.RemoveAll(swap => !purchasedItemSwaps.Contains(swap));
+
                     foreach (Item item in Item.ItemList.ToList())
                     {
-                        if (item.PendingItemSwap != null && !purchasedItemSwaps.Any(it => it.ItemToRemove == item))
+                        // Check against the complete list of pending swaps, not just the items modified in this message.
+                        // Otherwise, items with existing pending swaps get reset when other items are modified.
+                        if (item.PendingItemSwap != null && campaign.UpgradeManager.PurchasedItemSwaps.All(it => it.ItemToRemove != item))
                         {
                             item.PendingItemSwap = null;
                         }
                     }
+
                     campaign.CampaignUI?.UpgradeStore?.RequestRefresh();
                 }
             }
@@ -821,9 +833,9 @@ namespace Barotrauma
                 }
                 if (ShouldApply(NetFlags.Reputation, id, requireUpToDateSave: true))
                 {
-                    foreach (var (identifier, rep) in factionReps)
+                    foreach ((Identifier identifier, float rep) in factionReps)
                     {
-                        Faction faction = campaign.Factions.FirstOrDefault(f => f.Prefab.Identifier == identifier);
+                        Faction faction = campaign.GetFaction(identifier);
                         if (faction?.Reputation != null)
                         {
                             faction.Reputation.SetReputation(rep);
@@ -1031,6 +1043,102 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Replaces the stores at the current location with those of the server.
+        /// </summary>
+        public static void ClientReadStores(IReadMessage inc)
+        {
+            byte campaignID = inc.ReadByte();
+            UInt16 saveID = inc.ReadUInt16();
+            UInt16 locationIndex = inc.ReadUInt16();
+            string storesXml = inc.ReadString();
+
+            // Not loaded yet (or anymore), in which case the stores will come from the save
+            if (GameMain.GameSession?.Campaign is not MultiPlayerCampaign campaign || campaign.CampaignID != campaignID) { return; }
+
+            XElement storesElement;
+            try
+            {
+                storesElement = XElement.Parse(storesXml);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to read the stores sent by the server.", e);
+                return;
+            }
+
+            if (NetIdUtils.IdMoreRecent(saveID, campaign.LastSaveID))
+            {
+                // Loading the save would overwrite these stores, so apply them after it's been loaded
+                campaign.pendingStores = (saveID, locationIndex, storesElement);
+            }
+            else if (saveID == campaign.LastSaveID)
+            {
+                campaign.ApplyStores(locationIndex, storesElement);
+            }
+            // Otherwise these stores are older than the ones in the save we've loaded
+        }
+
+        /// <summary>
+        /// Applies the stores received while the save they're more recent than was still being loaded, called after loading a save.
+        /// </summary>
+        public void ApplyPendingStores()
+        {
+            if (pendingStores is not { } pending) { return; }
+            // Still waiting for the save
+            if (NetIdUtils.IdMoreRecent(pending.SaveID, LastSaveID)) { return; }
+
+            pendingStores = null;
+            // If the save we loaded is newer, its stores are also more recent than these
+            if (pending.SaveID == LastSaveID)
+            {
+                ApplyStores(pending.LocationIndex, pending.StoresElement);
+            }
+        }
+
+        private void ApplyStores(UInt16 locationIndex, XElement storesElement)
+        {
+            if (Map is not { } map || locationIndex >= map.Locations.Count) { return; }
+
+            Location location = map.Locations[locationIndex];
+            location.LoadStores(storesElement, createMissingStores: false);
+            if (location == map.CurrentLocation)
+            {
+                CampaignUI?.Store?.RefreshActiveStore();
+            }
+        }
+
+        /// <summary>
+        /// Switch to the server's round. Campaign updates received for a different round are acknowledged without applying them
+        /// (see ShouldApply in <see cref="ClientRead"/>), so mark us being behind on all data to make the server resend its current state.
+        /// Otherwise e.g. a client joining mid-round would never get the store and mission state sent before it finished loading.
+        /// </summary>
+        public void SetRoundID(byte roundId)
+        {
+            DebugConsole.Log($"Set round ID from {RoundID} to {roundId}.");
+            if (roundId != RoundID)
+            {
+                DecrementAllLastUpdateIds();
+            }
+            RoundID = roundId;
+        }
+
+        /// <summary>
+        /// The server rejected our store changes, which we've already applied on our end.
+        /// Mark us being behind on that store data, so the server sends us its state.
+        /// </summary>
+        public void ClientReadStoreChangesRejected(IReadMessage inc)
+        {
+            NetFlags rejectedFlags = (NetFlags)inc.ReadUInt16();
+            foreach (NetFlags flag in Enum.GetValues(typeof(NetFlags)))
+            {
+                if (rejectedFlags.HasFlag(flag))
+                {
+                    SetLastUpdateIdForFlag(flag, (UInt16)(GetLastUpdateIdForFlag(flag) - 1));
+                }
+            }
+        }
+
         public void ClientReadMoney(IReadMessage inc)
         {
             NetWalletUpdate update = INetSerializableStruct.Read<NetWalletUpdate>(inc);
@@ -1064,7 +1172,7 @@ namespace Barotrauma
             }
         }
 
-        public override bool TryPurchase(Client client, int price)
+        protected override bool TryDeductFunds(Client client, int price)
         {
             if (price == 0)
             {
@@ -1088,7 +1196,7 @@ namespace Barotrauma
                 int remainder = price - balance;
                 if (balance > 0) { PersonalWallet.Deduct(balance); }
                 Bank.Deduct(remainder);
-                return true ;
+                return true;
             }
 
             return false;

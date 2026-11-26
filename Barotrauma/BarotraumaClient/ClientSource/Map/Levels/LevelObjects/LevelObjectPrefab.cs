@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class LevelObjectPrefab : PrefabWithUintIdentifier, ISerializableEntity
+    public partial class LevelObjectPrefab : PrefabWithUintIdentifier, ISerializableEntity
     {
         public class SoundConfig
         {

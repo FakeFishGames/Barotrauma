@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class PowerTransfer : Powered
+    public partial class PowerTransfer : Powered
     {
         public List<Connection> PowerConnections { get; private set; }
 
@@ -56,6 +56,13 @@ namespace Barotrauma.Items.Components
 
         [Serialize(0.15f, IsPropertySaveable.Yes, description: "The probability for a fire to start when the item breaks."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float FireProbability
+        {
+            get;
+            set;
+        }
+
+        [Serialize("zap", IsPropertySaveable.No, description: "Tag of the sound (defined in sounds.xml) played when the item breaks due to overvoltage.")]
+        public string ZapSoundTag
         {
             get;
             set;
@@ -120,6 +127,8 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
+
+        public override bool ShouldCauseDeterioration => Voltage > 0.1f;
 
         public PowerTransfer(Item item, ContentXElement element)
             : base(item, element)
@@ -270,7 +279,7 @@ namespace Barotrauma.Items.Components
 
             overloadCooldownTimer = OverloadCooldown;
 #if CLIENT
-            SoundPlayer.PlaySound("zap", item.WorldPosition, hullGuess: item.CurrentHull);
+            SoundPlayer.PlaySound(ZapSoundTag, item.WorldPosition, hullGuess: item.CurrentHull);
             Vector2 baseVel = Rand.Vector(300.0f);
             for (int i = 0; i < 10; i++)
             {
@@ -466,6 +475,7 @@ namespace Barotrauma.Items.Components
                     //other junction boxes don't need to receive the signal in the pass-through signal connections
                     //because we relay it straight to the connected items without going through the whole chain of junction boxes
                     if (ic is PowerTransfer and not RelayComponent and not PowerDistributor) { continue; }
+                    if (ic.IgnoreSignals) { continue; }
                     ic.ReceiveSignal(signal, recipient);
                 }
 

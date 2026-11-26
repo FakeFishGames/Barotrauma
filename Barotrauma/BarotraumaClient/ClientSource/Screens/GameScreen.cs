@@ -3,12 +3,13 @@ using Barotrauma.Lights;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
 namespace Barotrauma
 {
-    partial class GameScreen : Screen
+    public partial class GameScreen : Screen
     {
         private RenderTarget2D renderTargetBackground;
         private RenderTarget2D renderTarget;
@@ -28,6 +29,19 @@ namespace Barotrauma
         public Effect GrainEffect { get; private set; }
         public Effect ThresholdTintEffect { get; private set; }
         public Effect BlueprintEffect { get; set; }
+        public Effect MonochromeEffect { get; private set; }
+
+        public bool ForceFadeToBlack { get; set; }
+        public float FadeToBlackSpeed { get; set; }
+
+        /// <param name="Origin">Vector in the range of 0-1 (0,0 being the top-left corner of the screen)</param>
+        /// <param name="Strength">Strength of the distortion effect. Positive values distort inwards, negative outwards.</param>
+        /// <param name="Radius">Radius of the distortion effect. Roughly corresponds to pixels (although not precisely, because the bounds of the distortion aren't well-defined).</param>
+        public record struct PositionalDistortion(Vector2 Origin, float Strength, float Radius);
+
+        private readonly List<PositionalDistortion> positionalDistortions = new();
+
+        const int MaxPositionalDistortions = 10;
 
         public GameScreen(GraphicsDevice graphics)
         {
@@ -55,6 +69,41 @@ namespace Barotrauma
 
             distortTexture = TextureLoader.FromFile("Content/Effects/distortnormals.png");
             PostProcessEffect.Parameters["xDistortTexture"].SetValue(distortTexture);
+
+            MonochromeEffect = EffectLoader.Load("Effects/monochromeshader");
+        }
+
+        /// <summary>
+        /// Creates a "positional distortion effect" (like a black hole sucking things in). Note that this must be called each frame for the effect to persist.
+        /// </summary>
+        public void AddPositionalDistortion(Vector2 origin, float strength, float radius)
+        {            
+            float margin = radius / GameMain.GraphicsWidth * 10; //magic number found by experimentation
+            if (origin.X + margin < 0 || origin.X - margin > 1) { return; }
+            if (origin.Y + margin < 0 || origin.Y - margin > 1) { return; }
+
+            //if we've reached the maximum number of positional distortions, 
+            //make this distortion replace the least noticeable (smallest/least strong) distortion
+            //or if the new one is the least noticeable, don't add it
+            if (positionalDistortions.Count >= MaxPositionalDistortions)
+            {
+                var smallestExistingDistortion = positionalDistortions.MinBy(p => GetDistortionPriority(p.Strength, p.Radius));
+                if (GetDistortionPriority(strength, radius) > GetDistortionPriority(smallestExistingDistortion.Strength, smallestExistingDistortion.Radius))
+                {
+                    positionalDistortions.Remove(smallestExistingDistortion);
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            positionalDistortions.Add(new PositionalDistortion(origin, strength, radius));
+
+            static float GetDistortionPriority(float strength, float radius)
+            {
+                return Math.Abs(strength) * radius;
+            }
         }
 
         private void CreateRenderTargets(GraphicsDevice graphics)
@@ -111,9 +160,13 @@ namespace Barotrauma
                 {
                     foreach (var limb in c.AnimController.Limbs)
                     {
-                        if (limb.LightSource is LightSource light)
+                        if (c.IsVisible)
                         {
-                            light.Enabled = c.IsVisible;
+                            limb.EnableLights();
+                        }
+                        else
+                        {
+                            limb.DisableLights();
                         }
                     }
                 }
@@ -167,21 +220,21 @@ namespace Barotrauma
             Sprite enemySprite = GUIStyle.EnemyIcon.Value?.Sprite;
             Sprite corpseSprite = GUIStyle.CorpseIcon.Value?.Sprite;
             Sprite beaconSprite = GUIStyle.BeaconIcon.Value?.Sprite;
-            
-            for (int i = 0; i < Submarine.MainSubs.Length; i++)
+
+            foreach (Submarine sub in Submarine.MainSubs)
             {
-                if (Submarine.MainSubs[i] == null) { continue; }
-                if (Level.Loaded != null && Submarine.MainSubs[i].WorldPosition.Y < Level.MaxEntityDepth) { continue; }
+                if (sub == null) { continue; }
+                if (Level.Loaded != null && sub.WorldPosition.Y < Level.MaxEntityDepth) { continue; }
                 
-                Vector2 position = Submarine.MainSubs[i].SubBody != null ? Submarine.MainSubs[i].WorldPosition : Submarine.MainSubs[i].HiddenSubPosition;
+                Vector2 position = sub.SubBody != null ? sub.WorldPosition : sub.HiddenSubPosition;
                 
-                Color indicatorColor = i == 0 ? Color.LightBlue * 0.5f : GUIStyle.Red * 0.5f;
-                Sprite displaySprite = Submarine.MainSubs[i].Info.HasTag(SubmarineTag.Shuttle) ? shuttleSprite : subLocationSprite;
+                Color indicatorColor = sub == Submarine.MainSub ? Color.LightBlue * 0.5f : GUIStyle.Red * 0.5f;
+                Sprite displaySprite = sub.Info.HasTag(SubmarineTag.Shuttle) ? shuttleSprite : subLocationSprite;
                 if (displaySprite != null)
                 {
                     GUI.DrawIndicator(
                         spriteBatch, position, cam,
-                        Math.Max(Submarine.MainSubs[i].Borders.Width, Submarine.MainSubs[i].Borders.Height),
+                        Math.Max(sub.Borders.Width, sub.Borders.Height),
                         displaySprite, indicatorColor);
                 }
             }
@@ -307,7 +360,6 @@ namespace Barotrauma
             //These will be visible through the LOS effect.
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, depthStencilState: DepthStencilState.None, transformMatrix: cam.Transform);
             Submarine.DrawBack(spriteBatch, false, e => e is Structure s && (e.SpriteDepth >= 0.9f || s.Prefab.BackgroundSprite != null) && !IsFromOutpostDrawnBehindSubs(e));
-            Submarine.DrawPaintedColors(spriteBatch, false);
             spriteBatch.End();
 
             sw.Stop();
@@ -406,6 +458,7 @@ namespace Barotrauma
             //Draw the rest of the structures, characters and front structures
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, depthStencilState: DepthStencilState.None, transformMatrix: cam.Transform);
             Submarine.DrawBack(spriteBatch, false, e => e is not Structure || e.SpriteDepth < 0.9f);
+            Submarine.DrawPaintedColors(spriteBatch, false, depth: 0.8f);
             DrawCharacters(deformed: false, firstPass: true);
             spriteBatch.End();
 
@@ -424,8 +477,8 @@ namespace Barotrauma
                 //backwards order to render the most recently spawned characters in front (characters spawned later have a larger sprite depth)
                 for (int i = Character.CharacterList.Count - 1; i >= 0; i--)
                 {
-                    Character c = Character.CharacterList[i];
-                    if (!c.IsVisible) { continue; }
+                    Character c = Character.CharacterList[i];           
+                    if (!c.IsVisible) { continue; }                    
                     if (c.Params.DrawLast == firstPass) { continue; }
                     if (deformed)
                     {
@@ -637,6 +690,35 @@ namespace Barotrauma
             graphics.BlendState = BlendState.Opaque;
             graphics.SamplerStates[0] = SamplerState.LinearClamp;
             graphics.DepthStencilState = DepthStencilState.None;
+
+            if (positionalDistortions.Any())
+            {
+                foreach ((Vector2 origin, float strength, float radius) in positionalDistortions)
+                {
+                    graphics.SetRenderTarget(renderTarget);
+                    graphics.Clear(Color.Transparent);
+                    PostProcessEffect.Parameters["MatrixTransform"].SetValue(Matrix.Identity);
+                    PostProcessEffect.Parameters["xTexture"].SetValue(renderTargetFinal);
+                    PostProcessEffect.CurrentTechnique = PostProcessEffect.Techniques["PositionalDistortion"];
+
+                    PostProcessEffect.Parameters["positionalDistortionStrength"].SetValue(strength);
+                    PostProcessEffect.Parameters["positionalDistortionOrigin"].SetValue(origin);
+                    PostProcessEffect.Parameters["positionalDistortionRadius"].SetValue(radius / 1000.0f * cam.Zoom);
+                    PostProcessEffect.Parameters["positionalDistortionAspectRatio"].SetValue(GameMain.GraphicsWidth / (float)GameMain.GraphicsHeight);
+                    PostProcessEffect.CurrentTechnique.Passes[0].Apply();
+
+                    //draw this distortion into renderTarget
+                    GraphicsQuad.Render();
+                   
+                    //draw rendertarget (now with the distortion rendered on it) back in renderTargetFinal
+                    graphics.SetRenderTarget(renderTargetFinal);
+                    GraphicsQuad.UseBasicEffect(renderTarget);
+                    GraphicsQuad.Render();
+                }
+                graphics.SetRenderTarget(null);
+                positionalDistortions.Clear();
+            }
+
             if (string.IsNullOrEmpty(postProcessTechnique))
             {
                 GraphicsQuad.UseBasicEffect(renderTargetFinal);
@@ -650,7 +732,7 @@ namespace Barotrauma
             }
             GraphicsQuad.Render();
 
-            Character.DrawSpeechBubbles(spriteBatch, cam);
+            SpeechBubbleManager.DrawSpeechBubbles(spriteBatch, cam);
 
             if (fadeToBlackState > 0.0f)
             {
@@ -671,13 +753,13 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(double deltaTime)
         {
-            if (ConversationAction.FadeScreenToBlack)
+            if (ConversationAction.FadeScreenToBlack || ForceFadeToBlack)
             {
-                fadeToBlackState = Math.Min(fadeToBlackState + (float)deltaTime, 1.0f);
+                fadeToBlackState = Math.Min(fadeToBlackState + (float)deltaTime * FadeToBlackSpeed, 1.0f);
             }
             else
             {
-                fadeToBlackState = Math.Max(fadeToBlackState - (float)deltaTime, 0.0f);
+                fadeToBlackState = Math.Max(fadeToBlackState - (float)deltaTime * FadeToBlackSpeed, 0.0f);
             }
 
             if (!PlayerInput.PrimaryMouseButtonHeld())
@@ -685,6 +767,8 @@ namespace Barotrauma
                 Inventory.DraggingSlot = null;
                 Inventory.DraggingItems.Clear();
             }
+
+            SpeechBubbleManager.UpdateSpeechBubbles((float)deltaTime);
         }
     }
 }

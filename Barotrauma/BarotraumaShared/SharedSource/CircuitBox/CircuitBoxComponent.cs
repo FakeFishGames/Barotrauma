@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Collections.Immutable;
@@ -9,9 +9,13 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    internal partial class CircuitBoxComponent : CircuitBoxNode, ICircuitBoxIdentifiable
+    public partial class CircuitBoxComponent : CircuitBoxNode, ICircuitBoxIdentifiable
     {
         public readonly Item Item;
+
+        /// <summary>
+        /// Persistent ID of the component. ID internal to the circuit box, not to be confused with item IDs.
+        /// </summary>
         public ushort ID { get; }
 
         public readonly ItemPrefab UsedResource;
@@ -38,6 +42,7 @@ namespace Barotrauma
 
         public static Option<CircuitBoxComponent> TryLoadFromXML(ContentXElement element, CircuitBox circuitBox)
         {
+            //note that we don't need to remap these IDs: they're internal IDs of the circuit box, not entity IDs
             ushort id = element.GetAttributeUInt16("id", ICircuitBoxIdentifiable.NullComponentID);
             Vector2 position = element.GetAttributeVector2("position", Vector2.Zero);
             var itemIdOption = ItemSlotIndexPair.TryDeserializeFromXML(element, "backingitemid");

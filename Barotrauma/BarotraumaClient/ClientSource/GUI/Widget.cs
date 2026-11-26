@@ -14,7 +14,7 @@ namespace Barotrauma
         Cross
     }
 
-    internal class Widget
+    public class Widget
     {
         public WidgetShape Shape;
         public LocalizedString Tooltip;

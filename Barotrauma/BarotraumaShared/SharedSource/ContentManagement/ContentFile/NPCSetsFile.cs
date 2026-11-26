@@ -1,9 +1,9 @@
-using System.Xml.Linq;
+﻿#nullable enable
 
 namespace Barotrauma
 {
     [RequiredByCorePackage]
-    sealed class NPCSetsFile : GenericPrefabFile<NPCSet>
+    public sealed class NPCSetsFile : GenericPrefabFile<NPCSet>
     {
         public NPCSetsFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

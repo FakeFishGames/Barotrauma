@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 
 namespace Barotrauma
 {
-    class CharacterSound
+    public class CharacterSound
     {
         public enum SoundType
         {

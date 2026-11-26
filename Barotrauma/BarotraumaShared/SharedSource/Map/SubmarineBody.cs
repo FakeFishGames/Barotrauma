@@ -14,7 +14,7 @@ using Voronoi2;
 
 namespace Barotrauma
 {
-    partial class SubmarineBody
+    public partial class SubmarineBody
     {
         public const float NeutralBallastPercentage = 0.07f;
 
@@ -80,18 +80,10 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Extents of the solid items/structures (ones with a physics body) and hulls
+        /// Extents of the solid items/structures (ones with a physics body) and hulls.
+        /// Also used as the dimensions of the submarine. Not suitable for culling: see VisibleBorders (client-only) for that.
         /// </summary>
         public Rectangle Borders
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Extents of all the visible items/structures/hulls (including ones without a physics body)
-        /// </summary>
-        public Rectangle VisibleBorders
         {
             get;
             private set;
@@ -268,7 +260,7 @@ namespace Barotrauma
                 }
 
                 Borders = new Rectangle((int)minExtents.X, (int)maxExtents.Y, (int)(maxExtents.X - minExtents.X), (int)(maxExtents.Y - minExtents.Y));
-                VisibleBorders = new Rectangle((int)visibleMinExtents.X, (int)visibleMaxExtents.Y, (int)(visibleMaxExtents.X - visibleMinExtents.X), (int)(visibleMaxExtents.Y - visibleMinExtents.Y));
+                CalculateVisibleBorders(visibleMinExtents, visibleMaxExtents);
             }
 
             farseerBody.Enabled = true;
@@ -312,10 +304,20 @@ namespace Barotrauma
 
             foreach (Structure wall in subWalls)
             {
-                points.Add(new Vector2(wall.Rect.X, wall.Rect.Y));
-                points.Add(new Vector2(wall.Rect.X + wall.Rect.Width, wall.Rect.Y));
-                points.Add(new Vector2(wall.Rect.X, wall.Rect.Y - wall.Rect.Height));
-                points.Add(new Vector2(wall.Rect.X + wall.Rect.Width, wall.Rect.Y - wall.Rect.Height));
+                Vector2[] corners =
+                [
+                    new(wall.Rect.X, wall.Rect.Y),
+                    new(wall.Rect.X + wall.Rect.Width, wall.Rect.Y),
+                    new(wall.Rect.X, wall.Rect.Y - wall.Rect.Height),
+                    new(wall.Rect.X + wall.Rect.Width, wall.Rect.Y - wall.Rect.Height)
+                ];
+
+                foreach (Vector2 corner in corners)
+                {
+                    Vector2 offset = corner - wall.Position;
+
+                    points.Add(wall.Position + Vector2.Transform(offset, Matrix.CreateRotationZ(wall.RotationRad)));
+                }
             }
 
             List<Vector2> hullPoints = MathUtils.GiftWrap(points);
@@ -349,7 +351,7 @@ namespace Barotrauma
 
             //-------------------------
 
-            if (Body.FarseerBody.BodyType == BodyType.Static) { return; }
+            if (Body.BodyType == BodyType.Static) { return; }
             
             ClientUpdatePosition(deltaTime);
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
@@ -488,6 +490,10 @@ namespace Barotrauma
         }
 
         partial void ClientUpdatePosition(float deltaTime);
+
+        /// <param name="minExtents">Minimum extents of all the structures, hulls and items with a static body (including ones without a collider)</param>
+        /// <param name="maxExtents">Maximum extents of all the structures, hulls and items with a static body (including ones without a collider)</param>
+        partial void CalculateVisibleBorders(Vector2 minExtents, Vector2 maxExtents);
 
         /// <summary>
         /// Moves away any character that is inside the bounding box of the sub (but not inside the sub)
@@ -849,11 +855,11 @@ namespace Barotrauma
                         playSound: true, 
                         attackImpulse: Vector2.Zero);
 
-                    if (limb.character.IsDead)
+                    if (limb.character.IsDead && GameMain.NetworkMember is not { IsClient: true })
                     {
                         foreach (LimbJoint limbJoint in limb.character.AnimController.LimbJoints)
                         {
-                            if (limbJoint.IsSevered || (limbJoint.LimbA != limb && limbJoint.LimbB != limb)) continue;
+                            if (limbJoint.IsSevered || (limbJoint.LimbA != limb && limbJoint.LimbB != limb)) { continue; }
                             limb.character.AnimController.SeverLimbJoint(limbJoint);
                         }
                     }
@@ -1084,7 +1090,10 @@ namespace Barotrauma
                     item.LastSubmarineImpactTime = Timing.TotalTimeUnpaused;
                 }
 
-                if (!item.body.Enabled || item.CurrentHull == null || item.body.Mass > impulseMagnitude) { continue; }
+                if (item.body == null || !item.body.Enabled || item.CurrentHull == null || item.body.Mass > impulseMagnitude) 
+                { 
+                    continue; 
+                }
 
                 item.body.ApplyLinearImpulse(impulse, 10.0f);
                 item.PositionUpdateInterval = 0.0f;

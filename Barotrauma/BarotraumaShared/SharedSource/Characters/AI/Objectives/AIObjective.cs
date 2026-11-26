@@ -7,7 +7,7 @@ using System.Collections.Immutable;
 
 namespace Barotrauma
 {
-    abstract partial class AIObjective
+    public abstract partial class AIObjective
     {
         public virtual float Devotion => AIObjectiveManager.baseDevotion;
 
@@ -15,7 +15,13 @@ namespace Barotrauma
         public virtual string DebugTag => Identifier.Value;
         public virtual bool ForceRun => false;
         public virtual bool IgnoreUnsafeHulls => false;
-        public virtual bool AbandonWhenCannotCompleteSubObjectives => true;
+
+        public bool AbandonWhenCannotCompleteSubObjectives
+        {
+            get;
+            set;
+        } = true;
+
         /// <summary>
         /// Should subobjectives be sorted according to their priority?
         /// </summary>
@@ -23,7 +29,7 @@ namespace Barotrauma
         public virtual bool PrioritizeIfSubObjectivesActive => false;
 
         /// <summary>
-        /// Can there be multiple objective instaces of the same type?
+        /// Can a character have multiple instances of the same type of objective?
         /// </summary>
         public virtual bool AllowMultipleInstances => false;
 
@@ -48,14 +54,31 @@ namespace Barotrauma
         /// </summary>
         protected virtual bool AllowInFriendlySubs => false;
         protected virtual bool AllowInAnySub => false;
-        protected virtual bool AllowWhileHandcuffed => true;
-        
+
+        /// <summary>
+        /// Does the character need to have both at least one hand available (not severed or handcuffed) to do the objective? 
+        /// Ignored if the character has no hands to begin with (e.g. if its some kind of a maintenance bot or a creature with a very dexterous mouth).
+        /// </summary>
+        protected virtual bool RequireOneHandAvailable => false;
+
+        /// <summary>
+        /// Does the character need to have both of their hands available (not severed or handcuffed) to do the objective? 
+        /// Ignored if the character has no hands to begin with (e.g. if its some kind of a maintenance bot or a creature with a very dexterous mouth).
+        /// </summary>
+        protected virtual bool RequireBothHandsAvailable => false;
+
+        /// <summary>
+        /// Is <see cref="ShipCommandManager"/> allowed to replace this objective? I.e. are outpost or AI sub crews allowed to give this character 
+        /// some other objective, or should the character keep doing this objective even if the "global ship AI" thinks it would be important for the character to e.g. fix leaks now?
+        /// </summary>
+        public bool AllowReplacementByShipCommandManager = true;
+
         /// <summary>
         /// Should the objective abandon when it's not allowed in the current context or should it just stay inactive with 0 priority?
         /// Abandoned automatic objectives are removed and recreated automatically (when new orders are assigned or after a cooldown period).
         /// Abandoned orders are removed, but the most recent order can be reissued by clicking the small order icon with the arrow in the crew manager panel. 
         /// </summary>
-        protected virtual bool AbandonIfDisallowed => true;
+        public bool AbandonIfDisallowed = true;
         
         public virtual bool CanBeCompleted => !Abandon;
         
@@ -79,7 +102,8 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Final priority value after all calculations.
+        /// Final priority value after all calculations. Do not modify this from outside the AIObjectives unless you're 
+        /// absolutely sure about what you're doing, as this value will be recalculated in GetPriority.
         /// </summary>
         public float Priority { get; set; }
         public float BasePriority { get; set; }
@@ -117,7 +141,15 @@ namespace Barotrauma
 
         public bool ForceWalk => ForceWalkTemporarily || ForceWalkPermanently;
 
+        /// <summary>
+        /// Should the order be ignored in outposts? Does not apply to outpost NPCs, they can always do objectives in outposts.
+        /// </summary>
         public bool IgnoreAtOutpost { get; set; }
+
+        /// <summary>
+        /// Should the order be ignored in outposts belonging to the character's own team (e.g. should the player crew be allowed to do the objective in a player outpost)
+        /// </summary>
+        public bool IgnoreAtOwnOutpost { get; set; }
 
         public readonly Character character;
         public readonly AIObjectiveManager objectiveManager;
@@ -213,11 +245,14 @@ namespace Barotrauma
             Act(deltaTime);
         }
 
-        public void AddSubObjective(AIObjective objective, bool addFirst = false)
+        public void AddSubObjective(AIObjective objective, bool addFirst = false, bool allowMultipleInstances = false)
         {
             var type = objective.GetType();
             objective.SourceObjective = this;
-            subObjectives.RemoveAll(o => o.GetType() == type);
+            if (!allowMultipleInstances)
+            {
+                subObjectives.RemoveAll(o => o.GetType() == type);
+            }
             if (addFirst)
             {
                 subObjectives.Insert(0, objective);
@@ -263,18 +298,70 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Is the bot currently allowed to do this objective in the submarine they're in?
+        /// If you're interested in whether a bot should e.g. target a thing in a specific submarine, 
+        /// rather than whether they should be attempting to do it at all, <see cref="IsAllowedInSubmarine(Submarine)"/>.
+        /// </summary>
         public bool IsAllowed
         {
             get 
             {
-                if (!AllowWhileHandcuffed && character.LockHands) { return false; }
-                if (!AllowOutsideSubmarine && character.Submarine == null) { return false; }
+                if (character.HasHandsOriginally)
+                {
+                    if (RequireBothHandsAvailable)
+                    {
+                        if (character.LockHands || !character.HasBothHands) { return false; }
+                    }
+                    else if (RequireOneHandAvailable)
+                    {
+                        if (character.BothHandsDisabled) { return false; }
+                    }
+                }
+                if (character.Submarine == null) 
+                {
+                    return AllowOutsideSubmarine;
+                }
                 // Evaluate ignored at outpost first, because it has higher priority than AllowInAnySub or AllowInFriendlySubs.
                 if (IsIgnoredAtOutpost()) { return false; }
                 if (AllowInAnySub) { return true; }
                 if ((AllowInFriendlySubs && character.Submarine.TeamID == CharacterTeamType.FriendlyNPC) || character.IsEscorted) { return true; }
-                return character.Submarine.TeamID == character.TeamID || character.Submarine.TeamID == character.OriginalTeamID;
+                //dwellers are allowed to do objectives in player-owned outposts
+                if (character.Submarine is { Info.IsOutpost: true } && 
+                    character.Submarine.TeamID == CharacterTeamType.Team1 && 
+                    character.TeamID == CharacterTeamType.FriendlyNPC)
+                {
+                    return true;
+                }
+                return IsAllowedInSubmarine(character.Submarine);
             }
+        }
+
+        /// <summary>
+        /// Is this objective valid in the specific submarine (e.g. should a bot fix leaks or repair things in a specific submarine)?
+        /// </summary>
+        protected bool IsAllowedInSubmarine(Submarine sub)
+        {
+            return IsAllowedInSubmarine(sub, character, AllowInAnySub, AllowInFriendlySubs);
+        }
+
+        /// <summary>
+        /// Is this objective valid in the specific submarine (e.g. should a bot fix leaks or repair things in a specific submarine)?
+        /// </summary>
+        protected static bool IsAllowedInSubmarine(Submarine sub, Character character, bool allowInAnySub, bool allowInFriendlySubs)
+        {
+            if (allowInAnySub) { return true; }
+            if ((allowInFriendlySubs && sub.TeamID == CharacterTeamType.FriendlyNPC) || character.IsEscorted) { return true; }
+            //dwellers are allowed to do objectives in player-owned outposts
+            if (sub is { Info.IsOutpost: true } &&
+                sub.TeamID == CharacterTeamType.Team1 &&
+                character.TeamID == CharacterTeamType.FriendlyNPC)
+            {
+                return true;
+            }
+            return
+                sub.TeamID == character.TeamID ||
+                sub.TeamID == character.OriginalTeamID;
         }
 
         /// <summary>
@@ -287,7 +374,9 @@ namespace Barotrauma
             if (!Level.IsLoadedFriendlyOutpost && GameMain.GameSession.GameMode is not TestGameMode) { return false; }
             if (!character.IsOnPlayerTeam || character.IsFriendlyNPCTurnedHostile) { return false; }
             if (character.Submarine?.Info == null) { return false; }
-            return character.Submarine.Info.IsOutpost && character.Submarine.TeamID == CharacterTeamType.FriendlyNPC;
+            if (!IgnoreAtOwnOutpost && character.Submarine.Info.IsOutpost && character.TeamID == character.Submarine.TeamID) { return false; }
+            return character.Submarine.Info.IsOutpost && // Check for both normal NPC outposts, and outposts aligned with the player's team
+                   (character.Submarine.TeamID == CharacterTeamType.FriendlyNPC || character.Submarine.TeamID == CharacterTeamType.Team1);
         }
 
         protected void HandleDisallowed()

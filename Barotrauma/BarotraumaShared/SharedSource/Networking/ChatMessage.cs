@@ -26,13 +26,13 @@ namespace Barotrauma.Networking
 
     public enum PlayerConnectionChangeType { None = 0, Joined = 1, Kicked = 2, Disconnected = 3, Banned = 4 }
 
-    partial class ChatMessage
+    public partial class ChatMessage
     {
         public const int MaxLength = 200;
 
         public const int MaxMessagesPerPacket = 10;
 
-        public const float SpeakRange = 2000.0f;
+        public const float SpeakRange = 2200.0f;
 
         /// <summary>
         /// This is shorter than the text chat speak range, because the voice chat is still intelligible (just quiet) close to the maximum range,
@@ -219,7 +219,7 @@ namespace Barotrauma.Networking
             return dist / range;
         }
 
-        public string ApplyDistanceEffect(Character listener)
+        public string ApplyDistanceEffect(Entity listener)
         {
             if (Sender == null) return Text;
 
@@ -231,10 +231,19 @@ namespace Barotrauma.Networking
             return ApplyDistanceEffect(text, GetGarbleAmount(listener, sender, range, obstructionMultiplier));
         }
 
+        /// <summary>
+        /// Garble amounts below this don't affect the message at all.
+        /// </summary>
+        private const float MinGarbleAmount = 0.3f;
+
         public static string ApplyDistanceEffect(string text, float garbleAmount)
         {
-            if (garbleAmount < 0.3f) { return text; }
+            if (garbleAmount < MinGarbleAmount) { return text; }
             if (garbleAmount >= 1.0f) { return ""; }
+
+            // Ramp the chance of dropping a character from 0 at the threshold to 1 at the max range,
+            // instead of jumping straight to dropping MinGarbleAmount of the characters once the threshold is exceeded
+            float garbleChance = MathUtils.InverseLerp(MinGarbleAmount, 1.0f, garbleAmount);
 
             string textWithoutColorTags = RichString.Rich(text).SanitizedValue;
 
@@ -243,7 +252,7 @@ namespace Barotrauma.Networking
             StringBuilder sb = new StringBuilder(text.Length);
             for (int i = 0; i < textWithoutColorTags.Length; i++)
             {
-                sb.Append((i > startIndex && Rand.Range(0.0f, 1.0f) < garbleAmount) ? '-' : textWithoutColorTags[i]);
+                sb.Append((i > startIndex && Rand.Range(0.0f, 1.0f) < garbleChance) ? '-' : textWithoutColorTags[i]);
             }
 
             return sb.ToString();

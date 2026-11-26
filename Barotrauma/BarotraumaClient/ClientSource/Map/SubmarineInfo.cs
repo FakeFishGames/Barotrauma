@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class SubmarineInfo : IDisposable
+    public partial class SubmarineInfo : IDisposable
     {
         public Sprite PreviewImage;
 
@@ -39,6 +39,7 @@ namespace Barotrauma
 
             var previewButton = new GUIButton(new RectTransform(new Vector2(1f, 0.5f), content.RectTransform), style: null)
             {
+                ToolTip = TextManager.Get("previewsubmarine"),
                 CanBeFocused = SubmarineElement != null,
                 OnClicked = (btn, obj) => { SubmarinePreview.Create(this); return false; },
             };
@@ -111,7 +112,7 @@ namespace Barotrauma
             if (includeTitle)
             {
                 int nameHeight = (int)GUIStyle.LargeFont.MeasureString(DisplayName, true).Y;
-                submarineNameText = new GUITextBlock(new RectTransform(new Point(leftPanelWidthInt, nameHeight + HUDLayoutSettings.Padding / 2), parent.Content.RectTransform), DisplayName, textAlignment: Alignment.CenterLeft, font: GUIStyle.LargeFont)
+                submarineNameText = new GUITextBlock(new RectTransform(new Point(parent.Content.Rect.Width, nameHeight + HUDLayoutSettings.Padding / 2), parent.Content.RectTransform), DisplayName, textAlignment: Alignment.CenterLeft, font: GUIStyle.LargeFont)
                 {
                     CanBeFocused = false
                 };

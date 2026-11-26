@@ -14,7 +14,7 @@ namespace Barotrauma
     [NetworkSerialize]
     internal readonly record struct NetIncrementedStat(AchievementStat Stat, float Amount) : INetSerializableStruct;
 
-    static class AchievementManager
+    public static class AchievementManager
     {
         public static readonly ImmutableHashSet<Identifier> SupportedAchievements = ImmutableHashSet.Create(
             "killmoloch".ToIdentifier(),
@@ -326,7 +326,7 @@ namespace Barotrauma
                     pathFinder ??= new PathFinder(WayPoint.WayPointList, false);
                     var path = pathFinder.FindPath(ConvertUnits.ToSimUnits(c.WorldPosition), ConvertUnits.ToSimUnits(Submarine.MainSub.WorldPosition));
                     if (path.Unreachable) { return null; }
-                    return new CachedDistance(c.WorldPosition, Submarine.MainSub.WorldPosition, path.TotalLength, Timing.TotalTime + Rand.Range(1.0f, 5.0f));
+                    return new CachedDistance(c.WorldPosition, Submarine.MainSub.WorldPosition, path.TotalLength, label: string.Empty, Timing.TotalTime + Rand.Range(1.0f, 5.0f));
                 }
             }
         }
@@ -671,7 +671,7 @@ namespace Barotrauma
 #endif
                 var charactersInSub = Character.CharacterList.FindAll(c => 
                     !c.IsDead && 
-                    c.TeamID != CharacterTeamType.FriendlyNPC &&
+                    c.IsOnPlayerTeam &&
                     c.AIController is not EnemyAIController &&
                     (c.Submarine == gameSession.Submarine || gameSession.Submarine.GetConnectedSubs().Contains(c.Submarine) || (Level.Loaded?.EndOutpost != null && c.Submarine == Level.Loaded.EndOutpost)));
 
@@ -705,7 +705,7 @@ namespace Barotrauma
                     {
                         UnlockAchievement(character, "survivecrushdepth".ToIdentifier());
                     }
-                    if (character.Info.Job == null) { continue; }
+                    if (character.Info?.Job == null) { continue; }
                     UnlockAchievement(character, $"{character.Info.Job.Prefab.Identifier}round".ToIdentifier());
                 }
             }
@@ -780,15 +780,6 @@ namespace Barotrauma
                     unlockedAchievements.Add(identifier);
                 }
             }
-
-            if (EosInterface.Core.IsInitialized)
-            {
-                TaskPool.Add("Eos.UnlockAchievementsOnPlatforms", EosInterface.Achievements.UnlockAchievements(identifier), t =>
-                {
-                    if (!t.TryGetResult(out Result<uint, EosInterface.AchievementUnlockError> result)) { return; }
-                    if (result.IsSuccess) { unlockedAchievements.Add(identifier); }
-                });
-            }
         }
 
         public static void IncrementStat(AchievementStat stat, float amount)
@@ -804,107 +795,12 @@ namespace Barotrauma
             {
                 SteamManager.IncrementStats(stat.ToSteam(amount));
             }
-
-            if (EosInterface.Core.IsInitialized)
-            {
-                TaskPool.Add("Eos.IncrementStat", EosInterface.Achievements.IngestStats(stat.ToEos(amount)), TaskPool.IgnoredCallback);
-            }
         }
 
-        public static void SyncBetweenPlatforms()
+        public static void CleanUpStaticReferences()
         {
-            if (!SteamManager.IsInitialized || !EosInterface.Core.IsInitialized) { return; }
-
-            var steamStats = SteamManager.GetAllStats();
-
-            TaskPool.AddWithResult("Eos.SyncBetweenPlatforms.QueryStats", EosInterface.Achievements.QueryStats(AchievementStatExtension.EosStats), result =>
-            {
-                result.Match(
-                    success: stats => SyncStats(stats, steamStats),
-                    failure: static error => DebugConsole.ThrowError($"Failed to query stats from EOS: {error}"));
-            });
-
-            static void SyncStats(ImmutableDictionary<AchievementStat, int> eosStats,
-                                  ImmutableDictionary<AchievementStat, float> steamStats)
-            {
-                var steamStatsConverted = steamStats.Select(static s => s.Key.ToEos(s.Value)).ToImmutableDictionary(static s => s.Stat, static s => s.Value);
-                var eosStatsConverted = eosStats.Select(static s => s.Key.ToEos(s.Value)).ToImmutableDictionary(static s => s.Stat, static s => s.Value);
-
-                static int GetStatValue(AchievementStat stat, ImmutableDictionary<AchievementStat, int> stats) => stats.TryGetValue(stat, out int value) ? value : 0;
-
-                var highestStats = AchievementStatExtension.EosStats.ToDictionary(
-                    static key => key,
-                    value =>
-                        Math.Max(
-                            GetStatValue(value, steamStatsConverted),
-                            GetStatValue(value, eosStatsConverted)));
-
-                List<(AchievementStat Stat, int Value)> eosStatsToIngest = new(),
-                                                        steamStatsToIncrement = new();
-
-                foreach (var (stat, value) in highestStats)
-                {
-                    int steamDiff = value - GetStatValue(stat, steamStatsConverted),
-                        eosDiff = value - GetStatValue(stat, eosStatsConverted);
-
-                    if (steamDiff > 0) { steamStatsToIncrement.Add((stat, steamDiff)); }
-                    if (eosDiff > 0) { eosStatsToIngest.Add((stat, eosDiff)); }
-                }
-
-                if (steamStatsToIncrement.Any())
-                {
-                    SteamManager.IncrementStats(steamStatsToIncrement.Select(static s => s.Stat.ToSteam(s.Value)).ToArray());
-                    SteamManager.StoreStats();
-                }
-
-                if (eosStatsToIngest.Any())
-                {
-                    TaskPool.Add("Eos.SyncBetweenPlatforms.IngestStats", EosInterface.Achievements.IngestStats(eosStatsToIngest.ToArray()), TaskPool.IgnoredCallback);
-                }
-            }
-
-            if (!SteamManager.TryGetUnlockedAchievements(out List<Steamworks.Data.Achievement> steamUnlockedAchievements))
-            {
-                DebugConsole.ThrowError("Failed to query unlocked achievements from Steam");
-                return;
-            }
-
-            TaskPool.AddWithResult("Eos.SyncBetweenPlatforms.QueryPlayerAchievements", EosInterface.Achievements.QueryPlayerAchievements(), t =>
-            {
-                t.Match(
-                    success: eosAchievements => SyncAchievements(eosAchievements, steamUnlockedAchievements),
-                    failure: static error => DebugConsole.ThrowError($"Failed to query achievements from EOS: {error}"));
-            });
-
-            static void SyncAchievements(
-                ImmutableDictionary<Identifier, double> eosAchievements,
-                List<Steamworks.Data.Achievement> steamUnlockedAchievements)
-            {
-                foreach (var (identifier, progress) in eosAchievements)
-                {
-                    if (!IsUnlocked(progress)) { continue; }
-
-                    if (steamUnlockedAchievements.Any(a => a.Identifier.ToIdentifier() == identifier)) { continue; }
-
-                    SteamManager.UnlockAchievement(identifier);
-                }
-
-                List<Identifier> eosAchievementsToUnlock = new();
-                foreach (var achievement in steamUnlockedAchievements)
-                {
-                    Identifier identifier = achievement.Identifier.ToIdentifier();
-                    if (eosAchievements.TryGetValue(identifier, out double progress) && IsUnlocked(progress)) { continue; }
-
-                    eosAchievementsToUnlock.Add(achievement.Identifier.ToIdentifier());
-                }
-
-                if (eosAchievementsToUnlock.Any())
-                {
-                    TaskPool.Add("Eos.SyncBetweenPlatforms.UnlockAchievements", EosInterface.Achievements.UnlockAchievements(eosAchievementsToUnlock.ToArray()), TaskPool.IgnoredCallback);
-                }
-
-                static bool IsUnlocked(double progress) => progress >= 100.0d;
-            }
+            roundData = null;
+            pathFinder = null;
         }
     }
 }

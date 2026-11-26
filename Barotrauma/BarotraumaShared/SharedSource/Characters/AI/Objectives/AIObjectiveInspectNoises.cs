@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    class AIObjectiveInspectNoises : AIObjective
+    public class AIObjectiveInspectNoises : AIObjective
     {
         public override Identifier Identifier { get; set; } = "inspect noises".ToIdentifier();
 
@@ -79,7 +79,7 @@ namespace Barotrauma
                     AIObjectiveFightIntruders.IsValidTarget(targetCharacter, character, targetCharactersInOtherSubs: false))
                 {
                     float range = aiTarget.SoundRange * HumanAIController.Hearing;
-                    float dist = character.CurrentHull.GetApproximateDistance(character.Position, targetCharacter.Position, targetCharacter.CurrentHull, range, distanceMultiplierPerClosedDoor: 2);
+                    float dist = character.CurrentHull.GetApproximateDistance(character.WorldPosition, targetCharacter.WorldPosition, targetCharacter.CurrentHull, range, distanceMultiplierPerClosedDoor: 2);
                     if (dist > range) { continue; }
 
                     character.Speak(TextManager.Get("dialogheardenemy").Value, identifier: "heardenemy".ToIdentifier(), minDurationBetweenSimilar: 30.0f);

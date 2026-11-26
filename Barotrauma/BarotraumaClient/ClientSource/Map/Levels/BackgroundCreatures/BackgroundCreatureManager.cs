@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class BackgroundCreatureManager
+    public class BackgroundCreatureManager
     {
         const int MaxCreatures = 100;
 

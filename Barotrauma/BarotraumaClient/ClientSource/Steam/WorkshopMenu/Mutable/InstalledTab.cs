@@ -1,7 +1,7 @@
 ﻿#nullable enable
 using Barotrauma.Extensions;
+using ICSharpCode.Decompiler.Util;
 using Microsoft.Xna.Framework;
-using Steamworks.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -83,7 +83,7 @@ namespace Barotrauma.Steam
             return (left, center, right);
         }
 
-        private static void HandleDraggingAcrossModLists(GUIListBox from, GUIListBox to)
+        public static void HandleDraggingAcrossModLists(GUIListBox from, GUIListBox to)
         {
             if (to.Rect.Contains(PlayerInput.MousePosition) && from.DraggedElement != null)
             {
@@ -339,7 +339,19 @@ namespace Barotrauma.Steam
                     new RectTransform(Vector2.One, filterContainer!.RectTransform, scaleBasis: ScaleBasis.BothHeight),
                     "", style: style);
             
-            padFilterContainer(width: 0.2f);
+            new GUITickBox(new RectTransform((0.2f, 1f), filterContainer.RectTransform), TextManager.Get("workshop.autoorder"))
+            {
+                ToolTip = TextManager.Get("workshop.autoorder.tip"),
+                Selected = GameSettings.CurrentConfig.AutoOrderModList,
+                OnSelected = tickbox =>
+                {
+                    GameSettings.SetCurrentConfig(GameSettings.CurrentConfig with { AutoOrderModList = tickbox.Selected });
+                    GameSettings.SaveCurrentConfig();
+                    SettingsMenu.Instance?.RefreshSettings();
+                    return true;
+                }
+            };
+
             var loadPresetBtn = filterLayoutButton("OpenButton");
             loadPresetBtn.ToolTip = TextManager.Get("LoadModListPresetHeader");
             loadPresetBtn.OnClicked = OpenLoadPreset;
@@ -495,6 +507,11 @@ namespace Barotrauma.Steam
             var iconBtn = guiItem.GetChild<GUILayoutGroup>()?.GetAllChildren<GUIButton>().Last();
 
             bool matches = false;
+            // Allow using the mods tab to view DLC packages while Steam isn't initialized
+            if (!SteamManager.IsInitialized)
+            {
+                matches = ContentPackageManager.DlcPackages.Contains(p);
+            }
 
             if (EnableWorkshopSupport)
             {
@@ -515,18 +532,18 @@ namespace Barotrauma.Steam
 
             if (modsListFilterTickboxes[Filter.ShowOnlySubs].Selected
                 && modsListFilterTickboxes[Filter.ShowOnlyItemAssemblies].Selected
-                && p.Files.All(f => f is BaseSubFile || f is ItemAssemblyFile))
+                && p.AllFiles.All(f => f is BaseSubFile || f is ItemAssemblyFile))
             {
                 //Both the subs-only tickbox and the item-assembly-only tickbox
                 //are enabled, and all files match either of them so show this mod
             }
             else if (modsListFilterTickboxes[Filter.ShowOnlySubs].Selected
-                && p.Files.Any(f => f is not BaseSubFile))
+                && p.AllFiles.Any(f => f is not BaseSubFile))
             {
                 matches = false;
             }
             else if (modsListFilterTickboxes[Filter.ShowOnlyItemAssemblies].Selected
-                && p.Files.Any(f => f is not ItemAssemblyFile))
+                && p.AllFiles.Any(f => f is not ItemAssemblyFile))
             {
                 matches = false;
             }
@@ -623,9 +640,14 @@ namespace Barotrauma.Steam
 
                             if (isUpToDate) { return; }
 
-                            infoButton.CanBeSelected = true;
-                            infoButton.ApplyStyle(GUIStyle.ComponentStyles["WorkshopMenu.InfoButtonUpdate"]);
-                            infoButton.ToolTip = TextManager.Get("ViewModDetailsUpdateAvailable");
+                            // Don't use the infoButton created above, if the lists were repopulated while this task was running,
+                            // the button is no longer the one we are looking for
+                            if (FindInfoButtonForContentPackage(mod) is GUIButton currentInfoButton)
+                            {
+                                currentInfoButton.CanBeSelected = true;
+                                currentInfoButton.ApplyStyle(GUIStyle.ComponentStyles["WorkshopMenu.InfoButtonUpdate"]);
+                                currentInfoButton.ToolTip = TextManager.Get("ViewModDetailsUpdateAvailable");
+                            }
                             if (bulkUpdateButtonOption.TryUnwrap(out var bulkUpdateButton))
                             {
                                 bulkUpdateButton.Enabled = true;
@@ -670,7 +692,7 @@ namespace Barotrauma.Steam
                     CanBeFocused = false
                 };
                 var modName = new GUITextBlock(new RectTransform(Vector2.One, modNameScissor.Content.RectTransform),
-                    text: mod.Name)
+                    text: mod.Name, textColor: mod.GetAccentColor())
                 {
                     CanBeFocused = false
                 };
@@ -720,11 +742,6 @@ namespace Barotrauma.Steam
                                 contextMenuOptions.Add(new("ViewWorkshopModDetails".ToIdentifier(), isEnabled: true, () => PrepareToShowModInfo(mod)));
                                 contextMenuOptions.Add(new("CopyWorkshopToLocal".ToIdentifier(), isEnabled: true, () => CopyToLocal()));
                             }
-                            if (mod.MissingDependencies.Any())
-                            {
-                                contextMenuOptions.Add(new("workshop.dependencynotfound.showmissingdependencies".ToIdentifier(), isEnabled: true, 
-                                    () => CreateDependencyErrorMessageBox(mod, mod.MissingDependencies)));
-                            }
                             if (selectedMods.All(ContentPackageManager.WorkshopPackages.Contains))
                             {
                                 static Identifier? GetButtonIconStyle(GUIComponent c) => c.GetChild<GUILayoutGroup>()?.GetAllChildren<GUIButton>().Last()?.Style?.Identifier;
@@ -733,6 +750,11 @@ namespace Barotrauma.Steam
                                 {
                                     contextMenuOptions.Add(new((selectedMods.Length > 1 ? "UnsubscribeFromAllSelected" : "WorkshopItemUnsubscribe").ToIdentifier(), true, () =>
                                     {
+                                        if (!MutableWorkshopMenu.CheckIfCanSafelyUpdateFiles(selectedMods))
+                                        {
+                                            return;
+                                        }
+
                                         TaskPool.AddIfNotFound("UnsubFromSelected", Task.WhenAll(selectedMods.Select(m => m.UgcId).NotNone().OfType<SteamWorkshopId>().Select(id => SteamManager.Workshop.GetItem(id.Value))), t =>
                                         {
                                             if (!t.TryGetResult(out Option<Steamworks.Ugc.Item>[]? itemOptions)) { return; }
@@ -762,6 +784,11 @@ namespace Barotrauma.Steam
                                 }
                                 contextMenuOptions.Add(new("Delete".ToIdentifier(), isEnabled: true, AskToDeleteLocal));
                             }
+                        }
+                        if (mod.Dependencies.Any())
+                        {
+                            contextMenuOptions.Add(new("workshop.viewdependencyinfo".ToIdentifier(), isEnabled: true,
+                                () => CreateDependencyInfoMessageBox(mod, mod.Dependencies)));
                         }
                         GUIContextMenu.CreateContextMenu(PlayerInput.MousePosition, ToolBox.LimitString(mod.Name, GUIStyle.SubHeadingFont, GUI.IntScale(300)), null, contextMenuOptions.ToArray());
                         static void NoOp() { }
@@ -887,78 +914,127 @@ namespace Barotrauma.Steam
             
             UpdateModListItemVisibility();
         }
-        
-        private void CreateDependencyErrorMessageBox(ContentPackage contentPackage, IEnumerable<PublishedFileId> missingDependencies)
+
+        private GUIButton? FindInfoButtonForContentPackage(ContentPackage mod)
         {
-            GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("Error"),
-                TextManager.GetWithVariable("workshop.dependencynotfoundtitle", "[name]", contentPackage.Name), new Vector2(0.25f, 0.0f), minSize: new Point(GUI.IntScale(650), GUI.IntScale(650)));
+            var modFrame = enabledCoreDropdown.ListBox.Content.Children
+                .Concat(enabledRegularModsList.Content.Children)
+                .Concat(disabledRegularModsList.Content.Children)
+                .FirstOrDefault(c => c.UserData == mod);
+
+            return modFrame?.GetChild<GUILayoutGroup>()?.GetAllChildren<GUIButton>().LastOrDefault();
+        }
+
+        private void CreateDependencyInfoMessageBox(ContentPackage contentPackage, IEnumerable<ContentPackage.Dependency> missingDependencies)
+        {
+            GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("workshop.dependencyinfo.header"),
+                TextManager.GetWithVariable("workshop.dependencyinfo.text", "[name]", contentPackage.Name), new Vector2(0.35f, 0.0f), minSize: new Point(GUI.IntScale(650), GUI.IntScale(650)));
             msgBox.Buttons[0].OnClicked = (btn, userdata) =>
             {
-                SettingsMenu.Instance?.ApplyInstalledModChanges();
                 msgBox.Close();
                 return true;
             };
             var textListBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), msgBox.Content.RectTransform));
+            textListBox.CurrentSelectMode = GUIListBox.SelectMode.None;
 
-            foreach (var dependency in missingDependencies)
+            var sortedDependencies = missingDependencies.ToList();
+            sortedDependencies.SortBy(s => s.IsOptional);
+
+            foreach (var dependency in sortedDependencies)
             {
-                var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), textListBox.Content.RectTransform),
-                    $"- {TextManager.Get("unknown")} {dependency}")
+                dependency.TryResolve(ContentPackageManager.AllPackages.Union(ContentPackageManager.EnabledPackages.All), out ContentPackage? dependencyPackage);
+
+                string dependencyName = dependencyPackage?.Name ?? dependency.ToString();
+
+                var frame = new GUIFrame(new RectTransform(new Vector2(1f, 0.1f), textListBox.Content.RectTransform), "ListBoxElement")
                 {
-                    CanBeFocused = false
+                    CanBeFocused = true
                 };
 
-                var matchingPackage = ContentPackageManager.WorkshopPackages.FirstOrDefault(p => 
-                    p.UgcId.TryUnwrap(out var ugcId) && 
-                    ugcId is SteamWorkshopId workshopId && 
-                    workshopId.Value == dependency.Value);
-                if (matchingPackage != null &&
-                    disabledRegularModsList.Content.GetChildByUserData(matchingPackage) is GUIComponent matchingListElement)
+                var layout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1f), frame.RectTransform), true, Anchor.CenterLeft);
+
+                var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.50f, 0.0f), layout.RectTransform), dependencyName)
                 {
-                    textBlock.Text = $"- {matchingPackage.Name}";
-                    var enableButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), textBlock.RectTransform, Anchor.CenterRight), TextManager.Get("workshopitemenabled"))
-                    {
-                        OnClicked = (btn, userdata) =>
-                        {
-                            btn.Enabled = false;
-                            textBlock.Flash(GUIStyle.Green);
-                            matchingListElement.RectTransform.Parent = enabledRegularModsList.Content.RectTransform;
-                            matchingListElement.Flash(GUIStyle.Green);
-                            return true;
-                        }
-                    };
-                    textBlock.RectTransform.MinSize = new Point(0, (int)(enableButton.Rect.Height * 1.2f));
+                    OverflowClip = true,
+                };
+
+                var optionalTextBlock = new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.0f), layout.RectTransform), 
+                    TextManager.Get(dependency.IsOptional ? "workshop.optional" : "workshop.required"))
+                {
+                    CanBeFocused = true,
+                    TextColor = dependency.IsOptional ? GUIStyle.Blue : GUIStyle.Orange
+                };
+
+                var orderTextBlock = new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.0f), layout.RectTransform),
+                    TextManager.Get(dependency.Order == ContentPackage.Dependency.RelativeOrder.Below ? "workshop.orderbelow" : "workshop.orderabove"))
+                {
+                    CanBeFocused = true
+                };
+                if (dependency.Order == ContentPackage.Dependency.RelativeOrder.None)
+                {
+                    orderTextBlock.Text = "";
                 }
                 else
                 {
-                    var subscribeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), textBlock.RectTransform, Anchor.CenterRight), TextManager.Get("downloadbutton"))
-                    {
-                        Enabled = false
-                    };
-                    textBlock.RectTransform.MinSize = new Point(0, (int)(subscribeButton.Rect.Height * 1.2f));
+                    orderTextBlock.Text = TextManager.Get(dependency.Order == ContentPackage.Dependency.RelativeOrder.Below ? 
+                        "workshop.orderbelow" : "workshop.orderabove");
+                    orderTextBlock.ToolTip = TextManager.GetWithVariable(
+                        dependency.Order == ContentPackage.Dependency.RelativeOrder.Below ? 
+                        "workshop.orderbelow.tip" : "workshop.orderabove.tip", 
+                        "[PackageName]", dependencyName);
+                }
 
-                    //fetch the workshop item based on the ID, update the text to show it's title and create a subscribe button
-                    TaskPool.Add($"GetMissingDependencyInfo{dependency}", SteamManager.Workshop.GetItem(dependency),
+                GUIComponent? matchingListElement = dependencyPackage != null ? disabledRegularModsList.Content.GetChildByUserData(dependencyPackage) : null;
+
+                var enableButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.9f), layout.RectTransform, Anchor.CenterRight), TextManager.Get("workshopitemenabled"))
+                {
+                    OnClicked = (btn, userdata) =>
+                    {
+                        if (matchingListElement == null) { return false; }
+
+                        btn.Enabled = false;
+                        if (dependencyPackage != null)
+                        {
+                            frame.Flash(GUIStyle.Green);
+                            SetContentPackageEnabledState(dependencyPackage, true);
+                            matchingListElement.Flash(GUIStyle.Green);
+                        }
+                        return true;
+                    }
+                };
+
+                enableButton.Enabled = matchingListElement != null;
+
+                if (dependencyPackage == null)
+                {
+                    enableButton.Text = TextManager.Get("unknown");
+
+                    if (dependency.PackageIds.Any() && dependency.PackageIds.First() is SteamWorkshopId workshopId)
+                    {
+                        TaskPool.Add($"GetMissingDependencyInfo{dependency}", SteamManager.Workshop.GetItem(workshopId.Value),
                         t =>
                         {
                             if (!t.TryGetResult(out Option<Steamworks.Ugc.Item> itemOption)) { return; }
                             if (!itemOption.TryUnwrap(out var item)) { return; }
                             if (!item.Title.IsNullOrEmpty())
                             {
-                                textBlock.Text = $"- {item.Title}";
+                                textBlock.Text = $"{item.Title}";
                             }
                             if (!item.IsSubscribed)
                             {
-                                subscribeButton.OnClicked = (btn, userdata) =>
+                                enableButton.Text = TextManager.Get("downloadbutton");
+
+                                enableButton.OnClicked = (btn, userdata) =>
                                 {
                                     _ = item.Subscribe();
-                                    subscribeButton.Enabled = false;
-                                    textBlock.Flash(GUIStyle.Green);
+                                    enableButton.Enabled = false;
+                                    frame.Flash(GUIStyle.Green);
                                     return true;
                                 };
-                                subscribeButton.Enabled = true;
+                                enableButton.Enabled = true;
                             }
                         });
+                    }
                 }
             }
         }

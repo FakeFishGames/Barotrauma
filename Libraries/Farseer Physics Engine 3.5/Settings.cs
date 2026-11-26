@@ -105,7 +105,7 @@ namespace FarseerPhysics
         /// to move by a small amount without triggering a tree adjustment.
         /// This is in meters.
         /// </summary>
-        public const float AABBExtension = 0.1f;
+        public const float AABBExtension = 0.2f;
 
         /// <summary>
         /// This is used to fatten AABBs in the dynamic tree. This is used to predict

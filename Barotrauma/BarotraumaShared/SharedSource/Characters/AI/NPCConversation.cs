@@ -4,6 +4,7 @@ using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 using System.Collections.Immutable;
+using System.Text;
 
 namespace Barotrauma
 {
@@ -15,8 +16,11 @@ namespace Barotrauma
 
         public readonly List<NPCConversation> Conversations;
 
+        public readonly NPCConversationsFile File;
+
         public NPCConversationCollection(NPCConversationsFile file, ContentXElement element) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
+            File = file;
             Language = element.GetAttributeIdentifier("language", "English").ToLanguageIdentifier();
             Conversations = new List<NPCConversation>();
             foreach (var subElement in element.Elements())
@@ -82,8 +86,8 @@ namespace Barotrauma
                 else if (Level.Loaded.Type == LevelData.LevelType.Outpost)
                 {
                     if (GameMain.GameSession.RoundDuration < 120.0f && 
-                        speaker?.CurrentHull != null && 
-                        GameMain.GameSession.Map?.CurrentLocation?.Reputation?.Value >= 0.0f &&
+                        speaker?.CurrentHull != null &&
+                        (GameMain.GameSession.Map?.CurrentLocation?.Reputation == null || GameMain.GameSession.Map?.CurrentLocation?.Reputation?.Value >= 0.0f) &&
                         Character.CharacterList.Any(c => c.TeamID != speaker.TeamID && c.CurrentHull == speaker.CurrentHull)) 
                     {
                         currentFlags.Add("EnterOutpost".ToIdentifier()); 
@@ -139,22 +143,33 @@ namespace Barotrauma
                 {
                     currentFlags.Add($"CampaignNPC.{speaker.CampaignInteractionType}".ToIdentifier());
                 }
-                if (GameMain.GameSession?.GameMode is CampaignMode campaignMode && 
-                    (campaignMode.Map?.CurrentLocation?.Type?.Identifier == "abandoned"))
+                if (GameMain.GameSession?.GameMode is CampaignMode campaignMode)
                 {
-                    if (speaker.TeamID == CharacterTeamType.None)
+                    if (campaignMode.Map?.CurrentLocation?.Type?.Identifier == "abandoned")
                     {
-                        currentFlags.Add("Bandit".ToIdentifier());
+                        if (speaker.TeamID == CharacterTeamType.None)
+                        {
+                            currentFlags.Add("Bandit".ToIdentifier());
+                        }
+                        else if (speaker.TeamID == CharacterTeamType.FriendlyNPC)
+                        {
+                            currentFlags.Add("Hostage".ToIdentifier());
+                        }
                     }
-                    else if (speaker.TeamID == CharacterTeamType.FriendlyNPC)
+                    if (campaignMode.Map?.CurrentLocation is { IsBelowInsufficientPopulationThreshold: true})
                     {
-                        currentFlags.Add("Hostage".ToIdentifier());
+                        currentFlags.Add("PopulationLow".ToIdentifier());
                     }
                 }
                 if (speaker.IsEscorted)
                 {
                     currentFlags.Add("escort".ToIdentifier());
                 }
+            }
+
+            foreach (var action in PluginData.GetHooks<PluginModifyCharacterSpecificNPCConversationFlags>())
+            {
+                action(speaker, currentFlags);
             }
 
             return currentFlags;
@@ -309,6 +324,8 @@ namespace Barotrauma
 
         static bool CheckSpeakerViability(Character potentialSpeaker, NPCConversation selectedConversation, List<Character> checkedSpeakers, bool ignoreFlags)
         {
+            if (!potentialSpeaker.CanSpeak) { return false; }
+
             //check if the character has an appropriate job to say the line
             if ((potentialSpeaker.Info?.Job != null && potentialSpeaker.Info.Job.Prefab.OnlyJobSpecificDialog) || selectedConversation.AllowedJobs.Count > 0)
             {
@@ -374,11 +391,18 @@ namespace Barotrauma
 #if DEBUG
         public static void WriteToCSV()
         {
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            Dictionary<Identifier, StringBuilder> stringBuilders = new Dictionary<Identifier, StringBuilder>();
 
             foreach (Identifier identifier in NPCConversationCollection.Collections[GameSettings.CurrentConfig.Language].Keys)
             {
-                foreach (var current in NPCConversationCollection.Collections[GameSettings.CurrentConfig.Language][identifier].Conversations)
+                var collection = NPCConversationCollection.Collections[GameSettings.CurrentConfig.Language][identifier];
+                if (!stringBuilders.TryGetValue(collection.Identifier, out StringBuilder sb))
+                {
+                    sb = new StringBuilder();
+                    stringBuilders.Add(collection.Identifier, sb);
+                }
+
+                foreach (var current in collection.Conversations)
                 {
                     WriteConversation(sb, current, 0);
                     WriteSubConversations(sb, current.Responses, 1);
@@ -386,7 +410,12 @@ namespace Barotrauma
                 }
             }
 
-            File.WriteAllText("NPCConversations.csv", sb.ToString());
+            foreach ((Identifier id, StringBuilder sb) in stringBuilders)
+            {
+                string fileName = $"NPCConversations_{id}.csv";
+                File.WriteAllText(fileName, sb.ToString());
+                DebugConsole.NewMessage($"Wrote NPC conversations from collection {id} to {fileName}.");
+            }
         }
 
         private static void WriteConversation(System.Text.StringBuilder sb, NPCConversation conv, int depthIndex)

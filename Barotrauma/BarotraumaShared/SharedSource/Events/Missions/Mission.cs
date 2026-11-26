@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Abilities;
 using Barotrauma.Extensions;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -10,13 +11,52 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    abstract partial class Mission
+    public abstract partial class Mission
     {
+        /// <summary>
+        /// Used by certain mission types where the win/fail conditions are configurable.
+        /// </summary>
+        public enum MissionResultCondition
+        {
+            CrewEliminated,
+            AnyoneFromCrewSurvived,
+            /// <summary>
+            /// Means the mission cannot succeed (or fail, if used as the failure condition).
+            /// </summary>
+            Never,
+            /// <summary>
+            /// Makes the mission always succeed at the end of the round as long as the failure condition is not met. If used as the failure condition, the mission always fails.
+            /// </summary>
+            Always,
+            /// <summary>
+            /// The submarine is flooded and there's only a few living crew members on board, and no-one currently assaulting inside the enemy sub/outpost.
+            /// Or, the submarine has sunken way below the bottom of the level.
+            /// </summary>
+            SubmarineIncapacitated,
+            /// <summary>
+            /// The opposite of <see cref="SubmarineIncapacitated"/>: makes the mission succeed if the submarine wasn't incapacitated (or fail, if used as a failure condition).
+            /// </summary>
+            SubmarineNotIncapacitated,
+            /// <summary>
+            /// The outpost is considered destroyed when most of the NPCs are dead or when the reactor has been blown up.
+            /// </summary>
+            OutpostDestroyed
+        }
+
+
         public readonly MissionPrefab Prefab;
         private bool completed;
         protected bool failed;
 
         protected Level level;
+
+        public Level Level => level;
+
+        /// <summary>
+        /// The condition that must be met for the mission to fail. 
+        /// Note that not winning is not the same as failing - a mission can also be neither success or failure, in which case it can be reattempted.
+        /// </summary>
+        public MissionResultCondition FailureCondition = MissionResultCondition.Never;
 
         protected int state;
         public virtual int State
@@ -36,6 +76,10 @@ namespace Barotrauma
                     {
                         CharacterHUD.ShowMissionProgressBar(this);
                     }
+
+                    // If the mission start message was hidden when it started, it may have become unhidden now due to the state change
+                    ShowMissionStartMessageIfNeeded();
+
 #endif
                     ShowMessage(State);
                     OnMissionStateChanged?.Invoke(this);
@@ -51,7 +95,7 @@ namespace Barotrauma
         protected readonly CheckDataAction completeCheckDataAction;
 
         public readonly ImmutableArray<LocalizedString> Headers;
-        public readonly ImmutableArray<LocalizedString> Messages;
+        public ImmutableArray<LocalizedString> Messages { get; private set; }
 
         /// <summary>
         /// The reward that was actually given from completing the mission, taking any talent bonuses into account 
@@ -61,32 +105,74 @@ namespace Barotrauma
 
         public virtual LocalizedString Name => Prefab.Name;
 
-        private readonly LocalizedString successMessage;
+        public RichString NameWithContentPackage
+        {
+            get
+            {
+                RichString missionName = Name;
+                if (Prefab.ContentPackage != ContentPackageManager.VanillaCorePackage)
+                {
+                    missionName = $"{missionName}\n‖color:{Prefab.ContentPackage.GetAccentColor().ToStringHex()}‖[{Prefab.ContentPackage?.Name}]‖color:end‖";
+                }
+                return missionName;
+            }
+        }
+
+        private LocalizedString successMessage;
+        /// <summary>
+        /// Shown if the mission has been <see cref="Mission.Completed">completed successfully</see>.
+        /// </summary>
         public virtual LocalizedString SuccessMessage
         {
             get { return successMessage; }
-            //private set { successMessage = value; }
         }
 
-        private readonly LocalizedString failureMessage;
+        private LocalizedString failureMessage;
+
+        /// <summary>
+        /// Shown if the mission has <see cref="Mission.Failed">failed</see>, or if the mission was not completed successfully and <see cref="FailureMessage"/> is not defined.
+        /// </summary>
         public virtual LocalizedString FailureMessage
         {
             get { return failureMessage; }
-            //private set { failureMessage = value; }
+        }
+
+        private LocalizedString neutralResultMessage;
+        /// <summary>
+        /// Shown if the mission was neither <see cref="Mission.Completed">completed successfully</see> or <see cref="Mission.Failed">failed</see>. 
+        /// If not defined, the <see cref="FailureMessage"/> is used if the mission was not completed.
+        /// </summary>
+        public virtual LocalizedString NeutralResultMessage
+        {
+            get { return neutralResultMessage; }
         }
 
         protected LocalizedString description;
         public virtual LocalizedString Description
         {
             get { return description; }
-            //private set { description = value; }
         }
 
         protected LocalizedString descriptionWithoutReward;
+        
+        public bool ShowInMenus =>
+            Prefab.ShowInMenusAfterReachingState > -1 ?
+                state >= Prefab.ShowInMenusAfterReachingState :
+                Prefab.ShowInMenus;
 
         public virtual bool AllowUndocking
         {
             get { return true; }
+        }
+
+        public bool DisallowLeavingLocation
+        {
+            get =>  Prefab.DisallowLeavingLocation && !completed;
+        }
+
+        public bool DisallowSaving
+        {
+            get => Prefab.DisallowSaving && !completed;
         }
 
         public virtual int Reward
@@ -108,26 +194,22 @@ namespace Barotrauma
             set { completed = value; }
         }
 
+        /// <summary>
+        /// Does the mission currently prevent the locations it takes place in from changing their type? See <see cref="MissionPrefab.BlockLocationTypeChanges"/>.
+        /// </summary>
+        public virtual bool BlocksLocationTypeChanges => !Completed && Prefab.BlockLocationTypeChanges;
+
         public bool Failed
         {
             get { return failed || ForceFailure; }
         }
 
         public bool ForceFailure;
+        public bool ForceRetry;
 
         public virtual bool AllowRespawning
         {
             get { return true; }
-        }
-
-        public virtual int TeamCount
-        {
-            get { return 1; }
-        }
-
-        public virtual SubmarineInfo EnemySubmarineInfo
-        {
-            get { return null; }
         }
 
         public virtual IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
@@ -145,10 +227,70 @@ namespace Barotrauma
 
         public readonly Location[] Locations;
 
+        /// <summary>
+        /// The actual, final destination of the mission: may be something else than Locations[1] on multi-level missions (see <see cref="PathToDestination"/>)
+        /// </summary>
+        public Location Destination => PathToDestination == null || PathToDestination.Length < 2 ? Locations[1] : PathToDestination.Last();
+
+        /// <summary>
+        /// If set, this mission is treated as a "chain" of missions leading up to the destination location.
+        /// In practice, when this mission instance completes, an identical mission is placed on the next LocationConnection towards the destination.
+        /// </summary>
+        public ImmutableArray<Location> PathToDestination { get; private set; }
+
+        /// <summary>
+        /// Is there more path to the destination remaining after the current level (i.e. is this a multi-level mission that's not yet at the last level?)
+        /// </summary>
+        public bool MorePathToDestinationRemaining => PathToDestination != null && PathToDestination.Length > 2;
+
+        public bool TimeLimitReached => Prefab.TimeLimitWorldSteps > -1 && WorldStepsSinceUnlocked >= Prefab.TimeLimitWorldSteps;
+
+        /// <summary>
+        /// How many world steps until the mission expires (= is removed from the available missions with no other effects).
+        /// Unlike <see cref="MissionPrefab.TimeLimitWorldSteps"/>, the expiry doesn't progress while the mission is available in the players' location or being played.
+        /// -1 = never expires. Set by <see cref="MissionAction.ExpireAfter"/>.
+        /// </summary>
+        public int WorldStepsUntilExpiry { get; set; } = -1;
+
+        public bool Expired => WorldStepsUntilExpiry == 0;
+
+        /// <summary>
+        /// How many world steps until the mission reaches its final destination (e.g. until a transport sub arrives at its destination)?
+        /// Takes into account the remaining levels on multi-level missions. Null if the mission has no time limit.
+        /// </summary>
+        public int? GetWorldStepsUntilDestinationReached()
+        {
+            if (Prefab.TimeLimitWorldSteps < 0) { return null; }
+            int steps = Math.Max(Prefab.TimeLimitWorldSteps - WorldStepsSinceUnlocked, 0);
+            if (MorePathToDestinationRemaining)
+            {
+                int currentDestinationIndex = PathToDestination.IndexOf(Locations[1]);
+                if (currentDestinationIndex >= 0)
+                {
+                    //each of the remaining levels takes the full time limit (a new mission instance is unlocked for each one)
+                    int remainingLevels = PathToDestination.Length - 1 - currentDestinationIndex;
+                    steps += remainingLevels * Prefab.TimeLimitWorldSteps;
+                }
+            }
+            return steps;
+        }
+
+        public int WorldStepsSinceUnlocked { get; set; }
+
+        public virtual bool RequiresSpecificWreck { get; }
+
         public int? Difficulty
         {
             get { return Prefab.Difficulty; }
         }
+
+        public bool missionMessageShown = false;
+
+        /// <summary>
+        /// Is this mission currently in a state that should disallow <see cref="AIObjectiveExploreOutside"/> in outpost levels?
+        /// E.g. to prevent bots from going out fishing when there's monsters or a hostile sub attacking the outpost.
+        /// </summary>
+        public virtual bool DisallowExploreOutsideOutpost => false;
 
         private class DelayedTriggerEvent
         {
@@ -170,20 +312,62 @@ namespace Barotrauma
         protected readonly List<Character> characters = new List<Character>();
         protected readonly Dictionary<Character, List<Item>> characterItems = new Dictionary<Character, List<Item>>();
 
+        public enum OutpostDestroyedState
+        {
+            None,
+            ReactorDestroyed,
+            TooManyNPCsKilled,
+            TooFlooded
+        }
+
+        /// <summary>
+        /// Why was the outpost considered destroyed? Only relevant in outpost missions with the <see cref="FailureCondition"/> set to <see cref="MissionResultCondition.OutpostDestroyed"/>.
+        /// </summary>
+        public OutpostDestroyedState OutpostDestroyedReason { get; set; } = OutpostDestroyedState.None;
+
+        /// <summary>
+        /// The amount of crew left below which the submarine is considered incapacitated for the purposes of <see cref="MissionResultCondition.SubmarineIncapacitated"/>.
+        /// E.g. a value of 0.2 would mean that the sub is considered incapacitated if it's flooded and there's less than 20% of the initial crew alive and on board.
+        /// </summary>
+        private readonly float submarineIncapacitatedWhenCrewBelowThreshold;
+
+        /// <summary>
+        /// The percentage of the sub that needs to be flooded for the purposes of <see cref="MissionResultCondition.SubmarineIncapacitated"/>.
+        /// E.g. a value of 0.5 would mean that the sub is considered incapacitated if more than 50% of it's volume is flooded and the crew is below <see cref="submarineIncapacitatedWhenCrewBelowThreshold"/>.
+        /// </summary>
+        private readonly float submarineIncapacitatedWhenSubFloodedThreshold;
+
+        /// <summary>
+        /// The amount of outpost NPCs left below which the outpost is considered destroyed for the purposes of <see cref="MissionResultCondition.OutpostDestroyed"/>.
+        /// E.g. a value of 0.2 would mean that the outpost is considered destroyed if less than 20% of the NPCs are alive.
+        /// </summary>
+        private readonly float outpostDestroyedWhenNPCsBelowThreshold;
+
+        /// <summary>
+        /// The percentage of the sub that needs to be flooded for it to be considered destroyed for the purposes of <see cref="MissionResultCondition.OutpostDestroyed"/>.
+        /// E.g. a value of 0.8 would mean that the outpost is considered destroyed if more than 80% of it's volume is flooded.
+        /// </summary>
+        private readonly float outpostDestroyedWhenFloodedThreshold;
+
+        private Item outpostReactor;
+
+        private int? initialOutpostDwellerCount;
+
         public Mission(MissionPrefab prefab, Location[] locations, Submarine sub)
         {
             System.Diagnostics.Debug.Assert(locations.Length == 2);
 
             Prefab = prefab;
-
-            description = prefab.Description.Value;
-            successMessage = prefab.SuccessMessage.Value;
-            failureMessage = prefab.FailureMessage.Value;
             Headers = prefab.Headers;
-            var messages = prefab.Messages.ToArray();
-
             OriginLocation = locations[0];
             Locations = locations;
+
+            submarineIncapacitatedWhenCrewBelowThreshold = prefab.ConfigElement.GetAttributeFloat(nameof(submarineIncapacitatedWhenCrewBelowThreshold), 0.2f);
+            submarineIncapacitatedWhenSubFloodedThreshold = prefab.ConfigElement.GetAttributeFloat(nameof(submarineIncapacitatedWhenSubFloodedThreshold), 0.5f);
+            outpostDestroyedWhenNPCsBelowThreshold = prefab.ConfigElement.GetAttributeFloat(nameof(outpostDestroyedWhenNPCsBelowThreshold), 0.1f);
+            outpostDestroyedWhenFloodedThreshold = prefab.ConfigElement.GetAttributeFloat(nameof(outpostDestroyedWhenFloodedThreshold), 0.8f);
+
+            FailureCondition = prefab.ConfigElement.GetAttributeEnum(nameof(FailureCondition), MissionResultCondition.Never);
 
             var endConditionElement = prefab.ConfigElement.GetChildElement(nameof(completeCheckDataAction));
             if (endConditionElement != null)
@@ -191,16 +375,8 @@ namespace Barotrauma
                 completeCheckDataAction = new CheckDataAction(endConditionElement, $"Mission ({prefab.Identifier})");
             }
 
-            descriptionWithoutReward = ReplaceVariablesInMissionMessage(description, sub, replaceReward: false);
-            description = ReplaceVariablesInMissionMessage(description, sub);
-            successMessage = ReplaceVariablesInMissionMessage(successMessage, sub);
-            failureMessage = ReplaceVariablesInMissionMessage(failureMessage, sub);
-            for (int m = 0; m < messages.Length; m++)
-            {
-                messages[m] = ReplaceVariablesInMissionMessage(messages[m], sub);
-            }
-            Messages = messages.ToImmutableArray();
-            
+            RefreshDescriptionAndMessages(sub);
+
             characterConfig = prefab.ConfigElement.GetChildElement("Characters");
             if (prefab.ConfigElement.GetChildElements("Characters").Count() > 1)
             {
@@ -209,12 +385,34 @@ namespace Barotrauma
             }
         }
 
+        private void RefreshDescriptionAndMessages(Submarine sub)
+        {
+            descriptionWithoutReward = ReplaceVariablesInMissionMessage(Prefab.Description.Value, sub, replaceReward: false);
+            description = ReplaceVariablesInMissionMessage(Prefab.Description.Value, sub);
+            successMessage = ReplaceVariablesInMissionMessage(Prefab.SuccessMessage.Value, sub);
+            failureMessage = ReplaceVariablesInMissionMessage(Prefab.FailureMessage.Value, sub);
+            neutralResultMessage = ReplaceVariablesInMissionMessage(Prefab.NeutralResultMessage.Value, sub);
+
+            var messages = Prefab.Messages.ToArray();
+            for (int m = 0; m < messages.Length; m++)
+            {
+                messages[m] = ReplaceVariablesInMissionMessage(messages[m], sub);
+            }
+            Messages = messages.ToImmutableArray();
+        }
+
         public LocalizedString ReplaceVariablesInMissionMessage(LocalizedString message, Submarine sub, bool replaceReward = true)
         {
             for (int locationIndex = 0; locationIndex < 2; locationIndex++)
             {
-                string locationName = $"‖color:gui.orange‖{Locations[locationIndex].DisplayName}‖end‖";
+                Location location = Locations[locationIndex];
+                string locationName = $"‖color:gui.orange‖{location.DisplayName}‖end‖";
                 message = message.Replace("[location" + (locationIndex + 1) + "]", locationName);
+            }
+            if (Destination != null)
+            {
+                string destinationName = $"‖color:gui.orange‖{Destination.DisplayName}‖end‖";
+                message = message.Replace("[destination]", destinationName);
             }
             if (replaceReward)
             {
@@ -223,17 +421,17 @@ namespace Barotrauma
             }
             return message;
         }
-        
+
         protected virtual void MissionStateChanged(int previousState) {}
 
-        public virtual void SetLevel(LevelData level) { }
-
-        public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, IEnumerable<Identifier> missionTypes, bool isSinglePlayer = false, float? difficultyLevel = null)
+        public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, IEnumerable<Identifier> missionTypes, 
+            bool isSinglePlayer = false, bool isCampaign = false, float? difficultyLevel = null)
         {
-            return LoadRandom(locations, new MTRandom(ToolBox.StringToInt(seed)), requireCorrectLocationType, missionTypes, isSinglePlayer, difficultyLevel);
+            return LoadRandom(locations, new MTRandom(ToolBox.StringToInt(seed)), requireCorrectLocationType, missionTypes, isSinglePlayer, isCampaign, difficultyLevel);
         }
 
-        public static Mission LoadRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, IEnumerable<Identifier> missionTypes, bool isSinglePlayer = false, float? difficultyLevel = null)
+        public static Mission LoadRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, IEnumerable<Identifier> missionTypes, 
+            bool isSinglePlayer = false, bool isCampaign = false, float? difficultyLevel = null)
         {
             List<MissionPrefab> allowedMissions = new List<MissionPrefab>();
             if (missionTypes.None())
@@ -244,6 +442,7 @@ namespace Barotrauma
             {
                 allowedMissions.AddRange(MissionPrefab.Prefabs.Where(m => missionTypes.Contains(m.Type)));
             }
+            if (!isCampaign) { allowedMissions.RemoveAll(m => m.CampaignOnly); }
             allowedMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);
             if (requireCorrectLocationType)
             {
@@ -288,6 +487,9 @@ namespace Barotrauma
             characters.Clear();
             characterItems.Clear();
 
+            //use level seed + mission id as the seed -> same set of monsters appears if you retry the same mission
+            var rand = new MTRandom(ToolBox.StringToInt(Level.Loaded?.Seed ?? 0 + Prefab.Identifier.Value));
+
             if (characterConfig != null) 
             { 
                 foreach (XElement element in characterConfig.Elements())
@@ -301,7 +503,7 @@ namespace Barotrauma
                     }
                     int min = Math.Min(element.GetAttributeInt("min", defaultCount), 255);
                     int max = Math.Min(Math.Max(min, element.GetAttributeInt("max", defaultCount)), 255);
-                    int count = Rand.Range(min, max + 1);
+                    int count = rand.Next(min, max + 1);
 
                     if (element.Attribute("identifier") != null && element.Attribute("from") != null)
                     {
@@ -358,7 +560,8 @@ namespace Barotrauma
                 GetSpawnLocationTypeFromSubmarineType(submarine), spawnPointType,
                 moduleFlags ?? humanPrefab.GetModuleFlags(),
                 spawnPointTags ?? humanPrefab.GetSpawnPointTags(),
-                element.GetAttributeBool("asfaraspossible", false));
+                element.GetAttributeBool("asfaraspossible", false),
+                debugLogName: $"Outpost NPC ({humanPrefab.Identifier})");
             spawnPos ??= submarine.GetHulls(alsoFromConnectedSubs: false).GetRandomUnsynced();
             var teamId = element.GetAttributeEnum("teamid", CharacterTeamType.None);
             var originalTeam = Level.Loaded.StartOutpost?.TeamID ?? teamId;
@@ -373,13 +576,9 @@ namespace Barotrauma
             {
                 spawnedCharacter.UniqueNameColor = element.GetAttributeColor("color", Color.Red);
             }
-            if (submarine.Info is { IsOutpost: true } outPostInfo)
+            if (submarine.Info is { IsOutpost: true } outpostInfo)
             {
-                outPostInfo.AddOutpostNPCIdentifierOrTag(spawnedCharacter, humanPrefab.Identifier);
-                foreach (Identifier tag in humanPrefab.GetTags())
-                {
-                    outPostInfo.AddOutpostNPCIdentifierOrTag(spawnedCharacter, tag);
-                }
+                outpostInfo.AddOutpostNPC(spawnedCharacter);
             }
             if (spawnPos is WayPoint wp)
             {
@@ -393,7 +592,8 @@ namespace Barotrauma
         {
             Identifier[] moduleFlags = element.GetAttributeIdentifierArray("moduleflags", null);
             Identifier[] spawnPointTags = element.GetAttributeIdentifierArray("spawnpointtags", null);
-            ISpatialEntity spawnPos = SpawnAction.GetSpawnPos(SpawnAction.SpawnLocationType.Outpost, SpawnType.Enemy, moduleFlags, spawnPointTags, element.GetAttributeBool("asfaraspossible", false));
+
+            ISpatialEntity spawnPos = SpawnAction.GetSpawnPos(GetSpawnLocationTypeFromSubmarineType(submarine), SpawnType.Enemy, moduleFlags, spawnPointTags, element.GetAttributeBool("asfaraspossible", false));
             spawnPos ??= submarine.GetHulls(alsoFromConnectedSubs: false).GetRandomUnsynced();
             Character spawnedCharacter = Character.Create(monsterPrefab.Identifier, spawnPos.WorldPosition, ToolBox.RandomSeed(8), createNetworkEvent: false);
             characters.Add(spawnedCharacter);
@@ -434,6 +634,7 @@ namespace Barotrauma
         public void Start(Level level)
         {
             state = 0;
+            initialOutpostDwellerCount = null;
 #if CLIENT
             shownMessages.Clear();
 #endif
@@ -442,11 +643,32 @@ namespace Barotrauma
             {
                 foreach (MapEntity entityToShow in MapEntity.MapEntityList.Where(me => me.Prefab?.HasSubCategory(categoryToShow) ?? false))
                 {
-                    entityToShow.IsLayerHidden = false;
+                    entityToShow.SetDisabled(disabled: false);
                 }
             }
             this.level = level;
             TryTriggerEvents(0);
+
+            if (level.Type == LevelData.LevelType.Outpost && Level.Loaded.StartOutpost is { } startOutpost)
+            {
+                if (GameMain.GameSession.GameMode is not CampaignMode && Prefab.ForceOutpostTeamInMissionMode.HasValue)
+                {
+                    Submarine.SetOutpostTeam(startOutpost, Prefab.ForceOutpostTeamInMissionMode.Value);
+                    if (startOutpost.TeamID == CharacterTeamType.Team1)
+                    {
+                        OutpostGenerator.SetDevicesDetachable(startOutpost, disableDetaching: false);
+                        OutpostGenerator.SetWiresLocked(startOutpost, isLocked: false);
+                        OutpostGenerator.SetDevicesPlayerTeamInteractable(startOutpost);
+                        OutpostGenerator.SetAllowSellingOutpostItems(startOutpost, allowSelling: true);
+                    }
+                }
+            }
+
+            if (level.StartOutpost is { } outpost)
+            {
+                outpostReactor = outpost.GetItems(alsoFromConnectedSubs: false).FirstOrDefault(it => it.HasTag(Tags.Reactor));
+            }
+
             StartMissionSpecific(level);
         }
 
@@ -454,7 +676,12 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            for (int i = delayedTriggerEvents.Count - 1; i>=0;i--)
+            if (!initialOutpostDwellerCount.HasValue && Level.Loaded?.StartOutpost != null)
+            {
+                initialOutpostDwellerCount = FindOutpostDwellers().Count();
+            }
+
+            for (int i = delayedTriggerEvents.Count - 1; i >= 0; i--)
             {
                 delayedTriggerEvents[i].Delay -= deltaTime;
                 if (delayedTriggerEvents[i].Delay <= 0.0f)
@@ -466,7 +693,74 @@ namespace Barotrauma
             UpdateMissionSpecific(deltaTime);
         }
 
+        public virtual void CharacterAttacked(Character attackedCharacter, Character attacker, AttackResult attackResult) { }
+        public virtual void StructureDamaged(Structure structure, float damageAmount, Character attacker) { }
+
         protected virtual void UpdateMissionSpecific(float deltaTime) { }
+
+        /// <param name="progressExpiry">Should the step count towards the mission's expiry (see <see cref="WorldStepsUntilExpiry"/>)?
+        /// Should be false for missions that are available in the players' location or being played.</param>
+        public void ProgressWorld(bool progressExpiry = true)
+        {
+            WorldStepsSinceUnlocked++;
+
+            if (progressExpiry && WorldStepsUntilExpiry > 0 && !completed)
+            {
+                WorldStepsUntilExpiry--;
+                if (Expired)
+                {
+                    //no other effects, the mission is just removed from the available missions (see ShouldBeRemovedFromLocation)
+                    DebugConsole.Log($"Mission \"{Name}\" ({Prefab.Identifier}) has expired.");
+#if SERVER
+                    (GameMain.GameSession?.Campaign as MultiPlayerCampaign)?.IncrementLastUpdateIdForFlag(MultiPlayerCampaign.NetFlags.MapAndMissions);
+#endif
+                }
+            }
+
+            //already completed, won't fail even if the time limit passes
+            //(otherwise e.g. an already completed "stop an assault sub" mission would fail if the round takes too long)
+            if (completed) { return; }
+
+            if (TimeLimitReached)
+            {
+                if (Prefab.CompleteWhenTimeLimitReached)
+                {
+                    //already failed during a round (e.g. a transport sub that got destroyed), can't complete anymore
+                    if (failed || completed) { return; }
+                    DebugConsole.Log($"Mission \"{Name}\" ({Prefab.Identifier}) has been completed: time limit reached ({Prefab.TimeLimitWorldSteps} world steps).");
+                    completed = true;
+                    ApplyActionsOnComplete();
+                }
+                else
+                {
+                    DebugConsole.Log($"Mission \"{Name}\" ({Prefab.Identifier}) has failed: not completed in time (within {Prefab.TimeLimitWorldSteps} world steps).");
+                    failed = true;
+                    ApplyActionsOnFailure();
+                }
+#if SERVER
+                (GameMain.GameSession?.Campaign as MultiPlayerCampaign)?.IncrementLastUpdateIdForFlag(MultiPlayerCampaign.NetFlags.MapAndMissions);
+#endif
+            }
+        }
+
+        public void CheckDestinationStillValid()
+        {
+            if (Prefab.RequiredDestinationFaction.IsEmpty) { return; }
+
+            //already completed, won't fail if the destination becomes invalid
+            if (completed) { return; }
+            
+            if ((Prefab.RequiredDestinationFaction == "None" && Destination.Faction != null) ||
+                (Prefab.RequiredDestinationFaction != "None" && Destination.Faction?.Prefab.Identifier != Prefab.RequiredDestinationFaction))
+            {
+                //fail, but do not apply any actions on failure - we want the mission to silently disappear if the destination is no longer valid
+                failed = true;
+                ApplyActionsOnFailure();
+#if SERVER
+                (GameMain.GameSession?.Campaign as MultiPlayerCampaign)?.IncrementLastUpdateIdForFlag(MultiPlayerCampaign.NetFlags.MapAndMissions);
+#endif
+            }            
+        }
 
         protected void ShowMessage(int missionState)
         {
@@ -516,6 +810,7 @@ namespace Barotrauma
         private void TriggerEvent(MissionPrefab.TriggerEvent trigger)
         {
             if (trigger.CampaignOnly && GameMain.GameSession?.Campaign == null) { return; }
+            if (Rand.Range(0.0f, 1.0f) > trigger.Probability) { return; }
             //clients are not allowed to trigger events, they're handled by the server
             if (GameMain.NetworkMember is { IsClient: true }) { return; }
             EventPrefab eventPrefab = EventPrefab.FindEventPrefab(trigger.EventIdentifier, trigger.EventTag, Prefab.ContentPackage);
@@ -537,14 +832,21 @@ namespace Barotrauma
         /// </summary>
         public void End(CampaignMode.TransitionType transitionType)
         {
+            //clients aren't allowed to make the mission fail by themselves, it's received from the server at the end of the round
+            //if the round ended without it (e.g. the client returned to the lobby mid-round or got disconnected),
+            //don't apply anything that'd modify the state of the campaign (that'd make the client's campaign state diverge from the server's)
+            bool outcomeKnown = true;
+#if CLIENT
+            outcomeKnown = GameMain.NetworkMember is not { IsClient: true } || failedStateFromServer.HasValue;
+#endif
             if (GameMain.NetworkMember is not { IsClient: true })
             {
-                completed =      
+                completed =
                     !ForceFailure &&
                     DetermineCompleted(transitionType) &&
                     (completeCheckDataAction == null || completeCheckDataAction.GetSuccess());
             }
-            if (completed)
+            if (completed && outcomeKnown)
             {
                 if (Prefab.LocationTypeChangeOnCompleted != null)
                 {
@@ -552,7 +854,7 @@ namespace Barotrauma
                 }
                 try
                 {
-                    GiveReward();
+                    ApplyActionsOnComplete();
                 }
                 catch (Exception e)
                 {
@@ -567,10 +869,37 @@ namespace Barotrauma
 
             TimesAttempted++;
 
+            bool wasPreviouslyFailed = failed;
             EndMissionSpecific(completed);
             if (ForceFailure)
             {
                 failed = true;
+            }
+#if CLIENT
+            if (failedStateFromServer.HasValue)
+            {
+                //the server decides whether the mission failed
+                failed = failedStateFromServer.Value;
+                failedStateFromServer = null;
+            }
+            else if (!outcomeKnown)
+            {
+                //don't let the client-side logic in EndMissionSpecific mark the mission as failed (which would e.g. remove it from the location)
+                failed = wasPreviouslyFailed;
+            }
+#endif
+            if (failed && outcomeKnown)
+            {
+                ApplyActionsOnFailure();
+            }
+
+            // Clear any unique name colors set by this mission
+            foreach (var character in characters)
+            {
+                if (character != null && !character.Removed)
+                {
+                    character.UniqueNameColor = null;
+                }
             }
         }
 
@@ -600,6 +929,31 @@ namespace Barotrauma
             finalReward = (int)(reward * missionMoneyGainMultiplier.Value);
         }
 
+        /// <summary>
+        /// Calculates the amount of reputation given by the reward after talent bonuses have been applied.
+        /// </summary>
+        /// <param name="preview">Should be true if the amount is only used for display purposes.
+        /// If false, this triggers talent effects of the type OnCrewGainMissionReputation, and should only be called when the reward is actually given!</param>
+        private float GetReputationRewardAmount(MissionPrefab.ReputationReward reputationReward, bool preview)
+        {
+            //talents only boost reputation gains, they shouldn't make a negative reward take away even more reputation
+            if (reputationReward.Amount <= 0.0f) { return reputationReward.Amount; }
+
+            var reputationGainMultiplier = new AbilityMissionReputationGainMultiplier(this, 1f, character: null);
+            foreach (var c in GameSession.GetSessionCrewCharacters(CharacterType.Both))
+            {
+                if (preview)
+                {
+                    c.PreviewTalentEffects(AbilityEffectType.OnCrewGainMissionReputation, reputationGainMultiplier);
+                }
+                else
+                {
+                    c.CheckTalents(AbilityEffectType.OnCrewGainMissionReputation, reputationGainMultiplier);
+                }
+            }
+            return reputationReward.Amount * reputationGainMultiplier.Value;
+        }
+
         private float CalculateDifficultyXPMultiplier()
         {
             const float minMissionDifficulty = 1;
@@ -611,12 +965,21 @@ namespace Barotrauma
             return xpBonusMultiplier;
         }
 
-        private void GiveReward()
+        public void ApplyActionsOnComplete()
         {
+            if (Prefab.ContinuePathCondition is MissionPrefab.CompletionCondition.Always or MissionPrefab.CompletionCondition.OnlyWhenCompleted &&
+                MorePathToDestinationRemaining)
+            {
+                ContinuePathTowardsDestination();
+                return;
+            }
+
             if (GameMain.GameSession.GameMode is not CampaignMode campaign) { return; }
 
             float xpReward = GetBaseReward(Submarine.MainSub) * Prefab.ExperienceMultiplier * campaign.Settings.ExperienceRewardMultiplier;
-            float xpGain = xpReward * level.LevelData.Biome.ExperienceFromMissionRewards * CalculateDifficultyXPMultiplier();
+            float xpGain = 
+                xpReward * (level?.LevelData.Biome.ExperienceFromMissionRewards ?? 1.0f) * CalculateDifficultyXPMultiplier()
+                + Prefab.AdditionalExperienceGain;
 
             IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
 
@@ -645,10 +1008,8 @@ namespace Barotrauma
 
                 foreach (var reputationReward in ReputationRewards)
                 {
-                    var reputationGainMultiplier = new AbilityMissionReputationGainMultiplier(this, 1f, character: null);
-                    foreach (var c in crewCharacters) { c.CheckTalents(AbilityEffectType.OnCrewGainMissionReputation, reputationGainMultiplier); }
-                    float amount = reputationReward.Amount * reputationGainMultiplier.Value;
-                    
+                    float amount = GetReputationRewardAmount(reputationReward, preview: false);
+
                     if (reputationReward.FactionIdentifier == "location")
                     {
                         OriginLocation.Reputation?.AddReputation(amount);
@@ -656,7 +1017,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier == reputationReward.FactionIdentifier);
+                        Faction faction = campaign.GetFaction(reputationReward.FactionIdentifier);
                         if (faction != null)
                         {
                             faction.Reputation.AddReputation(amount);
@@ -668,13 +1029,17 @@ namespace Barotrauma
                 void TryGiveReputationForOpposingFaction(Faction thisFaction, float amount)
                 {
                     if (MathUtils.NearlyEqual(amount, 0.0f)) { return; }
-                    if (thisFaction?.Prefab != null && 
-                        !thisFaction.Prefab.OpposingFaction.IsEmpty)
+                    if (thisFaction?.Prefab is { OpposingFaction.IsEmpty: false })
                     {
-                        Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier == thisFaction.Prefab.OpposingFaction);
+                        Faction faction = campaign.GetFaction(thisFaction.Prefab.OpposingFaction);
                         faction?.Reputation.AddReputation(amount);
                     }
                 }
+            }
+
+            if (!Prefab.ActionsOnCompleteCampaignOnly || GameMain.GameSession.Campaign != null)
+            {
+                ApplyActions(Prefab.ActionsOnComplete);                
             }
 
             if (Prefab.DataRewards != null)
@@ -684,6 +1049,188 @@ namespace Barotrauma
                     SetDataAction.PerformOperation(campaign.CampaignMetadata, identifier, value, operation);
                 }
             }
+        }
+
+        public void ApplyActionsOnFailure()
+        {
+            if (Prefab.ContinuePathCondition is MissionPrefab.CompletionCondition.Always or MissionPrefab.CompletionCondition.OnlyWhenFailed &&
+                MorePathToDestinationRemaining)
+            {
+                ContinuePathTowardsDestination();
+                return;
+            }
+
+            if (!Prefab.ActionsOnFailureCampaignOnly || GameMain.GameSession.Campaign != null)
+            {
+                ApplyActions(Prefab.ActionsOnFailure);
+            }
+        }
+
+        private void ApplyActions(IEnumerable<EventAction> actions)
+        {
+            string throwaway = null;
+            int remainingTries = 100;
+            foreach (var action in actions)
+            {
+                action.Reset();
+                action.ParentMission = this;
+                //run the actions until they're finished
+                //(e.g. BinaryOptionActions may check the conditional on the first iteration and continue into subactions on further iterations)
+                while (remainingTries > 0 && !action.IsFinished(ref throwaway))
+                {
+                    action.Update(1.0f);
+                    remainingTries--;
+                }
+            }
+        }
+
+        #region Win and failure conditions
+
+        protected bool CheckMissionResultCondition(MissionResultCondition conditionToMeet, Submarine referenceSub, IEnumerable<Character> characters)
+        {
+            return CheckMissionResultCondition(conditionToMeet, referenceSub, characters, out _);
+        }
+
+        protected bool CheckMissionResultCondition(MissionResultCondition conditionToMeet, Submarine referenceSub, IEnumerable<Character> characters, out OutpostDestroyedState outpostDestroyedReason)
+        {
+            outpostDestroyedReason = OutpostDestroyedState.None;
+            return conditionToMeet switch
+            {
+                MissionResultCondition.CrewEliminated => characters.All(DeadOrCaptured),
+                MissionResultCondition.AnyoneFromCrewSurvived => characters.Any(c => !DeadOrCaptured(c)),
+                //note that the Always condition is handled at the end of the round in DetermineCompleted
+                MissionResultCondition.SubmarineIncapacitated => IsSubmarineIncapacitated(referenceSub),
+                MissionResultCondition.SubmarineNotIncapacitated => !IsSubmarineIncapacitated(referenceSub),
+                MissionResultCondition.OutpostDestroyed => IsOutpostDestroyed(out outpostDestroyedReason),
+                _ => false,
+            };
+        }
+
+        private IEnumerable<Character> FindOutpostDwellers()
+        {
+            if (level.StartOutpost is not { } outpost)
+            {
+                DebugConsole.ThrowError($"Error in mission {nameof(SubmarineEncounterMission)}. No outpost found.");
+                return [];
+            }
+            return Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.FriendlyNPC && c.IsHuman && !c.IsDead);
+        }
+
+        protected static bool DeadOrCaptured(Character character)
+        {
+            return character == null || character.Removed || character.Submarine == null || (character.LockHands && character.Submarine == Submarine.MainSub) || character.IsIncapacitated;
+        }
+
+        private bool IsSubmarineIncapacitated(Submarine sub)
+        {
+            if (sub == null) { return true; }
+
+            if (level?.GenerationParams != null)
+            {
+                if (sub.AtDamageDepth) { return true; }
+                float midwayToSeaFloor = level.GenerationParams.SeaFloorDepth / 2;
+                if (sub.WorldPosition.Y < midwayToSeaFloor) { return true; }
+
+                //1000 m below the main submarine or the bottom of the level
+                //(or in other words, sinking way below the bottom of the level counts as incapacitated,
+                //except if the player sub is somewhere down there too, potentially still engaged in combat?)
+                if (sub.WorldPosition.Y < Math.Min(Submarine.MainSub.WorldPosition.Y, 0.0f) - ConvertUnits.ToDisplayUnits(1000.0f))
+                {
+                    return true;
+                }
+            }
+
+            var aliveCrew = characters.Where(c => !DeadOrCaptured(c));
+            if (aliveCrew.None()) { return true; }
+
+            //some of the crew are currently alive in some enemy sub = attacking the outpost or player sub?
+            //Don't end the mission until they're dead or captured
+            if (aliveCrew.Any(c => c.Submarine != null && !c.IsInSameTeamSub)) { return false; }
+
+            float waterVolume = 0.0f, totalHullVolume = 0.0f;
+            foreach (Hull hull in sub.GetHulls(alsoFromConnectedSubs: true))
+            {
+                if (hull.IsWetRoom) { continue; }
+                waterVolume += hull.WaterVolume;
+                totalHullVolume += hull.Volume;
+            }
+
+            float crewRatio = aliveCrew.Count() / (float)Math.Max(characters.Count, 1);
+            //half of the sub flooded, not much crew left
+            return waterVolume > totalHullVolume * submarineIncapacitatedWhenSubFloodedThreshold && crewRatio < submarineIncapacitatedWhenCrewBelowThreshold;
+        }
+
+        private bool IsOutpostDestroyed(out OutpostDestroyedState reason)
+        {
+            reason = OutpostDestroyedState.None;
+            if (level.StartOutpost is not { } outpost)
+            {
+                DebugConsole.ThrowErrorOnce(identifier: "IsOutpostDestroyed", $"Error in mission {nameof(SubmarineEncounterMission)}. No outpost found.");
+                return false;
+            }
+            if (outpostReactor != null && outpostReactor.Condition <= 0.0f)
+            {
+                reason = OutpostDestroyedState.ReactorDestroyed;
+                return true;
+            }
+            if (initialOutpostDwellerCount.HasValue &&
+                initialOutpostDwellerCount > 0 &&
+                FindOutpostDwellers().Count() / (float)initialOutpostDwellerCount < outpostDestroyedWhenNPCsBelowThreshold)
+            {
+                reason = OutpostDestroyedState.TooManyNPCsKilled;
+                return true;
+            }
+            float waterVolume = 0.0f, totalHullVolume = 0.0f;
+            foreach (Hull hull in outpost.GetHulls(alsoFromConnectedSubs: true))
+            {
+                if (hull.IsWetRoom) { continue; }
+                waterVolume += hull.WaterVolume;
+                totalHullVolume += hull.Volume;
+            }
+            if (waterVolume > totalHullVolume * outpostDestroyedWhenFloodedThreshold)
+            {
+                reason = OutpostDestroyedState.TooFlooded;
+                return true;
+            }
+            return false;
+        }
+
+        #endregion
+
+
+
+        /// <summary>
+        /// Makes the mission progress towards the next location in the path, if a path to destination has been set.
+        /// (In practice unlocks an identical mission heading towards the destination)
+        /// </summary>
+        private void ContinuePathTowardsDestination()
+        {
+            if (!MorePathToDestinationRemaining) { return; }
+            
+            var nextStartLocation = PathToDestination[1];
+            var nextDestinationLocation = PathToDestination[2];
+            var newMission = nextStartLocation.UnlockMission(Prefab, nextStartLocation.GetConnection(nextDestinationLocation));
+            if (newMission != null)
+            {
+                if (OriginLocation != null)
+                {
+                    newMission.OriginLocation = OriginLocation;
+                }
+                newMission.PathToDestination = PathToDestination.Skip(1).ToImmutableArray();
+                if (Prefab.DiscoverPathAsProgressing && GameMain.GameSession?.Map is { } currentMap)
+                {
+                    //discover the next leg of the path, so the progress of the mission can be followed on the map
+                    currentMap.Discover(nextStartLocation, checkTalents: false);
+                    currentMap.Discover(nextDestinationLocation, checkTalents: false);
+                }
+            }
+#if CLIENT
+            //remove mission icon immediately (so the icon doesn't gradually disappear, making both this and the new mission appear on the map at the same time)
+            if (GameMain.GameSession?.Map is { } map)
+            {
+                map.RemoveMissionIcon(this);
+            }
+#endif            
         }
 
         partial void DistributeExperienceToCrew(IEnumerable<Character> crew, int experienceGain);
@@ -701,6 +1248,19 @@ namespace Barotrauma
             int amount = reward.TryUnwrap(out var a) ? a : 0;
 
             return ((int)(amount * rewardWeight), rewardPercentage, sum);
+        }
+
+        public void SetPathToDestination(IEnumerable<Location> path)
+        {
+            if (!path.Contains(Locations[0]) || !path.Contains(Locations[1]))
+            {
+                DebugConsole.ThrowError(
+                    $"Tried to set an invalid path to destination on the mission {Prefab.Identifier}."+
+                    $" Locations the mission takes place between ({Locations[0].DisplayName}, {Locations[1].DisplayName}) not present in the path ({string.Join(" -> ", path.Select(l => l.DisplayName))}).");
+                return;
+            }
+            PathToDestination = path.ToImmutableArray();
+            RefreshDescriptionAndMessages(Submarine.MainSub);
         }
 
         protected void ChangeLocationType(LocationTypeChange change)
@@ -735,6 +1295,22 @@ namespace Barotrauma
         }
 
         public virtual void AdjustLevelData(LevelData levelData) { }
+
+        public bool ShouldBeRemovedFromLocation()
+        {
+            if (ForceRetry) 
+            { 
+                // Prevent the mission from being removed even if the mission was completed/failed
+                return false; 
+            }
+
+            if (ForceFailure) { return true; }
+            if (Completed) { return true; }
+            if (Failed && !Prefab.AllowRetry) { return true; }
+            if (Expired) { return true; }
+
+            return false;
+        }
 
         // putting these here since both escort and pirate missions need them. could be tucked away into another class that they can inherit from (or use composition)
         protected HumanPrefab GetHumanPrefabFromElement(XElement element)
@@ -780,37 +1356,50 @@ namespace Barotrauma
 
         protected ItemPrefab FindItemPrefab(XElement element)
         {
-            ItemPrefab itemPrefab;
+            ItemPrefab itemPrefab = null;
             if (element.Attribute("name") != null)
             {
                 DebugConsole.ThrowError($"Error in mission \"{Name}\" - use item identifiers instead of names to configure the items", 
                     contentPackage: Prefab.ContentPackage);
                 string itemName = element.GetAttributeString("name", "");
-                itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+                itemPrefab = MapEntityPrefab.FindByName(itemName) as ItemPrefab;
                 if (itemPrefab == null)
                 {
-                    DebugConsole.ThrowError($"Couldn't spawn item for mission \"{Name}\": item prefab \"{itemName}\" not found", 
+                    DebugConsole.ThrowError($"Couldn't spawn item for mission \"{Name}\": item prefab \"{itemName}\" not found.", 
                         contentPackage: Prefab.ContentPackage);
                 }
             }
-            else
+            else if (element.Attribute("identifier") != null)
             {
-                string itemIdentifier = element.GetAttributeString("identifier", "");
-                itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
+                Identifier itemIdentifier = element.GetAttributeIdentifier("identifier", "");
+                itemPrefab = MapEntityPrefab.FindByIdentifier(itemIdentifier) as ItemPrefab;
                 if (itemPrefab == null)
                 {
-                    DebugConsole.ThrowError($"Couldn't spawn item for mission \"{Name}\": item prefab \"{itemIdentifier}\" not found",
+                    DebugConsole.ThrowError($"Couldn't spawn item for mission \"{Name}\": item prefab \"{itemIdentifier}\" not found.",
                         contentPackage: Prefab.ContentPackage);
                 }
+            }
+            else if (element.Attribute("tag") != null)
+            {
+                Identifier itemTag = element.GetAttributeIdentifier("tag", "");
+                var matchingItemPrefabs = ItemPrefab.Prefabs.Where(p => p.Tags.Contains(itemTag));
+                if (matchingItemPrefabs.None())
+                {
+                    DebugConsole.ThrowError($"Couldn't spawn item for mission \"{Name}\": could not find item prefabs with the tag \"{itemTag}\".",
+                        contentPackage: Prefab.ContentPackage);
+                }
+                itemPrefab = matchingItemPrefabs.GetRandomUnsynced();
             }
             return itemPrefab;
         }
 
-        protected Vector2? GetCargoSpawnPosition(ItemPrefab itemPrefab, out Submarine cargoRoomSub)
+        protected Vector2? GetCargoSpawnPosition(ItemPrefab itemPrefab, out Submarine cargoRoomSub, Submarine targetSub = null)
         {
+            targetSub ??= Submarine.MainSub;
+
             cargoRoomSub = null;
 
-            WayPoint cargoSpawnPos = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub, useSyncedRand: true);
+            WayPoint cargoSpawnPos = WayPoint.GetRandom(SpawnType.Cargo, null, targetSub, useSyncedRand: true);
             if (cargoSpawnPos == null)
             {
                 DebugConsole.ThrowError($"Couldn't spawn items for mission \"{Name}\": no waypoints marked as Cargo were found",
@@ -837,7 +1426,6 @@ namespace Barotrauma
         /// Gets a random submarine by tags, filtered by difficulty. Used by missions that force specific submarines (wrecks, beacons, etc.)
         /// </summary>
         /// <param name="tags">Mission tags to match against</param>
-        /// <param name="seed">Random seed for selection</param>
         /// <param name="submarineSelector">Function to filter submarines by type (e.g., s => s.IsWreck)</param>
         /// <param name="submarineTypeName">Name of submarine type for error messages (e.g., "wreck", "beacon station")</param>
         /// <returns>Selected submarine, or null if none found</returns>

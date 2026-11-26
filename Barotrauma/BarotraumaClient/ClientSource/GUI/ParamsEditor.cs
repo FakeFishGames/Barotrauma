@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class ParamsEditor
+    public class ParamsEditor
     {
         private static ParamsEditor _instance;
         public static ParamsEditor Instance

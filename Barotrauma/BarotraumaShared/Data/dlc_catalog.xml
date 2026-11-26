@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<DLCs>
+  <DLC
+    name="Home &amp; Harbor"
+    description="Home &amp; Harbor is an expansion that introduces outpost ownership, building and management and a mysterious new faction: The Descendants, which will shake up the world of Europa's merry sailors."
+    iconpath="Data/DLCCoverArt/3714450.png"
+    appid="3714450"
+    hascontentpackage="true"/>
+  <DLC
+    name="Supporter Pack"
+    description="This is a collection of bonus content for those who want to dive deeper into the world of Europa."
+    iconpath="Data/DLCCoverArt/1197650.png"
+    appid="1197650"
+    hascontentpackage="false"/>
+</DLCs>

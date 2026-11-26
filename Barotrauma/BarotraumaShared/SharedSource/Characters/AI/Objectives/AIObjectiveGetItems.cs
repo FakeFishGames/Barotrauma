@@ -7,13 +7,13 @@ using System;
 
 namespace Barotrauma
 {
-    class AIObjectiveGetItems : AIObjective
+    public class AIObjectiveGetItems : AIObjective
     {
         public override Identifier Identifier { get; set; } = "get items".ToIdentifier();
         public override string DebugTag => $"{Identifier}";
         public override bool KeepDivingGearOn => true;
         public override bool AllowMultipleInstances => true;
-        protected override bool AllowWhileHandcuffed => false;
+        protected override bool RequireOneHandAvailable => true;
 
         public bool AllowStealing { get; set; }
         public bool TakeWholeStack { get; set; }
@@ -22,7 +22,13 @@ namespace Barotrauma
         public bool Wear { get; set; }
         public bool CheckInventory { get; set; }
         public bool EvaluateCombatPriority { get; set; }
-        public bool CheckPathForEachItem { get; set; }
+
+        /// <summary>
+        /// Should the objective go through all items it can find, trying to choose the best one 
+        /// (i.e. the one that's easiest to reach and best for combat when <see cref="EvaluateCombatPriority"/> is true),
+        /// or settle for the first suitable item it can find?
+        /// </summary>
+        public bool EvaluateAllItems { get; set; }
         public bool RequireNonEmpty { get; set; }
         public bool RequireAllItems { get; set; }
         public bool RequireDivingSuitAdequate { get; set; }
@@ -62,8 +68,9 @@ namespace Barotrauma
                         Wear = Wear,
                         TakeWholeStack = TakeWholeStack,
                         AllowStealing = AllowStealing,
+                        EvaluateCombatPriority = EvaluateCombatPriority,
                         ignoredIdentifiersOrTags = ignoredTags,
-                        CheckPathForEachItem = CheckPathForEachItem,
+                        EvaluateAllItems = EvaluateAllItems,
                         RequireNonEmpty = RequireNonEmpty,
                         ItemCount = count,
                         SpeakIfFails = RequireAllItems,

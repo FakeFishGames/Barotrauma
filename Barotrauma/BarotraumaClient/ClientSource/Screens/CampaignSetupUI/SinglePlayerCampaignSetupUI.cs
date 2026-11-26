@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.IO;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    sealed class SinglePlayerCampaignSetupUI : CampaignSetupUI
+    public sealed class SinglePlayerCampaignSetupUI : CampaignSetupUI
     {
         private GUIListBox subList;
 
@@ -135,11 +136,12 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SaveName"), font: GUIStyle.SubHeadingFont);
             saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, string.Empty)
             {
+                OverflowClip = true,
                 textFilterFunction = (string str) => { return ToolBox.RemoveInvalidFileNameChars(str); }
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed"), font: GUIStyle.SubHeadingFont);
-            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, ToolBox.RandomSeed(8));
+            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, ToolBox.RandomSeed(8)) { OverflowClip = true };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SelectedSub"), font: GUIStyle.SubHeadingFont);
 
@@ -161,7 +163,7 @@ namespace Barotrauma
             };
 
             var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUIStyle.Font);
-            var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUIStyle.Font, createClearButton: true);
+            var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUIStyle.Font, createClearButton: true) { OverflowClip = true };
             filterContainer.RectTransform.MinSize = searchBox.RectTransform.MinSize;
             searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
@@ -312,6 +314,8 @@ namespace Barotrauma
 
                 var characterName = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), subLayout.RectTransform))
                 {
+                    OverflowClip = true,
+                    MaxTextLength = Client.MaxNameLength,
                     Text = characterInfo.Name,
                     UserData = "random"
                 };
@@ -527,43 +531,47 @@ namespace Barotrauma
 
             foreach (SubmarineInfo sub in subsToShow)
             {
-                var textBlock = new GUITextBlock(
-                    new RectTransform(new Vector2(1, 0.15f), subList.Content.RectTransform) { MinSize = new Point(0, 30) },
-                    ToolBox.LimitString(sub.DisplayName.Value, GUIStyle.Font, subList.Rect.Width - 65), style: "ListBoxElement")
+#if !DEBUG
+                if (!GameMain.DebugDraw && !sub.IsCampaignCompatible) { continue; }
+#endif
+                ContentPackage subPackage = sub.FindPackage();
+                var textBlock = new GUITextBlock(new RectTransform(new Vector2(1, 0.15f), subList.Content.RectTransform) { MinSize = new Point(0, 30) },
+                    sub.DisplayName.Value, ContentPackage.GetAccentColor(subPackage), style: "ListBoxElement")
                     {
-                        ToolTip = sub.Description,
+                        ToolTip = LocalizedString.JoinIfNotNullOrEmpty("\n", sub.Description, ContentPackage.GetToolTip(subPackage)),
                         UserData = sub
                     };
+                textBlock.Text = ToolBox.LimitString(sub.DisplayName.Value, textBlock.Font, (int)(textBlock.Rect.Width - 65 - textBlock.Padding.X - textBlock.Padding.Z));
 
-                if (!sub.RequiredContentPackagesInstalled)
-                {
-                    textBlock.TextColor = Color.Lerp(textBlock.TextColor, Color.DarkRed, .5f);
-                    textBlock.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + textBlock.ToolTip.SanitizedString;
-                }
-
-                var infoContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight), isHorizontal: false);
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), infoContainer.RectTransform),
-                    TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", sub.Price)), textAlignment: Alignment.BottomRight, font: GUIStyle.SmallFont)
-                {
-                    TextColor = sub.Price > CampaignSettings.CurrentSettings.InitialMoney ? GUIStyle.Red : textBlock.TextColor * 0.8f,
-                    ToolTip = textBlock.ToolTip
-                };
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), infoContainer.RectTransform),
-                    TextManager.Get($"submarineclass.{sub.SubmarineClass}"), textAlignment: Alignment.TopRight, font: GUIStyle.SmallFont)
-                {
-                    TextColor = textBlock.TextColor * 0.8f,
-                    ToolTip = textBlock.ToolTip
-                };
 #if !DEBUG
-                if (!GameMain.DebugDraw)
+                if (!GameMain.DebugDraw && CampaignSettings.CurrentSettings.InitialMoney < sub.Price)
                 {
-                    if (sub.Price > CampaignSettings.CurrentSettings.InitialMoney || !sub.IsCampaignCompatible)
-                    {
-                        textBlock.CanBeFocused = false;
-                        textBlock.TextColor *= 0.5f;
-                    }
+                    textBlock.Strikethrough = new Strikethrough(textBlock.TextColor, Expand: 5);
+                    textBlock.CanBeFocused = false;
                 }
 #endif
+                if (!sub.RequiredContentPackagesInstalled)
+                {
+                    textBlock.ToolTip = LocalizedString.JoinIfNotNullOrEmpty("\n\n", textBlock.ToolTip, $"‖color:GUI.Red‖{TextManager.Get("ContentPackageMismatch")}‖end‖");
+                    textBlock.OverrideTextColor(textBlock.TextColor * 0.8f);
+                }
+
+                textBlock.ToolTip = RichString.Rich(textBlock.ToolTip);
+                var infoContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight), isHorizontal: false);
+
+                LocalizedString priceText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", sub.Price));
+                Color priceColor = (CampaignSettings.CurrentSettings.InitialMoney < sub.Price ? GUIStyle.Red : GUIStyle.TextColorNormal) * 0.8f;
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), infoContainer.RectTransform), priceText, priceColor, GUIStyle.SmallFont, Alignment.BottomRight)
+                {
+                    CanBeFocused = false
+                };
+
+                LocalizedString classText = TextManager.Get($"submarineclass.{sub.SubmarineClass}");
+                Color classColor = (sub.IsCampaignCompatible ? GUIStyle.TextColorNormal : GUIStyle.Red) * 0.8f;
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), infoContainer.RectTransform), classText, classColor, GUIStyle.SmallFont, Alignment.TopRight)
+                {
+                    CanBeFocused = false
+                };
             }
             if (SubmarineInfo.SavedSubmarines.Any())
             {
@@ -621,30 +629,21 @@ namespace Barotrauma
                 }
             };
 
-            foreach (var saveInfo in saveFiles)
+            foreach (CampaignMode.SaveInfo saveInfo in saveFiles)
             {
-                var saveFrame = CreateSaveElement(saveInfo);
-                if (saveFrame == null) { continue; }
-
                 XElement docRoot = SaveUtil.ExtractGameSessionRootElementFromSaveFile(saveInfo.FilePath);
-
                 if (docRoot == null)
                 {
-                    DebugConsole.ThrowError("Error loading save file \"" + saveInfo.FilePath + "\". The file may be corrupted.");
-                    saveFrame.GetChild<GUITextBlock>().TextColor = GUIStyle.Red;
+                    DebugConsole.ThrowError($"Error reading save file \"{saveInfo.FilePath}\". The file may be corrupted.");
                     continue;
                 }
-                if (docRoot.GetAttributeBool("ismultiplayer", false))
-                {
-                    //multiplayer campaign save in the wrong folder -> don't show the save
-                    saveList.Content.RemoveChild(saveFrame);
-                    continue;
+
+                if (docRoot.GetAttributeBool("ismultiplayer", defaultValue: false)) 
+                { 
+                    continue; 
                 }
-                if (!SaveUtil.IsSaveFileCompatible(docRoot))
-                {
-                    saveFrame.GetChild<GUITextBlock>().TextColor = GUIStyle.Red;
-                    saveFrame.ToolTip = TextManager.Get("campaignmode.incompatiblesave");
-                }
+
+                CreateSaveElement(saveInfo, docRoot);
             }
 
             SortSaveList();
@@ -655,7 +654,8 @@ namespace Barotrauma
                 {
                     if (saveList.SelectedData is not CampaignMode.SaveInfo saveInfo) { return false; }
                     if (string.IsNullOrWhiteSpace(saveInfo.FilePath)) { return false; }
-                    LoadGame?.Invoke(saveInfo.FilePath, backupIndex: Option.None);
+
+                    ConfirmLoadIfMissingFreshSavePackages(saveInfo, () => LoadGame?.Invoke(saveInfo.FilePath, backupIndex: Option.None));
                     return true;
                 },
                 Enabled = false
@@ -679,7 +679,7 @@ namespace Barotrauma
 
             RemoveSaveFrame();
 
-            string subName = saveInfo.SubmarineName;
+            LocalizedString subName = TextManager.Get($"submarine.name.{saveInfo.SubmarineName}").Fallback(saveInfo.SubmarineName);
             LocalizedString saveTime = saveInfo.SaveTime
                 .Select(t => (LocalizedString)t.ToLocalUserString())
                 .Fallback(TextManager.Get("Unknown"));
@@ -727,12 +727,15 @@ namespace Barotrauma
                 //spacing
                 new GUIFrame(new RectTransform(new Vector2(0.0f, 0.05f), layoutGroup.RectTransform), style: null);
             }
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+            var subNameText = new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
                 $"{TextManager.Get("Submarine")} : {subName}", font: GUIStyle.SmallFont);
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+            subNameText.Text = ToolBox.LimitString(subNameText.Text, subNameText.Font, subNameText.Rect.Width);
+            var saveTimeText = new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
                 $"{TextManager.Get("LastSaved")} : {saveTime}", font: GUIStyle.SmallFont);
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+            saveTimeText.Text = ToolBox.LimitString(saveTimeText.Text, saveTimeText.Font, saveTimeText.Rect.Width);
+            var mapSeedText = new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
                 $"{TextManager.Get("MapSeed")} : {mapseed}", font: GUIStyle.SmallFont);
+            mapSeedText.Text = ToolBox.LimitString(mapSeedText.Text, mapSeedText.Font, mapSeedText.Rect.Width);
 
             GUILayoutGroup buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.15f), saveFileFrame.RectTransform, Anchor.BottomCenter)
             {
@@ -766,7 +769,10 @@ namespace Barotrauma
             var indexData = SaveUtil.GetIndexData(saveInfo.FilePath);
             CreateBackupMenu(indexData, index =>
             {
-                LoadGame(saveInfo.FilePath, Option.Some(index.Index));
+                ConfirmLoadIfMissingFreshSavePackages(saveInfo, () =>
+                {
+                    LoadGame?.Invoke(saveInfo.FilePath, Option.Some(index.Index));
+                });
             });
             return true;
         }

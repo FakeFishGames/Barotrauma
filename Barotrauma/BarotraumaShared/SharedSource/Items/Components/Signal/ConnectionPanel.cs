@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
+    public partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
         const int MaxConnectionCount = 256;
         public readonly List<Connection> Connections = new List<Connection>();
@@ -33,7 +33,7 @@ namespace Barotrauma.Items.Components
                 {
                     case SubmarineType.Wreck:
                     case SubmarineType.BeaconStation:
-                    case SubmarineType.EnemySubmarine:
+                    case SubmarineType.AIControlled:
                     case SubmarineType.Ruin:
                         return true;
                 }
@@ -48,10 +48,29 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        private bool temporarilyLocked;
+        /// <summary>
+        /// Non-persistent way to lock connection panels just for the current round (the changes won't be saved in the the submarine/outpost file).
+        /// </summary>
         public bool TemporarilyLocked
         {
-            get { return Level.IsLoadedOutpost && (item.GetComponent<DockingPort>()?.Docked ?? false); }
+            get 
+            { 
+                return 
+                    temporarilyLocked ||
+                    TemporarilyLockedInNonPlayerOutpost ||
+                    (Level.IsLoadedOutpost && item.GetComponent<DockingPort>() is { Docked: true }); 
+            }
+            set
+            {
+                temporarilyLocked = value;
+            }
         }
+
+        /// <summary>
+        /// Used to lock connection panels in outposts. Affects the value returned by <see cref="TemporarilyLocked"/>
+        /// </summary>
+        public bool TemporarilyLockedInNonPlayerOutpost;
 
         //connection panels can't be deactivated externally (by signals or status effects)
         public override bool IsActive
@@ -143,6 +162,24 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        /// <summary>
+        /// Returns all wires connected to this connection panel, and also the wires that have been disconnected but not removed completely (visible at the bottom of the connection panel).
+        /// </summary>
+        public IEnumerable<Wire> GetAllWires()
+        {
+            foreach (Connection c in Connections)
+            {
+                foreach (Wire wire in c.Wires)
+                {
+                    if (wire != null) { yield return wire; }
+                }
+            }
+            foreach (var wire in DisconnectedWires)
+            {
+                yield return wire;
+            }
+        }
+
         public void MoveConnectedWires(Vector2 amount)
         {
             Vector2 wireNodeOffset = item.Submarine == null ? Vector2.Zero : item.Submarine.HiddenSubPosition + amount;
@@ -200,7 +237,7 @@ namespace Barotrauma.Items.Components
                 return; 
             }
 
-            user.AnimController.UpdateUseItem(!user.IsClimbing, item.WorldPosition + new Vector2(0.0f, 100.0f) * (((float)Timing.TotalTime / 10.0f) % 0.1f));
+            user.AnimController.UpdateUseItem(!user.IsClimbing, item.WorldPosition, handMoveAmount: new Vector2(0.0f, 100.0f) * (((float)Timing.TotalTime / 10.0f) % 0.1f));
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)

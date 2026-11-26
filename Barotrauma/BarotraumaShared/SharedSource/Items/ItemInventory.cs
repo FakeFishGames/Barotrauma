@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class ItemInventory : Inventory
+    public partial class ItemInventory : Inventory
     {
         private readonly ItemContainer container;
         public ItemContainer Container
@@ -43,7 +43,7 @@ namespace Barotrauma
             return -1;
         }
 
-        public override bool CanBePutInSlot(Item item, int i, bool ignoreCondition = false)
+        public override bool CanBePutInSlot(Item item, int i, bool ignoreCondition = false, bool allowReplacingIntactLimb = false)
         {
             if (ItemOwnsSelf(item)) { return false; }
             if (i < 0 || i >= slots.Length) { return false; }
@@ -88,9 +88,10 @@ namespace Barotrauma
             return true;
         }
 
-        public override bool TryPutItem(Item item, Character user, IEnumerable<InvSlotType> allowedSlots = null, bool createNetworkEvent = true, bool ignoreCondition = false, bool triggerOnInsertedEffects = true)
+        public override bool TryPutItem(Item item, Character user, IEnumerable<InvSlotType> allowedSlots = null, bool createNetworkEvent = true, bool ignoreCondition = false, bool triggerOnInsertedEffects = true, 
+            bool ignoreStuckInHand = false, bool allowReplacingIntactLimb = false)
         {
-            bool wasPut = base.TryPutItem(item, user, allowedSlots, createNetworkEvent, ignoreCondition, triggerOnInsertedEffects);
+            bool wasPut = base.TryPutItem(item, user, allowedSlots, createNetworkEvent, ignoreCondition, triggerOnInsertedEffects: false, ignoreStuckInHand);
 
             if (wasPut)
             {
@@ -102,7 +103,7 @@ namespace Barotrauma
                 }
 
                 container.IsActive = true;
-                container.OnItemContained(item);
+                container.OnItemContained(item, triggerOnInsertedEffects);
 #if SERVER
                 GameMain.Server?.KarmaManager?.OnItemContained(item, container.Item, user);
 #endif
@@ -111,9 +112,10 @@ namespace Barotrauma
             return wasPut;
         }
 
-        public override bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true, bool ignoreCondition = false, bool triggerOnInsertedEffects = true)
+        public override bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true, bool ignoreCondition = false, bool triggerOnInsertedEffects = true, 
+            bool ignoreStuckInHand = false, bool allowReplacingIntactLimb = false)
         {
-            bool wasPut = base.TryPutItem(item, i, allowSwapping, allowCombine, user, createNetworkEvent, ignoreCondition, triggerOnInsertedEffects);
+            bool wasPut = base.TryPutItem(item, i, allowSwapping, allowCombine, user, createNetworkEvent, ignoreCondition, triggerOnInsertedEffects: false, ignoreStuckInHand);
             if (wasPut && item.ParentInventory == this)
             {
                 foreach (Character c in Character.CharacterList)

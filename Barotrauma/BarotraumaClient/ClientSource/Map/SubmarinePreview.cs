@@ -13,14 +13,17 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    sealed class SubmarinePreview : IDisposable
+    public sealed class SubmarinePreview : IDisposable
     {
         private readonly SubmarineInfo submarineInfo;
 
         private SpriteRecorder spriteRecorder;
         private Camera camera;
         private Task loadTask;
-        private (Vector2 Min, Vector2 Max) bounds;
+        /// <summary>
+        /// The bounds of the sprites drawn on the preview (i.e. the bounds of the entities in the submarine - in world coordinates, not pixels on the texture).
+        /// </summary>
+        public (Vector2 Min, Vector2 Max) Bounds;
 
         private volatile bool isDisposed;
 
@@ -88,12 +91,34 @@ namespace Barotrauma
         private readonly List<HullCollection> hullCollections = new List<HullCollection>();
         private readonly List<Door> doors;
 
+        private Color backgroundColor = new Color(0.051f, 0.149f, 0.271f, 1.0f);
+
+        private float defaultZoom = 0.7f;
+
+        /// <summary>
+        /// Should the indicators around e.g. hulls and doors be included in the preview?
+        /// </summary>
+        private bool drawEntityIndicators = true;
+
+        private bool hideFactionSpecificEntities;
+
         private static SubmarinePreview instance = null;
 
-        public static void Create(SubmarineInfo submarineInfo)
+        private bool previewMeshesGenerated;
+
+        // Item identifiers that should not be drawn in the preview.
+        private Predicate<Identifier> doNotDrawPredicate;
+
+        public class SubmarineTexture(Texture2D texture, (Vector2 Min, Vector2 Max) bounds)
+        {
+            public readonly Texture2D Texture2D = texture;
+            public readonly (Vector2 Min, Vector2 Max) Bounds = bounds;
+        }
+
+        public static void Create(SubmarineInfo submarineInfo, bool showSubmarineSpecs = true)
         {
             Close();
-            instance = new SubmarinePreview(submarineInfo);
+            instance = new SubmarinePreview(submarineInfo, showSubmarineSpecs);
         }
 
         public static void Close()
@@ -101,9 +126,102 @@ namespace Barotrauma
             instance?.Dispose(); instance = null;
         }
 
-        private SubmarinePreview(SubmarineInfo subInfo)
+        private static bool isGeneratingTexture;
+
+        private static readonly Queue<Action> pendingTextureGenerations = new Queue<Action>();
+
+        /// <summary>
+        /// Generates a preview texture of the submarine. The generation is queued if another one is already running.
+        /// Must be called on the main thread.
+        /// </summary>
+        public static void GenerateTexture(SubmarineInfo subInfo, Predicate<Identifier> doNotDrawPredicate, Point size,  Action<SubmarineTexture> onFinished, bool hideFactionSpecificEntities = false)
         {
-            camera = new Camera();
+            pendingTextureGenerations.Enqueue(() => StartTextureGeneration(subInfo, doNotDrawPredicate, size, onFinished, hideFactionSpecificEntities));
+            StartNextTextureGeneration();
+        }
+
+        private static void StartNextTextureGeneration()
+        {
+            if (isGeneratingTexture || !pendingTextureGenerations.TryDequeue(out Action startGeneration)) { return; }
+            isGeneratingTexture = true;
+            try
+            {
+                startGeneration();
+            }
+            catch
+            {
+                isGeneratingTexture = false;
+                throw;
+            }
+        }
+
+        private static void OnTextureGenerationFinished()
+        {
+            isGeneratingTexture = false;
+            StartNextTextureGeneration();
+        }
+
+        private static void StartTextureGeneration(SubmarineInfo subInfo, Predicate<Identifier> doNotDrawPredicate, Point size, Action<SubmarineTexture> onFinished, bool hideFactionSpecificEntities)
+        {
+            var submarinePreview = new SubmarinePreview(subInfo)
+            {
+                backgroundColor = Color.Transparent,
+                defaultZoom = 1.0f,
+                drawEntityIndicators = false,
+                doNotDrawPredicate = doNotDrawPredicate,
+                hideFactionSpecificEntities = hideFactionSpecificEntities
+            };
+            submarinePreview.camera.SetResolution(size);
+            RenderTarget2D texture = new RenderTarget2D(GameMain.Instance.GraphicsDevice, size.X, size.Y);
+            var loadTask = Task.Run(() => GenerateTextureInternal(submarinePreview, texture, onFinished));
+        }
+
+        private static async Task GenerateTextureInternal(SubmarinePreview preview, RenderTarget2D texture, Action<SubmarineTexture> onFinished)
+        {
+            try
+            {
+                await Task.Yield();
+
+                while (!preview.spriteRecorder.ReadyToRender)
+                {
+                    if (MeshGenerationFailed()) { return; }
+                    await Task.Yield();
+                }
+                while (!preview.previewMeshesGenerated)
+                {
+                    if (MeshGenerationFailed()) { return; }
+                    await Task.Yield();
+                }
+
+                CrossThread.RequestExecutionOnMainThread(() =>
+                {
+                    var graphics = GameMain.Instance.GraphicsDevice;
+                    SpriteBatch sb = new SpriteBatch(graphics);
+                    sb.Begin();
+                    graphics.SetRenderTarget(texture);
+                    graphics.Clear(Color.Transparent);
+                    preview.RenderSubmarine(sb, new Rectangle(0, 0, texture.Width, texture.Height), component: null);
+                    sb.End();
+                    graphics.SetRenderTarget(null);
+                    onFinished(new SubmarineTexture(texture, preview.Bounds));
+                });
+            }
+            finally
+            {
+                // start the next queued generation (the queue is handled on the main thread)
+                CrossThread.RequestExecutionOnMainThread(OnTextureGenerationFinished);
+            }
+
+            // otherwise we'd wait forever and the generation slot would never be freed
+            bool MeshGenerationFailed() => preview.isDisposed || preview.loadTask is { IsFaulted: true } or { IsCanceled: true };
+        }
+
+        private SubmarinePreview(SubmarineInfo subInfo, bool showSubmarineSpecs = true)
+        {
+            camera = new Camera()
+            {
+                AutoUpdateToScreenResolution = false
+            };
             submarineInfo = subInfo;
             spriteRecorder = new SpriteRecorder();
             isDisposed = false;
@@ -174,51 +292,55 @@ namespace Barotrauma
                 OnClicked = (btn, obj) => { Dispose(); return false; }
             };
 
-            specsContainer = new GUIListBox(new RectTransform(new Vector2(0.4f, 1f), innerPadded.RectTransform, Anchor.TopLeft) { RelativeOffset = new Vector2(0.015f, 0.07f) })
+            if (showSubmarineSpecs)
             {
-                CurrentSelectMode = GUIListBox.SelectMode.None,
-                Color = Color.Black * 0.65f,
-                ScrollBarEnabled = false,
-                ScrollBarVisible = false,
-                Spacing = GUI.IntScale(5)
-            };
-            subInfo.CreateSpecsWindow(specsContainer, GUIStyle.Font,
-                includeTitle: false,
-                includeDescription: true);
-            int width = specsContainer.Rect.Width;
-            void recalculateSpecsContainerHeight()
-            {
-                int totalSize = 0;
-                var children = specsContainer.Content.Children.Where(c => c.Visible);
-                foreach (GUIComponent child in children)
+                specsContainer = new GUIListBox(new RectTransform(new Vector2(0.4f, 1f), innerPadded.RectTransform, Anchor.TopLeft) { RelativeOffset = new Vector2(0.015f, 0.07f) })
                 {
-                    totalSize += child.Rect.Height;
-                }
-                totalSize += specsContainer.Content.CountChildren * specsContainer.Spacing;
-                if (specsContainer.PadBottom)
+                    CurrentSelectMode = GUIListBox.SelectMode.None,
+                    Color = Color.Black * 0.65f,
+                    ScrollBarEnabled = false,
+                    ScrollBarVisible = false,
+                    Spacing = GUI.IntScale(5)
+                };
+                subInfo.CreateSpecsWindow(specsContainer, GUIStyle.Font,
+                    includeTitle: false,
+                    includeDescription: true);
+                int width = specsContainer.Rect.Width;
+                void recalculateSpecsContainerHeight()
                 {
-                    GUIComponent last = specsContainer.Content.Children.LastOrDefault();
-                    if (last != null)
+                    int totalSize = 0;
+                    var children = specsContainer.Content.Children.Where(c => c.Visible);
+                    foreach (GUIComponent child in children)
                     {
-                        totalSize += specsContainer.Rect.Height - last.Rect.Height;
+                        totalSize += child.Rect.Height;
                     }
+                    totalSize += specsContainer.Content.CountChildren * specsContainer.Spacing;
+                    if (specsContainer.PadBottom)
+                    {
+                        GUIComponent last = specsContainer.Content.Children.LastOrDefault();
+                        if (last != null)
+                        {
+                            totalSize += specsContainer.Rect.Height - last.Rect.Height;
+                        }
+                    }
+                    specsContainer.RectTransform.Resize(new Point(width, totalSize), true);
+                    specsContainer.RecalculateChildren();
                 }
-                specsContainer.RectTransform.Resize(new Point(width, totalSize), true);
-                specsContainer.RecalculateChildren();
-            }
-            //hell
-            recalculateSpecsContainerHeight();
-            specsContainer.Content.GetAllChildren<GUITextBlock>().ForEach(c =>
-            {
-                var firstChild = c.Children.FirstOrDefault() as GUITextBlock;
-                if (firstChild != null)
+                //hell
+                recalculateSpecsContainerHeight();
+                specsContainer.Content.GetAllChildren<GUITextBlock>().ForEach(c =>
                 {
-                    firstChild.CalculateHeightFromText(); firstChild.SetTextPos();
-                    c.RectTransform.MinSize = new Point(0, firstChild.Rect.Height);
-                }
-                c.CalculateHeightFromText(); c.SetTextPos();
-            });
-            recalculateSpecsContainerHeight();
+                    var firstChild = c.Children.FirstOrDefault() as GUITextBlock;
+                    if (firstChild != null)
+                    {
+                        firstChild.CalculateHeightFromText(); firstChild.SetTextPos();
+                        c.RectTransform.MinSize = new Point(0, firstChild.Rect.Height);
+                    }
+                    c.CalculateHeightFromText(); c.SetTextPos();
+                });
+                recalculateSpecsContainerHeight();
+            }
+            
 
             TaskPool.Add(nameof(GeneratePreviewMeshes), GeneratePreviewMeshes(), _ =>
             {
@@ -227,14 +349,16 @@ namespace Barotrauma
                 // because the Camera class is not thread-safe and
                 // it's possible for its state to not get updated
                 // properly if done within a task
-                camera.Position = (bounds.Min + bounds.Max) * (0.5f, -0.5f);
-                Vector2 span2d = bounds.Max - bounds.Min;
+                camera.Position = (Bounds.Min + Bounds.Max) * (0.5f, -0.5f);
+                Vector2 span2d = Bounds.Max - Bounds.Min;
                 Vector2 scaledSpan2d = span2d / camera.Resolution.ToVector2();
                 float scaledSpan = Math.Max(scaledSpan2d.X, scaledSpan2d.Y);
                 camera.MinZoom = Math.Min(0.1f, 0.4f / scaledSpan);
-                camera.Zoom = 0.7f / scaledSpan;
+                camera.Zoom = defaultZoom / scaledSpan;
                 camera.StopMovement();
                 camera.UpdateTransform(interpolate: false, updateListener: false);
+
+                previewMeshesGenerated = true;
             });
         }
 
@@ -257,6 +381,8 @@ namespace Barotrauma
 
             HashSet<int> toIgnore = new HashSet<int>();
             HashSet<int> wires = new HashSet<int>();
+
+            HashSet<Identifier> factionIdentifiers = FactionPrefab.Prefabs.Select(p => p.Identifier).ToHashSet();
 
             foreach (var subElement in submarineInfo.SubmarineElement.Elements())
             {
@@ -286,6 +412,19 @@ namespace Barotrauma
             foreach (var subElement in submarineInfo.SubmarineElement.Elements())
             {
                 if (subElement.GetAttributeBool("hiddeningame", false)) { continue; }
+
+                if (doNotDrawPredicate != null && doNotDrawPredicate(subElement.GetAttributeIdentifier("identifier", Identifier.Empty)))
+                {
+                    continue;
+                }
+
+                if (hideFactionSpecificEntities)
+                {
+                    Identifier layer = subElement.GetAttributeIdentifier(nameof(MapEntity.Layer), Identifier.Empty);
+                    if (!layer.IsEmpty && factionIdentifiers.Contains(layer)) { continue; }
+                    if (submarineInfo.LayersHiddenByDefault.Contains(layer)) { continue; }
+                }
+
                 switch (subElement.Name.LocalName.ToLowerInvariant())
                 {
                     case "structure":
@@ -340,7 +479,9 @@ namespace Barotrauma
                 }
             } while (intersectionFound);
 
-            bounds = (spriteRecorder.Min, spriteRecorder.Max);
+            if (isDisposed) { return; }
+
+            Bounds = (spriteRecorder.Min, spriteRecorder.Max);
             wireNodes.ForEach(BakeWireNodes);
 
             spriteRecorder.End();
@@ -448,9 +589,6 @@ namespace Barotrauma
                 spriteEffects |= SpriteEffects.FlipVertically;
             }
 
-            var prevEffects = prefab.Sprite.effects;
-            prefab.Sprite.effects ^= spriteEffects;
-
             bool overrideSprite = false;
             ItemPrefab itemPrefab = prefab as ItemPrefab;
             if (itemPrefab != null)
@@ -500,7 +638,8 @@ namespace Barotrauma
                         startOffset: backGroundOffset,
                         textureScale: textureScale * scale,
                         depth: depth,
-                        rotation: rotationRad);
+                        rotation: rotationRad,
+                        spriteEffects: prefab.Sprite.effects ^ spriteEffects);
                 }
                 else if (itemPrefab != null)
                 {
@@ -511,6 +650,10 @@ namespace Barotrauma
                     }
 
                     ParseUpgrades(itemPrefab.ConfigElement, ref scale);
+
+                    //same logic as in Item.Load
+                    float maxCondition = itemPrefab.Health;
+                    float condition = element.GetAttributeFloat("conditionpercentage", 100.0f) / 100.0f * maxCondition;
 
                     if (prefab.ResizeVertical || prefab.ResizeHorizontal)
                     {
@@ -532,10 +675,12 @@ namespace Barotrauma
                             rect.Size.ToVector2(),
                             color: color,
                             textureScale: Vector2.One * scale,
-                            depth: depth);
+                            depth: depth,
+                            spriteEffects: prefab.Sprite.effects ^ spriteEffects);
 
                         foreach (var decorativeSprite in itemPrefab.DecorativeSprites)
                         {
+                            if (!IsDecorativeSpriteActiveInPreview(decorativeSprite, condition, maxCondition)) { continue; }
                             float offsetState = 0f;
                             Vector2 offset = decorativeSprite.GetOffset(ref offsetState, Vector2.Zero) * scale;
                             if (flippedX) { offset.X = -offset.X; }
@@ -563,10 +708,12 @@ namespace Barotrauma
                             prefab.Sprite.Origin,
                             rotationRad,
                             scale,
-                            prefab.Sprite.effects, depth);
+                            spriteEffect: prefab.Sprite.effects ^ spriteEffects,
+                            depth: depth);
 
                         foreach (var decorativeSprite in itemPrefab.DecorativeSprites)
                         {
+                            if (!IsDecorativeSpriteActiveInPreview(decorativeSprite, condition, maxCondition)) { continue; }
                             float rotationState = 0f; float offsetState = 0f;
                             float rot = decorativeSprite.GetRotation(ref rotationState, 0f);
                             Vector2 offset = decorativeSprite.GetOffset(ref offsetState, Vector2.Zero) * scale;
@@ -574,14 +721,50 @@ namespace Barotrauma
                             if (flippedY) { offset.Y = -offset.Y; }
                             float throwAway = 0.0f;
                             decorativeSprite.Sprite.Draw(spriteRecorder, new Vector2(spritePos.X + offset.X, -(spritePos.Y + offset.Y)), color, decorativeSprite.Sprite.Origin,
-                                rotationRad + rot, decorativeSprite.GetScale(ref throwAway, 0f) * scale, prefab.Sprite.effects,
+                                rotationRad + rot, decorativeSprite.GetScale(ref throwAway, 0f) * scale, prefab.Sprite.effects ^ spriteEffects ^ decorativeSprite.SpriteEffects,
                                 depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - prefab.Sprite.Depth), 0.999f));
                         }
                     }
                 }
             }
+        }
 
-            prefab.Sprite.effects = prevEffects;
+        /// <summary>
+        /// Checks the DecorativeSprite's IsActiveConditionals. Since we have no real item instance to check against,
+        /// we only do some simple checks with the item's condition here, and assume other kinds of conditionals aren't met.
+        /// </summary>
+        private static bool IsDecorativeSpriteActiveInPreview(DecorativeSprite decorativeSprite, float condition, float maxCondition)
+        {
+            foreach (var conditional in decorativeSprite.IsActiveConditionals)
+            {
+                if (conditional.Type != PropertyConditional.ConditionType.PropertyValueOrAffliction ||
+                    !string.IsNullOrEmpty(conditional.TargetItemComponent) ||
+                    conditional.TargetContainer || conditional.TargetContainedItem ||
+                    !conditional.FloatValue.HasValue)
+                {
+                    return false;
+                }
+
+                float value;
+                if (conditional.AttributeName == "condition")
+                {
+                    value = condition;
+                }
+                else if (conditional.AttributeName == "conditionpercentage")
+                {
+                    value = maxCondition > 0.0f ? condition / maxCondition * 100.0f : 0.0f;
+                }
+                else
+                {
+                    return false;
+                }
+
+                if (!PropertyConditional.CompareFloat(value, conditional.FloatValue.Value, conditional.ComparisonOperator))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private void BakeItemComponents(
@@ -593,7 +776,7 @@ namespace Barotrauma
             overrideSprite = false;
 
             float relativeScale = scale / prefab.Scale;
-            foreach (var subElement in prefab.ConfigElement.Elements())
+            foreach (ContentXElement subElement in prefab.ConfigElement.Elements())
             {
                 switch (subElement.Name.LocalName.ToLowerInvariant())
                 {
@@ -654,6 +837,7 @@ namespace Barotrauma
                                 pos.X += (float)scaledRect.Width * 0.5f;
                             }
                             Sprite doorSprite = new Sprite(doorSpriteElem, texturePath.Contains("/") ? "" : Path.GetDirectoryName(prefab.FilePath));
+                            if (doorSprite.Texture == null) { continue; }
                             spriteRecorder.Draw(doorSprite.Texture, pos,
                                 new Rectangle((int)doorSprite.SourceRect.X,
                                     (int)doorSprite.SourceRect.Y,
@@ -706,10 +890,12 @@ namespace Barotrauma
 
         private void RenderSubmarine(SpriteBatch spriteBatch, Rectangle scissorRectangle, GUIComponent component)
         {
-            if (spriteRecorder == null) { return; }
+            if (isDisposed || spriteRecorder == null) { return; }
+            if (backgroundColor.A > 0)
+            {
+                GUI.DrawRectangle(spriteBatch, scissorRectangle, backgroundColor, isFilled: true);
+            }
 
-            GUI.DrawRectangle(spriteBatch, scissorRectangle, new Color(0.051f, 0.149f, 0.271f, 1.0f), isFilled: true);
-            
             if (!spriteRecorder.ReadyToRender)
             {
                 LocalizedString waitText = !loadTask.IsCompleted ?
@@ -739,44 +925,47 @@ namespace Barotrauma
 
             spriteRecorder.Render(camera);
 
-            var mousePos = camera.ScreenToWorld(PlayerInput.MousePosition);
-            mousePos.Y = -mousePos.Y;
-
-            spriteBatch.Begin(SpriteSortMode.BackToFront, rasterizerState: GameMain.ScissorTestEnable, transformMatrix: camera.Transform);
-            GameMain.Instance.GraphicsDevice.ScissorRectangle = scissorRectangle;
-            foreach (var hullCollection in hullCollections)
+            if (drawEntityIndicators)
             {
-                bool mouseOver = false;
-                if (GUI.MouseOn == null || GUI.MouseOn == component)
+                var mousePos = camera.ScreenToWorld(PlayerInput.MousePosition);
+                mousePos.Y = -mousePos.Y;
+
+                spriteBatch.Begin(SpriteSortMode.BackToFront, rasterizerState: GameMain.ScissorTestEnable, transformMatrix: camera.Transform);
+                GameMain.Instance.GraphicsDevice.ScissorRectangle = scissorRectangle;
+                foreach (var hullCollection in hullCollections)
                 {
+                    bool mouseOver = false;
+                    if (GUI.MouseOn == null || GUI.MouseOn == component)
+                    {
+                        foreach (var rect in hullCollection.Rects)
+                        {
+                            mouseOver = rect.Contains(mousePos);
+                            if (mouseOver) { break; }
+                        }
+                    }
+
                     foreach (var rect in hullCollection.Rects)
                     {
-                        mouseOver = rect.Contains(mousePos);
-                        if (mouseOver) { break; }
+                        GUI.DrawRectangle(spriteBatch, rect, mouseOver ? Color.Red : Color.Blue, depth: mouseOver ? 0.45f : 0.5f, thickness: (mouseOver ? 4f : 2f) / camera.Zoom);
+                    }
+
+                    if (mouseOver)
+                    {
+                        LocalizedString str = hullCollection.Name;
+                        Vector2 strSize = GUIStyle.Font.MeasureString(str) / camera.Zoom;
+                        Vector2 padding = new Vector2(30, 30) / camera.Zoom;
+                        Vector2 shift = new Vector2(10, 0) / camera.Zoom;
+
+                        GUI.DrawRectangle(spriteBatch, mousePos + shift, strSize + padding, Color.Black, isFilled: true, depth: 0.25f);
+                        GUIStyle.Font.DrawString(spriteBatch, str, mousePos + shift + (strSize + padding) * 0.5f, Color.White, 0f, strSize * camera.Zoom * 0.5f, 1f / camera.Zoom, SpriteEffects.None, 0f);
                     }
                 }
-
-                foreach (var rect in hullCollection.Rects)
+                foreach (var door in doors)
                 {
-                    GUI.DrawRectangle(spriteBatch, rect, mouseOver ? Color.Red : Color.Blue, depth: mouseOver ? 0.45f : 0.5f, thickness: (mouseOver ? 4f : 2f) / camera.Zoom);
+                    GUI.DrawRectangle(spriteBatch, door.Rect, GUIStyle.Green * 0.5f, isFilled: true, depth: 0.4f);
                 }
-
-                if (mouseOver)
-                {
-                    LocalizedString str = hullCollection.Name;
-                    Vector2 strSize = GUIStyle.Font.MeasureString(str) / camera.Zoom;
-                    Vector2 padding = new Vector2(30, 30) / camera.Zoom;
-                    Vector2 shift = new Vector2(10, 0) / camera.Zoom;
-
-                    GUI.DrawRectangle(spriteBatch, mousePos + shift, strSize + padding, Color.Black, isFilled: true, depth: 0.25f);
-                    GUIStyle.Font.DrawString(spriteBatch, str, mousePos + shift + (strSize + padding) * 0.5f, Color.White, 0f, strSize * camera.Zoom * 0.5f, 1f / camera.Zoom, SpriteEffects.None, 0f);
-                }
+                spriteBatch.End();
             }
-            foreach (var door in doors)
-            {
-                GUI.DrawRectangle(spriteBatch, door.Rect, GUIStyle.Green * 0.5f, isFilled: true, depth: 0.4f);
-            }
-            spriteBatch.End();
 
             GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
             GameMain.Instance.GraphicsDevice.RasterizerState = prevRasterizerState;
@@ -785,14 +974,16 @@ namespace Barotrauma
 
         public void Dispose()
         {
+            isDisposed = true;
             if (previewFrame != null)
             {
                 previewFrame.RectTransform.Parent = null;
                 previewFrame = null;
             }
-            spriteRecorder?.Dispose(); spriteRecorder = null;
+            // We deliberately don't null spriteRecorder here, the threaded mesh generation task may still be running in the background.
+            // It's enough that isDisposed is set.
+            spriteRecorder?.Dispose();
             camera = null;
-            isDisposed = true;
         }
     }
 }

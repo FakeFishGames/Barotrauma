@@ -1,15 +1,23 @@
-﻿using FarseerPhysics.Dynamics;
+﻿using FarseerPhysics.Common;
+using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 
 namespace Barotrauma
 {
-    class SteeringManager
+    public class SteeringManager
     {
         protected const float CircleDistance = 2.5f;
         protected const float CircleRadius = 0.3f;
 
         protected const float RayCastInterval = 0.5f;
+
+        /// <summary>
+        /// Half-width for "shoulder" raycasts that check if the character's full width can pass (only while swimming).
+        /// This will help avoid trying to go through too narrow gaps, and hugging too close to a hull
+        /// and ending up getting stuck on turrets and other protrusions that have no static body.
+        /// </summary>
+        public const float ShoulderRaycastWidth = 0.5f;
 
         protected ISteerable host;
 
@@ -48,6 +56,11 @@ namespace Barotrauma
             steering += DoSteeringWander(weight, avoidWanderingOutsideLevel);
         }
 
+        /// <summary>
+        /// Steer away from any obstacles in the direction the character is heading in. 
+        /// Can be used to make the character go around obstacles (although not very reliably, as there's no proper pathfinding involved here).
+        /// </summary>
+        /// <param name="lookAheadDistance">How far ahead the character we look for obstacles? In sim units.</param>
         public void SteeringAvoid(float deltaTime, float lookAheadDistance, float weight = 1)
         {
             steering += DoSteeringAvoid(deltaTime, lookAheadDistance, weight);
@@ -103,22 +116,10 @@ namespace Barotrauma
 
             if (targetVel.LengthSquared() < 0.00001f) { return Vector2.Zero; }
 
-            targetVel = Vector2.Normalize(targetVel) * weight;
-            // TODO: the code below doesn't quite work as it should, and I'm not sure what the purpose of it is/was.
-            // So, we'll just return the targetVel for now, as it produces smooth results.
-            return targetVel;
+            targetVel = Vector2.Normalize(targetVel);
 
-            //Vector2 newSteering = targetVel - host.Steering;
-
-            //if (newSteering == Vector2.Zero) return Vector2.Zero;
-
-            //float steeringSpeed = (newSteering + host.Steering).Length();
-            //if (steeringSpeed > Math.Abs(weight))
-            //{
-            //    newSteering = Vector2.Normalize(newSteering) * Math.Abs(weight);
-            //}
-
-            //return newSteering;
+            lastSeekDir = targetVel;
+            return targetVel * weight;
         }
 
         protected virtual Vector2 DoSteeringWander(float weight, bool avoidWanderingOutsideLevel)
@@ -161,7 +162,13 @@ namespace Barotrauma
             return newSteering;
         }
 
-        protected virtual Vector2 DoSteeringAvoid(float deltaTime, float lookAheadDistance, float weight, Vector2? heading = null)
+        /// <summary>
+        /// Previous known direction the target was seeking towards, used in the avoidance behavior to see which direction we should look for obstacles in
+        /// </summary>
+        private Vector2? lastSeekDir;
+        private Vector2 desiredAvoidDirection = Vector2.Zero;
+        public float avoidDirStrength;
+        protected virtual Vector2 DoSteeringAvoid(float deltaTime, float lookAheadDistance, float weight)
         {
             if (steering == Vector2.Zero || host.Steering == Vector2.Zero)
             {
@@ -172,37 +179,109 @@ namespace Barotrauma
             if (Timing.TotalTime >= lastRayCastTime + RayCastInterval)
             {
                 avoidRayCastHit = false;
-                AvoidLookAheadPos = host.SimPosition + Vector2.Normalize(host.Steering) * maxDistance;
-                lastRayCastTime = (float)Timing.TotalTime;
-                Body closestBody = Submarine.CheckVisibility(host.SimPosition, AvoidLookAheadPos);
-                if (closestBody != null)
+                if (lastSeekDir != null)
                 {
-                    avoidRayCastHit = true;
-                    AvoidRayCastHitPosition = Submarine.LastPickedPosition;
-                    AvoidDir = Submarine.LastPickedNormal;
-                    //add a bit of randomness
-                    AvoidDir = MathUtils.RotatePoint(AvoidDir, Rand.Range(-0.15f, 0.15f));
-                    //wait a bit longer for the next raycast
-                    lastRayCastTime += RayCastInterval;
+                    //If we're seeking towards a particular direction, do two raycasts:
+                    //  1. A check in the direction we're trying to seek towards.
+                    Vector2 avoidBasedOnLookAheadDir = GetDesiredAvoidDirection(lastSeekDir.Value, maxDistance);
+                    //  2. A check in the direction we're actually currently moving towards (perhaps already avoiding some obstacle)
+                    //     to prevent the character from ending up hugging some other obstacle not in the direction of the seek target-
+                    //     Shorter distance and a higher weight to just strongly push the character away from the obstacle.
+                    Vector2 avoidBasedOnHeading = GetDesiredAvoidDirection(Vector2.Normalize(host.Steering), maxDistance / 2) * 2.0f;
+                    desiredAvoidDirection = (avoidBasedOnLookAheadDir + avoidBasedOnHeading);
                 }
+                else
+                {
+                    desiredAvoidDirection = GetDesiredAvoidDirection(Vector2.Normalize(host.Steering), maxDistance);
+                }
+                lastRayCastTime = (float)Timing.TotalTime;
             }
 
-            if (AvoidDir.LengthSquared() < 0.0001f) { return Vector2.Zero; }
-
-            //if raycast hit nothing, lerp avoid dir to zero
             if (!avoidRayCastHit)
             {
-                AvoidDir -= Vector2.Normalize(AvoidDir) * deltaTime * 0.5f;
+                //nothing hit, lerp avoidance to zero
+                if (AvoidDir.LengthSquared() < 0.0001f)
+                {
+                    AvoidDir = Vector2.Zero;
+                    return Vector2.Zero;
+                }
+                else
+                {
+                    AvoidDir -= Vector2.Normalize(AvoidDir) * deltaTime * 0.25f;
+                }
+            }
+            else
+            {
+                if (desiredAvoidDirection.LengthSquared() < 0.0001f) { return Vector2.Zero; }
+                AvoidDir = Vector2.Lerp(AvoidDir, desiredAvoidDirection, deltaTime * 2.5f);
             }
 
             Vector2 diff = AvoidRayCastHitPosition - host.SimPosition;
             float dist = diff.Length();
 
-            //> 0 when heading in the same direction as the obstacle, < 0 when away from it
-            float dot = MathHelper.Clamp(Vector2.Dot(diff / dist, host.Steering), 0.0f, 1.0f);
-            if (dot < 0) { return Vector2.Zero; }
+            float avoidDistance = lookAheadDistance * 1.25f;
+            avoidDirStrength = MathHelper.Clamp(1.0f - dist / avoidDistance, 0.0f, 1.0f);
 
-            return AvoidDir * dot * weight * MathHelper.Clamp(1.0f - dist / lookAheadDistance, 0.0f, 1.0f);            
+            //the seeking behavior will need to be called again for the seek dir to be set
+            //(i.e. make sure we don't keep a stale value in lastSeekDir)
+            lastSeekDir = null;
+
+            return AvoidDir * weight * avoidDirStrength;
+        }
+
+        private Vector2 GetDesiredAvoidDirection(Vector2 lookAheadDir, float maxDistance)
+        {
+            AvoidLookAheadPos = host.SimPosition + lookAheadDir * maxDistance;
+            Body closestBody = Submarine.CheckVisibility(host.SimPosition, AvoidLookAheadPos);
+
+            // If center ray is clear (and character is swimming), check "shoulders" to ensure the full width can pass
+            if (closestBody == null && host is AIController ai && ai.Character.AnimController.InWater)
+            {
+                Vector2 steeringDir = Vector2.Normalize(host.Steering);
+                Vector2 perpendicular = new Vector2(-steeringDir.Y, steeringDir.X);
+
+                // Check one shoulder
+                Vector2 leftStart = host.SimPosition + perpendicular * ShoulderRaycastWidth;
+                Vector2 leftEnd = AvoidLookAheadPos + perpendicular * ShoulderRaycastWidth;
+                closestBody = Submarine.CheckVisibility(leftStart, leftEnd);
+
+                // If one shoulder is clear, check the other one too
+                if (closestBody == null)
+                {
+                    Vector2 rightStart = host.SimPosition - perpendicular * ShoulderRaycastWidth;
+                    Vector2 rightEnd = AvoidLookAheadPos - perpendicular * ShoulderRaycastWidth;
+                    closestBody = Submarine.CheckVisibility(rightStart, rightEnd);
+                }
+            }
+
+            if (closestBody != null)
+            {
+                avoidRayCastHit = true;
+                AvoidRayCastHitPosition = Submarine.LastPickedPosition;
+                Vector2 desiredAvoidDirection = Submarine.LastPickedNormal;
+
+                Vector2 dirNormalLeft = new Vector2(desiredAvoidDirection.Y, -desiredAvoidDirection.X);
+                Vector2 dirNormalRight = new Vector2(-desiredAvoidDirection.Y, desiredAvoidDirection.X);
+                //avoid in the direction that's closer to the host's current direction
+                //(i.e. if the character is currently moving left to get around some obstacle, keep going in that direction)
+                if (Vector2.Dot(lookAheadDir, dirNormalLeft) > Vector2.Dot(AvoidDir, dirNormalRight))
+                {
+                    desiredAvoidDirection =
+                        //steer in the direction of the normal (= along the edge of the obstacle), + slightly away from it
+                        dirNormalLeft + desiredAvoidDirection * 0.5f;
+                }
+                else
+                {
+                    desiredAvoidDirection = dirNormalRight + desiredAvoidDirection * 0.5f;
+                }
+
+                //add a bit of randomness
+                desiredAvoidDirection = MathUtils.RotatePoint(desiredAvoidDirection, Rand.Range(-0.2f, 0.2f));
+
+                return desiredAvoidDirection;
+            }
+
+            return Vector2.Zero;
         }
     }
 }

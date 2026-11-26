@@ -4,12 +4,13 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    class AIObjectiveFixLeaks : AIObjectiveLoop<Gap>
+    public class AIObjectiveFixLeaks : AIObjectiveLoop<Gap>
     {
         public override Identifier Identifier { get; set; } = "fix leaks".ToIdentifier();
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
         protected override bool AllowInFriendlySubs => true;
+        protected override bool RequireBothHandsAvailable => true;
 
         private Hull PrioritizedHull { get; set; }
 
@@ -18,7 +19,7 @@ namespace Barotrauma
             PrioritizedHull = prioritizedHull;
         }
 
-        protected override bool IsValidTarget(Gap gap) => IsValidTarget(gap, character);
+        protected override bool IsValidTarget(Gap gap) => IsValidTarget(gap, character, AllowInAnySub, AllowInFriendlySubs);
 
         public static float GetLeakSeverity(Gap leak)
         {
@@ -69,7 +70,7 @@ namespace Barotrauma
         protected override void OnObjectiveCompleted(AIObjective objective, Gap target)
             => HumanAIController.RemoveTargets<AIObjectiveFixLeaks, Gap>(character, target);
 
-        public static bool IsValidTarget(Gap gap, Character character)
+        public static bool IsValidTarget(Gap gap, Character character, bool allowInAnySub = false, bool allowInFriendlySubs = false)
         {
             if (gap == null) { return false; }
             // Don't fix a leak on a wall section set to be ignored
@@ -80,8 +81,12 @@ namespace Barotrauma
             }
             if (gap.ConnectedWall == null || gap.ConnectedDoor != null || gap.Open <= 0 || gap.linkedTo.All(l => l == null)) { return false; }
             if (gap.Submarine == null || character.Submarine == null) { return false; }
-            // Don't allow going into another sub, unless it's connected and of the same team and type.
-            if (!character.Submarine.IsEntityFoundOnThisSub(gap, includingConnectedSubs: true)) { return false; }
+            if (!IsAllowedInSubmarine(gap.Submarine, character, allowInAnySub, allowInFriendlySubs))
+            {
+                return false;
+            }
+            // Don't allow going into another sub, unless it's connected and of the same team.
+            if (!character.Submarine.IsEntityFoundOnThisSub(gap, includingConnectedSubs: true, allowDifferentType: true)) { return false; }
             return true;
         }
     }

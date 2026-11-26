@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -139,7 +139,15 @@ namespace Barotrauma
 
         private void SortInternal()
         {
-            overrides.Sort((p1, p2) => (p1.ContentPackage?.Index ?? int.MaxValue) - (p2.ContentPackage?.Index ?? int.MaxValue));
+            overrides.Sort((p1, p2) =>
+            {
+                int packageOrder = (p1.ContentPackage?.Index ?? int.MaxValue) - (p2.ContentPackage?.Index ?? int.MaxValue);
+                if (packageOrder != 0) { return packageOrder; }
+                // Within the same package, overrides in a FileGroup take priority
+                return IsInFileGroup(p2).CompareTo(IsInFileGroup(p1));
+            });
+
+            static bool IsInFileGroup(T prefab) => prefab.ContentFile.ContentPackage.FileGroups.Any(g => g.Files.Contains(prefab.ContentFile));
         }
 
         private bool isEmptyInternal => basePrefabInternal is null && overrides.Count == 0;

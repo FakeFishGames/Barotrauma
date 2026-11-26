@@ -112,7 +112,7 @@ namespace Barotrauma.Networking
 
         partial void InitProjSpecific()
         {
-            var properties = TypeDescriptor.GetProperties(GetType()).Cast<PropertyDescriptor>();
+            var properties = GetType().GetProperties();
 
             SerializableProperties = new Dictionary<Identifier, SerializableProperty>();
 

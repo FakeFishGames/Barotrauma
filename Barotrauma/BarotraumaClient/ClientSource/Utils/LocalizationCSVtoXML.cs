@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Barotrauma
 {
@@ -11,6 +12,12 @@ namespace Barotrauma
     {
         private static readonly List<int> conversationClosingIndent = new List<int>();
         private static readonly char[] separator = new char[1] { '|' };
+
+        /// <summary>
+        /// Anything between square brackets is assumed to be a tag (e.g. [location], [amount]) that must be present in the translations as-is.
+        /// Bracketed text with whitespace (e.g. [Connection lost.]) is assumed to be just text, not a tag.
+        /// </summary>
+        private static readonly Regex tagRegex = new Regex(@"\[[^\[\]\s]+\]", RegexOptions.Compiled);
 
         private const string conversationsPath = "Content/NPCConversations";
         private const string infoTextPath = "Content/Texts";
@@ -24,7 +31,7 @@ namespace Barotrauma
         public static void ConvertMasterLocalizationKit(string outputTextsDirectory, string outputConversationsDirectory, bool convertConversations)
         {
             List<string> languages = new List<string>();
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 6; i++)
             {
                 string textFilePath;
                 string outputFileName;
@@ -38,6 +45,22 @@ namespace Barotrauma
                         textFilePath = Path.Combine(infoTextPath, "EditorTexts.csv");
                         outputFileName = "VanillaEditorTexts.xml";
                         break;
+                    case 2:
+                        textFilePath = Path.Combine(infoTextPath, "EndGameTexts.csv");
+                        outputFileName = "VanillaEndGameTexts.xml";
+                        break;
+                    case 3:
+                        textFilePath = Path.Combine(infoTextPath, "FactionTexts.csv");
+                        outputFileName = "VanillaFactions.xml";
+                        break;
+                    case 4:
+                        textFilePath = Path.Combine(infoTextPath, "DLC.csv");
+                        outputFileName = "DLCFinal.xml";
+                        break;
+                    case 5:
+                        textFilePath = Path.Combine(infoTextPath, "DLCCompanionUpdate.csv");
+                        outputFileName = "DLCCompanionUpdateFinal.xml";
+                        break;
                     default:
                         throw new NotImplementedException();
                 }
@@ -45,7 +68,7 @@ namespace Barotrauma
                 Dictionary<string, List<string>> xmlContent;
                 try
                 {
-                    xmlContent = ConvertInfoTextToXML(File.ReadAllLines(textFilePath, Encoding.UTF8, catchUnauthorizedAccessExceptions: false));
+                    xmlContent = ConvertInfoTextToXML(File.ReadAllLines(textFilePath, Encoding.UTF8, catchUnauthorizedAccessExceptions: false), textFilePath);
                 }
                 catch (Exception e)
                 {
@@ -69,128 +92,66 @@ namespace Barotrauma
 
             if (convertConversations)
             {
-                string conversationFilePath = Path.Combine(infoTextPath, "NPCConversations.csv");
+                TryConvertConversationCSV("DLCConversations.csv", languages, outputConversationsDirectory);
+                foreach (Identifier identifier in NPCConversationCollection.Collections[GameSettings.CurrentConfig.Language].Keys)
+                {
+                    var collection = NPCConversationCollection.Collections[GameSettings.CurrentConfig.Language][identifier];
+                    TryConvertConversationCSV($"DLCConversations_{collection.Identifier}.csv", languages, outputConversationsDirectory);                    
+                }
+
+                string conversationFilePath = Path.Combine(infoTextPath, "DLCConversations.csv");
                 var conversationLinesAll = File.ReadAllLines(conversationFilePath, Encoding.UTF8);
                 foreach (string language in languages)
                 {
-                    List<string> convXmlContent = ConvertConversationsToXML(conversationLinesAll, language);
+                    List<string> convXmlContent = ConvertConversationsToXML(conversationLinesAll, language, conversationFilePath);
                     if (convXmlContent == null)
                     {
                         DebugConsole.ThrowError("NPCConversation Localization .csv to .xml conversion failed for: " + language);
                         continue;
                     }
                     string languageNoWhitespace = language.Replace(" ", "");
-                    string xmlFileFullPath = Path.Combine(outputConversationsDirectory, languageNoWhitespace, $"NpcConversations_{languageNoWhitespace}.xml");
+                    string xmlFileFullPath = Path.Combine(outputConversationsDirectory, languageNoWhitespace, $"DLCConversations_{languageNoWhitespace}.xml");
                     File.WriteAllLines(xmlFileFullPath, convXmlContent, Encoding.UTF8);
                     DebugConsole.NewMessage("Conversation localization .xml file successfully created at: " + xmlFileFullPath);
                 }
             }
         }
 
-        [Obsolete]
-        public static void ConvertIndividualFiles()
+        private static bool TryConvertConversationCSV(string csvPath, List<string> languages, string outputConversationsDirectory)
         {
-            if (GameSettings.CurrentConfig.Language != TextManager.DefaultLanguage)
+            string conversationFilePath = Path.Combine(infoTextPath, csvPath);
+            if (!File.Exists(conversationFilePath))
             {
-                DebugConsole.ThrowError("Use the english localization when converting .csv to allow copying values");
-                return;
+                DebugConsole.AddWarning($"No NPC conversation file found in {conversationFilePath}, skipping...");
+                return false; 
             }
-
-            List<string> conversationFiles = new List<string>();
-            List<string> infoTextFiles = new List<string>();
-            
-            for (int i = 0; i < translatedLanguageNames.GetUpperBound(0) + 1; i++)
+            var conversationLinesAll = File.ReadAllLines(conversationFilePath, Encoding.UTF8);
+            foreach (string language in languages)
             {
-                string language = translatedLanguageNames[i, 0];
-                string languageNoWhitespace = language.RemoveWhitespace();
-
-                if (Directory.Exists(conversationsPath + $"/{languageNoWhitespace}"))
+                List<string> convXmlContent = ConvertConversationsToXML(conversationLinesAll, language, conversationFilePath);
+                if (convXmlContent == null)
                 {
-                    IEnumerable<string> conversationFileArray = Directory.GetFiles(conversationsPath + $"/{languageNoWhitespace}", "*.csv", System.IO.SearchOption.AllDirectories);
-
-                    if (conversationFileArray != null)
-                    {
-                        foreach (string filePath in conversationFileArray)
-                        {
-                            conversationFiles.Add(filePath);
-                        }
-                    }
-                }
-                else
-                {
-                    DebugConsole.ThrowError("Directory at: " + conversationsPath + $"/{languageNoWhitespace} does not exist!");
-                }
-
-                if (Directory.Exists(infoTextPath + $"/{languageNoWhitespace}"))
-                {
-                    IEnumerable<string> infoTextFileArray = Directory.GetFiles(infoTextPath + $"/{languageNoWhitespace}", "*.csv", System.IO.SearchOption.AllDirectories);
-
-                    if (infoTextFileArray != null)
-                    {
-                        foreach (string filePath in infoTextFileArray)
-                        {
-                            infoTextFiles.Add(filePath);
-                        }
-                    }
-                }
-                else
-                {
-                    DebugConsole.ThrowError("Directory at: " + infoTextPath + $"/{languageNoWhitespace} does not exist!");
-                }
-
-                for (int j = 0; j < conversationFiles.Count; j++)
-                {
-                    List<string> xmlContent = ConvertConversationsToXML(File.ReadAllLines(conversationFiles[j], Encoding.UTF8), language);
-                    if (xmlContent == null)
-                    {
-                        DebugConsole.ThrowError("NPCConversation Localization .csv to .xml conversion failed for: " + conversationFiles[j]);
-                        continue;
-                    }
-                    string xmlFileFullPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/NpcConversations_{languageNoWhitespace}.xml";
-                    File.WriteAllLines(xmlFileFullPath, xmlContent, Encoding.UTF8);
-                    DebugConsole.NewMessage("Conversation localization .xml file successfully created at: " + xmlFileFullPath);
-                }
-
-                for (int j = 0; j < infoTextFiles.Count; j++)
-                {
-                    List<string> xmlContent;
-                    try
-                    {
-                        xmlContent = ConvertInfoTextToXML(File.ReadAllLines(infoTextFiles[j], Encoding.UTF8, catchUnauthorizedAccessExceptions: false), language);
-                    }
-                    catch (Exception e)
-                    {
-                        DebugConsole.ThrowError("InfoText Localization .csv to .xml conversion failed for: " + infoTextFiles[j], e);
-                        continue;
-                    }
-                    if (xmlContent == null)
-                    {
-                        DebugConsole.ThrowError("InfoText Localization .csv to .xml conversion failed for: " + infoTextFiles[j]);
-                        continue;
-                    }
-                    string xmlFileFullPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/{languageNoWhitespace}Vanilla.xml";
-                    File.WriteAllLines(xmlFileFullPath, xmlContent, Encoding.UTF8);
-                    DebugConsole.NewMessage("InfoText localization .xml file successfully created at: " + xmlFileFullPath);
-                }
-
-                if (conversationFiles.Count == 0 && infoTextFiles.Count == 0)
-                {
-                    DebugConsole.ThrowError("No .csv files found to convert for: " + language);
+                    DebugConsole.ThrowError("NPCConversation Localization .csv to .xml conversion failed for: " + language);
                     continue;
                 }
-
-                conversationFiles.Clear();
-                infoTextFiles.Clear();
+                string languageNoWhitespace = language.Replace(" ", "");
+                string xmlFileFullPath = Path.Combine(outputConversationsDirectory, languageNoWhitespace, $"{Path.GetFileNameWithoutExtension(csvPath)}_{languageNoWhitespace}.xml");
+                File.WriteAllLines(xmlFileFullPath, convXmlContent, Encoding.UTF8);
+                DebugConsole.NewMessage($"CSV conversation from {csvPath} converted to XML file in {xmlFileFullPath}.");
             }
+            return true;
         }
 
-        private static Dictionary<string, List<string>> ConvertInfoTextToXML(string[] csvContent)
+        private static Dictionary<string, List<string>> ConvertInfoTextToXML(string[] csvContent, string filePath)
         {
             Dictionary<string, List<string>> xmlContentByLanguage = new Dictionary<string, List<string>>();
 
             //get all the languages from the header row
             string headerRow = csvContent[0];
             var headerContent = headerRow.Split(separator);
+            int englishColumn = Array.IndexOf(headerContent, "English");
+            int commentsColumn = Array.FindIndex(headerContent, h => h.Equals("comments", StringComparison.OrdinalIgnoreCase));
+            List<int> languageColumns = new List<int>();
             for (int i = 0; i < headerContent.Length; i++)
             {
                 string languageName = headerContent[i];
@@ -207,76 +168,65 @@ namespace Barotrauma
                     $"<infotexts language=\"{languageName}\" nowhitespace=\"{nowhitespace.ToString().ToLower()}\" translatedname=\"{translatedName}\">"
                 };
                 xmlContentByLanguage.Add(headerContent[i], xmlContent);
+                languageColumns.Add(i);
             }
 
-            for (int row = 1; row < csvContent.Length; row++) // Start at one to ignore header
+            foreach ((int row, string[] split) in SplitCsvRows(csvContent, headerContent, commentsColumn, filePath))
             {
-                if (!xmlContentByLanguage.Values.All(values => values.Count == xmlContentByLanguage["English"].Count))
-                {
-                    throw new Exception($"Error while converting csv to xml: mismatching number of texts on line {row-1} ({csvContent[row - 1]}). Check that there's no extra newlines, separators or missing lines in the csv file.");
-                }
-
-                if (csvContent[row].Length == 0)
+                //all values empty = an empty line
+                if (split.All(s => s.IsNullOrEmpty()))
                 {
                     AddToAllLanguages(string.Empty);
+                    continue;
                 }
-                else
+
+                string tag = split[0];
+
+                //value is empty in all languages (the comments column doesn't matter here)
+                if (languageColumns.All(j => split[j].IsNullOrEmpty()))
                 {
-                    string[] split = csvContent[row].Split(separator);
-
-                    if (split.Length < xmlContentByLanguage.Count)
+                    //nothing but a comment in the comments column, nothing to export
+                    if (tag.IsNullOrEmpty()) { continue; }
+                    //first line is all lower-case and contains dot, assume it's an empty value
+                    if (tag.Contains(".") && !tag.Any(char.IsUpper))
                     {
-                        throw new Exception($"Error while converting csv to xml: not enough values on line {row} ({csvContent[row]}). Check that there's no extra newlines, separators or missing lines in the csv file.");
+                        AddToAllLanguages($"<{tag}></{tag}>");
                     }
-
-                    if (split.Length > 1) // Localization data
+                    //otherwise assume it's a comment
+                    else
                     {
-                        //all values empty = an empty line
-                        if (split.All(s => s.IsNullOrEmpty()))
-                        {
-                            AddToAllLanguages(string.Empty);
-                        }
-                        //value is empty in all languages
-                        else if (!split[0].IsNullOrEmpty() && split.Skip(2).All(s => s.IsNullOrEmpty()))
-                        {
-                            //first line is all lower-case and contains dot, assume it's an empty value
-                            if (split[0].Contains(".") && !split[0].Any(char.IsUpper))
-                            {
-                                AddToAllLanguages($"<{split[0]}></{split[0]}>");
-                            }
-                            //otherwise assume it's a comment
-                            else
-                            {
-                                AddToAllLanguages($"<!-- {split[0]} -->");
-                            }
-                        }
-                        else
-                        {
-                            for (int j = 0; j < split.Length; j++)
-                            {
-                                string languageName = headerContent[j];
-                                if (languageName.Equals("tag", StringComparison.OrdinalIgnoreCase) ||
-                                    languageName.Equals("comments", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    continue;
-                                }
+                        AddToAllLanguages($"<!-- {tag} -->");
+                    }
+                    continue;
+                }
 
-                                string textContent = split[j];
-                                if (textContent == "#NAME?")
-                                {
-                                    throw new Exception(
-                                        $"Error while converting csv to xml: #NAME? value found on line {row}, language: {languageName}." +
-                                        " This indicates a missing value in the csv file (some text got accidentally converted to a broken formula in the localization sheet?).");
-                                }
-                                textContent = textContent.Replace(" & ", " &amp; ");
-                                xmlContentByLanguage[languageName].Add($"<{split[0]}>{textContent}</{split[0]}>");
-                            }
-                        }
-                    }
-                    else // A header/comment
+                //texts without a valid tag can't be referenced, and would produce invalid xml (e.g. <>text</>)
+                //happens e.g. if the tag and English text have been removed from the sheet, but the old translations have been left in
+                if (!IsValidTag(tag))
+                {
+                    DebugConsole.AddWarning(
+                        $"Invalid tag \"{tag}\" on line {row} in {filePath}, skipping the row. " +
+                        $"The tag must be a valid xml element name (not empty, no whitespace or special characters). " +
+                        $"English: {(englishColumn > -1 ? split[englishColumn] : string.Empty)}");
+                    continue;
+                }
+
+                foreach (int j in languageColumns)
+                {
+                    string languageName = headerContent[j];
+                    string textContent = split[j];
+                    if (textContent == "#NAME?")
                     {
-                        AddToAllLanguages($"<!-- {split[0]} -->");
+                        throw new Exception(
+                            $"Error while converting csv to xml: #NAME? value found on line {row}, language: {languageName}." +
+                            " This indicates a missing value in the csv file (some text got accidentally converted to a broken formula in the localization sheet?).");
                     }
+                    if (englishColumn > -1 && j != englishColumn)
+                    {
+                        WarnAboutMismatchedTags(split[englishColumn], textContent, languageName, $"\"{tag}\" (line {row} in {filePath})");
+                    }
+                    textContent = textContent.Replace(" & ", " &amp; ");
+                    xmlContentByLanguage[languageName].Add($"<{tag}>{textContent}</{tag}>");
                 }
             }
 
@@ -294,51 +244,80 @@ namespace Barotrauma
             return xmlContentByLanguage;
         }
 
-        [Obsolete]
-        private static List<string> ConvertInfoTextToXML(string[] csvContent, string language)
+        /// <summary>
+        /// Splits the csv lines (excluding the header) into rows of values.
+        /// A value with newlines (typically a multi-line comment) is split on multiple lines in the csv,
+        /// those lines are merged back into one row based on the number of columns in the header.
+        /// </summary>
+        /// <returns>The values of each row, along with the line number the row starts on.</returns>
+        private static List<(int row, string[] values)> SplitCsvRows(string[] csvContent, string[] headerContent, int commentsColumn, string filePath)
         {
-            List<string> xmlContent = new List<string>
-            {
-                xmlHeader
-            };
-
-            string translatedName = GetTranslatedName(language);
-            bool nowhitespace = TextManager.IsCJK(translatedName);
-
-            xmlContent.Add($"<infotexts language=\"{language}\" nowhitespace=\"{nowhitespace.ToString().ToLower()}\" translatedname=\"{translatedName}\">");
-
+            var rows = new List<(int row, string[] values)>();
+            string pendingLine = null;
+            int pendingLineNumber = 0;
             for (int i = 1; i < csvContent.Length; i++) // Start at one to ignore header
             {
-                csvContent[i] = csvContent[i].Trim(separator);
-
-                if (csvContent[i].Length == 0)
+                if (pendingLine == null)
                 {
-                    xmlContent.Add(string.Empty);
+                    //empty line
+                    if (csvContent[i].Length == 0)
+                    {
+                        rows.Add((i, Enumerable.Repeat(string.Empty, headerContent.Length).ToArray()));
+                        continue;
+                    }
+                    pendingLine = csvContent[i];
+                    pendingLineNumber = i;
                 }
                 else
                 {
-                    string[] split = csvContent[i].Split(separator, 3);
+                    pendingLine += "\n" + csvContent[i];
+                }
 
-                    if (split.Length >= 2) // Localization data
+                string[] values = pendingLine.Split(separator);
+                if (values.Length < headerContent.Length)
+                {
+                    //not enough values yet, assume a value continues on the next line
+                    continue;
+                }
+                if (values.Length > headerContent.Length)
+                {
+                    throw new Exception(
+                        $"Error while converting csv to xml: too many values in the row starting on line {pendingLineNumber} ({pendingLine}). " +
+                        "Check that there's no extra separators or missing values in the csv file.");
+                }
+                for (int j = 0; j < values.Length; j++)
+                {
+                    if (j != commentsColumn && values[j].Contains('\n'))
                     {
-                        split[1] = split[1].Replace(" & ", " &amp; ");
-                        xmlContent.Add($"<{split[0]}>{split[1]}</{split[0]}>");
-                    }
-                    else if (split[0].Contains(".") && !split[0].Any(char.IsUpper)) // An empty field
-                    {
-                        xmlContent.Add($"<{split[0]}></{split[0]}>");
-                    }
-                    else // A header
-                    {
-                        xmlContent.Add($"<!-- {split[0]} -->");
+                        DebugConsole.AddWarning(
+                            $"Newline in column \"{headerContent[j]}\" in the row starting on line {pendingLineNumber} in {filePath}. " +
+                            "Newlines are only expected in the comments column, check that the row was parsed correctly.");
                     }
                 }
+                rows.Add((pendingLineNumber, values));
+                pendingLine = null;
             }
+            if (pendingLine != null)
+            {
+                throw new Exception(
+                    $"Error while converting csv to xml: not enough values in the row starting on line {pendingLineNumber} ({pendingLine}). " +
+                    "Check that there's no missing separators or values in the csv file.");
+            }
+            return rows;
+        }
 
-            xmlContent.Add(string.Empty);
-            xmlContent.Add("</infotexts>");
-
-            return xmlContent;
+        private static bool IsValidTag(string tag)
+        {
+            if (string.IsNullOrWhiteSpace(tag)) { return false; }
+            try
+            {
+                System.Xml.XmlConvert.VerifyName(tag);
+                return true;
+            }
+            catch (System.Xml.XmlException)
+            {
+                return false;
+            }
         }
 
         private static string GetTranslatedName(string language)
@@ -352,7 +331,42 @@ namespace Barotrauma
             return string.Empty;
         }
 
-        private static List<string> ConvertConversationsToXML(string[] csvContent, string language)
+        private static int GetConversationLanguageColumn(string[] headerSplit, string language)
+        {
+            for (int i = 0; i < headerSplit.Length; i++)
+            {
+                if (headerSplit[i] == language ||
+                    (language == "English" && headerSplit[i] == "Line (Original)"))
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// Warns if the translated text is missing any of the tags (anything between square brackets) present in the english text.
+        /// The tags must be present in the exact same form, because they're replaced with variables in the code.
+        /// </summary>
+        private static void WarnAboutMismatchedTags(string englishText, string translatedText, string language, string debugLocation)
+        {
+            //missing translations are a separate issue, no need to warn about tags in them
+            if (string.IsNullOrEmpty(englishText) || string.IsNullOrEmpty(translatedText)) { return; }
+
+            var missingTags = tagRegex.Matches(englishText)
+                .Select(m => m.Value)
+                .Distinct()
+                .Where(tag => !translatedText.Contains(tag))
+                .ToList();
+            if (!missingTags.Any()) { return; }
+
+            DebugConsole.AddWarning(
+                $"Mismatched tags in {debugLocation}, language: {language}. Missing tags: {string.Join(", ", missingTags)}.\n" +
+                $"English: {englishText}\n" +
+                $"{language}: {translatedText}");
+        }
+
+        private static List<string> ConvertConversationsToXML(string[] csvContent, string language, string filePath)
         {
             List<string> xmlContent = new List<string>
             {
@@ -362,17 +376,9 @@ namespace Barotrauma
             string translatedName = GetTranslatedName(language);
             bool nowhitespace = TextManager.IsCJK(translatedName);
 
-            int languageColumn = -1;
             string[] headerSplit = csvContent[0].Split(separator);
-            for (int i = 0; i < headerSplit.Length; i++)
-            {
-                if (headerSplit[i] == language || 
-                    (language == "English" && headerSplit[i]== "Line (Original)"))
-                {
-                    languageColumn = i;
-                    break;
-                }
-            }
+            int languageColumn = GetConversationLanguageColumn(headerSplit, language);
+            int englishColumn = GetConversationLanguageColumn(headerSplit, "English");
 
             xmlContent.Add($"<Conversations identifier=\"vanillaconversations\" Language=\"{language}\" nowhitespace=\"{nowhitespace}\">");
 
@@ -402,6 +408,10 @@ namespace Barotrauma
                 }
 
                 string line = split[languageColumn].Replace("\"", "");
+                if (englishColumn > -1 && languageColumn != englishColumn)
+                {
+                    WarnAboutMismatchedTags(split[englishColumn].Replace("\"", ""), line, language, $"line {i} in {filePath}");
+                }
                 string speaker = split[2];
                 int depthIndex = int.Parse(split[3]);
                 // 3 = original line

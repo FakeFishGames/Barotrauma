@@ -57,7 +57,13 @@ namespace Barotrauma
             = Enum.GetValues<SpeciallyHandledCharCategory>()
                 .Where(c => c is not (SpeciallyHandledCharCategory.None or SpeciallyHandledCharCategory.All))
                 .ToImmutableArray();
-        
+
+        /// <summary>
+        /// "Private Use Area" range of the Unicode character set. Inclusive.
+        /// See: <see href="https://jrgraphix.net/research/unicode_blocks.php"/>
+        /// </summary>
+        public static readonly Range<uint> IconRange = new Range<uint>(0xE000, 0xF8FF);
+
         private static readonly ImmutableDictionary<SpeciallyHandledCharCategory, ImmutableArray<Range<int>>> SpeciallyHandledCharacterRanges
             = new[]
             {
@@ -568,7 +574,7 @@ namespace Barotrauma
                 }
                 extraDescriptionLine = extraDescriptionLine.Replace(variableTag, replacementValue);
             }
-            if (!(description is RawLString { Value: "" })) { description += "\n"; } //TODO: this is cursed
+            if (description is not RawLString { Value: "" }) { description += "\n"; } //TODO: this is cursed
             description += extraDescriptionLine;
         }
 

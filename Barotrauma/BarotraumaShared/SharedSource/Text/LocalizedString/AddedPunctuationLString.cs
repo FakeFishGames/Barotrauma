@@ -12,6 +12,7 @@ namespace Barotrauma
         public AddedPunctuationLString(char symbol, params LocalizedString[] nStrs) { nestedStrs = nStrs.ToImmutableArray(); punctuationSymbol = symbol; }
 
         public override bool Loaded => nestedStrs.All(s => s.Loaded);
+        public override bool UsingDefaultLanguageAsFallback => CombinedUsingDefaultLanguageAsFallback(nestedStrs);
         public override void RetrieveValue()
         {
             string separator = "";

@@ -10,7 +10,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
-    class EditorImageManager
+    public class EditorImageManager
     {
         private struct EditorImageContainer
         {
@@ -326,7 +326,7 @@ namespace Barotrauma
         }
     }
 
-    class EditorImage
+    public class EditorImage
     {
         public enum DrawTargetType
         {

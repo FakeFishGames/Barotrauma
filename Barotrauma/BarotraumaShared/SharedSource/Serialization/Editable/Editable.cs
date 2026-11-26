@@ -3,7 +3,7 @@
 namespace Barotrauma;
 
 [AttributeUsage(AttributeTargets.Property)]
-class Editable : Attribute
+public class Editable : Attribute
 {
     /// <summary>
     /// Maximum length of the value if the value is a string. Only has an effect is larger than 0.
@@ -56,7 +56,7 @@ class Editable : Attribute
 }
 
 [AttributeUsage(AttributeTargets.Property)]
-sealed class InGameEditable : Editable
+public sealed class InGameEditable : Editable
 {
 }
 

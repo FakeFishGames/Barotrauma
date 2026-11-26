@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class SwarmBehavior
+    public class SwarmBehavior
     {
         private readonly float minDistFromClosest;
         private readonly float maxDistFromCenter;

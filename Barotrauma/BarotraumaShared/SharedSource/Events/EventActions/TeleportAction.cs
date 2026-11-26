@@ -1,4 +1,4 @@
-namespace Barotrauma;
+﻿namespace Barotrauma;
 
 /// <summary>
 /// Teleports a specific entity to a specific spawn point.
@@ -47,5 +47,5 @@ class TeleportAction : EventAction
 
     public override bool IsFinished(ref string goToLabel) => isFinished;
 
-    public override void Reset() => isFinished = false;
+    public override void Reset(bool shouldEndConversations = true) => isFinished = false;
 }

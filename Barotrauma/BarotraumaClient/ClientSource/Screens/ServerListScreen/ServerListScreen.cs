@@ -13,7 +13,7 @@ using Barotrauma.Steam;
 
 namespace Barotrauma
 {
-    sealed class ServerListScreen : Screen
+    public sealed class ServerListScreen : Screen
     {
         private enum MsgUserData
         {
@@ -207,7 +207,7 @@ namespace Barotrauma
 
         private static Task<string> GetDefaultUserName()
         {
-            return new CompositeFriendProvider(new SteamFriendProvider(), new EpicFriendProvider()).GetSelfUserName();
+            return new CompositeFriendProvider(new SteamFriendProvider()).GetSelfUserName();
         }
 
         private void AddTernaryFilter(RectTransform parent, float elementHeight, Identifier tag, Action<TernaryOption> valueSetter)
@@ -354,6 +354,7 @@ namespace Barotrauma
 
             var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), searchHolder.RectTransform), TextManager.Get("Search") + "...");
             searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), searchHolder.RectTransform), "");
+            searchBox.OverflowClip = true;
             searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
             searchBox.OnTextChanged += (txtBox, txt) => { FilterServers(); return true; };
@@ -905,21 +906,7 @@ namespace Barotrauma
                 MultiplayerPreferences.Instance.PlayerName = text;
                 return true;
             };
-            if (EosInterface.IdQueries.IsLoggedIntoEosConnect)
-            {
-                if (SteamManager.IsInitialized)
-                {
-                    serverProvider = new CompositeServerProvider(
-                        new EosServerProvider(),
-                        new SteamDedicatedServerProvider(),
-                        new SteamP2PServerProvider());
-                }
-                else
-                {
-                    serverProvider = new EosServerProvider();
-                }
-            }
-            else if (SteamManager.IsInitialized)
+            if (SteamManager.IsInitialized)
             {
                 serverProvider = new CompositeServerProvider(
                     new SteamDedicatedServerProvider(),
@@ -1110,7 +1097,7 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform),
                 SteamManager.IsInitialized ? TextManager.Get("ServerEndpoint") : TextManager.Get("ServerIP"), textAlignment: Alignment.Center);
-            var endpointBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform));
+            var endpointBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform)) { OverflowClip = true };
 
             content.RectTransform.NonScaledSize = new Point(content.Rect.Width, (int)(content.RectTransform.Children.Sum(c => c.Rect.Height)));
             content.RectTransform.IsFixedSize = true;
@@ -1125,10 +1112,6 @@ namespace Barotrauma
                     if (endpoint is SteamP2PEndpoint && !SteamManager.IsInitialized)
                     {
                         new GUIMessageBox(TextManager.Get("error"), TextManager.Get("CannotJoinSteamServer.SteamNotInitialized"));
-                    }
-                    else if (endpoint is EosP2PEndpoint && !EosInterface.Core.IsInitialized)
-                    {
-                        new GUIMessageBox(TextManager.Get("error"), TextManager.Get("EosStatus.NotInitialized"));
                     }
                     else
                     {
@@ -1296,7 +1279,7 @@ namespace Barotrauma
         }
 
         private object currentServerDataRecvCallbackObj = null;
-        private (Action<ServerInfo, ServerProvider> OnServerDataReceived, Action OnQueryCompleted) MakeServerQueryCallbacks()
+        private (Action<ServerInfo> OnServerDataReceived, Action OnQueryCompleted) MakeServerQueryCallbacks()
         {
             var uniqueObject = new object();
             currentServerDataRecvCallbackObj = uniqueObject;
@@ -1311,20 +1294,9 @@ namespace Barotrauma
             }
             
             return (
-                (serverInfo, serverProvider) =>
+                (serverInfo) =>
                 {
                     if (!shouldRunCallback()) { return; }
-
-                    if (serverProvider is not EosServerProvider
-                        && EosInterface.IdQueries.IsLoggedIntoEosConnect)
-                    {
-                        if (serverInfo.EosCrossplay)
-                        {
-                            // EosServerProvider should get us this server,
-                            // don't add it again
-                            return;
-                        }
-                    }
 
                     if (selectedTab == TabEnum.All)
                     {
@@ -1673,13 +1645,6 @@ namespace Barotrauma
             {
                 serverPingText.Text = ping.ToString();
                 serverPingText.TextColor = GetPingTextColor(ping);
-            }
-            else if ((serverInfo.Endpoints.Length == 1 && serverInfo.Endpoints.First() is EosP2PEndpoint)
-                     || (!SteamManager.IsInitialized && serverInfo.Endpoints.Any(e => e is P2PEndpoint)))
-            {
-                serverPingText.Text = "-";
-                serverPingText.ToolTip = TextManager.Get("EosPingUnavailable");
-                serverPingText.TextAlignment = Alignment.Center;
             }
             else
             {

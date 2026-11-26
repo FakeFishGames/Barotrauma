@@ -13,7 +13,7 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    partial class BackgroundSection
+    public partial class BackgroundSection
     {
         public Rectangle Rect;
         public ushort Index;
@@ -111,7 +111,7 @@ namespace Barotrauma
         }
     }
 
-    partial class Hull : MapEntity, ISerializableEntity, IServerSerializable
+    public partial class Hull : MapEntity, ISerializableEntity, IServerSerializable
     {
         public readonly static List<Hull> HullList = new List<Hull>();
         public readonly static List<EntityGrid> EntityGrids = new List<EntityGrid>();
@@ -176,6 +176,7 @@ namespace Barotrauma
 
         private readonly List<Decal> decals = new List<Decal>();
 
+        public int DecalCount => decals.Count;
 
         public readonly List<Gap> ConnectedGaps = new List<Gap>();
 
@@ -190,9 +191,17 @@ namespace Barotrauma
         private readonly HashSet<Identifier> moduleTags = new HashSet<Identifier>();
 
         /// <summary>
-        /// Inherited flags from outpost generation.
+        /// Inherited flags from outpost generation. If the hull hasn't been given any (e.g. when the module is loaded in the sub editor instead of
+        /// being part of a generated outpost), falls back to the flags of the outpost module the hull belongs to.
         /// </summary>
-        public IEnumerable<Identifier> OutpostModuleTags => moduleTags;
+        public IEnumerable<Identifier> OutpostModuleTags
+        {
+            get
+            {
+                if (moduleTags.Any()) { return moduleTags; }
+                return Submarine?.Info?.OutpostModuleInfo?.ModuleFlags ?? moduleTags;
+            }
+        }
 
         private string roomName;
         [Editable, Serialize("", IsPropertySaveable.Yes, translationTextTag: "RoomName.")]
@@ -222,9 +231,6 @@ namespace Barotrauma
             set 
             { 
                 ambientLight = value;
-#if CLIENT
-                lastAmbientLightEditTime = Timing.TotalTime;
-#endif
             }
         }
 
@@ -266,10 +272,7 @@ namespace Barotrauma
             }
         }
         
-        public override bool Linkable
-        {
-            get { return true; }
-        }
+        public override bool Linkable => true;
 
         public float LethalPressure
         {
@@ -352,11 +355,16 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Can be used to temporarily make bots avoid staying in this hull.
+        /// </summary>
+        public float TemporaryAvoidStayingTime { get; set; } = 0f;
+
         private bool avoidStaying;
         [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Bots avoid staying here, but they are still allowed to access the room when needed and go through it. Forced true for wet rooms.")]
         public bool AvoidStaying
         {
-            get { return avoidStaying || IsWetRoom; }
+            get { return avoidStaying || IsWetRoom || TemporaryAvoidStayingTime > 0f; }
             set
             {
                 avoidStaying = value;
@@ -432,6 +440,11 @@ namespace Barotrauma
         /// Average color of the background sections
         /// </summary>
         public Color AveragePaintedColor { get; private set; }
+
+        /// <summary>
+        /// The average of the dirtiness values of the sections, 0 being no dirt, 1 meaning the entire hull is at maximum dirtiness.
+        /// </summary>
+        public float AverageDirtiness { get; private set; }
 
         /// <summary>
         /// Returns true if the red component of the background color is twice as bright as the blue and green. Can be used by StatusEffects.
@@ -557,9 +570,6 @@ namespace Barotrauma
                 if (!property.Value.Attributes.OfType<Serialize>().Any()) { continue; }
                 clone.SerializableProperties[property.Key].TrySetValue(clone, property.Value.GetValue(this));
             }
-#if CLIENT
-            clone.lastAmbientLightEditTime = 0.0;
-#endif
             return clone;
         }
 
@@ -611,9 +621,6 @@ namespace Barotrauma
             DetermineIsAirlock();
 
             BallastFlora?.OnMapLoaded();
-#if CLIENT
-            lastAmbientLightEditTime = 0.0;
-#endif
         }
 
         public void AddToGrid(Submarine submarine)
@@ -747,7 +754,10 @@ namespace Barotrauma
             }
         }
 
-        public Decal AddDecal(UInt32 decalId, Vector2 worldPosition, float scale, bool isNetworkEvent, int? spriteIndex = null)
+        /// <param name="multiplyByPrefabScale">Should the scale be multiplied/randomized according to the scale defined in the prefab? 
+        /// Should be set to false if we're e.g. loading a serialized decal with the prefab scale already applied.</param>
+        /// <param name="spriteIndex">If not set, one of the decal prefab's sprites will be chosen randomly.</param>
+        public Decal AddDecal(UInt32 decalId, Vector2 worldPosition, float scale, bool isNetworkEvent, bool multiplyByPrefabScale = true, int? spriteIndex = null)
         {
             //clients are only allowed to create decals when the server says so
             if (!isNetworkEvent && GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
@@ -761,11 +771,13 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Could not find a decal prefab with the UInt identifier {decalId}!");
                 return null;
             }
-            return AddDecal(decal.Name, worldPosition, scale, isNetworkEvent, spriteIndex);
+            return AddDecal(decal.Identifier, worldPosition, scale, isNetworkEvent, multiplyByPrefabScale, spriteIndex);
         }
 
-
-        public Decal AddDecal(string decalName, Vector2 worldPosition, float scale, bool isNetworkEvent, int? spriteIndex = null)
+        /// <param name="multiplyByPrefabScale">Should the scale be multiplied/randomized according to the scale defined in the prefab? 
+        /// Should be set to false if we're e.g. loading a serialized decal with the prefab scale already applied.</param>
+        /// <param name="spriteIndex">If not set, one of the decal prefab's sprites will be chosen randomly.</param>
+        public Decal AddDecal(Identifier decalIdentifier, Vector2 worldPosition, float scale, bool isNetworkEvent, bool multiplyByPrefabScale = true, int? spriteIndex = null)
         {
             //clients are only allowed to create decals when the server says so
             if (!isNetworkEvent && GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
@@ -775,7 +787,7 @@ namespace Barotrauma
 
             if (decals.Count >= MaxDecalsPerHull) { return null; }
 
-            var decal = DecalManager.CreateDecal(decalName, scale, worldPosition, this, spriteIndex);
+            var decal = DecalManager.CreateDecal(decalIdentifier, scale, worldPosition, this, multiplyByPrefabScale, spriteIndex);
             if (decal != null)
             {
                 if (GameMain.NetworkMember is { IsServer: true })
@@ -882,6 +894,8 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
+            TemporaryAvoidStayingTime -= deltaTime;
+
             BallastFlora?.Update(deltaTime);
             
             UpdateProjSpecific(deltaTime, cam);
@@ -1148,13 +1162,13 @@ namespace Barotrauma
         /// Uses a Dijkstra's algorithm to find the shortest path.
         /// </summary>
         /// <param name="minimumGapOpenness">The gap's <see cref="Gap.Open">openness</see> must be larger than or equal to this to be considered valid for the path.</param>
-        public float GetApproximateDistance(Vector2 startPos, Vector2 endPos, Hull targetHull, float maxDistance, float distanceMultiplierPerClosedDoor = 0, float minimumGapOpenness = 0.5f)
+        public float GetApproximateDistance(Vector2 startWorldPos, Vector2 endWorldPos, Hull targetHull, float maxDistance, float distanceMultiplierPerClosedDoor = 0, float minimumGapOpenness = 0.5f)
         {
             cachedDistances.Clear();
             priorityQueue.Clear();
 
             cachedDistances[this] = 0f;
-            priorityQueue.Enqueue((this, startPos), 0f);
+            priorityQueue.Enqueue((this, startWorldPos), 0f);
 
             while (priorityQueue.TryDequeue(out var current, out float currentDist))
             {
@@ -1169,7 +1183,7 @@ namespace Barotrauma
                 // If we've reached the target, add the final segment from hull to endPos
                 if (currentHull == targetHull)
                 {
-                    return currentDist + Vector2.Distance(currentPos, endPos);
+                    return currentDist + Vector2.Distance(currentPos, endWorldPos);
                 }
 
                 foreach (Gap g in currentHull.ConnectedGaps)
@@ -1198,11 +1212,18 @@ namespace Barotrauma
                     {
                         if (g.linkedTo[i] is Hull nextHull && nextHull != currentHull)
                         {
-                            float newDist = currentDist + Vector2.Distance(currentPos, g.Position) * distanceMultiplier;
+                            Vector2 closestPointOnGap =
+                                g.IsHorizontal ?
+                                MathUtils.GetClosestPointOnLineSegment(new Vector2(g.WorldPosition.X, g.WorldRect.Y), new Vector2(g.WorldPosition.X, g.WorldRect.Y - g.WorldRect.Height), currentPos) :
+                                MathUtils.GetClosestPointOnLineSegment(new Vector2(g.WorldRect.X, g.WorldPosition.Y), new Vector2(g.WorldRect.Right, g.WorldPosition.Y), currentPos);
+
+                            System.Diagnostics.Debug.Assert(Vector2.DistanceSquared(currentPos, closestPointOnGap) <= Vector2.DistanceSquared(currentPos, g.Position), "Closest point on gap should never be further than the center of the gap!");
+
+                            float newDist = currentDist + Vector2.Distance(currentPos, closestPointOnGap) * distanceMultiplier;
                             if (!cachedDistances.TryGetValue(nextHull, out float oldDist) || newDist < oldDist)
                             {
                                 cachedDistances[nextHull] = newDist;
-                                priorityQueue.Enqueue((nextHull, g.Position), newDist);
+                                priorityQueue.Enqueue((nextHull, closestPointOnGap), newDist);
                             }
                         }
                     }
@@ -1600,7 +1621,7 @@ namespace Barotrauma
 #endif
                     sectionUpdated = true;
                 }
-                RefreshAveragePaintedColor();
+                RefreshAveragePaintedColorAndDirtiness();
             }
 
             if (sectionUpdated && GameMain.NetworkMember != null && requiresUpdate)
@@ -1613,15 +1634,76 @@ namespace Barotrauma
             }
         }
 
-        private void RefreshAveragePaintedColor()
+        public void CleanAllSections()
         {
+            foreach (var section in BackgroundSections)
+            {
+                CleanSection(section, cleanVal: -100.0f, updateRequired: true);
+            }
+        }
+
+        /// <summary>
+        /// Makes the hull more dirty.
+        /// </summary>
+        /// <param name="dirtyVal">Amount of dirtiness to add. 1 represents maximum dirtiness.</param>
+        /// <param name="gradientToBottom">When true, the dirtiness is applied in a gradient, with the top of the hull being clean and getting gradually dirtier towards the bottom.</param>
+        public void DirtyAllSections(float dirtyVal, bool gradientToBottom, bool requiresUpdate)
+        {
+            if (BackgroundSections == null) { return; }
+            if (gradientToBottom)
+            {
+                float maxRow = BackgroundSections.Last().RowIndex;
+                for (int i = 0; i < BackgroundSections.Count; i++)
+                {
+                    float alpha = BackgroundSections[i].RowIndex / maxRow;
+                    IncreaseSectionColorOrStrength(BackgroundSections[i], BackgroundSections[i].DirtColor, dirtyVal * alpha, requiresUpdate: requiresUpdate, isCleaning: false);
+                }
+            }
+            else
+            {
+                DirtySections(BackgroundSections, dirtyVal, requiresUpdate);
+            }
+        }
+
+        /// <summary>
+        /// Makes the specified sections more dirty.
+        /// </summary>
+        /// <param name="dirtyVal">Amount of dirtiness to add. 1 represents maximum dirtiness.</param>
+        /// <param name="requiresUpdate">Should a network event be created to update the server/clients about this change?</param>
+        public void DirtySections(List<BackgroundSection> sections, float dirtyVal, bool requiresUpdate)
+        {
+            if (sections == null) { return; }
+            for (int i = 0; i < sections.Count; i++)
+            {
+                IncreaseSectionColorOrStrength(sections[i], sections[i].DirtColor, dirtyVal, requiresUpdate: requiresUpdate, isCleaning: false);
+            }
+        }
+
+        private void RefreshAveragePaintedColorAndDirtiness()
+        {
+            if (BackgroundSections.Count == 0)
+            {
+                AveragePaintedColor = Color.Transparent;
+                AverageDirtiness = 0.0f;
+                return;
+            }
+
             Vector4 avgColor = Vector4.Zero;
+            float avgDirtiness = 0.0f;
             foreach (var anySection in BackgroundSections)
             {
                 avgColor += anySection.Color.ToVector4();
+                //This is somewhat hacky, since we only consider the section to be dirty if the color matches exactly,
+                //not if the section has been painted and is somewhere between the painted color and the dirty color.
+                //But seems to work well enough in practice
+                if (anySection.Color == anySection.DirtColor)
+                {
+                    avgDirtiness += anySection.ColorStrength / maxColorStrength;
+                }
             }
             avgColor /= BackgroundSections.Count;
             AveragePaintedColor = new Color(avgColor);
+            AverageDirtiness = avgDirtiness / BackgroundSections.Count;
         }
 
         public void SetSectionColorOrStrength(BackgroundSection section, Color? color, float? strength)
@@ -1711,12 +1793,12 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "decal":
-                        string id = subElement.GetAttributeString("id", "");
+                        Identifier id = subElement.GetAttributeIdentifier("id", "");
                         Vector2 pos = subElement.GetAttributeVector2("pos", Vector2.Zero);
                         float scale = subElement.GetAttributeFloat("scale", 1.0f);
                         float timer = subElement.GetAttributeFloat("timer", 1.0f);
                         float baseAlpha = subElement.GetAttributeFloat("alpha", 1.0f);
-                        var decal = hull.AddDecal(id, pos + hull.WorldRect.Location.ToVector2(), scale, true);
+                        var decal = hull.AddDecal(id, pos + hull.WorldRect.Location.ToVector2(), scale, isNetworkEvent: true, multiplyByPrefabScale: false);
                         if (decal != null)
                         {
                             decal.FadeTimer = timer;
@@ -1751,7 +1833,7 @@ namespace Barotrauma
                     }
                 }
             }
-            hull.RefreshAveragePaintedColor();
+            hull.RefreshAveragePaintedColorAndDirtiness();
 
             SerializableProperty.DeserializeProperties(hull, element);
             if (element.GetAttribute("oxygen") == null) { hull.Oxygen = hull.Volume; }
@@ -1780,11 +1862,7 @@ namespace Barotrauma
                 new XAttribute("water", waterVolume)
             );
 
-            if (linkedTo != null && linkedTo.Count > 0)
-            {
-                var saveableLinked = linkedTo.Where(l => l.ShouldBeSaved && (l.Removed == Removed)).ToList();
-                element.Add(new XAttribute("linked", string.Join(",", saveableLinked.Select(l => l.ID.ToString()))));
-            }
+            SaveLinkedEntities(element);
 
             if (OriginalAmbientLight != null)
             {
@@ -1821,6 +1899,12 @@ namespace Barotrauma
         public override string ToString()
         {
             return $"{base.ToString()} ({DisplayName ?? "unnamed"}, {(Submarine?.Info?.Name ?? "no sub")})";
+        }
+
+        public new static void CleanUpStaticReferences()
+        {
+            cachedDistances.Clear();
+            priorityQueue.Clear();
         }
     }
 }

@@ -2,11 +2,10 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
-    class AIObjectiveFindThieves : AIObjectiveLoop<Character>
+    public class AIObjectiveFindThieves : AIObjectiveLoop<Character>
     {
         public override Identifier Identifier { get; set; } = "find thieves".ToIdentifier();
         protected override float IgnoreListClearInterval => 30;
@@ -67,13 +66,17 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// When did the character last inspect whether some other character has stolen items on them?
+        /// When did some character last inspect whether some other character has stolen items on them?
         /// </summary>
         private static readonly Dictionary<Character, double> lastInspectionTimes = new Dictionary<Character, double>();
         
         private const float NormalInspectionInterval = 120.0f;
         private const float CriminalInspectionInterval = 30.0f;
-        
+
+        protected override bool RequireReports => false;
+
+        protected override bool RequireBothHandsAvailable => true;
+
         public AIObjectiveFindThieves(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier) { }
 
@@ -135,15 +138,16 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);
+            if (!IsAllowed)
+            {
+                // The objective might be disallowed (e.g. missing hands) -> don't continue (the other looping objectives don't need this check, because they don't override the update method.
+                // Note: don't check Priority here, because it's 0 whenever there's no pat-down subobjective, which would prevent spotting the stolen items in plain view.
+                return;
+            }
             if (checkVisibleStolenItemsTimer > 0.0f || character.IsClimbing)
             {
                 checkVisibleStolenItemsTimer -= deltaTime;
                 return;
-            }
-            if (character.SelectedSecondaryItem?.GetComponent<Controller>() != null)
-            {
-                // Might be e.g. sitting on a chair.
-                character.SelectedSecondaryItem = null;
             }
             if (HumanAIController.CurrentHullSafety >= HumanAIController.HULL_SAFETY_THRESHOLD)
             {
@@ -185,6 +189,8 @@ namespace Barotrauma
             if (character.OriginalTeamID == target.TeamID || character.TeamID == target.TeamID) { return false; }
             // Ignore targets that are climbing, because might need to use ladders to get to them.
             if (target.IsClimbing) { return false; }
+            // Don't interrupt players who are in the middle of a conversation.
+            if (ConversationAction.IsConversationOpenFor(target)) { return false; }
             if (HumanAIController.IsTrueForAnyBotInTheCrew(bot => 
                     bot != HumanAIController &&
                     ((bot.ObjectiveManager.GetActiveObjective() is AIObjectiveCheckStolenItems checkObj && checkObj.Target == target) ||
@@ -215,6 +221,11 @@ namespace Barotrauma
         {
             base.OnDeselected();
             character.DeselectCharacter();
+        }
+
+        public static void CleanUpStaticReferences()
+        {
+            lastInspectionTimes.Clear();
         }
     }
 }

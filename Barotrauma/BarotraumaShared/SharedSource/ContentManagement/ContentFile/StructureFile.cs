@@ -3,7 +3,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
     [RequiredByCorePackage]
-    sealed class StructureFile : GenericPrefabFile<StructurePrefab>
+    public sealed class StructureFile : GenericPrefabFile<StructurePrefab>
     {
         public StructureFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

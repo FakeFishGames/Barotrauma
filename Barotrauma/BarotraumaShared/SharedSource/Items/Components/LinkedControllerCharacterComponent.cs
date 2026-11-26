@@ -35,7 +35,7 @@ namespace Barotrauma.Items.Components
         private readonly ImmutableArray<SpriteOverride> spriteOverrides;
 #endif
 
-        [Serialize(0.5f, IsPropertySaveable.No, description: $"Maximum value which {nameof(DeconstructTimeMultiplier)} can be.")]
+        [Serialize(0.5f, IsPropertySaveable.No, description: $"Lower limit of the deconstruction time reduction caused by the character missing limbs. For example, 0.25 means missing limbs can reduce the time to 25% at most. Doesn't limit the character's own {nameof(CharacterParams.DeconstructTimeMultiplier)}.")]
         public float MaxDeconstructTimeMultiplier
         {
             get;
@@ -77,6 +77,8 @@ namespace Barotrauma.Items.Components
         {
             Character = character;
 
+            //recalculated from scratch on every call, so repeated calls don't stack the multipliers
+            DeconstructTimeMultiplier = 1f;
             if (character != null)
             {
                 var animController = character.AnimController;
@@ -85,6 +87,8 @@ namespace Barotrauma.Items.Components
 
                 // Decrease deconstruction time if the character is missing some limbs
                 DeconstructTimeMultiplier *= MathF.Max(MaxDeconstructTimeMultiplier, nonSeveredLimbs / totalLimbs);
+                // Per-character multiplier defined in the character XML
+                DeconstructTimeMultiplier *= character.Params.DeconstructTimeMultiplier;
             }
 
 #if CLIENT
@@ -92,7 +96,7 @@ namespace Barotrauma.Items.Components
             {
                 SpriteOverride? spriteOverride =
                     spriteOverrides.Where(s => s.SpeciesName == character.SpeciesName).FirstOrDefault()
-                    ?? spriteOverrides.Where(s => s.SpeciesGroup == character.Group).FirstOrDefault();
+                    ?? spriteOverrides.Where(s => !character.Group.IsEmpty && s.SpeciesGroup == character.Group).FirstOrDefault();
                 
                 if (spriteOverride != null)
                 {

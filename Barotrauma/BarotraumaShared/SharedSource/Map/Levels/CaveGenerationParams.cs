@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class CaveGenerationParams : PrefabWithUintIdentifier, ISerializableEntity
+    public class CaveGenerationParams : PrefabWithUintIdentifier, ISerializableEntity
     {
         public readonly static PrefabCollection<CaveGenerationParams> CaveParams = new PrefabCollection<CaveGenerationParams>();
 

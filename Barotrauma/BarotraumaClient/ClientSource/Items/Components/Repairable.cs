@@ -86,7 +86,9 @@ namespace Barotrauma.Items.Components
                 {
                     case "emitter":
                     case "particleemitter":
-                        particleEmitters.Add(new ParticleEmitter(subElement));
+                        var emitter = new ParticleEmitter(subElement);
+                        particleEmitters.Add(emitter);
+                        TryAddParticleEmitterByID(emitter);
                         float minCondition = subElement.GetAttributeFloat("mincondition", 0.0f);
                         float maxCondition = subElement.GetAttributeFloat("maxcondition", 100.0f);
 

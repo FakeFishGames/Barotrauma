@@ -6,7 +6,7 @@ using Barotrauma.Networking;
 
 namespace Barotrauma
 {
-    internal partial class ReadyCheck
+    public partial class ReadyCheck
     {
         private static List<Client> ActivePlayers => GameMain.Server.ConnectedClients.Where(c => c != null && !c.Spectating && c.InGame).ToList();
 

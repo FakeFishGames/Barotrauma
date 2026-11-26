@@ -2,7 +2,7 @@
   <Item
     name="Oxygen Dispenser Test"
     identifier="oxygendispensertest"
-    tags="oxygengenerator,refuelableitem,donttakeitemstorefill"
+    tags="oxygengenerator,refuelableitem,donttakeitemsunlessemergency"
     category="Machine"
     scale="0.5"
     isshootable="true" GrabWhenSelected="true">

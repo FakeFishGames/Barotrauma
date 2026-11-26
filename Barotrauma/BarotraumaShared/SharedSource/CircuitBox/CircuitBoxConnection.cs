@@ -6,8 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-
-    internal class CircuitBoxInputConnection : CircuitBoxConnection
+    public class CircuitBoxInputConnection : CircuitBoxConnection
     {
         /// <summary>
         /// Circuit box input connection is classified as an output because it behaves like an output inside the circuit box.
@@ -32,7 +31,7 @@ namespace Barotrauma
         }
     }
 
-    internal class CircuitBoxOutputConnection : CircuitBoxConnection
+    public class CircuitBoxOutputConnection : CircuitBoxConnection
     {
         /// <summary>
         /// Circuit box output connection is classified as an input because it behaves like an input inside the circuit box.
@@ -61,7 +60,7 @@ namespace Barotrauma
         public override void ReceiveSignal(Signal signal) => Connection.SendSignalIntoConnection(signal, Connection);
     }
 
-    internal abstract partial class CircuitBoxConnection
+    public abstract partial class CircuitBoxConnection
     {
         public readonly Connection Connection;
 

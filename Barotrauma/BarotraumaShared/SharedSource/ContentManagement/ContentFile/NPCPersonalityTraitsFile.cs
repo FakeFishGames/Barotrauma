@@ -1,6 +1,6 @@
 namespace Barotrauma
 {
-    sealed class NPCPersonalityTraitsFile : GenericPrefabFile<NPCPersonalityTrait>
+    public sealed class NPCPersonalityTraitsFile : GenericPrefabFile<NPCPersonalityTrait>
     {
         public NPCPersonalityTraitsFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

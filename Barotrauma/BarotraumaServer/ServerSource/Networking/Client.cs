@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    partial class Client : IDisposable
+    public partial class Client : IDisposable
     {
         public bool VoiceEnabled = true;
 
@@ -55,7 +55,9 @@ namespace Barotrauma.Networking
         //how many unique events the client missed before joining the server
         public UInt16 UnreceivedEntityEventCount;
         public UInt16 FirstNewEventID;
-        
+
+        public bool HasJoinedRoundDelegateFired;
+
         //when was a specific entity event last sent to the client
         //  key = event id, value = NetTime.Now when sending
         public readonly Dictionary<UInt16, double> EntityEventLastSent = new Dictionary<UInt16, double>();
@@ -150,8 +152,8 @@ namespace Barotrauma.Networking
             VoipServerDecoder = new VoipServerDecoder(VoipQueue, this);
             GameMain.Server.VoipServer.RegisterQueue(VoipQueue);
 
-            //initialize to infinity, gets set to a proper value when initializing midround syncing
-            MidRoundSyncTimeOut = double.PositiveInfinity;
+            //initialize to 0, gets set to a proper value (current time + timeout) when initializing midround syncing
+            MidRoundSyncTimeOut = 0.0f;
 
             JoinTime = DateTime.Now;
         }
@@ -262,7 +264,7 @@ namespace Barotrauma.Networking
         }
 
 
-        public void SetPermissions(ClientPermissions permissions, IEnumerable<DebugConsole.Command> permittedConsoleCommands)
+        internal void SetPermissions(ClientPermissions permissions, IEnumerable<DebugConsole.Command> permittedConsoleCommands)
         {
             Permissions = permissions;
             PermittedConsoleCommands.Clear();

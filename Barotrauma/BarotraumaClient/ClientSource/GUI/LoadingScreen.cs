@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    sealed class LoadingScreen
+    public sealed class LoadingScreen
     {
         private readonly Sprite defaultBackgroundTexture, overlay;
         private readonly SpriteSheet decorativeGraph, decorativeMap;

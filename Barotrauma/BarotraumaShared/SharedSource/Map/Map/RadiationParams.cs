@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    internal class RadiationParams: ISerializableEntity
+    public class RadiationParams: ISerializableEntity
     {
         public string Name => nameof(RadiationParams);
         public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; }

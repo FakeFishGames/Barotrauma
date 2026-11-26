@@ -4,10 +4,10 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveDeconstructItem : AIObjective
+    public class AIObjectiveDeconstructItem : AIObjective
     {
         public override Identifier Identifier { get; set; } = "deconstruct item".ToIdentifier();
-        protected override bool AllowWhileHandcuffed => false;
+        protected override bool RequireOneHandAvailable => true;
 
         protected override bool AllowInFriendlySubs => true;
 
@@ -91,6 +91,7 @@ namespace Barotrauma
             float bestDistFactor = 0;
             foreach (var otherItem in Item.ItemList)
             {
+                if (otherItem.Submarine == null || !character.IsOnFriendlyTeam(otherItem.Submarine.TeamID)) { continue; }
                 var potentialDeconstructor = otherItem.GetComponent<Deconstructor>();
                 if (potentialDeconstructor?.InputContainer == null) { continue; }
                 if (!potentialDeconstructor.InputContainer.Inventory.CanBePut(Item)) { continue; }
@@ -100,6 +101,8 @@ namespace Barotrauma
                 { 
                     continue; 
                 }
+                //in some remote sub, not connected to current sub -> do not try to swim there!
+                if (character.Submarine != null && !character.Submarine.GetConnectedSubs().Contains(otherItem.Submarine)) { continue; }
                 float distFactor = GetDistanceFactor(Item.WorldPosition, potentialDeconstructor.Item.WorldPosition, factorAtMaxDistance: 0.2f);
                 if (distFactor > bestDistFactor)
                 {

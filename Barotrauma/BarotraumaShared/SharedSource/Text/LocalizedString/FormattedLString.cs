@@ -16,6 +16,7 @@ namespace Barotrauma
         }
 
         public override bool Loaded => str.Loaded && subStrs.All(s => s.Loaded);
+        public override bool UsingDefaultLanguageAsFallback => CombinedUsingDefaultLanguageAsFallback(subStrs.Prepend(str));
         public override void RetrieveValue()
         {
             //TODO: possibly broken!

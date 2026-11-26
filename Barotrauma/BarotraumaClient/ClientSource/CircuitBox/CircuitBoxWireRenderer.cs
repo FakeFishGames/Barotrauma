@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    internal class CircuitBoxWireRenderer
+    public class CircuitBoxWireRenderer
     {
         private const int VertsPerQuad = 4, // how many points per quad
                           QuadsPerLine = 10, // how many quads per line

@@ -23,13 +23,15 @@ namespace Barotrauma
 
         public readonly Color Color;
         public readonly Color HoverColor;
-        public readonly Color SelectedColor;
         public readonly Color PressedColor;
+        public readonly Color SelectedColor;
         public readonly Color DisabledColor;
 
         public readonly Color TextColor;
         public readonly Color HoverTextColor;
+        public readonly Color PressedTextColor;
         public readonly Color SelectedTextColor;
+        public readonly Color HoverSelectedTextColor;
         public readonly Color DisabledTextColor;
 
         public readonly float SpriteCrossFadeTime;
@@ -103,10 +105,13 @@ namespace Barotrauma
             PressedColor = element.GetAttributeColor("pressedcolor", Color);
             OutlineColor = element.GetAttributeColor("outlinecolor", Color.Transparent);
 
-            TextColor = element.GetAttributeColor("textcolor", Color.Black);
-            HoverTextColor = element.GetAttributeColor("hovertextcolor", TextColor);
-            DisabledTextColor = element.GetAttributeColor("disabledtextcolor", TextColor);
-            SelectedTextColor = element.GetAttributeColor("selectedtextcolor", TextColor);
+            TextColor = element.GetAttributeColor(nameof(TextColor), Color.Black);
+            HoverTextColor = element.GetAttributeColor(nameof(HoverTextColor), TextColor);
+            PressedTextColor = element.GetAttributeColor(nameof(PressedTextColor), TextColor);
+            SelectedTextColor = element.GetAttributeColor(nameof(SelectedTextColor), TextColor);
+            HoverSelectedTextColor = element.GetAttributeColor(nameof(HoverSelectedTextColor), HoverTextColor);
+            DisabledTextColor = element.GetAttributeColor(nameof(DisabledTextColor), TextColor);
+
             SpriteCrossFadeTime = element.GetAttributeFloat("spritefadetime", SpriteCrossFadeTime);
             ColorCrossFadeTime = element.GetAttributeFloat("colorfadetime", ColorCrossFadeTime);
 

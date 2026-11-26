@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class CharacterHUD
+    public partial class CharacterHUD
     {        
         abstract class ProgressBar
         {
@@ -73,11 +73,13 @@ namespace Barotrauma
                         { AbsoluteOffset = new Point(2) }, 
                         string.Empty, textAlignment: Alignment.Center, textColor: GUIStyle.TextColorDark)
                     {
+                        CanBeFocused = false,
                         TextGetter = () => NumberToDisplay
                     };
                     new GUITextBlock(new RectTransform(Vector2.One, parent.RectTransform), 
                         string.Empty, textAlignment: Alignment.Center, textColor: GUIStyle.TextColorBright)
                     {
+                        CanBeFocused = false,
                         TextGetter = () => NumberToDisplay
                     };
                 }
@@ -187,16 +189,43 @@ namespace Barotrauma
             GameMain.GameSession?.Campaign != null && 
             (GameMain.GameSession.Campaign.ShowCampaignUI || GameMain.GameSession.Campaign.ForceMapUI);
 
+        private static double hideHUDUntil;
+
+        /// <summary>
+        /// Temporarily hides the HUD. Must be called continuously to keep the HUD closed (the HUD automatically reopens after 0.1s)
+        /// </summary>
+        public static bool HideHUD
+        {
+            get => hideHUDUntil >= Timing.TotalTime;
+            set
+            {
+                hideHUDUntil = value ? Timing.TotalTime + 0.1 : 0.0;
+            }
+        }
+
         public static bool ShouldDrawInventory(Character character)
         {
-            var controller = character.SelectedItem?.GetComponent<Controller>();
+            if (character?.Inventory == null || character.Removed) { return false; }
 
-            return 
-                character?.Inventory != null && 
-                !character.Removed && !character.IsKnockedDown &&
-                (controller?.User != character || !controller.HideHUD || Screen.Selected.IsEditor) &&
-                !IsCampaignInterfaceOpen &&
-                !ConversationAction.FadeScreenToBlack;
+            if (HideHUD || 
+                IsCampaignInterfaceOpen || 
+                ConversationAction.FadeScreenToBlack || 
+                (Screen.Selected is GameScreen { ForceFadeToBlack: true })) 
+            { 
+                return false; 
+            }
+
+            if (Character.Controlled != null && character == Character.Controlled.SelectedCharacter)
+            {
+                return Character.Controlled.CanAccessInventory(character.Inventory);
+            }
+            else
+            {
+                var controller = character.SelectedItem?.GetComponent<Controller>();
+                return
+                    !character.Removed && !character.IsKnockedDown &&
+                    (controller?.User != character || !controller.HideHUD || Screen.Selected.IsEditor);
+            }
         }
 
         public static LocalizedString GetCachedHudText(string textTag, InputType keyBind)
@@ -219,7 +248,8 @@ namespace Barotrauma
             
             if (!character.IsIncapacitated && character.Stun <= 0.0f && !IsCampaignInterfaceOpen)
             {
-                if (character.Inventory != null)
+                // Equipped items' HUDs are hidden along with the rest of the HUD
+                if (character.Inventory != null && !HideHUD)
                 {
                     for (int i = 0; i < character.Inventory.Capacity; i++)
                     {
@@ -281,7 +311,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        character.Inventory.ClearSubInventories();
+                        character.Inventory.ClearInventoryHighlights();
                     }
                 }
 
@@ -595,25 +625,28 @@ namespace Barotrauma
                 }
             }
 
-            if (character.SelectedItem != null && 
-                (character.CanInteractWith(character.SelectedItem) || Screen.Selected == GameMain.SubEditorScreen))
+            if (!HideHUD)
             {
-                character.SelectedItem.DrawHUD(spriteBatch, cam, character);
-            }
-            if (character.Inventory != null)
-            {
-                foreach (Item item in character.Inventory.AllItems)
+                if (character.SelectedItem != null && 
+                    (character.CanInteractWith(character.SelectedItem) || Screen.Selected == GameMain.SubEditorScreen))
                 {
-                    if (character.HasEquippedItem(item))
+                    character.SelectedItem.DrawHUD(spriteBatch, cam, character);
+                }
+                if (character.Inventory != null)
+                {
+                    foreach (Item item in character.Inventory.AllItems)
                     {
-                        item.DrawHUD(spriteBatch, cam, character);
+                        if (character.HasEquippedItem(item))
+                        {
+                            item.DrawHUD(spriteBatch, cam, character);
+                        }
                     }
                 }
             }
 
             if (IsCampaignInterfaceOpen) { return; }
 
-            if (character.Inventory != null)
+            if (character.Inventory != null && !HideHUD)
             {
                 for (int i = 0; i < character.Inventory.Capacity; i++)
                 {
@@ -702,7 +735,8 @@ namespace Barotrauma
                 GUIComponent.DrawToolTip(
                     spriteBatch,
                     character.Info?.Job == null ? character.DisplayName : character.DisplayName + " (" + character.Info.Job.Name + ")",
-                    HUDLayoutSettings.PortraitArea);
+                    HUDLayoutSettings.PortraitArea,
+                    Anchor.BottomLeft, Pivot.BottomRight);
             }
         }
 
@@ -723,8 +757,9 @@ namespace Barotrauma
                 foreach (Item item in allItems)
                 {
                     var statusHUD = item?.GetComponent<StatusHUD>();
-                    if (statusHUD != null && statusHUD.IsActive && statusHUD.VisibleCharacters.Contains(character.FocusedCharacter))
+                    if (statusHUD is { IsActive: true, ShowTexts: true } && statusHUD.VisibleCharacters.Contains(character.FocusedCharacter))
                     {
+                        // When StatusHUD.ShowTexts is true, the interaction hints are drawn in StatusHUD.DrawCharacterHealthStateInfo, so let's not draw them here.
                         return;
                     }
                 }
@@ -859,6 +894,18 @@ namespace Barotrauma
 
                 if (bossHealthBar.TopContainer.Visible)
                 {
+                    if (GameMain.GameSession?.Campaign?.EndRoundButton is { Visible: true } endRoundButton)
+                    {
+                        bossHealthBar.TopContainer.RectTransform.AbsoluteOffset = new Point(0, (int)(endRoundButton.Rect.Height * 1.5f));
+                    }
+                    else if (Character.Controlled?.CharacterHealth.SuicideButton is { Visible: true } suicideButton)
+                    {
+                        bossHealthBar.TopContainer.RectTransform.AbsoluteOffset = new Point(0, (int)(suicideButton.Rect.Height * 1.5f));
+                    }
+                    else
+                    {
+                        bossHealthBar.TopContainer.RectTransform.AbsoluteOffset = new Point(0);
+                    }
                     SetColor(bossHealthBar, bossHealthBar.TopContainer, alpha);
                 }
                 if (bossHealthBar.SideContainer.Visible)
@@ -903,7 +950,7 @@ namespace Barotrauma
 
         private static bool LockInventory(Character character)
         {
-            if (character?.Inventory == null || !character.AllowInput || character.LockHands || IsCampaignInterfaceOpen) { return true; }
+            if (character?.Inventory == null || !character.AllowInput || character.BothHandsDisabled || IsCampaignInterfaceOpen) { return true; }
             return character.ShouldLockHud();
         }
 
@@ -962,6 +1009,12 @@ namespace Barotrauma
                     break;
                 }
             }
+        }
+
+        public static void CleanUpStaticReferences()
+        {
+            focusedItem = null;
+            orderIndicatorCount.Clear();
         }
     }
 }

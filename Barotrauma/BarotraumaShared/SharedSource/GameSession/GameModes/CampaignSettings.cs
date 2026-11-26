@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    internal class CampaignSettings : INetSerializableStruct, ISerializableEntity
+    public class CampaignSettings : INetSerializableStruct, ISerializableEntity
     {
         public static CampaignSettings Empty => new CampaignSettings(element: null);
 

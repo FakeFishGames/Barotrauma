@@ -10,8 +10,6 @@ namespace Barotrauma.Networking
         
         public override string StringRepresentation { get; }
 
-        public override string EosStringRepresentation => Value.ToString(CultureInfo.InvariantCulture);
-
         /// Based on information found here: https://developer.valvesoftware.com/wiki/SteamID
         /// ------------------------------------------------------------------------------------
         /// A SteamID is a 64-bit value (16 hexadecimal digits) that's broken up as follows:

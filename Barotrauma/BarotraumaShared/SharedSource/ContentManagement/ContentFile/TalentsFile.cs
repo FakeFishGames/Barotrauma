@@ -3,7 +3,7 @@
 namespace Barotrauma
 {
     [RequiredByCorePackage]
-    sealed class TalentsFile : GenericPrefabFile<TalentPrefab>
+    public sealed class TalentsFile : GenericPrefabFile<TalentPrefab>
     {
         public TalentsFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

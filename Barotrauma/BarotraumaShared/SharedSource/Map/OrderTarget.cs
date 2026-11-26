@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    class OrderTarget : ISpatialEntity
+    public class OrderTarget : ISpatialEntity
     {
         public Vector2 Position { get; private set; }
         public Hull Hull { get; private set; }

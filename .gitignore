@@ -52,6 +52,8 @@ temp.txt
 
 # Private assets
 Barotrauma/BarotraumaShared/Content/*
+Barotrauma/BarotraumaShared/LocalMods/*
+DLC/Home & Harbor/SharedSource/Content/*
 Barotrauma/**/GameAnalyticsKeys.cs
 Deploy/DeployAll/PrivateKey.*
 .github/ISSUE_TEMPLATE/release-checklist.md

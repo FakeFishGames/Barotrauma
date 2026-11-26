@@ -9,6 +9,21 @@ namespace Barotrauma;
 
 partial class Item
 {
+    private readonly struct SayMessageEventData : IEventData
+    {
+        public EventType EventType => EventType.SayMessage;
+        public readonly string Message;
+        public readonly bool SayInRadio;
+        public readonly Client? IgnoredClient;
+
+        public SayMessageEventData(string message, bool radio, Client? ignoredClient)
+        {
+            Message = message;
+            SayInRadio = radio;
+            IgnoredClient = ignoredClient;
+        }
+    }
+
     private readonly struct DroppedStackEventData : IEventData
     {
         public EventType EventType => EventType.DroppedStack;

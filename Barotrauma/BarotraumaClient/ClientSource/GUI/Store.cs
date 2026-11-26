@@ -1,17 +1,16 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
-using Microsoft.Xna.Framework.Input;
 using PlayerBalanceElement = Barotrauma.CampaignUI.PlayerBalanceElement;
 
 namespace Barotrauma
 {
-    class Store
+    public class Store
     {
         class ItemQuantity
         {
@@ -72,6 +71,10 @@ namespace Barotrauma
 
         private Dictionary<ItemPrefab, ItemQuantity> OwnedItems { get; } = new Dictionary<ItemPrefab, ItemQuantity>();
         private Location.StoreInfo ActiveStore { get; set; }
+        /// <summary>
+        /// The merchant whose store was last selected, so the store can be selected again when the location's stores are replaced (see <see cref="RefreshActiveStore"/>).
+        /// </summary>
+        private Character activeMerchant;
 
         private CargoManager CargoManager => campaignUI.Campaign.CargoManager;
         private Location CurrentLocation => campaignUI.Campaign.Map?.CurrentLocation;
@@ -212,22 +215,22 @@ namespace Barotrauma
 
         public void SelectStore(Character merchant)
         {
+            activeMerchant = merchant;
             Identifier storeIdentifier = merchant?.MerchantIdentifier ?? Identifier.Empty;
             if (CurrentLocation?.Stores != null)
             {
                 if (!storeIdentifier.IsEmpty && CurrentLocation.GetStore(storeIdentifier) is { } store)
                 {
                     ActiveStore = store;
-                    if (storeNameBlock != null)
-                    {
-                        var storeName = TextManager.Get($"storename.{store.Identifier}");
-                        if (storeName.IsNullOrEmpty())
-                        {
-                            storeName = TextManager.Get("store");
-                        } 
-                        storeNameBlock.SetRichText(storeName);
-                    }
+                    storeNameBlock?.SetRichText(store.DisplayName);
                     ActiveStore.SetMerchantFaction(merchant.Faction);
+                }
+                else if (!storeIdentifier.IsEmpty && GameMain.NetworkMember is { IsClient: true })
+                {
+                    // Note: Only checked on the client because in MP this is not necessarily an error. The server may not have sent the
+                    // store yet (if it was created mid-round), in which case it gets selected once it arrives (see RefreshActiveStore).
+                    ActiveStore = null;
+                    DebugConsole.Log($"Store with the identifier \"{storeIdentifier}\" doesn't exist at {CurrentLocation}, it may not have been received from the server yet.");
                 }
                 else
                 {
@@ -264,7 +267,8 @@ namespace Barotrauma
                 else if (CurrentLocation.Stores == null)
                 {
                     errorId = "Store.SelectStore:StoresNull";
-                    msg = $"Error selecting store with identifier \"{storeIdentifier}\": CurrentLocation.Stores is null.";
+                    msg = $"Error selecting store with identifier \"{storeIdentifier}\": CurrentLocation.Stores is null (location type: {CurrentLocation.Type.Identifier},"+
+                            $" original type: {((CurrentLocation.OriginalType ?? CurrentLocation.Type).Identifier)}).";
                 }
                 if (!msg.IsNullOrEmpty())
                 {
@@ -274,6 +278,36 @@ namespace Barotrauma
             }
             RefreshItemsToSell();
             Refresh();
+        }
+
+        /// <summary>
+        /// Find the active store again after the location's stores have been replaced (eg. by the server), so the UI doesn't keep using the old one.
+        /// </summary>
+        public void RefreshActiveStore()
+        {
+            if (activeMerchant is { Removed: false })
+            {
+                // Select by the merchant, so this also works if the store didn't exist yet when the UI was opened (eg. hadn't been received from the server)
+                if (CurrentLocation?.GetStore(activeMerchant.MerchantIdentifier) != null)
+                {
+                    SelectStore(activeMerchant);
+                    return;
+                }
+            }
+            else if (ActiveStore != null && CurrentLocation?.GetStore(ActiveStore.Identifier) is { } store)
+            {
+                ActiveStore = store;
+                needsRefresh = true;
+                return;
+            }
+
+            if (ActiveStore == null) { return; }
+            ActiveStore = null;
+            if (campaignUI.Campaign.ShowCampaignUI && campaignUI.SelectedTab == CampaignMode.InteractionType.Store)
+            {
+                // The store doesn't exist anymore but the UI is open, close it
+                campaignUI.Campaign.ShowCampaignUI = false;
+            }
         }
 
         public void Refresh(bool updateOwned = true)
@@ -554,7 +588,7 @@ namespace Barotrauma
                 Stretch = true
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), filterGroup.RectTransform), TextManager.Get("serverlog.filter"));
-            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), filterGroup.RectTransform), createClearButton: true);
+            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), filterGroup.RectTransform), createClearButton: true) { OverflowClip = true };
             searchBox.OnTextChanged += (textBox, text) => { FilterStoreItems(null, text); return true; };
 
             var storeItemListContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.92f), sortFilterListContainer.RectTransform), style: null);
@@ -708,6 +742,21 @@ namespace Barotrauma
             var dealsIcon = new GUIImage(new RectTransform(new Vector2(iconWidth, 0.9f), dealsHeader.RectTransform), "StoreDealIcon", scaleToFit: true);
             var text = TextManager.Get(parentList == storeBuyList ? "campaignstore.dailyspecials" : "campaignstore.requestedgoods");
             var dealsText = new GUITextBlock(new RectTransform(new Vector2(1.0f - iconWidth, 0.9f), dealsHeader.RectTransform), text, font: GUIStyle.LargeFont);
+
+            var infoBtn = new GUIButton(new RectTransform(new Vector2(0.5f), dealsText.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.Smallest), style: "GUIButtonInfo");
+            infoBtn.OnAddedToGUIUpdateList += (GUIComponent component) =>
+            {
+                if (CurrentLocation == null || ActiveStore is not Location.StoreInfo activeStore) 
+                { 
+                    component.ToolTip = LocalizedString.EmptyString;
+                    return;
+                }
+                component.ToolTip = TextManager.GetWithVariable("campaignstore.dailyspecials.info",
+                    "[worldsteps]",
+                    Math.Max(Location.SpecialsUpdateInterval - activeStore.StepsSinceSpecialsUpdated, 0).ToString());
+            };
+            infoBtn.PressedColor = infoBtn.HoverColor;            
+
             storeSpecialColor = dealsIcon.Color;
             dealsText.TextColor = storeSpecialColor;
             var divider = new GUIImage(new RectTransform(new Point(dealsGroup.Rect.Width, 3), dealsGroup.RectTransform), "HorizontalLine")
@@ -860,6 +909,31 @@ namespace Barotrauma
             FilterStoreItems(category, searchBox.Text);
         }
 
+        /// <summary>
+        /// Which faction's reputation the item's reputation requirement is checked against?
+        /// The merchant's or the location's faction if the requirement is for those, otherwise the item's own faction at the location
+        /// (eg. a secondary faction selling their items in the outpost, see <see cref="Location.StoreInfo.MeetsPurchaseRequirements"/>).
+        /// </summary>
+        private Identifier GetReputationRequirementFaction(PriceInfo priceInfo)
+        {
+            Identifier merchantFaction = ActiveStore.GetMerchantOrLocationFactionIdentifier();
+            if (priceInfo.MinReputation.ContainsKey(merchantFaction))
+            {
+                return merchantFaction;
+            }
+
+            Location location = ActiveStore.Location;
+            foreach (Identifier faction in priceInfo.MinReputation.Keys)
+            {
+                if (faction == location.Faction?.Prefab.Identifier || faction == location.SecondaryFaction?.Prefab.Identifier)
+                {
+                    return faction;
+                }
+            }
+
+            return merchantFaction;
+        }
+
         private static float GetReputationRequirement(PriceInfo priceInfo, Identifier faction)
         {
             return priceInfo.MinReputation.GetValueOrDefault(faction);
@@ -885,8 +959,17 @@ namespace Barotrauma
             float prevBuyListScroll = storeBuyList.BarScroll;
             float prevShoppingCrateScroll = shoppingCrateBuyList.BarScroll;
 
-            int dailySpecialCount = ActiveStore?.DailySpecials.Count(s => s.CanCharacterBuy()) ?? 0;
-            if ((ActiveStore == null && storeDailySpecialsGroup != null) || (storeDailySpecialsGroup != null) != ActiveStore.DailySpecials.Any() || dailySpecialCount != prevDailySpecialCount)
+            int dailySpecialCount = ActiveStore?.DailySpecials
+                .Count(s => s.CanBeBoughtFrom(ActiveStore, out PriceInfo priceInfo) && s.CanCharacterBuy()) ?? 0;
+
+            // Check if we need to rebuild the daily specials group (refactored for clarity)
+            bool storeWasRemoved = ActiveStore == null && storeDailySpecialsGroup != null;
+            bool storeHasDailySpecials = dailySpecialCount > 0;
+            bool dailySpecialsGroupExists = storeDailySpecialsGroup != null;
+            bool dailySpecialsStateChanged = dailySpecialsGroupExists != storeHasDailySpecials;
+            bool dailySpecialCountChanged = dailySpecialCount != prevDailySpecialCount;
+
+            if (storeWasRemoved || dailySpecialsStateChanged || dailySpecialCountChanged)
             {
                 storeBuyList.RemoveChild(storeDailySpecialsGroup?.Parent);
                 if (ActiveStore != null && (storeDailySpecialsGroup == null || dailySpecialCount != prevDailySpecialCount))
@@ -912,6 +995,7 @@ namespace Barotrauma
                 }
                 foreach (ItemPrefab itemPrefab in ActiveStore.DailySpecials)
                 {
+                    //if an element for the item was created above already, no need to do it again
                     if (ActiveStore.Stock.Any(pi => pi.ItemPrefab == itemPrefab)) { continue; }
                     CreateOrUpdateItemFrame(itemPrefab, 0);
                 }
@@ -944,7 +1028,7 @@ namespace Barotrauma
                         SetPriceGetters(itemFrame, true);
                     }
 
-                    SetItemFrameStatus(itemFrame, hasPermissions && quantity > 0 && ReputationRequirementsMet(priceInfo, ActiveStore.GetMerchantOrLocationFactionIdentifier()));
+                    SetItemFrameStatus(itemFrame, hasPermissions && quantity > 0 && ReputationRequirementsMet(priceInfo, GetReputationRequirementFaction(priceInfo)));
                     existingItemFrames.Add(itemFrame);
                 }
             }
@@ -972,7 +1056,15 @@ namespace Barotrauma
             float prevShoppingCrateScroll = shoppingCrateSellList.BarScroll;
 
             int requestedGoodsCount = ActiveStore?.RequestedGoods.Count ?? 0;
-            if ((ActiveStore == null && storeRequestedGoodGroup != null) || (storeRequestedGoodGroup != null) != ActiveStore.RequestedGoods.Any() || requestedGoodsCount != prevRequestedGoodsCount)
+
+            // Check if we need to rebuild the requested goods group
+            bool storeWasRemoved = ActiveStore == null && storeRequestedGoodGroup != null;
+            bool storeHasRequestedGoods = ActiveStore?.RequestedGoods.Any() ?? false;
+            bool requestedGoodsGroupExists = storeRequestedGoodGroup != null;
+            bool requestedGoodsStateChanged = requestedGoodsGroupExists != storeHasRequestedGoods;
+            bool requestedGoodsCountChanged = requestedGoodsCount != prevRequestedGoodsCount;
+
+            if (storeWasRemoved || requestedGoodsStateChanged || requestedGoodsCountChanged)
             {
                 storeSellList.RemoveChild(storeRequestedGoodGroup?.Parent);
                 if (ActiveStore != null && (storeRequestedGoodGroup == null || requestedGoodsCount != prevRequestedGoodsCount))
@@ -1059,7 +1151,13 @@ namespace Barotrauma
             float prevShoppingCrateScroll = shoppingCrateSellFromSubList.BarScroll;
 
             int requestedGoodsCount = ActiveStore?.RequestedGoods.Count ?? 0;
-            if ((ActiveStore == null && storeRequestedSubGoodGroup != null) || (storeRequestedSubGoodGroup != null) != ActiveStore.RequestedGoods.Any() || requestedGoodsCount != prevSubRequestedGoodsCount)
+            //refresh if 
+            //1. "requested goods" group has been created, but there's no active store
+            if ((ActiveStore == null && storeRequestedSubGoodGroup != null) || 
+                //2. no "requested goods" group, but there are requested goods
+                (ActiveStore != null && (storeRequestedSubGoodGroup != null != ActiveStore.RequestedGoods.Any())) || 
+                //3. amount of requested goods has changed
+                requestedGoodsCount != prevSubRequestedGoodsCount)
             {
                 storeSellFromSubList.RemoveChild(storeRequestedSubGoodGroup?.Parent);
                 if (ActiveStore != null && (storeRequestedSubGoodGroup == null || requestedGoodsCount != prevSubRequestedGoodsCount))
@@ -1460,9 +1558,10 @@ namespace Barotrauma
                 PriceInfo priceInfo2 = item2.ItemPrefab.GetPriceInfo(ActiveStore);
                 if (priceInfo1 != null && priceInfo2 != null)
                 {
-                    Identifier faction = ActiveStore.GetMerchantOrLocationFactionIdentifier();
-                    float requiredReputation1 = ReputationRequirementsMet(priceInfo1, faction) ? 0.0f : GetReputationRequirement(priceInfo1, faction);
-                    float requiredReputation2 = ReputationRequirementsMet(priceInfo2, faction) ? 0.0f : GetReputationRequirement(priceInfo2, faction);
+                    Identifier faction1 = GetReputationRequirementFaction(priceInfo1);
+                    Identifier faction2 = GetReputationRequirementFaction(priceInfo2);
+                    float requiredReputation1 = ReputationRequirementsMet(priceInfo1, faction1) ? 0.0f : GetReputationRequirement(priceInfo1, faction1);
+                    float requiredReputation2 = ReputationRequirementsMet(priceInfo2, faction2) ? 0.0f : GetReputationRequirement(priceInfo2, faction2);
                     return requiredReputation1.CompareTo(requiredReputation2);
                 }
                 return 0;                
@@ -1679,7 +1778,7 @@ namespace Barotrauma
                     }, "", font: GUIStyle.SmallFont, textAlignment: Alignment.Center)
                 {
                     CanBeFocused = false,
-                    Strikethrough = new GUITextBlock.StrikethroughSettings(color: priceBlock.TextColor, expand: 1),
+                    Strikethrough = new Strikethrough(Expand: 1),
                     TextColor = priceBlock.TextColor,
                     UserData = "undiscountedprice"
                 };
@@ -1840,7 +1939,7 @@ namespace Barotrauma
             if (itemFrame.FindChild("undiscountedprice", recursive: true) is GUITextBlock undiscountedPriceBlock)
             {
                 undiscountedPriceBlock.TextColor = color;
-                undiscountedPriceBlock.Strikethrough.Color = color;
+                undiscountedPriceBlock.Strikethrough = undiscountedPriceBlock.Strikethrough.Value with { Color = color };
                 isDiscounted = true;
             }
             if (itemFrame.FindChild("price", recursive: true) is GUITextBlock priceBlock)
@@ -1939,7 +2038,7 @@ namespace Barotrauma
                     var campaign = GameMain.GameSession?.Campaign;
                     if (priceInfo != null && campaign != null)
                     {
-                        Identifier faction = ActiveStore.GetMerchantOrLocationFactionIdentifier();
+                        Identifier faction = GetReputationRequirementFaction(priceInfo);
                         float requiredReputation = GetReputationRequirement(priceInfo, faction);
                         if (requiredReputation > 0)
                         {

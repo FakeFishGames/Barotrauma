@@ -23,7 +23,9 @@ namespace Barotrauma
 
         public override ImmutableHashSet<Identifier> Tags => null;
 
-        public override ImmutableHashSet<Identifier> AllowedLinks => null;
+        private static readonly ImmutableHashSet<Identifier> allowedLinks = new HashSet<Identifier> { Barotrauma.Tags.DockingPort, Barotrauma.Tags.TurretAmmoSource }.ToImmutableHashSet();
+
+        public override ImmutableHashSet<Identifier> AllowedLinks => allowedLinks;
 
         public override MapEntityCategory Category => MapEntityCategory.Misc;
 
@@ -32,8 +34,13 @@ namespace Barotrauma
         public LinkedSubmarinePrefab(SubmarineInfo subInfo) : base(subInfo.Name.ToIdentifier())
         {
             this.subInfo = subInfo;
-
             Aliases = Name.Value.ToEnumerable().ToImmutableHashSet();
+        }
+
+        public static bool IsLinkedAllowed(MapEntity target)
+        {
+            if (target.Prefab == null || target is not Item targetItem) { return false; }
+            return targetItem.HasIdentifierOrTags(allowedLinks);
         }
 
         protected override void CreateInstance(Rectangle rect)
@@ -43,7 +50,7 @@ namespace Barotrauma
         }
     }
 
-    partial class LinkedSubmarine : MapEntity
+    public partial class LinkedSubmarine : MapEntity
     {
         private List<Vector2> wallVertices;
 
@@ -75,13 +82,7 @@ namespace Barotrauma
 
         private Vector2? positionRelativeToMainSub;
 
-        public override bool Linkable
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool Linkable => true;
 
         public int CargoCapacity { get; private set; }
         
@@ -89,9 +90,7 @@ namespace Barotrauma
             : base(null, submarine, id)
         {
             linkedToID = new List<ushort>();
-
             InsertToList();
-
             DebugConsole.Log("Created linked submarine (" + ID + ")");
         }
 
@@ -305,14 +304,14 @@ namespace Barotrauma
             DockingPort linkedPort = null;
             DockingPort myPort = null;
             
-            MapEntity linkedItem = linkedTo.FirstOrDefault(lt => (lt as Item)?.GetComponent<DockingPort>() != null);
-            if (linkedItem == null)
+            MapEntity linkedDockingPortItem = linkedTo.FirstOrDefault(lt => (lt as Item)?.GetComponent<DockingPort>() != null);
+            if (linkedDockingPortItem == null)
             {
                 linkedPort = DockingPort.List.FirstOrDefault(dp => dp.DockingTarget != null && dp.DockingTarget.Item.Submarine == sub);
             }
             else
             {
-                linkedPort = ((Item)linkedItem).GetComponent<DockingPort>();
+                linkedPort = ((Item)linkedDockingPortItem).GetComponent<DockingPort>();
             }
 
             if (linkedPort == null)
@@ -331,6 +330,8 @@ namespace Barotrauma
                     if (relativePos != Vector2.Zero)
                     {
                         positionRelativeToMainSub = relativePos;
+                        //needed to know which sub this one belongs to (e.g. to not consider outposts' linked subs as something the crew would leave behind)
+                        sub.Submarine = Submarine;
                     }
                     else
                     {
@@ -342,6 +343,21 @@ namespace Barotrauma
                     sub.Submarine = Submarine;
                 }
                 return; 
+            }
+
+            foreach (var linked in linkedTo)
+            {
+                if (linked is Item linkedItem && linkedItem.HasTag(Tags.TurretAmmoSource))
+                {
+                    foreach (var mySubItem in sub.GetItems(alsoFromConnectedSubs: false))
+                    {
+                        if (mySubItem.GetComponent<Turret>() != null)
+                        {
+                            if (!mySubItem.linkedTo.Contains(linked)) { mySubItem.linkedTo.Add(linked); }
+                            if (!linked.linkedTo.Contains(mySubItem)) { linked.linkedTo.Add(mySubItem); }
+                        }
+                    }
+                }
             }
 
             originalLinkedPort = linkedPort;
@@ -389,7 +405,7 @@ namespace Barotrauma
                     Vector2 offset = myPort.IsHorizontal ?
                         Vector2.UnitX * myPort.GetDir(linkedPort) :
                         Vector2.UnitY * myPort.GetDir(linkedPort);
-                    offset *= myPort.DockedDistance;
+                    offset *= myPort.DockedDistance * myPort.Item.Scale;
 
                     sub.SetPosition((linkedPort.Item.WorldPosition - portDiff) - offset);
 
@@ -458,14 +474,24 @@ namespace Barotrauma
                 saveElement = new XElement("LinkedSubmarine");
                 sub.SaveToXElement(saveElement);
             }
-            if (linkedTo.Any() || linkedToID.Any())
+            if (linkedTo.Any())
             {
-                var linkedPort = 
-                    linkedTo.FirstOrDefault(lt => (lt is Item item) && item.GetComponent<DockingPort>() != null) ?? 
-                    FindEntityByID(linkedToID.First()) as MapEntity;
-                if (linkedPort != null)
+                saveElement.SetAttributeValue("linkedto", string.Join(",", linkedTo.Select(l => l.ID)));
+            }
+            else if (linkedToID.Any())
+            {
+                List<MapEntity> linkedEntities = new List<MapEntity>();
+                foreach (ushort linkedId in linkedToID)
                 {
-                    saveElement.SetAttributeValue("linkedto", linkedPort.ID);
+                    MapEntity linkedEntity = FindEntityByID(linkedToID.First()) as MapEntity;
+                    if (linkedEntity != null)
+                    {
+                        linkedEntities.Add(linkedEntity);
+                    }
+                }
+                if (linkedEntities.Any())
+                {
+                    saveElement.SetAttributeValue("linkedto", string.Join(",", linkedEntities.Select(l => l.ID)));
                 }
             }
 
@@ -474,21 +500,7 @@ namespace Barotrauma
 
             if (sub != null)
             {
-                bool leaveBehind = false;
-                if (sub.Submarine != null && !sub.DockedTo.Contains(sub.Submarine))
-                {
-                    System.Diagnostics.Debug.Assert(Submarine.MainSub.AtEitherExit);
-                    if (Submarine.MainSub.AtEndExit)
-                    {
-                        leaveBehind = sub.AtEndExit != Submarine.MainSub.AtEndExit;
-                    }
-                    else
-                    {
-                        leaveBehind = sub.AtStartExit != Submarine.MainSub.AtStartExit;
-                    }
-                }
-
-                if (leaveBehind)
+                if (sub.Submarine != null && CampaignMode.ShouldLeaveSubBehind(subToCheck: sub, leavingSub: sub.Submarine))
                 {
                     saveElement.SetAttributeValue("location", Level.Loaded.Seed);
                     Vector2 position = sub.SubBody.Position;

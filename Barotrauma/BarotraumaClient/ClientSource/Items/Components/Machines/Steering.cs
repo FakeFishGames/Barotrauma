@@ -21,6 +21,8 @@ namespace Barotrauma.Items.Components
             LevelStart
         };
 
+
+
         private GUITickBox maintainPosTickBox, levelEndTickBox, levelStartTickBox;
 
         private GUIComponent statusContainer, dockingContainer;
@@ -53,7 +55,6 @@ namespace Barotrauma.Items.Components
         private float inputCumulation;
 
         private bool? swapDestinationOrder;
-
         private GUIMessageBox enterOutpostPrompt, exitOutpostPrompt;
 
         private bool levelStartSelected;
@@ -393,6 +394,8 @@ namespace Barotrauma.Items.Components
             {
                 OnClicked = (btn, userdata) =>
                 {
+                    if (Character.Controlled == null) { return false; }
+                    bool dockedWithOutpost = DockingSources.Any(d => d.Docked && (d.DockingTarget?.Item.Submarine?.Info?.IsOutpost ?? false));
                     if (GameMain.GameSession?.Missions.Any(m => !m.AllowUndocking) ?? false)
                     {
                         new GUIMessageBox("", TextManager.Get("undockingdisabledbymission"));
@@ -400,51 +403,61 @@ namespace Barotrauma.Items.Components
                     }
                     else if (GameMain.GameSession?.Campaign is CampaignMode campaign)
                     {
-                        if (Level.IsLoadedOutpost &&
-                            DockingSources.Any(d => d.Docked && (d.DockingTarget?.Item.Submarine?.Info?.IsOutpost ?? false)))
+                        if (Level.IsLoadedOutpost && dockedWithOutpost)
                         {
                             // Undocking from an outpost
-                            if (!ObjectiveManager.AllActiveObjectivesCompleted())
+                            if (ObjectiveManager.AllActiveObjectivesCompleted())
                             {
-                                exitOutpostPrompt = new GUIMessageBox("",
-                                    TextManager.GetWithVariable("CampaignExitTutorialOutpostPrompt", "[locationname]", campaign.Map.CurrentLocation.DisplayName),
-                                    new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
-                                exitOutpostPrompt.Buttons[0].OnClicked += (_, _) =>
-                                {
-                                    exitOutpostPrompt.Close();
-                                    return OpenMap(campaign);
-                                };
-                                exitOutpostPrompt.Buttons[1].OnClicked += exitOutpostPrompt.Close;
-                                return false;
-                            }
-                            return OpenMap(campaign);
-                        }
-                        else if (!Level.IsLoadedOutpost && DockingModeEnabled && ActiveDockingSource != null &&
-                                !ActiveDockingSource.Docked && DockingTarget?.Item?.Submarine == Level.Loaded.StartOutpost && (DockingTarget?.Item?.Submarine?.Info.IsOutpost ?? false))
-                        {
-                            // Docking to an outpost
-                            var subsToLeaveBehind = CampaignMode.GetSubsToLeaveBehind(Item.Submarine);
-                            if (subsToLeaveBehind.Any())
-                            {
-                                enterOutpostPrompt = new GUIMessageBox(
-                                    TextManager.GetWithVariable("enterlocation", "[locationname]", DockingTarget.Item.Submarine.Info.Name),
-                                    TextManager.Get(subsToLeaveBehind.Count == 1 ? "LeaveSubBehind" : "LeaveSubsBehind"),
-                                    new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
+                                CheckLeaveSubsBehindAndShowUndockPrompt(campaign);
                             }
                             else
                             {
-                                enterOutpostPrompt = new GUIMessageBox("",
-                                    TextManager.GetWithVariable("campaignenteroutpostprompt", "[locationname]", DockingTarget.Item.Submarine.Info.Name),
-                                    new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
+                                exitOutpostPrompt = new GUIMessageBox("",
+                                    TextManager.GetWithVariable("CampaignExitTutorialOutpostPrompt", "[locationname]", campaign.Map.CurrentLocation.DisplayName),
+                                    [TextManager.Get("yes"), TextManager.Get("no")]);
+                                exitOutpostPrompt.Buttons[0].OnClicked += (_, _) =>
+                                {
+                                    exitOutpostPrompt.Close();
+                                    CheckLeaveSubsBehindAndShowUndockPrompt(campaign);
+                                    return false;
+                                };
+                                exitOutpostPrompt.Buttons[1].OnClicked += exitOutpostPrompt.Close;
                             }
-                            enterOutpostPrompt.Buttons[0].OnClicked += (btn, userdata) =>
-                            {
-                                SendDockingSignal();
-                                enterOutpostPrompt.Close();
-                                return true;
-                            };
-                            enterOutpostPrompt.Buttons[1].OnClicked += enterOutpostPrompt.Close;
+
                             return false;
+                        }
+                        else
+                        {
+                            bool readyToDockWithOutpost = 
+                                !Level.IsLoadedOutpost && DockingModeEnabled &&
+                                ActiveDockingSource is { Docked: false } &&
+                                IsValidOutpostToEnter() &&
+                                item.Submarine is not { IsRespawnShuttle: true }
+                                && (Character.Controlled.Submarine == item.Submarine || item.Submarine.DockedTo.Contains(Character.Controlled.Submarine));
+                            if (readyToDockWithOutpost)
+                            {
+                                // Docking to an outpost
+                                var subsToLeaveBehind = CampaignMode.GetSubsToLeaveBehind(Item.Submarine);
+                                if (subsToLeaveBehind.Any())
+                                {
+                                    enterOutpostPrompt = new GUIMessageBox(
+                                        TextManager.GetWithVariable("enterlocation", "[locationname]", DockingTarget.Item.Submarine.Info.Name),
+                                        TextManager.Get(subsToLeaveBehind.Count == 1 ? "LeaveSubBehind" : "LeaveSubsBehind"),
+                                        new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
+                                    enterOutpostPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                                    {
+                                        SendDockingSignal();
+                                        enterOutpostPrompt.Close();
+                                        return true;
+                                    };
+                                    enterOutpostPrompt.Buttons[1].OnClicked += enterOutpostPrompt.Close;
+                                }
+                                else
+                                {
+                                    SendDockingSignal();
+                                }
+                                return false;
+                            }
                         }
                     }
                     SendDockingSignal();
@@ -453,25 +466,82 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            bool OpenMap(CampaignMode campaign)
+            void CheckLeaveSubsBehindAndShowUndockPrompt(CampaignMode campaign)
             {
-                campaign.ShowCampaignUI = true;
-                campaign.CampaignUI.SelectTab(CampaignMode.InteractionType.Map);
-                return false;
-            }
-
-            void SendDockingSignal()
-            {
-                if (GameMain.Client == null)
+                var subsToLeaveBehind = CampaignMode.GetSubsToLeaveBehind(Item.Submarine);
+                if (subsToLeaveBehind.Contains(Submarine.MainSub) && campaign != null)
                 {
-                    item.SendSignal(new Signal("1", sender: Character.Controlled), "toggle_docking");
+                    //can't leave without the main sub in the campaign!
+                    new GUIMessageBox(
+                        TextManager.GetWithVariable("exitlocation", "[locationname]", Level.Loaded.StartLocation?.DisplayName ?? TextManager.Get("unknown")),
+                        TextManager.Get("leavesubbehind.cantleavemainsub"));
+                    return;
+                }
+                if (subsToLeaveBehind.Any())
+                {
+                    exitOutpostPrompt = new GUIMessageBox(
+                        TextManager.GetWithVariable("exitlocation", "[locationname]", Level.Loaded.StartLocation?.DisplayName ?? TextManager.Get("unknown")),
+                        TextManager.Get(subsToLeaveBehind.Count == 1 ? "LeaveSubBehind" : "LeaveSubsBehind"),
+                        [TextManager.Get("yes"), TextManager.Get("no")]);
+                    exitOutpostPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                    {
+                        exitOutpostPrompt?.Close();
+                        ShowUndockPrompt(campaign);
+                        return true;
+                    };
+                    exitOutpostPrompt.Buttons[1].OnClicked += exitOutpostPrompt.Close;
                 }
                 else
                 {
-                    dockingNetworkMessagePending = true;
-                    item.CreateClientEvent(this);
+                    ShowUndockPrompt(campaign);
                 }
             }
+
+            void ShowUndockPrompt(CampaignMode campaign)
+            {
+                //only show the undock prompt for the main sub, not e.g. when undocking a drone/shuttle from the outpost or the sub
+                if (controlledSub != Submarine.MainSub)
+                {
+                    SendDockingSignal();
+                    return;
+                }
+
+                var undockPrompt = new GUIMessageBox("",
+                    TextManager.Get("campaignundockprompt"),
+                    [TextManager.Get("campaignundockprompt.leavelocation"), TextManager.Get("campaignundockprompt.undock")]);
+                undockPrompt.OnAddedToGUIUpdateList += (GUIComponent component) =>
+                {
+                    if (ActiveDockingSource is { Docked: false })
+                    {
+                        undockPrompt?.Close();
+                        undockPrompt = null;
+                    }
+                };
+                undockPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                {
+                    OpenMap(campaign);
+                    undockPrompt.Close();
+                    return true;
+                };
+                undockPrompt.Buttons[1].OnClicked += (btn, userdata) =>
+                {
+                    SendDockingSignal();
+                    undockPrompt.Close();
+                    return true;
+                };
+
+                if (GameMain.GameSession?.DisallowLeavingLocation == true)
+                {
+                    undockPrompt.Buttons[0].Enabled = false;
+                }
+            }
+
+            void OpenMap(CampaignMode campaign)
+            {
+                campaign.ShowCampaignUI = true;
+                campaign.CampaignUI.SelectTab(CampaignMode.InteractionType.Map);
+            }
+
 
             dockingButton.Font = GUIStyle.SubHeadingFont;
             dockingButton.TextBlock.RectTransform.MaxSize = new Point((int)(dockingButton.Rect.Width * 0.7f), int.MaxValue);
@@ -530,6 +600,31 @@ namespace Barotrauma.Items.Components
                 GameMain.GameSession?.StartLocation == null ? "Start" : GameMain.GameSession.StartLocation.DisplayName);
             autoPilotLevelEndTip = TextManager.GetWithVariable("SteeringAutoPilotLocationTip", "[locationname]",
                 GameMain.GameSession?.EndLocation == null ? "End" : GameMain.GameSession.EndLocation.DisplayName);
+        }
+
+        private void CreateDockingNetworkEvent()
+        {
+            dockingNetworkMessagePending = true;
+            item.CreateClientEvent(this);
+        }
+
+        void SendDockingSignal()
+        {
+            if (GameMain.Client == null)
+            {
+                item.SendSignal(new Signal("1", sender: Character.Controlled), "toggle_docking");
+            }
+            else
+            {
+                CreateDockingNetworkEvent();
+            }
+        }
+
+        private bool IsValidOutpostToEnter()
+        {
+            return
+                DockingTarget?.Item?.Submarine is { Info.IsOutpost: true } outpost &&
+                (outpost == Level.Loaded?.StartOutpost || outpost == Level.Loaded?.EndOutpost);
         }
 
         protected override void OnResolutionChanged()
@@ -739,10 +834,6 @@ namespace Barotrauma.Items.Components
 
             dockingContainer.Visible = DockingModeEnabled;
             statusContainer.Visible = !DockingModeEnabled;
-            if (!DockingModeEnabled)
-            {
-                enterOutpostPrompt?.Close();
-            }
 
             if (DockingModeEnabled && ActiveDockingSource != null)
             {
@@ -755,10 +846,6 @@ namespace Barotrauma.Items.Components
                         dockingButton.Flash(GUIStyle.Blue, 0.5f, useCircularFlash: true);
                         dockingButton.Pulsate(Vector2.One, Vector2.One * 1.2f, dockingButton.FlashTimer);
                     }
-                }
-                else
-                {
-                    enterOutpostPrompt?.Close();
                 }
             }
             else if (connectedPorts.Any(d => d.Docked))
@@ -983,8 +1070,8 @@ namespace Barotrauma.Items.Components
             maintainPosIndicator?.Remove();
             maintainPosOriginIndicator?.Remove();
             steeringIndicator?.Remove();
-            enterOutpostPrompt?.Close();
             exitOutpostPrompt?.Close();
+            enterOutpostPrompt?.Close();
             pathFinder = null;
         }
 
@@ -1030,7 +1117,7 @@ namespace Barotrauma.Items.Components
             bool headingToStart             = false;
 
             if (dockingButtonClicked)
-            {
+            {                
                 item.SendSignal(new Signal("1", sender: Entity.FindEntityByID(userID) as Character), "toggle_docking");
             }
 
@@ -1074,6 +1161,8 @@ namespace Barotrauma.Items.Components
             {
                 MaintainPos = newPosToMaintain != null;
                 posToMaintain = newPosToMaintain;
+                //the server determines the position, don't refresh it locally
+                posToMaintainRefreshPending = false;
 
                 if (posToMaintain == null)
                 {

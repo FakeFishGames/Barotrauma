@@ -99,6 +99,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void OnLoadCharacterInventory(Character character)
+        {
+            SyncHistory();
+        }
+
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             if (TryExtractEventData(extraData, out ServerEventData eventData))

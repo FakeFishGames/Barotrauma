@@ -22,7 +22,7 @@ namespace Barotrauma
         public OnButtonDownHandler OnButtonDown;
 
         public bool CanBeSelected = true;
-                
+
         public override bool Enabled 
         { 
             get
@@ -184,6 +184,7 @@ namespace Barotrauma
                 }
             }
         }
+
         public float HoldDurationSeconds { get; set; } = 5f;
         private float holdTimer;
 
@@ -250,6 +251,10 @@ namespace Barotrauma
                 expandRect.Inflate(expand, expand);
 
                 GUIStyle.EndRoundButtonPulse.Draw(spriteBatch, expandRect, ToolBox.GradientLerp(pulseExpand, Color.White, Color.White, Color.Transparent));
+            }
+            if (OutlineColor != Color.Transparent)
+            {
+                GUI.DrawRectangle(spriteBatch, Rect, OutlineColor, false, thickness: OutlineThickness);
             }
         }
 

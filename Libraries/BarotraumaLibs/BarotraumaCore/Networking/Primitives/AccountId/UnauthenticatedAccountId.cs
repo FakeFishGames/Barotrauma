@@ -6,7 +6,7 @@ namespace Barotrauma.Networking
 {
     /// <summary>
     /// Represents an account ID of a client that has not been authenticated in any way. The account ID is only based on the client's name. 
-    /// Only used on servers that allow joining without Steam/EOS authentication (such as when playing in a local network with no internet connection).
+    /// Only used on servers that allow joining without Steam authentication (such as when playing in a local network with no internet connection).
     /// </summary>
     public sealed class UnauthenticatedAccountId : AccountId
     {
@@ -15,8 +15,6 @@ namespace Barotrauma.Networking
         private readonly string clientName;
 
         public override string StringRepresentation => Prefix + clientName;
-
-        public override string EosStringRepresentation => StringRepresentation;
 
         public UnauthenticatedAccountId(string clientName)
         {

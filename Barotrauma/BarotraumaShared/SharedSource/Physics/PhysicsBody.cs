@@ -4,13 +4,15 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Xml.Linq;
-using LimbParams = Barotrauma.RagdollParams.LimbParams;
 using ColliderParams = Barotrauma.RagdollParams.ColliderParams;
+using LimbParams = Barotrauma.RagdollParams.LimbParams;
 
 namespace Barotrauma
 {
-    class PosInfo
+    public class PosInfo
     {
         public Vector2 Position
         {
@@ -82,7 +84,7 @@ namespace Barotrauma
         }
     }
 
-    partial class PhysicsBody
+    public partial class PhysicsBody
     {
         public enum Shape
         {
@@ -92,11 +94,15 @@ namespace Barotrauma
         public const float MinDensity = 0.01f;
         public const float DefaultAngularDamping = 5.0f;
 
-        private static readonly List<PhysicsBody> list = new List<PhysicsBody>();
-        public static List<PhysicsBody> List
-        {
-            get { return list; }
-        }
+        private static readonly List<PhysicsBody> list = new List<PhysicsBody>(2000);
+        public static List<PhysicsBody> List => list;
+
+        private static readonly List<PhysicsBody> activeBodyList = new List<PhysicsBody>(1000);
+
+        /// <summary>
+        /// List of bodies that are active and non-static
+        /// </summary>
+        public static IReadOnlyList<PhysicsBody> ActiveBodyList => activeBodyList;
 
         protected Vector2 prevPosition;
         protected float prevRotation;
@@ -200,16 +206,26 @@ namespace Barotrauma
         private bool isEnabled = true;
         private bool isPhysEnabled = true;
 
+        /// <summary>
+        /// Determines whether this physics body is enabled. Disabled bodies aren't visible and their 
+        /// physics don't update. (for example, when an item is in an inventory)
+        /// </summary>
+        /// <remarks>
+        /// If <see cref="PhysEnabled"/> is <see langword="false"/>, enabling this body will only make 
+        /// this body visible, the physics simulation will remain disabled.
+        /// </remarks>
         public bool Enabled
         {
             get { return isEnabled; }
             set
             {
+                if (isEnabled == value) { return; }
                 isEnabled = value;
                 try
                 {
-                    FarseerBody.Enabled = isEnabled && isPhysEnabled;
-                }
+                    FarseerBody.Enabled = isEnabled && isPhysEnabled; 
+                    AddOrRemoveToActiveBodyList();                    
+                }                
                 catch (Exception e)
                 {
                     DebugConsole.ThrowError("Exception in PhysicsBody.Enabled = " + value + " (" + isPhysEnabled + ")", e);
@@ -234,18 +250,32 @@ namespace Barotrauma
                         DebugConsole.NewMessage("Entity \"" + entity + "\" removed!", Color.Red);
                     }
                 }
+#if DEBUG
+                if (Enabled && BodyType == BodyType.Dynamic && !activeBodyList.Contains(this))
+                {
+                    DebugConsole.ThrowError($"Something went wrong when setting {nameof(Enabled)}: body is dynamic and enabled but not in {nameof(activeBodyList)}.");
+                    Debugger.Break();
+                }
+#endif
             }
         }
 
+
+        /// <summary>
+        /// Determines if physics simulation is enabled on this body. The body can still be <see cref="Enabled"/> (visible), 
+        /// for example when the item is being held by a character.
+        /// </summary>
         public bool PhysEnabled
         {
             get { return FarseerBody.Enabled; }
             set
             {
                 isPhysEnabled = value;
-                if (Enabled)
+
+                if (Enabled && FarseerBody.Enabled != value)
                 {
                     FarseerBody.Enabled = value;
+                    AddOrRemoveToActiveBodyList();
                 }
             }
         }
@@ -330,7 +360,12 @@ namespace Barotrauma
         public BodyType BodyType
         {
             get { return FarseerBody.BodyType; }
-            set { FarseerBody.BodyType = value; }
+            set 
+            { 
+                if (FarseerBody.BodyType == value) { return; }
+                FarseerBody.BodyType = value;
+                AddOrRemoveToActiveBodyList();
+            }
         }
 
         private Category _collisionCategories;
@@ -387,7 +422,8 @@ namespace Barotrauma
             density = Math.Max(density, MinDensity);
             CreateBody(width, height, radius, density, bodyType, collisionCategory, collidesWith, findNewContacts);
             LastSentPosition = FarseerBody.Position;
-            list.Add(this);
+            list.Add(this); 
+            AddOrRemoveToActiveBodyList();
         }
 
         public PhysicsBody(Body farseerBody)
@@ -396,6 +432,7 @@ namespace Barotrauma
             if (FarseerBody.UserData == null) { FarseerBody.UserData = this; }
             LastSentPosition = FarseerBody.Position;
             list.Add(this);
+            AddOrRemoveToActiveBodyList();
         }
 
         public PhysicsBody(ColliderParams colliderParams, Vector2 position, bool findNewContacts = true)
@@ -415,6 +452,7 @@ namespace Barotrauma
             SetTransformIgnoreContacts(position, 0.0f);
             LastSentPosition = position;
             list.Add(this);
+            AddOrRemoveToActiveBodyList();
         }
 
         public PhysicsBody(LimbParams limbParams, Vector2 position, bool findNewContacts = true)
@@ -444,6 +482,7 @@ namespace Barotrauma
             SetTransformIgnoreContacts(position, 0.0f);
             LastSentPosition = position;
             list.Add(this);
+            AddOrRemoveToActiveBodyList();
         }
         
         public PhysicsBody(XElement element, Vector2 position, float scale = 1.0f, float? forceDensity = null, Category collisionCategory = Physics.CollisionItem, Category collidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform, bool findNewContacts = true)
@@ -462,6 +501,26 @@ namespace Barotrauma
             {
                 _collisionCategories = collisionCategory;
                 _collidesWith = collidesWith;
+
+                if (Physics.TryParseCollisionCategory(element.GetAttributeString("collisioncategory", ""), out var parsedCollisionCategory))
+                {
+                    _collisionCategories = parsedCollisionCategory;
+                }
+
+                string[] collidesWithStringCategories = element.GetAttributeStringArray("collideswith", []);
+
+                if (collidesWithStringCategories.Length > 0)
+                {
+                    _collidesWith = Category.None;
+
+                    foreach (string category in collidesWithStringCategories)
+                    {
+                        if (Physics.TryParseCollisionCategory(category, out var parsedCollidesWithCategory))
+                        {
+                            _collidesWith |= parsedCollidesWithCategory;
+                        }
+                    }
+                }
             }
             CreateBody(width, height, radius, density, bodyType, _collisionCategories, _collidesWith, findNewContacts);
             FarseerBody.Friction = element.GetAttributeFloat("friction", 0.5f);
@@ -471,6 +530,7 @@ namespace Barotrauma
             SetTransformIgnoreContacts(position, 0.0f);
             LastSentPosition = position;      
             list.Add(this);
+            AddOrRemoveToActiveBodyList();
         }
 
         private void CreateBody(float width, float height, float radius, float density, BodyType bodyType, Category collisionCategory, Category collidesWith, bool findNewContacts = true)
@@ -505,6 +565,21 @@ namespace Barotrauma
             Radius = radius;
             _collisionCategories = collisionCategory;
             _collidesWith = collidesWith;
+        }
+
+        private void AddOrRemoveToActiveBodyList()
+        {
+            if (isEnabled && BodyType != BodyType.Static)
+            {
+                if (!activeBodyList.Contains(this))
+                {
+                    activeBodyList.Add(this);
+                }              
+            }
+            else
+            {
+                activeBodyList.Remove(this);
+            }
         }
 
         /// <summary>
@@ -857,10 +932,10 @@ namespace Barotrauma
         /// <summary>
         /// Applies buoyancy, drag and angular drag caused by water
         /// </summary>
-        public void ApplyWaterForces()
+        public void ApplyWaterForces(float buoyancyMultiplier = 1.0f)
         {
             //buoyancy
-            Vector2 buoyancy = new Vector2(0, Mass * 9.6f);
+            Vector2 buoyancy = new Vector2(0, Mass * 9.6f * buoyancyMultiplier);
 
             Vector2 dragForce = Vector2.Zero;
 
@@ -991,6 +1066,7 @@ namespace Barotrauma
         public void Remove()
         {
             list.Remove(this);
+            activeBodyList.Remove(this);
             GameMain.World.Remove(FarseerBody);
 
             Removed = true;

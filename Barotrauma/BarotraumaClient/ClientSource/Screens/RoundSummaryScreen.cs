@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    class RoundSummaryScreen : Screen
+    public class RoundSummaryScreen : Screen
     {
         private Sprite backgroundSprite;
         private RoundSummary roundSummary;

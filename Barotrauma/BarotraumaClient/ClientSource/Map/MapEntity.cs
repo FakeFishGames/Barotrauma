@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
+using Barotrauma.Lights;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -7,13 +8,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using Barotrauma.Lights;
-using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
     abstract partial class MapEntity : Entity
     {
+        public static bool ShowLinks = true;
+        
         protected static Vector2 selectionPos = Vector2.Zero;
         protected static Vector2 selectionSize = Vector2.Zero;
 
@@ -80,6 +81,15 @@ namespace Barotrauma
         public bool IsSelected => SelectedList.Contains(this);
 
         public bool IsIncludedInSelection { get; set; }
+
+        public static void ClearEditingHUD()
+        {
+            if (editingHUD != null)
+            {
+                editingHUD.RectTransform.Parent = null;
+            }
+            editingHUD = null;
+        }
 
         public virtual bool IsVisible(Rectangle worldView)
         {
@@ -445,23 +455,13 @@ namespace Barotrauma
                                 onGapFound: (door, gap) =>
                                 {
                                     door.RefreshLinkedGap();
-                                    if (!SelectedList.Contains(gap))
-                                    {
-                                        SelectedList.Add(gap);
-                                    }
+                                    SelectedList.Add(gap);
                                 },
-                                onDoorFound: (door, gap) =>
-                                {
-                                    if (!SelectedList.Contains(door.Item))
-                                    {
-                                        SelectedList.Add(door.Item);
-                                    }
-                                });
+                                onDoorFound: (door, gap) => { SelectedList.Add(door.Item); });
                         }
                     }
 
                     //select wire if both items it's connected to are selected
-                    var selectedItems = SelectedList.Where(e => e is Item).Cast<Item>().ToList();
                     foreach (Item item in Item.ItemList)
                     {
                         var wire = item.GetComponent<Wire>();
@@ -503,7 +503,10 @@ namespace Barotrauma
                     //if clicking a selected entity, start moving it
                     foreach (MapEntity e in SelectedList)
                     {
-                        if (e.IsMouseOn(position)) startMovingPos = position;
+                        if (e.IsMouseOn(position))
+                        {
+                            startMovingPos = position;
+                        }
                     }
                     selectionPos = position;
 
@@ -642,8 +645,8 @@ namespace Barotrauma
             }
             if (highlightedListBox != null)
             {
-                if (GUI.MouseOn == highlightedListBox || highlightedListBox.IsParentOf(GUI.MouseOn)) return;
-                if (highlightedEntities.SequenceEqual(highlightedInEditorList)) return;
+                if (GUI.IsMouseOn(highlightedListBox)) { return; }
+                if (highlightedEntities.SequenceEqual(highlightedInEditorList)) { return; }
             }
 
             highlightedInEditorList = highlightedEntities;
@@ -653,6 +656,8 @@ namespace Barotrauma
                 MaxSize = new Point(int.MaxValue, 256),
                 ScreenSpaceOffset =  PlayerInput.MousePosition.ToPoint() + new Point(15)
             }, style: "GUIToolTip");
+            HighlightedListBox.RectTransform.MinSize =
+                new Point(HighlightedListBox.Rect.Width, HighlightedListBox.Rect.Height + (int)(highlightedListBox.Padding.Y + HighlightedListBox.Padding.W));
 
             foreach (MapEntity entity in highlightedEntities)
             {
@@ -716,18 +721,9 @@ namespace Barotrauma
                 onGapFound: (door, gap) =>
                 {
                     door.RefreshLinkedGap();
-                    if (!SelectedList.Contains(gap))
-                    {
-                        SelectedList.Add(gap);
-                    }
+                    SelectedList.Add(gap);
                 },
-                onDoorFound: (door, gap) =>
-                {
-                    if (!SelectedList.Contains(door.Item))
-                    {
-                        SelectedList.Add(door.Item);
-                    }
-                });
+                onDoorFound: (door, gap) => { SelectedList.Add(door.Item); });
         }
 
         private static void HandleDoorGapLinks(MapEntity entity, Action<Door, Gap> onGapFound, Action<Door, Gap> onDoorFound)
@@ -1028,7 +1024,6 @@ namespace Barotrauma
             if (SelectedList.Count == 1)
             {
                 MapEntity firstSelected = SelectedList.First();
-                firstSelected.DrawEditing(spriteBatch, cam);
                 if (firstSelected.ResizeHorizontal || firstSelected.ResizeVertical)
                 {
                     firstSelected.DrawResizing(spriteBatch, cam);
@@ -1127,7 +1122,38 @@ namespace Barotrauma
             if (editingHUD != null && editingHUD.UserData == this) { editingHUD.AddToGUIUpdateList(order: order); }
         }
 
-        public virtual void UpdateEditing(Camera cam, float deltaTime) { }
+        public virtual void UpdateEditing(Camera cam, float deltaTime)
+        {
+            if (Screen.Selected != GameMain.SubEditorScreen) { return; }
+            if (GameMain.SubEditorScreen.TransformWidgetSelected) { return; }
+            if (!Linkable) { return; }
+            if (!PlayerInput.KeyDown(Keys.Space)) { return; }
+            bool lClick = PlayerInput.PrimaryMouseButtonClicked();
+            bool rClick = PlayerInput.SecondaryMouseButtonClicked();
+            if (!lClick && !rClick) { return; }
+
+            Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
+            var otherEntity = highlightedEntities.FirstOrDefault(e => e != this && e.IsMouseOn(position));
+            if (otherEntity != null)
+            {
+                if (linkedTo.Contains(otherEntity))
+                {
+                    linkedTo.Remove(otherEntity);
+                    if (otherEntity.linkedTo != null && otherEntity.linkedTo.Contains(this))
+                    {
+                        otherEntity.linkedTo.Remove(this);
+                    }
+                }
+                else
+                {
+                    linkedTo.Add(otherEntity);
+                    if (otherEntity.Linkable && otherEntity.linkedTo != null)
+                    {
+                        otherEntity.linkedTo.Add(this);
+                    }
+                }
+            }
+        }
 
         protected static void PositionEditingHUD()
         {
@@ -1168,7 +1194,29 @@ namespace Barotrauma
             }
         }
 
-        public virtual void DrawEditing(SpriteBatch spriteBatch, Camera cam) { }
+        public void DrawLinks(SpriteBatch spriteBatch)
+        {
+            if (GUI.DisableHUD) { return; }
+            if (!ShowLinks) { return; }
+            foreach (MapEntity linkedEntity in linkedTo)
+            {
+                bool isLinkAllowed = Prefab.IsLinkAllowed(linkedEntity.Prefab);
+                Color lineColor = GUIStyle.Red * 0.5f;
+                if (isLinkAllowed)
+                {
+                    lineColor = Color.LightGreen * 0.5f;
+                    if (this is Item { DisplaySideBySideWhenLinked: true } || linkedEntity is Item { DisplaySideBySideWhenLinked: true })
+                    {
+                        lineColor = Color.Purple * 0.5f;
+                    }
+                }
+                Vector2 from = new Vector2(WorldPosition.X, -WorldPosition.Y);
+                Vector2 to = new Vector2(linkedEntity.WorldPosition.X, -linkedEntity.WorldPosition.Y);
+                GUI.DrawLine(spriteBatch, from, to, lineColor * 0.25f, width: 3);
+                GUI.DrawLine(spriteBatch, from, to, lineColor, width: 1);
+                //GUI.DrawString(spriteBatch, from, $"Linked to {e.Name}", lineColor, Color.Black * 0.5f);
+            }  
+        }
 
         private Vector2 GetEditingHandlePos(int x, int y, Camera cam)
         {

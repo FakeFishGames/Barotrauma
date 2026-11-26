@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -24,10 +25,13 @@ namespace Barotrauma
         HideInMenus = 2
     }
 
-    public enum SubmarineType { Player, Outpost, OutpostModule, Wreck, BeaconStation, EnemySubmarine, Ruin }
+    public enum SubmarineType 
+    { 
+        Player, Outpost, OutpostModule, Wreck, BeaconStation, AIControlled, Ruin
+    }
     public enum SubmarineClass { Undefined, Scout, Attack, Transport }
 
-    partial class SubmarineInfo : IDisposable
+    public partial class SubmarineInfo : IDisposable
     {
         public static HashSet<string> SubmarinePathsWithRemoteStorage { get; set; } = [];
 
@@ -115,6 +119,20 @@ namespace Barotrauma
             set;
         }
 
+        private ImmutableHashSet<Identifier> soldByFaction = ImmutableHashSet<Identifier>.Empty;
+        /// <summary>
+        /// Identifiers of the factions whose outposts this submarine can be sold in. If empty, can be sold in outposts belonging to any faction.
+        /// </summary>
+        public IEnumerable<Identifier> SoldByFaction
+        {
+            get => soldByFaction;
+        }
+
+        /// <summary>
+        /// Minimum reputation required for the faction that's selling the sub to buy this submarine.
+        /// </summary>
+        public int MinReputationToBuy { get; set; }
+
         public bool InitialSuppliesSpawned
         {
             get;
@@ -151,7 +169,7 @@ namespace Barotrauma
         public OutpostModuleInfo OutpostModuleInfo { get; set; }
         public BeaconStationInfo BeaconStationInfo { get; set; }
         public WreckInfo WreckInfo { get; set; }
-        public EnemySubmarineInfo EnemySubmarineInfo { get; set; }
+        public AISubmarineInfo AISubmarineInfo { get; set; }
 
         public ExtraSubmarineInfo GetExtraSubmarineInfo => BeaconStationInfo ?? WreckInfo as ExtraSubmarineInfo;
 
@@ -161,10 +179,13 @@ namespace Barotrauma
 
         public bool IsOutpost => Type is SubmarineType.Outpost or SubmarineType.OutpostModule;
 
+        public bool IsOutpostModule => Type == SubmarineType.OutpostModule;
+
         public bool IsWreck => Type == SubmarineType.Wreck;
         public bool IsBeacon => Type == SubmarineType.BeaconStation;
-        public bool IsEnemySubmarine => Type == SubmarineType.EnemySubmarine;
+        public bool IsAIControlled => Type == SubmarineType.AIControlled;
         public bool IsPlayer => Type == SubmarineType.Player;
+
         public bool IsRuin => Type == SubmarineType.Ruin;
 
         /// <summary>
@@ -291,8 +312,11 @@ namespace Barotrauma
             get; private set;
         }
 
-        public OutpostGenerationParams OutpostGenerationParams;
+        public OutpostGenerationParams OutpostGenerationParams { get; set; }
 
+        /// <summary>
+        /// NPCs present in the current outpost, grouped by their identifier or tag.
+        /// </summary>
         public readonly Dictionary<Identifier, List<Character>> OutpostNPCs = new Dictionary<Identifier, List<Character>>();
 
         /// <summary>
@@ -375,6 +399,8 @@ namespace Barotrauma
             Description = original.Description;
             Price = original.Price;
             InitialSuppliesSpawned = original.InitialSuppliesSpawned;
+            MinReputationToBuy = original.MinReputationToBuy;
+            soldByFaction = original.soldByFaction;
             NoItems = original.NoItems;
             LowFuel = original.LowFuel;
             GameVersion = original.GameVersion;
@@ -406,9 +432,9 @@ namespace Barotrauma
             {
                 BeaconStationInfo = new BeaconStationInfo(original.BeaconStationInfo);
             }
-            else if (original.EnemySubmarineInfo != null)
+            else if (original.AISubmarineInfo != null)
             {
-                EnemySubmarineInfo = new EnemySubmarineInfo(original.EnemySubmarineInfo);
+                AISubmarineInfo = new AISubmarineInfo(original.AISubmarineInfo);
             }
             else if (original.WreckInfo != null)
             {
@@ -452,6 +478,8 @@ namespace Barotrauma
             EqualityCheckVal = SubmarineElement.GetAttributeInt("checkval", 0);
 
             Price = SubmarineElement.GetAttributeInt("price", 1000);
+            soldByFaction = submarineElement.GetAttributeIdentifierImmutableHashSet(nameof(soldByFaction), []);
+            MinReputationToBuy = SubmarineElement.GetAttributeInt(nameof(MinReputationToBuy), 0);
 
             InitialSuppliesSpawned = SubmarineElement.GetAttributeBool("initialsuppliesspawned", false);
             NoItems = SubmarineElement.GetAttributeBool("noitems", false);
@@ -505,25 +533,30 @@ namespace Barotrauma
 
             if (SubmarineElement?.Attribute("type") != null)
             {
-                if (Enum.TryParse(SubmarineElement.GetAttributeString("type", ""), out SubmarineType type))
+                string typeName = SubmarineElement.GetAttributeString("type", "");
+                if (typeName.Equals("EnemySubmarine", StringComparison.OrdinalIgnoreCase))
+                {
+                    //backwards compatibility
+                    Type = SubmarineType.AIControlled;
+                }
+                else if (Enum.TryParse(typeName, out SubmarineType type))
                 {
                     Type = type;
-                    if (Type == SubmarineType.OutpostModule)
-                    {
+                }
+                switch (Type)
+                {
+                    case SubmarineType.OutpostModule:
                         OutpostModuleInfo = new OutpostModuleInfo(this, SubmarineElement);
-                    }
-                    else if (Type == SubmarineType.BeaconStation)
-                    {
+                        break;
+                    case SubmarineType.BeaconStation:
                         BeaconStationInfo = new BeaconStationInfo(this, SubmarineElement);
-                    }
-                    else if (Type == SubmarineType.EnemySubmarine)
-                    {
-                        EnemySubmarineInfo = new EnemySubmarineInfo(this, SubmarineElement);
-                    }
-                    else if (Type == SubmarineType.Wreck)
-                    {
+                        break;
+                    case SubmarineType.AIControlled:
+                        AISubmarineInfo = new AISubmarineInfo(this, SubmarineElement);
+                        break;
+                    case SubmarineType.Wreck:
                         WreckInfo = new WreckInfo(this, SubmarineElement);
-                    }
+                        break;
                 }
             }
 
@@ -602,6 +635,18 @@ namespace Barotrauma
             hashTask.Start();
         }
 
+        public void SetSoldByFaction(IEnumerable<Identifier> factionIdentifiers)
+        {
+            soldByFaction = factionIdentifiers.ToImmutableHashSet();
+        }
+
+        public bool SufficientReputationToBuyFrom(Location location)
+        {
+            if (MinReputationToBuy <= 0) { return true; }
+            float locationFactionRep = location.Faction?.Reputation.Value ?? 0;
+            return locationFactionRep >= MinReputationToBuy;
+        }
+
         public bool HasTag(SubmarineTag tag)
         {
             return Tags.HasFlag(tag);
@@ -678,13 +723,87 @@ namespace Barotrauma
             }
             return structureCrushDepthsDefined;
         }
+
+        private void InvalidateEventTargetCache()
+        {
+            if (GameMain.GameSession?.EventManager != null)
+            {
+                GameMain.GameSession.EventManager.ActiveEvents
+                    .OfType<ScriptedEvent>()
+                    .ForEach(static scriptedEvent => scriptedEvent.InvalidateTargetCache());
+            }
+        }
+
+        /// <summary>
+        /// Adds the NPC to the <see cref="OutpostNPCs"/> dictionary, using the NPC's prefab identifiers and tags and the "outpostnpc" tag as keys.
+        /// </summary>
+        public void AddOutpostNPC(Character npc)
+        {
+            AddOutpostNPCIdentifierOrTag(npc, "outpostnpc".ToIdentifier());
+            if (npc.HumanPrefab != null)
+            {
+                AddOutpostNPCIdentifierOrTag(npc, npc.HumanPrefab.Identifier);
+                foreach (Identifier tag in npc.HumanPrefab.GetTags())
+                {
+                    AddOutpostNPCIdentifierOrTag(npc, tag);
+                }
+            }
+
+            OnNPCsChanged();
+        }
+
         public void AddOutpostNPCIdentifierOrTag(Character npc, Identifier idOrTag)
         {
-            if (!OutpostNPCs.ContainsKey(idOrTag))
+            List<Character> npcList = null;
+            if (!OutpostNPCs.TryGetValue(idOrTag, out npcList))
             {
-                OutpostNPCs.Add(idOrTag, new List<Character>());
+                npcList = new List<Character>();
+                OutpostNPCs.Add(idOrTag, npcList);
             }
-            OutpostNPCs[idOrTag].Add(npc);
+            if (!npcList.Contains(npc))
+            {
+                npcList.Add(npc);
+            }
+
+            OnNPCsChanged();
+        }
+
+        public IEnumerable<Character> GetOutpostNPCs()
+        {
+            return OutpostNPCs.Values.SelectMany(list => list).Distinct();
+        }
+
+        public void ClearOutpostNPCIdentifierOrTag(Identifier idOrTag)
+        {
+            if (OutpostNPCs.TryGetValue(idOrTag, out List<Character> npcList))
+            {
+                OutpostNPCs[idOrTag].Clear();
+            }
+
+            OnNPCsChanged();
+        }
+
+        public void RemoveOutpostNPCIdentifierOrTag(Character npc, Identifier idOrTag)
+        {
+            if (OutpostNPCs.TryGetValue(idOrTag, out List<Character> npcList))
+            {
+                OutpostNPCs[idOrTag].Remove(npc);
+            }
+            OnNPCsChanged();
+        }
+
+        public void OnNPCsChanged()
+        {
+            InvalidateEventTargetCache();
+
+            if (Level.Loaded?.StartLocation is { } location &&
+                Level.Loaded?.StartOutpost is { } outpost)
+            {
+                foreach (var hook in PluginData.GetHooks<PluginCampaignOnOutpostNPCsChangedDelegate>())
+                {
+                    hook(GameMain.GameSession?.Campaign, location, outpost);
+                }
+            }
         }
 
         //saving/loading ----------------------------------------------------
@@ -698,25 +817,24 @@ namespace Barotrauma
                         !string.Equals(a.Name.LocalName, "name", StringComparison.InvariantCultureIgnoreCase)), 
                 SubmarineElement.Elements());
 
-            if (Type == SubmarineType.OutpostModule)
+            switch (Type)
             {
-                OutpostModuleInfo.Save(newElement);
-                OutpostModuleInfo = new OutpostModuleInfo(this, newElement);
-            }
-            else if (Type == SubmarineType.BeaconStation)
-            {
-                BeaconStationInfo.Save(newElement);
-                BeaconStationInfo = new BeaconStationInfo(this, newElement);
-            }
-            else if (Type == SubmarineType.EnemySubmarine)
-            {
-                EnemySubmarineInfo.Save(newElement);
-                EnemySubmarineInfo = new EnemySubmarineInfo(this, newElement);
-            }
-            else if (Type == SubmarineType.Wreck)
-            {
-                WreckInfo.Save(newElement);
-                WreckInfo = new WreckInfo(this, newElement);
+                case SubmarineType.OutpostModule:
+                    OutpostModuleInfo.Save(newElement);
+                    OutpostModuleInfo = new OutpostModuleInfo(this, newElement);
+                    break;
+                case SubmarineType.BeaconStation:
+                    BeaconStationInfo.Save(newElement);
+                    BeaconStationInfo = new BeaconStationInfo(this, newElement);
+                    break;
+                case SubmarineType.AIControlled:
+                    AISubmarineInfo.Save(newElement);
+                    AISubmarineInfo = new AISubmarineInfo(this, newElement);
+                    break;
+                case SubmarineType.Wreck:
+                    WreckInfo.Save(newElement);
+                    WreckInfo = new WreckInfo(this, newElement);
+                    break;
             }
             XDocument doc = new XDocument(newElement);
 
@@ -915,6 +1033,8 @@ namespace Barotrauma
                 price *= campaign.Settings.ShipyardPriceMultiplier;
             }
 
+            price *= location.Type.ShipyardPriceMultiplier;
+
             if (characterList.Any())
             {
                 if (location.Faction is { } faction && Faction.GetPlayerAffiliationStatus(faction) is FactionAffiliation.Positive)
@@ -930,5 +1050,8 @@ namespace Barotrauma
         public static int GetDefaultTier(int price) => price > 20000 ? HighestTier : price > 10000 ? 2 : 1;
 
         public const int HighestTier = 3;
+
+#nullable enable
+        public ContentPackage? FindPackage() => ContentPackageManager.AllPackages.FirstOrDefault(p => p.Files.Any(f => f.Path == FilePath));
     }
 }

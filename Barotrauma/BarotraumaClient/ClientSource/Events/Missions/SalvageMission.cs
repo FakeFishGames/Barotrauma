@@ -94,12 +94,12 @@ namespace Barotrauma
                     int listIndex = msg.ReadByte();
                     int effectIndex = msg.ReadByte();
                     var selectedEffect = target.StatusEffects[listIndex][effectIndex];
-                    target.Item.ApplyStatusEffect(selectedEffect, selectedEffect.type, deltaTime: 1.0f, worldPosition: target.Item.Position);
+                    target.Item.ApplyStatusEffect(selectedEffect, selectedEffect.Type, deltaTime: 1.0f, worldPosition: target.Item.Position);
                 }
 
                 if (target.Item.body != null && target.Item.CurrentHull == null)
                 {
-                    target.Item.body.FarseerBody.BodyType = BodyType.Kinematic;
+                    target.Item.body.BodyType = BodyType.Kinematic;
                 }
             }
         }
@@ -123,7 +123,7 @@ namespace Barotrauma
                     {
                         atLeastOneTargetWasRetrieved = true;
                     }
-                    else if (!wasPickedUp && target.State == Target.RetrievalState.PickedUp)
+                    if (!wasPickedUp && target.State == Target.RetrievalState.PickedUp)
                     {
                         showPickedUpMsg = true;
                     }

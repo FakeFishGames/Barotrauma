@@ -4,8 +4,13 @@ namespace Barotrauma;
 
 partial class EventLogAction : EventAction
 {
-    partial void AddEntryProjSpecific(EventLog? eventLog, string displayText)
+    partial void AddEntryProjSpecific(EventLog? eventLog, Identifier eventIdentifier, string displayText)
     {
-        eventLog?.AddEntry(ParentEvent.Prefab.Identifier, Id, displayText);
+        eventLog?.AddEntry(eventIdentifier, ResolvedId, displayText, SendMessage, Persistent);
+    }
+
+    partial void RemoveEntriesProjSpecific(EventLog? eventLog, Identifier eventIdentifier)
+    {
+        eventLog?.RemoveEvent(eventIdentifier);
     }
 }

@@ -10,7 +10,7 @@ using Concentus.Structs;
 
 namespace Barotrauma
 {
-    internal sealed class VoipServerDecoder
+    public sealed class VoipServerDecoder
     {
         private readonly OpusDecoder decoder;
         private readonly VoipQueue queue;

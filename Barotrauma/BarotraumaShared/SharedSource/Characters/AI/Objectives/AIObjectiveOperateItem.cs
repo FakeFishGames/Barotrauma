@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveOperateItem : AIObjective
+    public class AIObjectiveOperateItem : AIObjective
     {
         public override Identifier Identifier { get; set; } = "operate item".ToIdentifier();
         public override string DebugTag =>  $"{Identifier} ({component.Name})";
@@ -15,7 +15,8 @@ namespace Barotrauma
         public override bool AllowAutomaticItemUnequipping => true;
         public override bool AllowMultipleInstances => true;
         protected override bool AllowInAnySub => true;
-        protected override bool AllowWhileHandcuffed => false;
+        protected override bool RequireOneHandAvailable => true;
+        protected override bool AllowOutsideSubmarine => component?.AIOperateAllowedOutside ?? false;
         public override bool PrioritizeIfSubObjectivesActive => component is Reactor or Turret;
 
         private readonly ItemComponent component, controller;
@@ -51,6 +52,18 @@ namespace Barotrauma
 
         public float? OverridePriority = null;
 
+        /// <summary>
+        /// Outpost NPCs can spawn more ammo when needed (with an optional cooldown)
+        /// </summary>
+        public bool SpawnAmmoIfNotFound => 
+            !character.IsOnPlayerTeam && 
+            Level.IsLoadedOutpost && 
+            character.TeamID == Level.Loaded.StartOutpost.TeamID;
+
+        public double DisableAmmoSpawnsUntil;
+
+        public bool CanSpawnMoreAmmo => SpawnAmmoIfNotFound && Timing.TotalTimeUnpaused > DisableAmmoSpawnsUntil;
+
         protected override float GetPriority()
         {
             bool isOrder = objectiveManager.IsOrder(this);
@@ -59,7 +72,7 @@ namespace Barotrauma
                 HandleDisallowed();
                 return Priority;
             }
-            if (!isOrder && component.Item.ConditionPercentage <= 0)
+            if (!isOrder && component.Item.Condition <= 0)
             {
                 Priority = 0;
             }
@@ -89,6 +102,13 @@ namespace Barotrauma
                     Priority = 0;
                     return Priority;
                 }
+
+                //if the objective is to blow up the reactor, we can ignore all the special logic below (avoiding unsafe hulls, reactors already operated by someone etc)
+                if (Option == "blowup")
+                {
+                    return component.Item.Condition <= 0 ? 0.0f : Priority;
+                }
+
                 Hull targetHull = targetItem.CurrentHull;
                 if (HumanAIController.UnsafeHulls.Contains(targetHull))
                 {
@@ -153,7 +173,7 @@ namespace Barotrauma
                 {
                     Priority = 0;
                 }
-                else
+                else if (!OverridePriority.HasValue)
                 {
                     if (isOrder)
                     {
@@ -161,11 +181,11 @@ namespace Barotrauma
                         float value = CumulatedDevotion + (max * PriorityModifier);
                         Priority = MathHelper.Clamp(value, 0, max);
                     }
-                    else if (!OverridePriority.HasValue)
+                    else
                     {
                         float value = CumulatedDevotion + (AIObjectiveManager.LowestOrderPriority * PriorityModifier);
                         const float max = AIObjectiveManager.LowestOrderPriority - 1;
-                        if (reactor is { PowerOn: true, FissionRate: > 1, AutoTemp: true } && Option == "powerup")
+                        if (reactor is { PowerOn: true, FissionRate: > 1 } && Option == "powerup")
                         {
                             // Already on, no need to operate.
                             value = 0;
@@ -194,7 +214,10 @@ namespace Barotrauma
                 throw new Exception("target null");
 #endif
             }
-            else if (!target.Item.IsInteractable(character))
+            //if we have given the AI an objective to operate the hidden item, let's allow that.
+            //There are e.g. hidden defensible positions in abandoned outposts and beacon stations which enemy NPCs are made to "operate" (stand at).
+            //In cases where we don't want hidden items to be operated, that should be handled on a higher level (not trying to create objectives for those)
+            else if (!target.Item.IsInteractable(character, allowHiddenItems: true))
             {
                 Abandon = true;
             }
@@ -202,7 +225,7 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (character.LockHands)
+            if (character.BothHandsDisabled)
             {
                 Abandon = true;
                 return;
@@ -232,7 +255,10 @@ namespace Barotrauma
 
             if (target.CanBeSelected)
             {
-                if (!character.IsClimbing && character.CanInteractWith(target.Item, out _, checkLinked: false))
+                bool canInteractWith = character.CanInteractWith(target.Item, out _, checkLinked: false, allowHiddenItems: true);
+
+                //if we are climbing, let's not operate the item yet, but try to get closer
+                if (canInteractWith && !character.IsClimbing)
                 {
                     if (target.Item.GetComponent<Controller>() is not Controller { ControlCharacterPose: true })
                     {
@@ -246,30 +272,54 @@ namespace Barotrauma
                     {
                         target.Item.TryInteract(character, forceSelectKey: true);
                     }
-                    if (component.CrewAIOperate(deltaTime, character, this))
-                    {
-                        isDoneOperating = completionCondition == null || completionCondition();
-                    }
+                    Operate();
                 }
                 else
                 {
-                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50)
+                    // If we have an operateTarget, go to that instead of the tool itself
+                    Entity goToTarget = operateTarget ?? target.Item;
+                    
+                    float closeEnoughDistance = 50; // magic number that we also use elsewhere for this purpose
+                    if (operateTarget != null && component is RepairTool repairTool)
+                    {
+                        // For RepairTools with operateTargets, we can calculate the tool's reach
+                        closeEnoughDistance = repairTool.CalculateReach(character) * 0.8f;
+                    }
+                    
+                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(goToTarget, character, objectiveManager,
+                            minimumCloseEnoughDistance: closeEnoughDistance)
                     {
                         DialogueIdentifier = AIObjectiveGoTo.DialogCannotReachTarget,
-                        TargetName = target.Item.Name,
-                        ForceWalkPermanently = ForceWalk,
-                        endNodeFilter = EndNodeFilter ?? AIObjectiveGetItem.CreateEndNodeFilter(target.Item)
+                        TargetName = goToTarget is Item item ? item.Name : goToTarget.ToString(),
+                        endNodeFilter = EndNodeFilter ?? AIObjectiveGetItem.CreateEndNodeFilter(goToTarget),
+                        requiredCondition = () => target == null || character.CanInteractWith(target?.Item, out _, checkLinked: false, allowHiddenItems: true),
+                        ForceWalkPermanently = ForceWalk
                     },
-                        onAbandon: () => Abandon = true,
-                        onCompleted: () => RemoveSubObjective(ref goToObjective));
+                    onAbandon: () => Abandon = true,
+                    onCompleted: () => RemoveSubObjective(ref goToObjective));
+
+                    //if we are close enough to interact but still climbing, we must get close enough to the target item to get off the ladders
+                    if (goToObjective != null && canInteractWith && character.IsClimbing)
+                    {
+                        //so let's enforce the distance we calculated above
+                        // - the AIObjectiveGoTo constructor just considers it a minimum distance but allows a larger distance for e.g. items with a large interaction range
+                        goToObjective.CloseEnough = closeEnoughDistance;
+                    }
                 }
             }
             else
             {
                 if (component.Item.GetComponent<Pickable>() == null)
                 {
-                    //controller/target can't be selected and the item cannot be picked -> objective can't be completed
-                    Abandon = true;
+                    if (component.AIOperateRemotely)
+                    {
+                        Operate();
+                    }
+                    else
+                    {
+                        //controller/target can't be selected and the item cannot be picked -> objective can't be completed
+                        Abandon = true;
+                    }
                     return;
                 }
                 else if (!character.Inventory.Contains(component.Item))
@@ -316,10 +366,15 @@ namespace Barotrauma
                         }
                         return;
                     }
-                    if (component.CrewAIOperate(deltaTime, character, this))
-                    {
-                        isDoneOperating = completionCondition == null || completionCondition();
-                    }
+                    Operate();
+                }
+            }
+
+            void Operate()
+            {
+                if (component.CrewAIOperate(deltaTime, character, this))
+                {
+                    isDoneOperating = completionCondition == null || completionCondition();
                 }
             }
         }

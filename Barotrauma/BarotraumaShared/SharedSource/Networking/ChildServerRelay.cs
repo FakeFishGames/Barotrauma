@@ -163,15 +163,18 @@ namespace Barotrauma.Networking
         {
             if (status is StatusEnum.Active && pipe is not { IsConnected: true })
             {
-                string exceptionMsg = $"{name} was disconnected unexpectedly.";
+                string exceptionMsg = $"{name} was disconnected unexpectedly. This probably means the server crashed in an abnormal way, preventing it from reporting the crash to the client.";
+#if DEBUG
+                exceptionMsg += " In debug builds, crash reporting is disabled, so any server crash is expected to lead to this error.";
+#endif
 #if CLIENT
                 if (Process is { HasExited: true, ExitCode: var exitCode })
                 {
-                    exceptionMsg += $" Child process exit code was {(uint)exitCode:X8}.";
+                    exceptionMsg += $" Server exit code was {(uint)exitCode:X8}.";
                 }
                 else if (Process is { HasExited: false })
                 {
-                    exceptionMsg += " Child process has not exited.";
+                    exceptionMsg += " Server process has not exited.";
                 }
 #endif
                 throw new Exception(exceptionMsg);

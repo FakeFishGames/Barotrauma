@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Xna.Framework;
@@ -99,4 +100,10 @@ public static class ToolBoxCore
 
         return e;
     }
+
+    // This method cannot be inlined because else TryGetTarget will create a new strong reference to the target
+    // which will prevent the target from being collected where this method is used.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static bool IsAlive<T>(this WeakReference<T> t) where T : class
+        => t.TryGetTarget(out _);
 }

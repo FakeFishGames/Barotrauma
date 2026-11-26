@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Networking
 {
-    partial class ServerSettings
+    public partial class ServerSettings
     {
         partial class NetPropertyData
         {

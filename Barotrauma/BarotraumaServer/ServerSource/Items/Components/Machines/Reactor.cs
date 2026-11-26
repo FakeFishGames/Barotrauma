@@ -3,7 +3,7 @@ using System;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Reactor
+    partial class Reactor : ReactorBase
     {
         const float NetworkUpdateIntervalLow = 10.0f;
 
@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
         private float? nextServerLogWriteTime;
         private float lastServerLogWriteTime;
 
-        public void ServerEventRead(IReadMessage msg, Client c)
+        public override void ServerEventRead(IReadMessage msg, Client c)
         {
             bool autoTemp = msg.ReadBoolean();
             bool powerOn = msg.ReadBoolean();
@@ -27,10 +27,10 @@ namespace Barotrauma.Items.Components
             if (!autoTemp && AutoTemp) { blameOnBroken = c; }
             if (turbineOutput < TargetTurbineOutput) { blameOnBroken = c; }
             if (fissionRate > TargetFissionRate) { blameOnBroken = c; }
-            if (!_powerOn && powerOn) { blameOnBroken = c; }
+            if (!PowerOn && powerOn) { blameOnBroken = c; }
 
             AutoTemp = autoTemp;
-            _powerOn = powerOn;
+            PowerOn = powerOn;
             TargetFissionRate = fissionRate;
             TargetTurbineOutput = turbineOutput;
             if (AllowTemperatureBoost) { temperatureBoost = temperatureBoostAmount; }
@@ -45,10 +45,10 @@ namespace Barotrauma.Items.Components
             unsentChanges = true;
         }
 
-        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
+        public override void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.WriteBoolean(autoTemp);
-            msg.WriteBoolean(_powerOn);
+            msg.WriteBoolean(AutoTemp);
+            msg.WriteBoolean(PowerOn);
             msg.WriteRangedSingle(temperature, 0.0f, 100.0f, 8);
             msg.WriteRangedSingle(TargetFissionRate, 0.0f, 100.0f, 8);
             msg.WriteRangedSingle(TargetTurbineOutput, 0.0f, 100.0f, 8);

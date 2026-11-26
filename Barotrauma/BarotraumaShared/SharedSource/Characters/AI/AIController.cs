@@ -1,14 +1,15 @@
 ﻿using Barotrauma.Items.Components;
-using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
+using FarseerPhysics.Common;
 
 namespace Barotrauma
 {
-    abstract partial class AIController : ISteerable
+    public abstract partial class AIController : ISteerable
     {
         public bool Enabled;
 
@@ -134,21 +135,39 @@ namespace Barotrauma
         public bool IsCurrentPathUnreachable => steeringManager is IndoorsSteeringManager pathSteering && !pathSteering.IsPathDirty && pathSteering.CurrentPath != null && pathSteering.CurrentPath.Unreachable;
         public bool IsCurrentPathFinished => steeringManager is IndoorsSteeringManager pathSteering && !pathSteering.IsPathDirty && pathSteering.CurrentPath != null && pathSteering.CurrentPath.Finished;
 
-        protected readonly float colliderWidth;
-        protected readonly float minGapSize;
-        protected readonly float colliderLength;
-        protected readonly float avoidLookAheadDistance;
+        /// <summary>
+        /// In sim units.
+        /// </summary>
+        public readonly float ColliderWidth;
+        /// <summary>
+        /// In display units.
+        /// </summary>
+        public readonly float MinGapSize;
+        /// <summary>
+        /// In sim units.
+        /// </summary>
+        public readonly float ColliderLength;
+        /// <summary>
+        /// In sim units.
+        /// </summary>
+        public readonly float AvoidLookAheadDistance;
 
         public AIController (Character c)
         {
             Character = c;
             hullVisibilityTimer = Rand.Range(0f, hullVisibilityTimer);
             Enabled = true;
+
             var size = Character.AnimController.Collider.GetSize();
-            colliderWidth = size.X;
-            colliderLength = size.Y;
-            avoidLookAheadDistance = Math.Max(Math.Max(colliderWidth, colliderLength) * 3, 1.5f);
-            minGapSize = ConvertUnits.ToDisplayUnits(Math.Min(colliderWidth, colliderLength));
+            ColliderWidth = size.X;
+            ColliderLength = size.Y;
+
+            //any creature can avoid obstacles less than 3 meters away regardless of distance
+            float minAvoidDistance = 3.0f;
+            //make sure the creature can leave at least 1 meter between it and the obstacle
+            float avoidMargin = 1.0f;
+            AvoidLookAheadDistance = Math.Max(Character.AnimController.Collider.GetMaxExtent() * 1.5f + avoidMargin, minAvoidDistance);
+            MinGapSize = ConvertUnits.ToDisplayUnits(Math.Min(ColliderWidth, ColliderLength));
         }
 
         public virtual void OnHealed(Character healer, float healAmount) { }
@@ -207,7 +226,7 @@ namespace Barotrauma
             return SteerThroughGap(gap, targetWorldPos, deltaTime, maxDistance: -1);
         }
 
-        public virtual bool SteerThroughGap(Gap gap, Vector2 targetWorldPos, float deltaTime, float maxDistance = -1)
+        public virtual bool SteerThroughGap(Gap gap, Vector2 targetWorldPos, float deltaTime, float maxDistance = -1, bool attemptColliderReorientationWithTightGaps = true)
         {
             Hull targetHull = gap.FlowTargetHull;
             if (targetHull == null) { return false; }
@@ -220,7 +239,35 @@ namespace Barotrauma
             {
                 pathSteering.ResetPath();
             }
-            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(targetWorldPos - Character.WorldPosition));
+            Vector2 targetDirection = Vector2.Normalize(targetWorldPos - Character.WorldPosition);
+            if (!targetDirection.IsValid()) { return false; }
+            if (attemptColliderReorientationWithTightGaps && !gap.CanFitThrough(ConvertUnits.ToDisplayUnits(Math.Max(ColliderLength, ColliderWidth))))
+            {
+                // Check whether we can fit through the gap when the collider is not quite oriented towards the gap.
+                var animController = Character.AnimController;
+                Vector2 colliderOrientation = VectorExtensions.Forward(animController.Collider.Rotation + MathHelper.PiOver2);
+                if (colliderOrientation.Angle(targetDirection) > MathHelper.PiOver4 && 
+                    colliderOrientation.Angle(animController.TargetMovement) > MathHelper.PiOver4)
+                {
+                    // If the main collider is not roughly facing where we are heading, the chances are we are or would get stuck in the gap.
+                    if (Character.CurrentHull == targetHull)
+                    {
+                        // If already in, try to nudge through.
+                        // Note that if we'd use the method for getting outside through the gap, this approach wouldn't work. The direction would have to be inversed, yet we can't do it here without having the information about the direction.
+                        // However, I don't think we actually use it for exiting, except when bots are following a target. And in that case, we shouldn't get here.
+                        Vector2 gapFlowDirection = Vector2.Normalize(targetWorldPos - gap.WorldPosition);
+                        SteeringManager.SteeringManual(deltaTime, gapFlowDirection + new Vector2(Rand.Range(-0.5f, 0.5f), 0f));
+                        return true;
+                    }
+                    else if (Character.CurrentHull == null)
+                    {
+                        // Reverse so that there's room for the main collider to rotate towards the gap.
+                        SteeringManager.SteeringManual(deltaTime, -targetDirection);
+                        return true;
+                    }
+                }
+            }
+            SteeringManager.SteeringManual(deltaTime, targetDirection); 
             return true;
         }
 
@@ -296,26 +343,28 @@ namespace Barotrauma
                 foreach (InvSlotType slots in pickable.AllowedSlots)
                 {
                     if (slots.HasFlag(InvSlotType.Any)) { continue; }
+
+                    bool isHandSlot = slots == InvSlotType.RightHand || slots == InvSlotType.LeftHand || slots == (InvSlotType.RightHand | InvSlotType.LeftHand);
+
                     if (!wear)
                     {
-                        if (slots != InvSlotType.RightHand && slots != InvSlotType.LeftHand && slots != (InvSlotType.RightHand | InvSlotType.LeftHand))
+                        if (!isHandSlot)
                         {
                             // Don't allow other than hand slots if not allowed to wear.
                             continue;
                         }
                     }
+
                     for (int i = 0; i < targetInventory.Capacity; i++)
                     {
-                        if (targetInventory is CharacterInventory characterInventory)
-                        {
-                            //slot not needed by the item, continue
-                            if (!slots.HasFlag(characterInventory.SlotTypes[i])) { continue; }
-                        }
+                        //slot not needed by the item, continue
+                        if (!slots.HasFlag(targetInventory.SlotTypes[i])) { continue; }
                         targetSlot = i;
                         var otherItem = targetInventory.GetItemAt(i);
                         //slot free, continue
                         if (otherItem == null) { continue; }
-                        if (!otherItem.IsInteractable(Character)) { return false; }
+                        if (!otherItem.IsInteractable(Character)) { continue; }
+                        if (otherItem.IsStuckInHandSlot) { continue; }
                         //try to move the existing item to LimbSlot.Any and continue if successful
                         if (otherItem.AllowedSlots.Contains(InvSlotType.Any) && targetInventory.TryPutItem(otherItem, Character, CharacterInventory.AnySlot))
                         {
@@ -352,7 +401,17 @@ namespace Barotrauma
                 {
                     targetInventory.TryPutItem(item, Character, CharacterInventory.AnySlot);
                 }
-                return targetInventory.TryPutItem(item, targetSlot, allowSwapping, allowCombine: false, Character);
+                bool success = targetInventory.TryPutItem(item, targetSlot, allowSwapping, allowCombine: false, Character);
+                if (!success)
+                {
+                    // Failed to equip the item: the slot may be occupied by an item that's forcibly kept in the hand (eg. a swappable prosthetic's tool/weapon).
+                    // So now that we know we can't equip the item otherwise, signal the target inventory that we know
+                    // what we are doing and _really_ want the slot free (force == true), but let it attempt to release
+                    // the item correctly first, then we try one more time.
+                    targetInventory.AttemptToFreeHandsFor(item, force: true);
+                    success = targetInventory.TryPutItem(item, targetSlot, allowSwapping, allowCombine: false, Character);
+                }
+                return success;
             }
             else
             {
@@ -360,23 +419,23 @@ namespace Barotrauma
             }
         }
 
-        /// <param name="avoidDroppingInSea">When enabled, items are first put in the inventory and dropped only if that fails, unless the character is inside a friendly submarine.</param>
+        /// <param name="avoidDroppingOutsideFriendlySubs">When enabled, items are first put in the inventory and dropped only if that fails, unless the character is inside a friendly submarine.</param>
         /// <param name="allowDestroying">Allows destroying of the items when unequipped (instead of dropping them). Used only with infinite spawns.</param>
-        public void UnequipEmptyItems(Item parentItem, bool avoidDroppingInSea = true, bool allowDestroying = false) => UnequipEmptyItems(Character, parentItem, avoidDroppingInSea, allowDestroying);
+        public void UnequipEmptyItems(Item parentItem, bool avoidDroppingOutsideFriendlySubs = true, bool allowDestroying = false) => UnequipEmptyItems(Character, parentItem, avoidDroppingOutsideFriendlySubs, allowDestroying);
 
-        /// <param name="avoidDroppingInSea">When enabled, items are first put in the inventory and dropped only if that fails, unless the character is inside a friendly submarine.</param>
+        /// <param name="avoidDroppingOutsideFriendlySubs">When enabled, items are first put in the inventory and dropped only if that fails, unless the character is inside a friendly submarine.</param>
         /// <param name="allowDestroying">Allows destroying of the items when unequipped (instead of dropping them). Used only with infinite spawns.</param>
         /// <param name="unequipMax">Optional max amount for items to be unequipped.</param>
-        public void UnequipContainedItems(Item parentItem, Func<Item, bool> predicate = null, bool avoidDroppingInSea = true, bool allowDestroying = false, int? unequipMax = null) => UnequipContainedItems(Character, parentItem, predicate, avoidDroppingInSea, allowDestroying, unequipMax);
+        public void UnequipContainedItems(Item parentItem, Func<Item, bool> predicate = null, bool avoidDroppingOutsideFriendlySubs = true, bool allowDestroying = false, int? unequipMax = null) => UnequipContainedItems(Character, parentItem, predicate, avoidDroppingOutsideFriendlySubs, allowDestroying, unequipMax);
 
-        /// <param name="avoidDroppingInSea">When enabled, items are first put in the inventory and dropped only if that fails, unless the character is inside a friendly submarine.</param>
+        /// <param name="avoidDroppingOutsideFriendlySubs">When enabled, items are first put in the inventory and dropped only if that fails, unless the character is inside a friendly submarine.</param>
         /// <param name="allowDestroying">Allows destroying of the items when unequipped (instead of dropping them). Used only with infinite spawns.</param>
-        public static void UnequipEmptyItems(Character character, Item parentItem, bool avoidDroppingInSea = true, bool allowDestroying = false) => UnequipContainedItems(character, parentItem, it => it.Condition <= 0, avoidDroppingInSea, allowDestroying);
+        public static void UnequipEmptyItems(Character character, Item parentItem, bool avoidDroppingOutsideFriendlySubs = true, bool allowDestroying = false) => UnequipContainedItems(character, parentItem, it => it.Condition <= 0, avoidDroppingOutsideFriendlySubs, allowDestroying);
         
-        /// <param name="avoidDroppingInSea">When enabled, items are first put in the inventory and dropped only if that fails, unless the character is inside a friendly submarine.</param>
+        /// <param name="avoidDroppingOutsideFriendlySubs">When enabled, items are first put in the inventory and dropped only if that fails, unless the character is inside a friendly submarine.</param>
         /// <param name="allowDestroying">Allows destroying of the items when unequipped (instead of dropping them). Used only with infinite spawns.</param>
         /// <param name="unequipMax">Optional max amount for items to be unequipped.</param>
-        public static void UnequipContainedItems(Character character, Item parentItem, Func<Item, bool> predicate, bool avoidDroppingInSea = true, bool allowDestroying = false, int? unequipMax = null)
+        public static void UnequipContainedItems(Character character, Item parentItem, Func<Item, bool> predicate, bool avoidDroppingOutsideFriendlySubs = true, bool allowDestroying = false, int? unequipMax = null)
         {
             var inventory = parentItem.OwnInventory;
             if (inventory == null || !inventory.Container.DrawInventory) { return; }
@@ -394,9 +453,10 @@ namespace Barotrauma
                         }
                         else
                         {
-                            if (avoidDroppingInSea && !character.IsInFriendlySub)
+                            if (avoidDroppingOutsideFriendlySubs && 
+                                (character.Submarine == null || !character.IsAllowedToInteractWithItemsOnSub(character.Submarine)))
                             {
-                                // If we are not inside a friendly sub (= same team), try to put the item in the inventory instead dropping it.
+                                // If we are not inside a friendly sub/outpost, try to put the item in the inventory instead dropping it.
                                 if (character.Inventory.TryPutItem(containedItem, character, CharacterInventory.AnySlot))
                                 {
                                     if (unequipMax.HasValue && ++removed >= unequipMax) { return; }
@@ -430,6 +490,11 @@ namespace Barotrauma
             }
             unequippedItems.Clear();
         }
+
+        /// <summary>
+        /// Tries to get the character that this AI controlled character is currently attacking.
+        /// </summary>
+        public abstract bool TryGetAttackTarget<T>(out T outTarget) where T : Entity;
 
         #region Escape
         public abstract bool Escape(float deltaTime);
@@ -476,7 +541,7 @@ namespace Barotrauma
                         else
                         {
                             if (gap.Open < 1) { continue; }
-                            if (gap.Size < minGapSize) { continue; }
+                            if (gap.Size < MinGapSize) { continue; }
                         }
                         if (gap.FlowTargetHull == Character.CurrentHull)
                         {
@@ -539,7 +604,7 @@ namespace Barotrauma
                 }
                 else if (pathSteering != null)
                 {
-                    pathSteering.SteeringSeek(EscapeTarget.SimPosition, weight: 1, minGapSize);
+                    pathSteering.SteeringSeek(EscapeTarget.SimPosition, weight: 1, MinGapSize);
                 }
                 else
                 {

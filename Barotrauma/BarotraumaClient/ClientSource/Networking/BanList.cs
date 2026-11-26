@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma.Networking
 {
-    partial class BannedPlayer
+    public partial class BannedPlayer
     {
         public BannedPlayer(
             UInt32 uniqueIdentifier,
@@ -22,7 +22,7 @@ namespace Barotrauma.Networking
         }
     }
 
-    partial class BanList
+    public partial class BanList
     {
         public GUIComponent? BanFrame { get; private set; }
 

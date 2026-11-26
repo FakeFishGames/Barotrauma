@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using Barotrauma;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -44,6 +45,8 @@ public static class AssemblyInfo
 #else
     public const Configuration CurrentConfiguration = Configuration.Release;
 #endif
+
+    public static string FullVersionDisplayText => "Barotrauma v" + GameMain.Version + " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")";
 
     static AssemblyInfo()
     {

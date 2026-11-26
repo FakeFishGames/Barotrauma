@@ -20,7 +20,7 @@ namespace Barotrauma
         Crouch = 5
     }
 
-    abstract class GroundedMovementParams : AnimationParams
+    public abstract class GroundedMovementParams : AnimationParams
     {
         [Header("Legs")]
         [Serialize("1.0, 1.0", IsPropertySaveable.Yes, description: "How big steps the character takes."), Editable(DecimalCount = 2, ValueStep = 0.01f)]
@@ -62,7 +62,10 @@ namespace Barotrauma
         
         [Serialize(10.5f, IsPropertySaveable.Yes, description: "Force applied to the main collider, torso and head, when climbing ladders."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 100f, DecimalCount = 1)]
         public float ClimbBodyMoveForce { get; set; }
-        
+
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "Multiplier on how far the character's body (torso, head) are placed from the ladders when climbing."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10f, DecimalCount = 1)]
+        public float ClimbBodyMoveDistance { get; set; }
+
         [Serialize(5.2f, IsPropertySaveable.Yes, description: "Force applied to the hands when climbing ladders."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 100f, DecimalCount = 1)]
         public float ClimbHandMoveForce { get; set; }
         
@@ -97,7 +100,7 @@ namespace Barotrauma
         }
     }
 
-    abstract class SwimParams : AnimationParams
+    public abstract class SwimParams : AnimationParams
     {
         [Serialize(25.0f, IsPropertySaveable.Yes, description: "Turning speed (or rather a force applied on the main collider to make it turn). Note that you can set a limb-specific steering forces too (additional)."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
         public float SteerTorque { get; set; }
@@ -106,7 +109,7 @@ namespace Barotrauma
         public float LegTorque { get; set; }
     }
 
-    abstract class AnimationParams : EditableParams, IMemorizable<AnimationParams>
+    public abstract class AnimationParams : EditableParams, IMemorizable<AnimationParams>
     {
         public Identifier SpeciesName { get; private set; }
         public bool IsGroundedAnimation => AnimationType is AnimationType.Walk or AnimationType.Run or AnimationType.Crouch;

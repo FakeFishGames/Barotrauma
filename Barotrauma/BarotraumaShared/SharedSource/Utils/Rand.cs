@@ -95,13 +95,13 @@ namespace Barotrauma
             return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[sync])).Next(max);
         }
 
+        /// <summary>
+        /// Returns a uniformly distributed random direction vector of the specified length.
+        /// </summary>
         public static Vector2 Vector(float length, RandSync sync = RandSync.Unsynced)
         {
-            Vector2 randomVector = new Vector2(Range(-1.0f, 1.0f, sync), Range(-1.0f, 1.0f, sync));
-
-            if (randomVector.LengthSquared() < 0.001f) return new Vector2(0.0f, length);
-
-            return Vector2.Normalize(randomVector) * length;
+            float angle = Range(0f, MathHelper.TwoPi, sync);
+            return new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * length;
         }
         
         /// <summary>
@@ -124,15 +124,13 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Returns a uniformly distributed random direction vector of the specified length (double precision).
+        /// </summary>
         public static DoubleVector2 Vector(double length, RandSync sync = RandSync.Unsynced)
         {
-            double x = Range(-1.0, 1.0, sync);
-            double y = Range(-1.0, 1.0, sync);
-
-            double len = Math.Sqrt(x * x + y * y);
-            if (len < 0.00001) return new DoubleVector2(0.0, length);
-
-            return new DoubleVector2(x / len * length, y / len * length);
+            double angle = Range(0.0, Math.Tau, sync); // Tau is just 2pi that happens to already be double
+            return new DoubleVector2(Math.Cos(angle) * length, Math.Sin(angle) * length);
         }
     }
 }

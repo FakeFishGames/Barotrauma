@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class RoundSummary
+    public class RoundSummary
     {
         private float crewListAnimDelay = 0.25f;
         private float missionIconAnimDelay;
@@ -50,7 +50,8 @@ namespace Barotrauma
             }
         }
 
-        public GUIFrame CreateSummaryFrame(GameSession gameSession, string endMessage, CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None, TraitorManager.TraitorResults? traitorResults = null)
+        public GUIFrame CreateSummaryFrame(GameSession gameSession, string endMessage, 
+            CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None, TraitorManager.TraitorResults? traitorResults = null)
         {
             bool singleplayer = GameMain.NetworkMember == null;
             bool gameOver =
@@ -88,7 +89,11 @@ namespace Barotrauma
                 TextManager.Get("crew"), textAlignment: Alignment.TopLeft, font: GUIStyle.SubHeadingFont);
             crewHeader.RectTransform.MinSize = new Point(0, GUI.IntScale(crewHeader.Rect.Height * 2.0f));
 
-            var crewList = CreateCrewList(crewContent, gameSession.CrewManager.GetCharacterInfos().Where(c => c.TeamID != CharacterTeamType.Team2), traitorResults);
+            var crewList = CreateCrewList(parent: crewContent, 
+                characterInfos: gameSession.CrewManager.GetCharacterInfos()
+                .Where(c => c.TeamID != CharacterTeamType.Team2)
+                .OrderBy(c => c.CrewListIndex),
+                traitorResults: traitorResults);
             if (traitorResults != null && traitorResults.Value.VotedAsTraitorClientSessionId > 0)
             {
                 var traitorInfoPanel = CreateTraitorInfoPanel(crewList.Content, traitorResults.Value, crewListAnimDelay);
@@ -126,7 +131,10 @@ namespace Barotrauma
 
             //header -------------------------------------------------------------------------------
 
-            LocalizedString headerText = GetHeaderText(gameOver, transitionType);
+            float elapsedWorldSteps = CampaignMode.GetElapsedWorldSteps(gameSession?.RoundDuration ?? 0, transitionType);
+            int elapsedWholeWorldSteps = (int)Math.Floor(elapsedWorldSteps);
+
+            LocalizedString headerText = GetHeaderText(gameOver, transitionType, elapsedWholeWorldSteps);
             GUITextBlock headerTextBlock = null;
             if (!headerText.IsNullOrEmpty())
             {
@@ -170,20 +178,69 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            List<Mission> missionsToDisplay = new List<Mission>(selectedMissions.Where(m => m.Prefab.ShowInMenus));
+            if (elapsedWholeWorldSteps > 0)
+            {
+                var worldStepCounter = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionContent.RectTransform),
+                    TextManager.Get("timeonmission.label"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft)
+                {
+                    ToolTip = TextManager.Get("timeonmission.tooltip")
+                };
+                worldStepCounter.RectTransform.MinSize = new Point(0, (int)(worldStepCounter.TextSize.Y * 2f));
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), worldStepCounter.RectTransform),
+                    TextManager.GetWithVariable(elapsedWholeWorldSteps == 1 ? "timeonmission.valuesingular" : "timeonmission.valueplural", "[worldsteps]", elapsedWholeWorldSteps.ToString()), 
+                    textAlignment: Alignment.CenterRight)
+                {
+                    CanBeFocused = false
+                };
+
+                //spacing
+                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), missionContent.RectTransform), style: "HorizontalLine")
+                {
+                    CanBeFocused = false
+                };
+            }
+
+            List<Mission> missionsToDisplay = new List<Mission>(selectedMissions.Where(m => m.ShowInMenus || shouldShowEndMessage(m)));
             if (startLocation != null)
             {
                 //side objectives can't be selected manually (they're always selected), we need to add them separately from SelectedMissions
                 foreach (Mission mission in startLocation.SelectedMissions.Union(startLocation.AvailableMissions.Where(m => m.Prefab.IsSideObjective)))
                 {
                     if (missionsToDisplay.Contains(mission)) { continue; }
-                    if (!mission.Prefab.ShowInMenus) { continue; }
+                    if (!mission.ShowInMenus && !shouldShowEndMessage(mission)) { continue; }
                     if (mission.Locations[0] == mission.Locations[1] ||
                         mission.Locations.Contains(campaignMode?.Map.SelectedLocation))
                     {
                         missionsToDisplay.Add(mission);
                     }
                 }
+                //add automatically selected side objectives from the connection
+                if (campaignMode?.Map.SelectedLocation is { } selectedLocation && selectedLocation != startLocation)
+                {
+                    //if the mission isn't shown in menus, it cannot be selected by the player -> must be something that is supposed to be automatically selected
+                    foreach (var mission in selectedLocation.AvailableMissions.Where(m => 
+                                m.Prefab.IsSideObjective && m.Locations.Contains(startLocation)))
+                    {
+                        if (missionsToDisplay.Contains(mission)) { continue; }
+                        if (!mission.ShowInMenus && !shouldShowEndMessage(mission)) { continue; }
+                        missionsToDisplay.Add(mission);                        
+                    }
+                }
+            }
+
+            static bool shouldShowEndMessage(Mission mission)
+            {
+                //the mission can't have ended this round if it doesn't take place in this level
+                if (mission.Level != Level.Loaded) { return false; }
+
+                return mission.Prefab.ShowEndMessage switch
+                {
+                    MissionPrefab.CompletionCondition.Always => true,
+                    MissionPrefab.CompletionCondition.Never => false,
+                    MissionPrefab.CompletionCondition.OnlyWhenCompleted => mission.Completed,
+                    MissionPrefab.CompletionCondition.OnlyWhenFailed => mission.Failed,
+                    _ => throw new NotImplementedException(),
+                };
             }
 
             GUIListBox missionList = new GUIListBox(new RectTransform(Vector2.One, missionContent.RectTransform, Anchor.Center))
@@ -216,26 +273,46 @@ namespace Barotrauma
 
                 if (selectedMissions.Contains(mission))
                 {
-                    textContent.Add(mission.Completed ? mission.SuccessMessage : mission.FailureMessage);
-
-                    var repText = mission.GetReputationRewardText();
-                    if (!repText.IsNullOrEmpty()) { textContent.Add(repText); }
-
-                    int totalReward = mission.GetFinalReward(Submarine.MainSub);
-                    if (totalReward > 0)
+                    if (mission.OutpostDestroyedReason != Mission.OutpostDestroyedState.None)
                     {
-                        textContent.Add(mission.GetMissionRewardText(Submarine.MainSub));
-                        if (GameMain.IsMultiplayer && Character.Controlled is { } controlled && mission.Completed)
+                        textContent.Add(TextManager.Get($"missionfailure.outpostcombat.{mission.OutpostDestroyedReason}"));
+                    }
+
+                    if (!mission.Failed)
+                    {
+                        var repText = mission.GetReputationRewardText();
+                        if (!repText.IsNullOrEmpty()) { textContent.Add(repText); }
+
+                        int totalReward = mission.GetFinalReward(Submarine.MainSub);
+                        if (totalReward > 0)
                         {
-                            var (share, percentage, _) = Mission.GetRewardShare(controlled.Wallet.RewardDistribution, GameSession.GetSessionCrewCharacters(CharacterType.Player).Where(c => c != controlled), Option<int>.Some(totalReward));
-                            if (share > 0)
+                            textContent.Add(mission.GetMissionRewardText(Submarine.MainSub));
+                            if (GameMain.IsMultiplayer && Character.Controlled is { } controlled && mission.Completed)
                             {
-                                string shareFormatted = string.Format(CultureInfo.InvariantCulture, "{0:N0}", share);
-                                RichString yourShareString = TextManager.GetWithVariables("crewwallet.missionreward.get", ("[money]", $"{shareFormatted}"), ("[share]", $"{percentage}"));
-                                textContent.Add(yourShareString);
+                                var (share, percentage, _) = Mission.GetRewardShare(controlled.Wallet.RewardDistribution, GameSession.GetSessionCrewCharacters(CharacterType.Player).Where(c => c != controlled), Option<int>.Some(totalReward));
+                                if (share > 0)
+                                {
+                                    string shareFormatted = string.Format(CultureInfo.InvariantCulture, "{0:N0}", share);
+                                    RichString yourShareString = TextManager.GetWithVariables("crewwallet.missionreward.get", ("[money]", $"{shareFormatted}"), ("[share]", $"{percentage}"));
+                                    textContent.Add(yourShareString);
+                                }
                             }
                         }
                     }
+
+                    if (mission.Completed)
+                    {
+                        textContent.Add(mission.SuccessMessage);
+                    }
+                    else if (mission.Failed || mission.NeutralResultMessage.IsNullOrEmpty())
+                    {
+                        textContent.Add(mission.FailureMessage);
+                    }
+                    else
+                    {
+                        textContent.Add(mission.NeutralResultMessage);
+                    }
+
                 }
                 else
                 {
@@ -248,14 +325,14 @@ namespace Barotrauma
 
                 CreateMissionEntry(
                     missionList.Content,
-                    mission.Name,
+                    mission.NameWithContentPackage,
                     textContent,
                     mission.Difficulty ?? 0,
                     mission.Prefab.Icon, mission.Prefab.IconColor,
                     mission.GetDifficultyToolTipText(),
                     out GUIImage missionIcon);
 
-                if (selectedMissions.Contains(mission))
+                if (selectedMissions.Contains(mission) && mission.Prefab.ShowCompletionState)
                 {
                     UpdateMissionStateIcon(mission is CombatMission combatMission ? CombatMission.IsInWinningTeam(GameMain.Client?.Character) : mission.Completed, missionIcon, animDelay);
                     animDelay += 0.25f;
@@ -275,7 +352,11 @@ namespace Barotrauma
                     TextManager.Get("nomission"), font: GUIStyle.LargeFont);
             }
 
-            gameSession?.EventManager?.EventLog?.CreateEventLogUI(missionList.Content, traitorResults);
+            gameSession?.EventManager?.EventLog?.CreateEventLogUI(missionList.Content, traitorResults, 
+                //Don't show persistent logs after every round.
+                //The player can find them in the mission tab, they don't need to be reminded about every ongoing event chain constantly.
+                //The logs may also overlap with logs about the missions (e.g. "completed this main story mission!" + event log says "you completed this part of the main story")
+                showPersistentLogs: false);
 
             AddSeparators(missionList.Content);
 
@@ -391,7 +472,7 @@ namespace Barotrauma
                         Faction unlockFaction = null;
                         if (!unlockEvent.Faction.IsEmpty)
                         {
-                            unlockFaction = GameMain.GameSession.Campaign.Factions.Find(f => f.Prefab.Identifier == unlockEvent.Faction);
+                            unlockFaction = GameMain.GameSession.Campaign.GetFaction(unlockEvent.Faction);
                             unlockReputation = unlockFaction?.Reputation;
                         }
                         float normalizedUnlockReputation = MathUtils.InverseLerp(unlockReputation.MinReputation, unlockReputation.MaxReputation, unlockEvent.UnlockPathReputation);
@@ -579,7 +660,7 @@ namespace Barotrauma
         }
 
 
-        private LocalizedString GetHeaderText(bool gameOver, CampaignMode.TransitionType transitionType)
+        private LocalizedString GetHeaderText(bool gameOver, CampaignMode.TransitionType transitionType, int elapsedWorldSteps)
         {
             LocalizedString locationName = Submarine.MainSub is { AtEndExit: true } ? endLocation?.DisplayName : startLocation?.DisplayName;
 
@@ -612,9 +693,26 @@ namespace Barotrauma
                         locationName = startLocation?.DisplayName;
                         textTag = "RoundSummaryReturn";
                         break;
+                    case CampaignMode.TransitionType.SaveAndReturnToSameLocation:
+                        locationName = startLocation?.DisplayName;
+                        textTag = "RoundSummarySaveAndReturnToSameLocation";
+                        break;
                     case CampaignMode.TransitionType.ReturnToPreviousEmptyLocation:
                         locationName = startLocation?.DisplayName;
                         textTag = "RoundSummaryReturnToEmptyLocation";
+                        break;
+                    case CampaignMode.TransitionType.TeleportToLocation:
+                        if (gameMode is CampaignMode campaign)
+                        {
+                            locationName = 
+                                campaign.Map?.LocationToTeleportTo?.DisplayName ?? 
+                                //LocationToTeleportTo is used by clients to communicate to the server where to teleport, 
+                                //but not communicated from the server to other clients. However, at this point when the round is ended,
+                                //the current location has already been set by clients and we can use that.
+                                campaign?.CurrentLocation?.DisplayName;
+                        }
+
+                        textTag = "RoundSummaryTeleportToLocation";
                         break;
                     default:
                         if (Submarine.MainSub == null)
@@ -649,7 +747,10 @@ namespace Barotrauma
                 subName = currentOrPending.DisplayName;
             }
 
-            return TextManager.GetWithVariables(textTag, ("[sub]", subName), ("[location]", locationName));            
+            return TextManager.GetWithVariables(textTag, 
+                ("[sub]", subName), 
+                ("[location]", locationName),
+                ("[worldsteps]", elapsedWorldSteps.ToString()));            
         }
 
         private GUIListBox CreateCrewList(GUIComponent parent, IEnumerable<CharacterInfo> characterInfos, TraitorManager.TraitorResults? traitorResults)
@@ -894,16 +995,35 @@ namespace Barotrauma
             sliderHolder.RectTransform.IsFixedSize = true;
             factionTextContent.Recalculate();
             
-            new GUICustomComponent(new RectTransform(new Vector2(0.8f, 1.0f), sliderHolder.RectTransform),
+            var reputationBar = new GUICustomComponent(new RectTransform(new Vector2(0.8f, 1.0f), sliderHolder.RectTransform),
                 onDraw: (sb, customComponent) => DrawReputationBar(sb, customComponent.Rect, reputation.NormalizedValue, reputation.MinReputation, reputation.MaxReputation));
-                
+
             var reputationText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), sliderHolder.RectTransform),
-                string.Empty, textAlignment: Alignment.CenterLeft, font: GUIStyle.SubHeadingFont);
+                string.Empty, textAlignment: Alignment.CenterLeft, font: GUIStyle.SubHeadingFont)
+            {
+                Shadow = true
+            };
             SetReputationText(reputationText);
-            reputation?.OnReputationValueChanged.RegisterOverwriteExisting("RefreshRoundSummary".ToIdentifier(), _ => 
+            SetRecoveryToolTip();
+            reputation?.OnReputationValueChanged.RegisterOverwriteExisting("RefreshRoundSummary".ToIdentifier(), _ =>
             {
                 SetReputationText(reputationText);
+                SetRecoveryToolTip();
             });
+
+            //explain that very low reputation recovers on its own (see Faction.ProgressWorld)
+            void SetRecoveryToolTip()
+            {
+                LocalizedString toolTip = null;
+                if (reputation?.Faction?.Prefab is FactionPrefab factionPrefab &&
+                    factionPrefab.ReputationRecoveryPerWorldStep > 0.0f &&
+                    reputation.Value < factionPrefab.ReputationRecoveryThreshold)
+                {
+                    toolTip = TextManager.GetWithVariable("reputationrecovery.tooltip", "[threshold]", ((int)factionPrefab.ReputationRecoveryThreshold).ToString());
+                }
+                reputationBar.ToolTip = toolTip;
+                reputationText.ToolTip = toolTip;
+            }
 
             void SetReputationText(GUITextBlock textBlock)
             {

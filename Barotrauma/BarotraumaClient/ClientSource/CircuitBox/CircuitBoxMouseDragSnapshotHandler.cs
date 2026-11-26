@@ -14,7 +14,7 @@ namespace Barotrauma
     /// - Finding components, connectors and wires under cursor.
     /// - Determines whether the user is dragging something.
     /// </summary>
-    internal sealed class CircuitBoxMouseDragSnapshotHandler
+    public sealed class CircuitBoxMouseDragSnapshotHandler
     {
         public IEnumerable<CircuitBoxNode> Nodes
         {

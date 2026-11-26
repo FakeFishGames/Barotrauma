@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    internal readonly struct NetLimitedString
+    public readonly struct NetLimitedString
     {
         public readonly string Value;
         public const int MaxLength = 255;

@@ -3,7 +3,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class DeformableSprite
+    public partial class DeformableSprite
     {
         public Vector2 Size
         {

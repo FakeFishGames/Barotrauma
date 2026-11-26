@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    internal sealed partial class CircuitBox
+    public sealed partial class CircuitBox
     {
         /// <summary>
         /// If the server needs to initialize the circuit box to the clients

@@ -8,7 +8,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
     [RequiredByCorePackage]
-    sealed class CharacterFile : ContentFile
+    public sealed class CharacterFile : ContentFile
     {
         public CharacterFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

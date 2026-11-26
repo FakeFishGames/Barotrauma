@@ -7,11 +7,14 @@ using System.Text;
 
 namespace Barotrauma.Sounds
 {
-    sealed class SoundBuffers : IDisposable
+    public sealed class SoundBuffers : IDisposable
     {
         private static readonly HashSet<uint> bufferPool = new HashSet<uint>();
 #if OSX
-        public const int MaxBuffers = 400; //TODO: check that this value works for macOS
+        // Apple's OpenAL.framework has a hard limit of 1024 buffers (one reserved for AL_NONE), shared with those buffers
+        // the streamed channels generate for themselves.
+        // Thus we shouldn't max it out, but leave enough for every source to be streaming.
+        public const int MaxBuffers = 1023 - SoundChannel.StreamBufferCount * (SoundManager.SourceCount + SoundManager.VoiceSourceCount); // = 831
 #else
         public const int MaxBuffers = 32000;
 #endif

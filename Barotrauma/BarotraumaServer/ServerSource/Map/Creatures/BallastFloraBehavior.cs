@@ -4,7 +4,7 @@ using System;
 
 namespace Barotrauma.MapCreatures.Behavior
 {
-    partial class BallastFloraBehavior
+    public partial class BallastFloraBehavior
     {
         const float DamageUpdateInterval = 1.0f;
 
@@ -98,8 +98,8 @@ namespace Barotrauma.MapCreatures.Behavior
             msg.WriteBoolean(branch.IsRootGrowth);
             msg.WriteRangedInteger((byte)branch.Type, 0b0000, 0b1111);
             msg.WriteRangedInteger((byte)branch.Sides, 0b0000, 0b1111);
-            msg.WriteRangedInteger(branch.FlowerConfig.Serialize(), 0, 0xFFF);
-            msg.WriteRangedInteger(branch.LeafConfig.Serialize(), 0, 0xFFF);
+            branch.FlowerConfig.WriteFoliageConfig(rotationMin: 0, rotationMax: 360f, msg);
+            branch.LeafConfig.WriteFoliageConfig(rotationMin: 0, rotationMax: 360f, msg);
             msg.WriteUInt16((ushort)branch.MaxHealth);
             msg.WriteInt32((int)(x / VineTile.Size));
             msg.WriteInt32((int)(y / VineTile.Size));

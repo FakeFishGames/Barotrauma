@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveFightIntruders : AIObjectiveLoop<Character>
+    public class AIObjectiveFightIntruders : AIObjectiveLoop<Character>
     {
         public override Identifier Identifier { get; set; } = "fight intruders".ToIdentifier();
         protected override float IgnoreListClearInterval => 30;

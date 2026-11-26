@@ -9,6 +9,30 @@ namespace Barotrauma
 {
     partial class SubmarineBody
     {
+        /// <summary>
+        /// Extents of everything drawn as a part of the submarine, used for culling. Unlike <see cref="Borders"/>, includes structures without a collider
+        /// and the parts of item sprites that extend beyond the items (e.g. turret barrels).
+        /// </summary>
+        public Rectangle VisibleBorders
+        {
+            get;
+            private set;
+        }
+
+        partial void CalculateVisibleBorders(Vector2 minExtents, Vector2 maxExtents)
+        {
+            Vector2 min = minExtents;
+            Vector2 max = maxExtents;
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.Submarine != submarine || item.ParentInventory != null) { continue; }
+                //range drawables (lights, editor range indicators) are ignored, they'd make the borders unnecessarily large
+                Rectangle extents = item.CalculateVisibleExtents(ignoreRangedDrawables: true);
+                min = Vector2.Min(min, item.Position + new Vector2(extents.X, extents.Y));
+                max = Vector2.Max(max, item.Position + new Vector2(extents.Width, extents.Height));
+            }
+            VisibleBorders = new Rectangle((int)min.X, (int)max.Y, (int)(max.X - min.X), (int)(max.Y - min.Y));
+        }
 
         partial void HandleLevelCollisionProjSpecific(Impact impact)
         {

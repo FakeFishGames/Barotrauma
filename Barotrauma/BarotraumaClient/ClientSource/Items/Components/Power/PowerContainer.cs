@@ -5,7 +5,7 @@ using System;
 
 namespace Barotrauma.Items.Components
 {
-    partial class PowerContainer : Powered, IDrawableComponent, IServerSerializable, IClientSerializable
+    public partial class PowerContainer : Powered, IDrawableComponent, IServerSerializable, IClientSerializable
     {
         private GUIProgressBar chargeIndicator;
         private GUIScrollBar rechargeSpeedSlider;

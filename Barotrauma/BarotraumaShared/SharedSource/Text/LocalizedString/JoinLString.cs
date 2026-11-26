@@ -15,6 +15,7 @@ namespace Barotrauma
         }
 
         public override bool Loaded => subStrs.All(s => s.Loaded);
+        public override bool UsingDefaultLanguageAsFallback => CombinedUsingDefaultLanguageAsFallback(subStrs);
         public override void RetrieveValue()
         {
             cachedValue = string.Join(separator, subStrs);

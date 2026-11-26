@@ -1,16 +1,31 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
-    class LocationConnection
+    public class LocationConnection
     {
         public Biome Biome;
 
         public float Difficulty;
 
         public readonly List<Vector2[]> CrackSegments = new List<Vector2[]>();
+
+#if CLIENT
+        /// <summary>
+        /// Mission icons to display on the campaign map. 
+        /// Note that some of the missions may have already been failed/completed, but the icon is still present (e.g. until it moves to the end of the connection)
+        /// </summary>
+        public readonly List<Map.MissionIcon> MissionIcons = new List<Map.MissionIcon>();
+
+        /// <summary>
+        /// Number of icons (e.g. beacon station, hunting grounds, depth warning) on the connection.
+        /// Calculated by and set by the Map draw methods.
+        /// </summary>
+        public int IconCount;
+#endif
 
         public bool Passed;
 
@@ -31,16 +46,17 @@ namespace Barotrauma
         public float Length
         {
             get;
-            private set;
+            set;
         }
 
-        private readonly List<Mission> availableMissions = new List<Mission>();
+        /// <summary>
+        /// Missions that take place in this level, originating from the location at either side.
+        /// </summary>
         public IEnumerable<Mission> AvailableMissions
         {
             get
             {
-                availableMissions.RemoveAll(m => m.Completed || (m.Failed && !m.Prefab.AllowRetry) || m.ForceFailure);
-                return availableMissions;
+                return Locations[0].GetMissionsInConnection(this).Union(Locations[1].GetMissionsInConnection(this)).Distinct();
             }
         }
 

@@ -196,6 +196,74 @@ namespace Microsoft.Xna.Framework.Input
             }
             return chr;
         }
+
+        public static Keys ToXnaFromScancode(int scancode)
+        {
+            switch (scancode)
+            {
+                case 4: return Keys.A;
+                case 5: return Keys.B;
+                case 6: return Keys.C;
+                case 7: return Keys.D;
+                case 8: return Keys.E;
+                case 9: return Keys.F;
+                case 10: return Keys.G;
+                case 11: return Keys.H;
+                case 12: return Keys.I;
+                case 13: return Keys.J;
+                case 14: return Keys.K;
+                case 15: return Keys.L;
+                case 16: return Keys.M;
+                case 17: return Keys.N;
+                case 18: return Keys.O;
+                case 19: return Keys.P;
+                case 20: return Keys.Q;
+                case 21: return Keys.R;
+                case 22: return Keys.S;
+                case 23: return Keys.T;
+                case 24: return Keys.U;
+                case 25: return Keys.V;
+                case 26: return Keys.W;
+                case 27: return Keys.X;
+                case 28: return Keys.Y;
+                case 29: return Keys.Z;
+
+                case 30: return Keys.D1;
+                case 31: return Keys.D2;
+                case 32: return Keys.D3;
+                case 33: return Keys.D4;
+                case 34: return Keys.D5;
+                case 35: return Keys.D6;
+                case 36: return Keys.D7;
+                case 37: return Keys.D8;
+                case 38: return Keys.D9;
+                case 39: return Keys.D0;
+
+                case 40: return Keys.Enter;
+                case 41: return Keys.Escape;
+                case 42: return Keys.Back;
+                case 43: return Keys.Tab;
+                case 44: return Keys.Space;
+
+                case 79: return Keys.Right;
+                case 80: return Keys.Left;
+                case 81: return Keys.Down;
+                case 82: return Keys.Up;
+
+                case 224: return Keys.LeftControl;
+                case 225: return Keys.LeftShift;
+                case 226: return Keys.LeftAlt;
+                case 227: return Keys.LeftWindows;
+                case 228: return Keys.RightControl;
+                case 229: return Keys.RightShift;
+                case 230: return Keys.RightAlt;
+                case 231: return Keys.RightWindows;
+
+                default:
+                    return Keys.None;
+            }
+        }
+
     }
 }
 

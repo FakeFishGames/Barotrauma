@@ -9,7 +9,12 @@ using Barotrauma.MapCreatures.Behavior;
 
 namespace Barotrauma.Items.Components
 {
-    partial class RepairTool : ItemComponent
+    public interface IRepairToolDamageable
+    {
+        void OnDamageRepairTool(RepairTool repairTool, Character user, Vector2 hitPosition, float damage, float deltaTime, float degreeOfSuccess, Body targetBody);
+    }
+
+    public partial class RepairTool : ItemComponent
     {
         public enum UseEnvironment
         {
@@ -21,7 +26,17 @@ namespace Barotrauma.Items.Components
         private Vector2 pickedPosition;
         private float activeTimer;
 
+        /// <summary>
+        /// If set, controls the rotation of the tool.
+        /// </summary>
+        private Turret turret;
+
         private Vector2 debugRayStartPos, debugRayEndPos;
+
+        /// <summary>
+        /// Is the repair tool currently firing (being used)?
+        /// </summary>
+        private bool isFiring;
 
         private readonly List<Body> ignoredBodies = new List<Body>();
 
@@ -29,6 +44,13 @@ namespace Barotrauma.Items.Components
         public UseEnvironment UsableIn
         {
             get; set;
+        }
+
+        [Serialize(false, IsPropertySaveable.No, description: "When set to true, the item cannot be used by a character. Used by repair tools that are part of turrets.")]
+        public bool DisallowUsingByCharacters
+        {
+            get;
+            set;
         }
 
         [Serialize(0.0f, IsPropertySaveable.No, description: "The distance at which the item can repair targets.")]
@@ -74,6 +96,9 @@ namespace Barotrauma.Items.Components
 
         [Serialize(0.0f, IsPropertySaveable.No, description: "How much water the item provides to planters per second.")]
         public float WaterAmount { get; set; }
+        
+        [Serialize(0.0f, IsPropertySaveable.No, description: "How much fertilizer the item provides to planters per second.")]
+        public float FertilizerAmount { get; set; }
 
         [Serialize("0.0,0.0", IsPropertySaveable.No, description: "The position of the barrel as an offset from the item's center (in pixels).")]
         public Vector2 BarrelPos { get; set; }
@@ -121,13 +146,15 @@ namespace Barotrauma.Items.Components
         {
             get
             {
-                if (item.body == null) { return BarrelPos; }
-                Matrix bodyTransform = Matrix.CreateRotationZ(item.body.Rotation + MathHelper.ToRadians(BarrelRotation));
+                if (item.body == null && turret == null) { return BarrelPos; }
+                Matrix bodyTransform = Matrix.CreateRotationZ((item.body?.Rotation ?? 0.0f) + MathHelper.ToRadians(BarrelRotation) + TurretRotation);
                 Vector2 flippedPos = BarrelPos;
-                if (item.body.Dir < 0.0f) { flippedPos.X = -flippedPos.X; }
+                if (item.body != null && item.body.Dir < 0.0f) { flippedPos.X = -flippedPos.X; }
                 return Vector2.Transform(flippedPos, bodyTransform);
             }
         }
+
+        private float TurretRotation => -(turret?.BarrelRotation ?? 0.0f);
 
         public RepairTool(Item item, ContentXElement element)
             : base(item, element)
@@ -176,16 +203,42 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(ContentXElement element);
 
+        public override void OnItemLoaded()
+        {
+            base.OnItemLoaded();
+            turret = item.GetComponent<Turret>();
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
-            activeTimer -= deltaTime;
-            if (activeTimer <= 0.0f) { IsActive = false; }
+            if (Parent is Engine engine)
+            {
+                if (engine.IsOperating)
+                {
+                    Use(deltaTime, character: null);
+                    isFiring = true;
+                }
+                else
+                {
+                    isFiring = false;
+                }
+            }
+            else
+            {
+                activeTimer -= deltaTime;
+                if (activeTimer <= 0.0f) 
+                { 
+                    IsActive = false;
+                    isFiring = false;
+                }
+            }
         }
 
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character != null)
             {
+                if (DisallowUsingByCharacters) { return false; }
                 if (item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) { return false; }
             }
             
@@ -225,16 +278,30 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
+            isFiring = true;
+
             Vector2 rayStart;
             Vector2 rayStartWorld;
             Vector2 sourcePos = character?.AnimController == null ? item.SimPosition : character.AnimController.AimSourceSimPos;
-            Vector2 barrelPos = item.SimPosition + ConvertUnits.ToSimUnits(TransformedBarrelPos);
+
+            Vector2 turretFiringPosWorld = turret == null ? Vector2.Zero : turret.GetFiringPosition();
+
+            Vector2 barrelPos =
+                turret == null ?
+                item.SimPosition + ConvertUnits.ToSimUnits(TransformedBarrelPos) :
+                item.SimPosition + ConvertUnits.ToSimUnits(turretFiringPosWorld - item.WorldPosition);
             //make sure there's no obstacles between the base of the item (or the shoulder of the character) and the end of the barrel
             if (Submarine.PickBody(sourcePos, barrelPos, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking) == null)
             {
                 //no obstacles -> we start the raycast at the end of the barrel
-                rayStart = ConvertUnits.ToSimUnits(item.Position + TransformedBarrelPos);
-                rayStartWorld = ConvertUnits.ToSimUnits(item.WorldPosition + TransformedBarrelPos);
+                rayStart =
+                    turret == null ?
+                    ConvertUnits.ToSimUnits(item.Position + TransformedBarrelPos) :
+                    ConvertUnits.ToSimUnits(item.Position + turretFiringPosWorld - item.WorldPosition);
+                rayStartWorld =
+                    turret == null ?
+                    ConvertUnits.ToSimUnits(item.WorldPosition + TransformedBarrelPos) :
+                    ConvertUnits.ToSimUnits(turretFiringPosWorld);
             }
             else
             {
@@ -262,21 +329,23 @@ namespace Barotrauma.Items.Components
 
             float spread = MathHelper.ToRadians(MathHelper.Lerp(UnskilledSpread, Spread, degreeOfSuccess));
 
-            float angle = MathHelper.ToRadians(BarrelRotation) + spread * Rand.Range(-0.5f, 0.5f);
+            float angle = MathHelper.ToRadians(BarrelRotation) + TurretRotation + spread * Rand.Range(-0.5f, 0.5f);
             float dir = 1;
             if (item.body != null)
             {
                 angle += item.body.Rotation;
                 dir = item.body.Dir;
             }
-            Vector2 rayEnd = rayStartWorld + ConvertUnits.ToSimUnits(new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Range * dir);
+
+            Vector2 ray = ConvertUnits.ToSimUnits(new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * Range * dir);
+            Vector2 rayEnd = rayStartWorld + ray;
 
             ignoredBodies.Clear();
             if (character != null)
             {
                 foreach (Limb limb in character.AnimController.Limbs)
                 {
-                    if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess) continue;
+                    if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess) { continue; }
                     ignoredBodies.Add(limb.body.FarseerBody);
                 }
                 ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
@@ -289,8 +358,17 @@ namespace Barotrauma.Items.Components
             debugRayEndPos = ConvertUnits.ToDisplayUnits(rayEnd);
 
             Submarine parentSub = character?.Submarine ?? item.Submarine;
-            if (parentSub == null)
+            if (parentSub == null || item.CurrentHull == null)
             {
+                //item is outside -> need to do the ray cast in nearby subs' coordinate spaces too
+                //characters outside subs are in world space, so the casts in the subs' coordinate spaces can't see them:
+                //check how far the ray can go before hitting one, so the walls behind the character don't get hit
+                float maxFractionInSubs = 1.0f;
+                if (!RepairMultiple && !IgnoreCharacters &&
+                    Submarine.PickBody(rayStartWorld, rayEnd, ignoredBodies, Physics.CollisionCharacter) != null)
+                {
+                    maxFractionInSubs = Submarine.LastPickedFraction;
+                }
                 foreach (Submarine sub in Submarine.Loaded)
                 {
                     Rectangle subBorders = sub.Borders;
@@ -299,7 +377,7 @@ namespace Barotrauma.Items.Components
                     {
                         continue;
                     }
-                    Repair(rayStartWorld - sub.SimPosition, rayEnd - sub.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
+                    Repair(rayStartWorld - sub.SimPosition, rayEnd - sub.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies, maxFractionInSubs);
                 }
                 Repair(rayStartWorld, rayEnd, deltaTime, character, degreeOfSuccess, ignoredBodies);
             }
@@ -308,17 +386,21 @@ namespace Barotrauma.Items.Components
                 Repair(rayStartWorld - parentSub.SimPosition, rayEnd - parentSub.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
             }
             
-            UseProjSpecific(deltaTime, rayStartWorld);
+            UseProjSpecific(deltaTime, rayStartWorld, rayStartWorld + ray * lastPickedFraction);
 
             return true;
         }
 
-        partial void UseProjSpecific(float deltaTime, Vector2 raystart);
+
+        partial void UseProjSpecific(float deltaTime, Vector2 raystart, Vector2 rayEnd);
 
         private static readonly List<Body> hitBodies = new List<Body>();
         private readonly HashSet<Character> hitCharacters = new HashSet<Character>();
         private readonly List<FireSource> fireSourcesInRange = new List<FireSource>();
-        private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
+        private float lastPickedFraction = 0.0f;
+
+        /// <param name="maxFraction">Bodies further along the ray than this are not affected. Only used when RepairMultiple is false.</param>
+        private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies, float maxFraction = 1.0f)
         {
             var collisionCategories = Physics.CollisionWall | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepairableWall | Physics.CollisionItemBlocking;
             if (!IgnoreCharacters)
@@ -327,45 +409,56 @@ namespace Barotrauma.Items.Components
             }
 
             //if the item can cut off limbs, activate nearby bodies to allow the raycast to hit them
-            if (statusEffectLists != null)
+            if (CanSeverJoints(ActionType.OnUse) || CanSeverJoints(ActionType.OnSuccess))
             {
-                static bool CanSeverJoints(ActionType type, Dictionary<ActionType, List<StatusEffect>> effectList) =>
-                    effectList.TryGetValue(type, out List<StatusEffect> effects) && effects.Any(e => e.SeverLimbsProbability > 0);
-
-                if (CanSeverJoints(ActionType.OnUse, statusEffectLists) || CanSeverJoints(ActionType.OnSuccess, statusEffectLists))
+                float rangeSqr = ConvertUnits.ToSimUnits(Range);
+                rangeSqr *= rangeSqr;
+                foreach (Character c in Character.CharacterList)
                 {
-                    float rangeSqr = ConvertUnits.ToSimUnits(Range);
-                    rangeSqr *= rangeSqr;
-                    foreach (Character c in Character.CharacterList)
+                    if (!c.Enabled || !c.AnimController.BodyInRest) { continue; }
+                    //do a broad check first
+                    if (Math.Abs(c.WorldPosition.X - item.WorldPosition.X) > 1000.0f) { continue; }
+                    if (Math.Abs(c.WorldPosition.Y - item.WorldPosition.Y) > 1000.0f) { continue; }
+                    foreach (Limb limb in c.AnimController.Limbs)
                     {
-                        if (!c.Enabled || !c.AnimController.BodyInRest) { continue; }
-                        //do a broad check first
-                        if (Math.Abs(c.WorldPosition.X - item.WorldPosition.X) > 1000.0f) { continue; }
-                        if (Math.Abs(c.WorldPosition.Y - item.WorldPosition.Y) > 1000.0f) { continue; }
-                        foreach (Limb limb in c.AnimController.Limbs)
+                        if (Vector2.DistanceSquared(limb.SimPosition, item.SimPosition) < rangeSqr && Vector2.Dot(rayEnd - rayStart, limb.SimPosition - rayStart) > 0)
                         {
-                            if (Vector2.DistanceSquared(limb.SimPosition, item.SimPosition) < rangeSqr && Vector2.Dot(rayEnd - rayStart, limb.SimPosition - rayStart) > 0)
-                            {
-                                c.AnimController.BodyInRest = false;
-                                break;
-                            }
+                            c.AnimController.BodyInRest = false;
+                            break;
                         }
                     }
                 }
             }
 
-            float lastPickedFraction = 0.0f;
+            bool CanSeverJoints(ActionType type)
+            {
+                foreach (StatusEffect statusEffect in GetStatusEffectsOfType(type))
+                {
+                    if (statusEffect.SeverLimbsProbability > 0) { return true; }
+                }
+                if (turret?.GetActiveTurretAmmo() is TurretAmmo turretAmmo)
+                {
+                    foreach (StatusEffect statusEffect in turretAmmo.GetHitStatusEffects(type))
+                    {
+                        if (statusEffect.SeverLimbsProbability > 0) { return true; }
+                    }
+                }
+                return false;
+            }
+
+            lastPickedFraction = 0.0f;
             if (RepairMultiple)
             {
                 var bodies = Submarine.PickBodies(rayStart, rayEnd, ignoredBodies, collisionCategories,
                     ignoreSensors: false,
                     customPredicate: (Fixture f) =>
                     {
-                        if (f.IsSensor)
+                        if (f.IsSensor || f.CollisionCategories == Physics.CollisionRepairableWall)
                         {
                             if (RepairThroughHoles && f.Body?.UserData is Structure) { return false; }
                             if (f.Body?.UserData is PhysicsBody) { return false; }
                         }
+                        if (item.StaticFixtures.Contains(f)) { return false; }
                         if (f.Body?.UserData is Item it && it.GetComponent<Planter>() != null) { return false; }
                         if (f.Body?.UserData as string == "ruinroom") { return false; }
                         if (f.Body?.UserData is VineTile && !(FireDamage > 0)) { return false; }
@@ -427,13 +520,15 @@ namespace Barotrauma.Items.Components
                     ignoreSensors: false,
                     customPredicate: (Fixture f) =>
                     {
-                        if (f.IsSensor)
+                        if (f.Body?.UserData is Gap) { return false; }
+                        if (f.IsSensor || f.CollisionCategories == Physics.CollisionRepairableWall)
                         {
                             if (RepairThroughHoles && f.Body?.UserData is Structure) { return false; }
                             if (f.Body?.UserData is PhysicsBody) { return false; }
                         }
                         if (f.Body?.UserData as string == "ruinroom") { return false; }
                         if (f.Body?.UserData is VineTile && !(FireDamage > 0)) { return false; }
+                        if (item.StaticFixtures.Contains(f)) { return false; }
 
                         if (f.Body?.UserData is Item targetItem)
                         {
@@ -451,7 +546,10 @@ namespace Barotrauma.Items.Components
                     },
                     allowInsideFixture: true);
                 pickedPosition = Submarine.LastPickedPosition;
-                FixBody(user, pickedPosition, deltaTime, degreeOfSuccess, pickedBody);                    
+                if (Submarine.LastPickedFraction <= maxFraction)
+                {
+                    FixBody(user, pickedPosition, deltaTime, degreeOfSuccess, pickedBody);
+                }
                 lastPickedFraction = Submarine.LastPickedFraction;
             }
             
@@ -494,41 +592,15 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (WaterAmount > 0.0f && item.Submarine != null)
+            if (WaterAmount > 0.0f
+                && (UsableIn != UseEnvironment.Air || !item.InWater)) // if the watering tool itself is in water, respect the UsableIn definition
             {
-                Vector2 pos = ConvertUnits.ToDisplayUnits(rayStart + item.Submarine.SimPosition);
+                ApplySprayToPlanters(rayStart, collisionCategories, watering: true, fertilizing: false, deltaTime, user);
+            }
 
-                // Could probably be done much efficiently here
-                foreach (Item it in Item.ItemList)
-                {
-                    if (it.Submarine == item.Submarine && it.GetComponent<Planter>() is { } planter)
-                    {
-                        if (it.GetComponent<Holdable>() is { } holdable && holdable.Attachable && !holdable.Attached) { continue; }
-
-                        Rectangle collisionRect = it.WorldRect;
-                        collisionRect.Y -= collisionRect.Height;
-                        if (collisionRect.Left < pos.X && collisionRect.Right > pos.X && collisionRect.Bottom < pos.Y)
-                        {
-                            Body collision = Submarine.PickBody(rayStart, it.SimPosition, ignoredBodies, collisionCategories);
-                            if (collision == null)
-                            {
-                                for (var i = 0; i < planter.GrowableSeeds.Length; i++)
-                                {
-                                    Growable seed = planter.GrowableSeeds[i];
-                                    if (seed == null || seed.Decayed) { continue; }
-
-                                    seed.Health += WaterAmount * deltaTime;
-
-#if CLIENT
-                                    float barOffset = 10f * GUI.Scale;
-                                    Vector2 offset = planter.PlantSlots.ContainsKey(i) ? planter.PlantSlots[i].Offset : Vector2.Zero;
-                                    user?.UpdateHUDProgressBar(planter, planter.Item.DrawPosition + new Vector2(barOffset, 0) + offset, seed.Health / seed.MaxWater, GUIStyle.Blue, GUIStyle.Blue, "progressbar.watering");
-#endif
-                                }
-                            }
-                        }
-                    }
-                }
+            if (FertilizerAmount > 0.0f)
+            {
+                ApplySprayToPlanters(rayStart, collisionCategories, watering: false, fertilizing: true, deltaTime, user);
             }
 
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
@@ -542,9 +614,60 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private void ApplySprayToPlanters(Vector2 rayStart, Category collisionCategories, bool watering, bool fertilizing, float deltaTime, Character user)
+        {
+            if (item.Submarine == null) { return; }
+
+            Vector2 sprayedPos = ConvertUnits.ToDisplayUnits(rayStart + item.Submarine.SimPosition);
+
+            foreach (Item planterItem in Item.PlanterItems)
+            {
+                if (planterItem.Submarine != item.Submarine) { continue; }
+                if (planterItem.GetComponent<Planter>() is not Planter planter) { continue; }
+                if (!planter.HasBeenPlaced) { continue; }
+                if (watering && planterItem.InWater) { continue; } // if the planter itself is in water, watering cans are no use
+
+                Rectangle planterRect = planterItem.WorldRect;
+                planterRect.Y -= planterRect.Height;
+
+                bool canHit = false;
+                
+                // Check that the spray hits the planter (horizontally aligned, below the spray, within range)
+                if (planterRect.Left < sprayedPos.X && planterRect.Right > sprayedPos.X
+                    && planterRect.Bottom < sprayedPos.Y
+                    && sprayedPos.Y - planterRect.Bottom <= Range)
+                {
+                    // Check that the spray doesn't get blocked by the sub
+                    if (Submarine.PickBody(rayStart, planterItem.SimPosition, ignoredBodies, collisionCategories) == null)
+                    {
+                        canHit = true;
+                    }
+                }
+
+                if (!canHit && user is { IsBot: true })
+                {
+                    //aiming with the fertilizer and watering can is quite finicky:
+                    //let's cut the bots some slack and let them hit the planter they're trying to hit
+                    canHit = 
+                        user.AIController is HumanAIController humanAi && 
+                        humanAi.ObjectiveManager.GetActiveObjective() is AIObjectiveOperateItem operateObjective &&
+                        operateObjective.Component == this && operateObjective.OperateTarget == planter.Item;
+                }
+
+                if (canHit)
+                {
+                    if (watering) { planter.AddWater(WaterAmount, user, deltaTime); }
+                    if (fertilizing) { planter.AddFertilizer(FertilizerAmount, user, deltaTime); }
+                }                
+            }
+        }
+
         private bool FixBody(Character user, Vector2 hitPosition, float deltaTime, float degreeOfSuccess, Body targetBody)
         {
             if (targetBody?.UserData == null) { return false; }
+
+            float prevItemCondition = 0.0f;
+            float prevDoorStuck = 0.0f;
 
             if (targetBody.UserData is Structure targetStructure)
             {
@@ -559,16 +682,19 @@ namespace Barotrauma.Items.Components
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnSuccess, structure: targetStructure);
                 FixStructureProjSpecific(user, deltaTime, targetStructure, sectionIndex);
 
-                float structureFixAmount = StructureFixAmount;
-                if (structureFixAmount >= 0f)
+                float structureFixAmount = StructureFixAmount * (turret?.GetActiveTurretAmmo()?.StructureFixAmountMultiplier ?? 1.0f);
+                if (user != null)
                 {
-                    structureFixAmount *= 1 + user.GetStatValue(StatTypes.RepairToolStructureRepairMultiplier);
-                    structureFixAmount *= 1 + item.GetQualityModifier(Quality.StatType.RepairToolStructureRepairMultiplier);
-                }
-                else
-                {
-                    structureFixAmount *= 1 + user.GetStatValue(StatTypes.RepairToolStructureDamageMultiplier);
-                    structureFixAmount *= 1 + item.GetQualityModifier(Quality.StatType.RepairToolStructureDamageMultiplier);
+                    if (structureFixAmount >= 0f)
+                    {
+                        structureFixAmount *= 1 + user.GetStatValue(StatTypes.RepairToolStructureRepairMultiplier);
+                        structureFixAmount *= 1 + item.GetQualityModifier(Quality.StatType.RepairToolStructureRepairMultiplier);
+                    }
+                    else
+                    {
+                        structureFixAmount *= 1 + user.GetStatValue(StatTypes.RepairToolStructureDamageMultiplier);
+                        structureFixAmount *= 1 + item.GetQualityModifier(Quality.StatType.RepairToolStructureDamageMultiplier);
+                    }
                 }
 
                 var didLeak = targetStructure.SectionIsLeakingFromOutside(sectionIndex);
@@ -659,6 +785,9 @@ namespace Barotrauma.Items.Components
                 Item targetItem = targetBody.UserData is Holdable holdable ? holdable.Item : (Item)targetBody.UserData;
                 if (!HitItems || !targetItem.IsInteractable(user)) { return false; }
 
+                prevDoorStuck = targetItem.GetComponent<Door>()?.Stuck ?? 0.0f;
+                prevItemCondition = targetItem.Condition;
+
                 var levelResource = targetItem.GetComponent<LevelResource>();
                 if (levelResource != null && levelResource.Attached &&
                     levelResource.RequiredItems.Any() &&
@@ -683,32 +812,43 @@ namespace Barotrauma.Items.Components
                     FixItemProjSpecific(user, deltaTime, targetItem, showProgressBar: false);
                     return true;
                 }
+
+                if (targetItem.Prefab.DamagedByRepairTools) 
+                { 
+                    if (HitBrokenDoors)
+                    {
+                        if (targetItem.GetComponent<Door>() == null && targetItem.Condition <= 0) { return false; }
+                    }
+                    else
+                    {
+                        if (targetItem.Condition <= 0) { return false; }
+                    }
+
+                    targetItem.IsHighlighted = true;
                 
-                if (!targetItem.Prefab.DamagedByRepairTools) { return false; }
+                    ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, targetItem);
+                    ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnSuccess, targetItem);
 
-                if (HitBrokenDoors)
-                {
-                    if (targetItem.GetComponent<Door>() == null && targetItem.Condition <= 0) { return false; }
-                }
-                else
-                {
-                    if (targetItem.Condition <= 0) { return false; }
-                }
+                    if (targetItem.body != null && !MathUtils.NearlyEqual(TargetForce, 0.0f))
+                    {
+                        Vector2 dir = targetItem.WorldPosition - item.WorldPosition;
+                        dir = dir.LengthSquared() < 0.0001f ? Vector2.UnitY : Vector2.Normalize(dir);
+                        targetItem.body.ApplyForce(dir * TargetForce, maxVelocity: 10.0f);
+                    }
 
-                targetItem.IsHighlighted = true;
-                
-                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, targetItem);
-                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnSuccess, targetItem);
-
-                if (targetItem.body != null && !MathUtils.NearlyEqual(TargetForce, 0.0f))
-                {
-                    Vector2 dir = targetItem.WorldPosition - item.WorldPosition;
-                    dir = dir.LengthSquared() < 0.0001f ? Vector2.UnitY : Vector2.Normalize(dir);
-                    targetItem.body.ApplyForce(dir * TargetForce, maxVelocity: 10.0f);
+                    FixItemProjSpecific(user, deltaTime, targetItem, showProgressBar: true);                
                 }
 
-                FixItemProjSpecific(user, deltaTime, targetItem, showProgressBar: true);
-                return true;
+                float currentDoorStuck = targetItem.GetComponent<Door>()?.Stuck ?? 0.0f;
+
+                targetItem.Components
+                    .OfType<IRepairToolDamageable>()
+                    .ForEach(c => c.OnDamageRepairTool(this, user, hitPosition, 
+                    //react to welding doors as if it was damage, since it's also a harmful action
+                    damage: (prevItemCondition - targetItem.Condition) + (currentDoorStuck - prevDoorStuck), 
+                    deltaTime, degreeOfSuccess, targetBody));
+
+                return targetItem.Prefab.DamagedByRepairTools;
             }
             else if (targetBody.UserData is BallastFloraBranch branch)
             {
@@ -724,30 +864,56 @@ namespace Barotrauma.Items.Components
         partial void FixCharacterProjSpecific(Character user, float deltaTime, Character targetCharacter);
         partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem, bool showProgressBar);
 
+        /// <summary>
+        /// Approximate reach of the repair tool, taking the length of the character's arm and the barrel position into account.
+        /// </summary>
+        public float CalculateReach(Character character)
+        {
+            float armLength =
+                character.AnimController is HumanoidAnimController humanoidAnimController ?
+                humanoidAnimController.ArmLength :
+                0.0f;
+            // This is an approximation, because we don't know the exact reach until the pose is taken.
+            // And even then the actual range depends on the direction we are aiming to.
+            // Found out that without any multiplier the value (209) is often too short.
+            return Range + BarrelPos.X + armLength * 2;
+        }
+
         private float sinTime;
         private float repairTimer;
         private Gap previousGap;
         private readonly float repairTimeOut = 5;
+        
+        /// <summary>
+        /// How far above the planter the cursor should be positioned when watering/fertilizing
+        /// </summary>
+        private const float AbovePlanterHeight = 10.0f;
+        
         public override bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            if (objective.OperateTarget is not Gap leak)
+            Gap leak = objective.OperateTarget as Gap;
+            Planter planter = (objective.OperateTarget as Item)?.GetComponent<Planter>();
+            if (leak == null && planter == null)
             {
                 Reset();
                 return true;
             }
-            if (leak.Submarine == null || leak.Submarine != character.Submarine)
+            if (leak != null)
             {
-                Reset();
-                return true;
+                if (leak.Submarine == null || leak.Submarine != character.Submarine)
+                {
+                    Reset();
+                    return true;
+                }
+                if (leak != previousGap)
+                {
+                    Reset();
+                    previousGap = leak;
+                }
             }
-            if (leak != previousGap)
-            {
-                Reset();
-                previousGap = leak;
-            }
-            Vector2 fromCharacterToLeak = leak.WorldPosition - character.AnimController.AimSourceWorldPos;
-            float dist = fromCharacterToLeak.Length();
-            float reach = AIObjectiveFixLeak.CalculateReach(this, character);
+            Vector2 fromCharacterToTarget = objective.OperateTarget.WorldPosition - character.AnimController.AimSourceWorldPos;
+            float dist = fromCharacterToTarget.Length();
+            float reach = CalculateReach(character);
             if (dist > reach * 2)
             {
                 // Too far away -> consider this done and hope the AI is smart enough to move closer
@@ -759,43 +925,56 @@ namespace Barotrauma.Items.Components
             {
                 pathSteering.ResetPath();
             }
-            if (!character.AnimController.InWater)
+            if (!character.AnimController.InWater && leak != null)
             {
-                // TODO: use the collider size?
                 if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController humanAnim &&
-                    Math.Abs(fromCharacterToLeak.X) < 100.0f && fromCharacterToLeak.Y < 0.0f && fromCharacterToLeak.Y > -150.0f)
+                    Math.Abs(fromCharacterToTarget.X) < 100.0f && fromCharacterToTarget.Y < 0.0f)
                 {
                     humanAnim.Crouch();
                 }
             }
             if (!character.IsClimbing)
             {
-                if (dist > reach * 0.8f || dist > reach * 0.5f && character.AnimController.Limbs.Any(l => l.InWater))
+                if (dist > reach * 0.75f || dist > reach * 0.5f && character.AnimController.Limbs.Any(l => l.InWater))
                 {
                     // Steer closer
-                    Vector2 dir = Vector2.Normalize(fromCharacterToLeak);
+                    Vector2 dir = Vector2.Normalize(fromCharacterToTarget);
                     if (!character.InWater)
                     {
                         dir.Y = 0;
                     }
                     character.AIController.SteeringManager.SteeringManual(deltaTime, dir);
                 }
-                else if (dist < reach * 0.25f && !character.IsClimbing)
+                else if (!character.IsClimbing)
                 {
-                    // Too close -> steer away
-                    character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - leak.SimPosition));
+                    if (dist < reach * 0.25f || 
+                        //don't stand right at the position of the planter when watering/fertilizing, it looks weird
+                        (planter != null && Math.Abs(fromCharacterToTarget.X) < reach * 0.2f))
+                    {
+                        // Too close -> steer away
+                        character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - objective.OperateTarget.SimPosition));
+                    }
                 }
             }
             if (dist <= reach || character.IsClimbing)
             {
                 // In range
-                character.CursorPosition = leak.WorldPosition;
+                character.CursorPosition = objective.OperateTarget.WorldPosition;
                 if (character.Submarine != null)
                 {
                     character.CursorPosition -= character.Submarine.Position;
                 }
-                character.CursorPosition += VectorExtensions.Forward(Item.body.TransformedRotation + (float)Math.Sin(sinTime) / 2, dist / 2);
-                if (character.AnimController.InWater)
+                if (planter != null)
+                {
+                    //watering/fertilizing plants: we want the cursor (and the watering can) to be above the item
+                    character.CursorPosition = 
+                        new Vector2(planter.Item.Position.X + MathF.Sin(sinTime) * planter.Item.RectWidth / 2, planter.Item.Position.Y + planter.Item.Rect.Height / 2 + AbovePlanterHeight);
+                }
+                else
+                {
+                    character.CursorPosition += VectorExtensions.Forward(Item.body.TransformedRotation + MathF.Sin(sinTime) / 2, dist / 2);
+                }
+                if (character.AnimController.InWater && leak != null)
                 {
                     var torso = character.AnimController.GetLimb(LimbType.Torso);
                     // Turn facing the target when not moving (handled in the animcontroller if not moving)
@@ -804,7 +983,7 @@ namespace Barotrauma.Items.Components
                     float newRotation = MathUtils.VectorToAngle(diff);
                     character.AnimController.Collider.SmoothRotate(newRotation, 5.0f);
 
-                    if (VectorExtensions.Angle(VectorExtensions.Forward(torso.body.TransformedRotation), fromCharacterToLeak) < MathHelper.PiOver4)
+                    if (VectorExtensions.Angle(VectorExtensions.Forward(torso.body.TransformedRotation), fromCharacterToTarget) < MathHelper.PiOver4)
                     {
                         // Swim past
                         Vector2 moveDir = leak.IsHorizontal ? Vector2.UnitY : Vector2.UnitX;
@@ -818,12 +997,12 @@ namespace Barotrauma.Items.Components
                     sinTime += deltaTime * 5;
                 }
                 // Press the trigger only when the tool is approximately facing the target.
-                Vector2 fromItemToLeak = leak.WorldPosition - item.WorldPosition;
-                var angle = VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak);
+                Vector2 fromItemToTarget = objective.OperateTarget.WorldPosition - item.WorldPosition;
+                var angle = VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToTarget);
                 bool repair = true;
-                if (angle < MathHelper.PiOver4)
+                if (angle < MathHelper.PiOver4 || planter != null)
                 {
-                    if (Submarine.PickBody(item.SimPosition, leak.SimPosition, collisionCategory: Physics.CollisionWall, allowInsideFixture: true)?.UserData is Item i)
+                    if (Submarine.PickBody(item.SimPosition, objective.OperateTarget.SimPosition, collisionCategory: Physics.CollisionWall, allowInsideFixture: true)?.UserData is Item i)
                     { 
                         if (i.GetComponent<Door>() is Door door && !door.CanBeTraversed )
                         {
@@ -842,7 +1021,7 @@ namespace Barotrauma.Items.Components
                     if (repair)
                     {
                         // Check that we don't hit any friendlies
-                        if (Submarine.PickBodies(item.SimPosition, leak.SimPosition, collisionCategory: Physics.CollisionCharacter).None(hit =>
+                        if (Submarine.PickBodies(item.SimPosition, objective.OperateTarget.SimPosition, collisionCategory: Physics.CollisionCharacter).None(hit =>
                         {
                             if (hit.UserData is Character c)
                             {
@@ -860,7 +1039,14 @@ namespace Barotrauma.Items.Components
                     if (repairTimer > repairTimeOut)
                     {
 #if DEBUG
-                        DebugConsole.NewMessage($"{character.Name}: timed out while welding a leak in {leak.FlowTargetHull.DisplayName}.", color: Color.Yellow);
+                        if (leak != null)
+                        {
+                            DebugConsole.NewMessage($"{character.Name}: timed out while welding a leak in {leak.FlowTargetHull.DisplayName}.", color: Color.Yellow);
+                        }
+                        else
+                        {
+                            DebugConsole.NewMessage($"{character.Name}: timed out while repairing a target {objective.OperateTarget}.", color: Color.Yellow);
+                        }
 #endif
                         Reset();
                         return true;
@@ -873,22 +1059,57 @@ namespace Barotrauma.Items.Components
                 repairTimer = 0;
             }
 
-            bool leakFixed = (leak.Open <= 0.0f || leak.Removed) && 
-                (leak.ConnectedWall == null || leak.ConnectedWall.Sections.Max(s => s.damage) < 0.1f);
-
-            if (leakFixed && leak.FlowTargetHull?.DisplayName != null && character.IsOnPlayerTeam)
+            if (leak != null)
             {
-                if (!leak.FlowTargetHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f))
+                bool leakFixed = (leak.Open <= 0.0f || leak.Removed) && 
+                    (leak.ConnectedWall == null || leak.ConnectedWall.Sections.Max(s => s.damage) < 0.1f);
+
+                if (leakFixed && leak.FlowTargetHull?.DisplayName != null && character.IsOnPlayerTeam)
                 {
-                    character.Speak(TextManager.GetWithVariable("DialogLeaksFixed", "[roomname]", leak.FlowTargetHull.DisplayName, FormatCapitals.Yes).Value, null, 0.0f, "leaksfixed".ToIdentifier(), 10.0f);
+                    if (!leak.FlowTargetHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f))
+                    {
+                        character.Speak(TextManager.GetWithVariable("DialogLeaksFixed", "[roomname]", leak.FlowTargetHull.DisplayName, FormatCapitals.Yes).Value, null, 0.0f, "leaksfixed".ToIdentifier(), 10.0f);
+                    }
+                    else
+                    {
+                        character.Speak(TextManager.GetWithVariable("DialogLeakFixed", "[roomname]", leak.FlowTargetHull.DisplayName, FormatCapitals.Yes).Value, null, 0.0f, "leakfixed".ToIdentifier(), 10.0f);
+                    }
                 }
-                else
+
+                return leakFixed;
+            }
+            else if (planter != null)
+            {
+                bool canWater = WaterAmount > 0; // watering can or equivalent
+                bool canFertilize = FertilizerAmount > 0; // fertilizer canister or equivalent
+                
+                if (!canWater && !canFertilize)
                 {
-                    character.Speak(TextManager.GetWithVariable("DialogLeakFixed", "[roomname]", leak.FlowTargetHull.DisplayName, FormatCapitals.Yes).Value, null, 0.0f, "leakfixed".ToIdentifier(), 10.0f);
+                    DebugConsole.ThrowError($"{character.DisplayName} is trying to use {Name} for gardening, but it doesn't seem to be useful for that?");
+                    return true;
                 }
+                
+                bool needsWork = false;
+                foreach (Growable growable in planter.GrowableSeeds)
+                {
+                    if (growable == null) { continue; }
+
+                    if (canWater && planter.CurrentWater < growable.OverwaterThreshold)
+                    {
+                        needsWork = true;
+                    }
+                    
+                    if (canFertilize && planter.Fertilizer < growable.OverfertilizedThreshold)
+                    {
+                        needsWork = true;
+                    }
+                }
+                
+                // Return an answer to the question "are we done here"
+                return !needsWork;
             }
 
-            return leakFixed;
+            return true;
 
             void Reset()
             {
@@ -900,65 +1121,77 @@ namespace Barotrauma.Items.Components
         private static List<ISerializableEntity> currentTargets = new List<ISerializableEntity>();
         private void ApplyStatusEffectsOnTarget(Character user, float deltaTime, ActionType actionType, Item targetItem = null, Character character = null, Limb limb = null, Structure structure = null)
         {
-            if (statusEffectLists == null) { return; }
-            if (!statusEffectLists.TryGetValue(actionType, out List<StatusEffect> statusEffects)) { return; }
+            user ??= turret?.User;
 
-            foreach (StatusEffect effect in statusEffects)
+            foreach (StatusEffect statusEffect in GetStatusEffectsOfType(actionType))
             {
-                currentTargets.Clear();
-                effect.SetUser(user);
-                if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
+                ApplyStatusEffectOnTarget(statusEffect, user, deltaTime, actionType, targetItem, character, limb, structure);
+            }
+            //effects defined by the turret's ammo (e.g. different damage per ammo type)
+            if (turret?.GetActiveTurretAmmo() is TurretAmmo turretAmmo)
+            {
+                foreach (StatusEffect statusEffect in turretAmmo.GetHitStatusEffects(actionType))
                 {
-                    if (targetItem != null)
-                    {
-                        currentTargets.AddRange(targetItem.AllPropertyObjects);
-                    }
-                    if (structure != null)
-                    {
-                        currentTargets.Add(structure);
-                    }
-                    if (character != null)
-                    {
-                        currentTargets.Add(character);
-                    }
-                    effect.Apply(actionType, deltaTime, item, currentTargets);
+                    ApplyStatusEffectOnTarget(statusEffect, user, deltaTime, actionType, targetItem, character, limb, structure);
                 }
-                else if (effect.HasTargetType(StatusEffect.TargetType.Character))
+            }
+        }
+
+        private void ApplyStatusEffectOnTarget(StatusEffect statusEffect, Character user, float deltaTime, ActionType actionType, Item targetItem, Character character, Limb limb, Structure structure)
+        {
+            currentTargets.Clear();
+            statusEffect.SetUser(user);
+            if (statusEffect.HasTargetType(StatusEffect.TargetType.UseTarget))
+            {
+                if (targetItem != null)
                 {
-                    currentTargets.Add(user);
-                    effect.Apply(actionType, deltaTime, item, currentTargets);
+                    currentTargets.AddRange(targetItem.AllPropertyObjects);
                 }
-                else if (effect.HasTargetType(StatusEffect.TargetType.Limb))
+                if (structure != null)
                 {
-                    currentTargets.Add(limb);
-                    effect.Apply(actionType, deltaTime, item, currentTargets);
+                    currentTargets.Add(structure);
                 }
+                if (character != null)
+                {
+                    currentTargets.Add(character);
+                }
+                statusEffect.Apply(actionType, deltaTime, item, currentTargets);
+            }
+            else if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
+            {
+                currentTargets.Add(user);
+                statusEffect.Apply(actionType, deltaTime, item, currentTargets);
+            }
+            else if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
+            {
+                currentTargets.Add(limb);
+                statusEffect.Apply(actionType, deltaTime, item, currentTargets);
+            }
 
 #if CLIENT
-                if (user == null) { return; }
-                // Hard-coded progress bars for welding doors stuck.
-                // A general purpose system could be better, but it would most likely require changes in the way we define the status effects in xml.
-                foreach (ISerializableEntity target in currentTargets)
+            if (user == null) { return; }
+            // Hard-coded progress bars for welding doors stuck.
+            // A general purpose system could be better, but it would most likely require changes in the way we define the status effects in xml.
+            foreach (ISerializableEntity target in currentTargets)
+            {
+                if (target is not Door door) { continue; }
+                if (!door.CanBeWelded || !door.Item.IsInteractable(user)) { continue; }
+                foreach (var propertyEffect in statusEffect.PropertyEffects)
                 {
-                    if (target is not Door door) { continue; }
-                    if (!door.CanBeWelded || !door.Item.IsInteractable(user)) { continue; }
-                    foreach (var propertyEffect in effect.PropertyEffects)
+                    if (propertyEffect.propertyName != "stuck") { continue; }
+                    if (door.SerializableProperties == null || !door.SerializableProperties.TryGetValue(propertyEffect.propertyName, out SerializableProperty property)) { continue; }
+                    object value = property.GetValue(target);
+                    if (door.Stuck > 0)
                     {
-                        if (propertyEffect.propertyName != "stuck") { continue; }
-                        if (door.SerializableProperties == null || !door.SerializableProperties.TryGetValue(propertyEffect.propertyName, out SerializableProperty property)) { continue; }
-                        object value = property.GetValue(target);
-                        if (door.Stuck > 0)
-                        {
-                            bool isCutting = propertyEffect.value is float and < 0;
-                            var progressBar = user.UpdateHUDProgressBar(door, door.Item.WorldPosition, door.Stuck / 100, Color.DarkGray * 0.5f, Color.White,
-                                textTag: isCutting ? "progressbar.cutting" : "progressbar.welding");
-                            if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
-                            if (!isCutting) { HintManager.OnWeldingDoor(user, door); }
-                        }
-                    }                    
+                        bool isCutting = propertyEffect.value is float and < 0;
+                        var progressBar = user.UpdateHUDProgressBar(door, door.Item.WorldPosition, door.Stuck / 100, Color.DarkGray * 0.5f, Color.White,
+                            textTag: isCutting ? "progressbar.cutting" : "progressbar.welding");
+                        if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
+                        if (!isCutting) { HintManager.OnWeldingDoor(user, door); }
+                    }
                 }
-#endif
             }
+#endif
         }
     }
 }

@@ -3,7 +3,7 @@ using Barotrauma.Networking;
 
 namespace Barotrauma
 {
-    partial class CharacterCampaignData
+    public partial class CharacterCampaignData
     {
         public readonly CharacterInfo CharacterInfo;
 

@@ -4,7 +4,7 @@ using Barotrauma.Networking;
 
 namespace Barotrauma.Items.Components
 {
-    partial class ItemComponent : ISerializableEntity
+    public partial class ItemComponent : ISerializableEntity
     {
         private bool LoadElemProjSpecific(ContentXElement subElement)
         {

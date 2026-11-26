@@ -25,7 +25,7 @@ namespace Barotrauma
 
         private object? queryRef = null;
         
-        protected override void RetrieveServersImpl(Action<ServerInfo, ServerProvider> onServerDataReceived, Action onQueryCompleted)
+        protected override void RetrieveServersImpl(Action<ServerInfo> onServerDataReceived, Action onQueryCompleted)
         {
             if (!SteamManager.IsInitialized)
             {
@@ -81,16 +81,11 @@ namespace Barotrauma
                     var ownerId = SteamId.Parse(lobbyOwnerStr);
                     if (!ownerId.TryUnwrap(out var lobbyOwnerId)) { continue; }
 
-                    var eosP2PEndpointOption = EosP2PEndpoint
-                        .Parse(lobby.GetData("EosEndpoint") ?? "")
-                        .Select(e => (Endpoint)e);
-                    
                     if (retrieved.Contains(lobbyOwnerId)) { continue; }
                     retrieved.Add(lobbyOwnerId);
 
                     var endpoints = new List<Endpoint> { new SteamP2PEndpoint(lobbyOwnerId) };
-                    if (eosP2PEndpointOption.TryUnwrap(out var eosP2PEndpoint)) { endpoints.Add(eosP2PEndpoint); }
-                    
+
                     var serverInfo = new ServerInfo(endpoints.ToImmutableArray())
                     {
                         ServerName = serverName,
@@ -98,8 +93,8 @@ namespace Barotrauma
                     };
                     serverInfo.UpdateInfo(key => lobby.GetData(key));
                     serverInfo.Checked = true;
-                    
-                    onServerDataReceived(serverInfo, this);
+
+                    onServerDataReceived(serverInfo);
                 }
                 startQuery();
             }

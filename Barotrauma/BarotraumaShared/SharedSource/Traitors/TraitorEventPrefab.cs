@@ -10,7 +10,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class TraitorEventPrefab : EventPrefab
+    public class TraitorEventPrefab : EventPrefab
     {
         class MissionRequirement
         {
@@ -197,9 +197,6 @@ namespace Barotrauma
             }
         }
 
-        public readonly Sprite? Icon;
-        public readonly Color IconColor;
-
         public const int MinDangerLevel = 1;
         public const int MaxDangerLevel = 3;
 
@@ -301,10 +298,6 @@ namespace Barotrauma
                     case "levelrequirement":
                         levelRequirements.Add(new LevelRequirement(subElement!, this));
                         break;
-                    case "icon":
-                        Icon = new Sprite(subElement);
-                        IconColor = subElement.GetAttributeColor("color", Color.White);
-                        break;
                 }
             }
             this.reputationRequirements = reputationRequirements.ToImmutableArray();
@@ -347,11 +340,6 @@ namespace Barotrauma
                 if (!requirement.Match(level)) { return false; }
             }
             return true;
-        }
-
-        public override void Dispose()
-        {
-            Icon?.Remove();
         }
 
         public override string ToString()

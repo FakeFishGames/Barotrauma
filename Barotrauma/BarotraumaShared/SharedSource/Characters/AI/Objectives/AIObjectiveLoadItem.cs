@@ -8,24 +8,24 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveLoadItem : AIObjective
+    public class AIObjectiveLoadItem : AIObjective
     {
         public override Identifier Identifier { get; set; } = "load item".ToIdentifier();
 
-        protected override bool AllowWhileHandcuffed => false;
+        protected override bool RequireOneHandAvailable => true;
 
         private AIObjectiveLoadItems.ItemCondition TargetItemCondition { get; }
         private Item Container { get; }
         private ItemContainer ItemContainer { get; }
         private ImmutableArray<Identifier> TargetContainerTags { get; }
-        private ImmutableHashSet<Identifier> ValidContainableItemIdentifiers { get; }
+        private ImmutableHashSet<Identifier> ValidContainableItemIdentifiers { get; set; }
         private static Dictionary<ItemPrefab, ImmutableHashSet<Identifier>> AllValidContainableItemIdentifiers { get; } = new Dictionary<ItemPrefab, ImmutableHashSet<Identifier>>();
 
         private int itemIndex;
         private AIObjectiveMoveItem moveItemObjective;
         private readonly HashSet<Item> ignoredItems = new HashSet<Item>();
         private Item targetItem;
-        private readonly string abandonGetItemDialogueIdentifier = "dialogcannotfindloadable";
+        private readonly Identifier abandonGetItemDialogueIdentifier = "dialogcannotfindloadable".ToIdentifier();
 
         public AIObjectiveLoadItem(Item container, ImmutableArray<Identifier> targetTags, AIObjectiveLoadItems.ItemCondition targetCondition, Identifier option, Character character, AIObjectiveManager objectiveManager, float priorityModifier)
             : base(character, objectiveManager, priorityModifier)
@@ -41,7 +41,7 @@ namespace Barotrauma
             TargetItemCondition = targetCondition;
             if (!option.IsEmpty)
             {
-                string optionSpecificDialogueIdentifier = $"{abandonGetItemDialogueIdentifier}.{option}";
+                Identifier optionSpecificDialogueIdentifier = $"{abandonGetItemDialogueIdentifier}.{option}".ToIdentifier();
                 if (TextManager.ContainsTag(optionSpecificDialogueIdentifier))
                 {
                     abandonGetItemDialogueIdentifier = optionSpecificDialogueIdentifier;
@@ -53,6 +53,7 @@ namespace Barotrauma
 #if DEBUG
                 DebugConsole.LogError($"No valid containable item identifiers found for the Load Item objective targeting {Container}");
 #endif
+                character?.AIController?.SteeringManager?.Reset();
                 Abandon = true;
                 return;
             }
@@ -69,9 +70,16 @@ namespace Barotrauma
             // Status effects are often used to alter item condition so using the Containable Item Identifiers directly can lead to unwanted results
             // For example, placing welding fuel tanks inside oxygen tank shelves
             bool useDefaultContainableItemIdentifiers = true;
+            // Only consider containables that bots are allowed to refill (AllowBotRefills="false" excludes e.g. welding fuel in oxygen dispensers).
+            // Also applies to the default identifiers used when the status effects don't tell us what to load.
+            var refillableContainableIdentifiers = GetAllContainableItems(ItemContainer)
+                .Where(c => c.AllowBotRefills)
+                .SelectMany(c => c.Identifiers)
+                .ToHashSet();
             var potentialContainablePrefabs = MapEntityPrefab.List
-                .Where(mep => mep is ItemPrefab ip && ItemContainer.ContainableItemIdentifiers.Any(i => i == ip.Identifier || ip.Tags.Contains(i)))
-                .Cast<ItemPrefab>();
+                .Where(mep => mep is ItemPrefab ip && refillableContainableIdentifiers.Any(i => i == ip.Identifier || ip.Tags.Contains(i)))
+                .Cast<ItemPrefab>()
+                .ToList();
             var validContainableItemIdentifiers = new HashSet<Identifier>();
             foreach (var component in Container.Components)
             {
@@ -81,33 +89,36 @@ namespace Barotrauma
                 }
                 CheckStatus CheckComponent()
                 {
-                    if (component.statusEffectLists != null)
+                    if (CheckStatusEffects(component.GetAllStatusEffects()) == CheckStatus.Finished)
                     {
-                        foreach (var (_, statusEffects) in component.statusEffectLists)
-                        {
-                            if (CheckStatusEffects(statusEffects) == CheckStatus.Finished)
-                            {
-                                return CheckStatus.Finished;
-                            }
-                        }
+                        return CheckStatus.Finished;
                     }
-                    if (component is ItemContainer itemContainer && itemContainer.ContainableItems != null)
+                    if (component is ItemContainer itemContainer)
                     {
-                        foreach (var item in itemContainer.ContainableItems)
+                        foreach (var containableItem in GetAllContainableItems(itemContainer).Where(c => c.AllowBotRefills))
                         {
-                            if (CheckStatusEffects(item.StatusEffects) == CheckStatus.Finished)
+                            if (CheckStatusEffects(containableItem.StatusEffects, containableItem.Identifiers) == CheckStatus.Finished)
                             {
                                 return CheckStatus.Finished;
                             }
                         }
                     }
                     return CheckStatus.Unfinished;
-                    CheckStatus CheckStatusEffects(IEnumerable<StatusEffect> statusEffects)
+
+                    //checks if we can determine what kind of items are supposed to be loaded into the container based on the status effects
+                    CheckStatus CheckStatusEffects(IEnumerable<StatusEffect> statusEffects, IEnumerable<Identifier> containableIdentifiers = null)
                     {
                         if (statusEffects == null) { return CheckStatus.Unfinished; }
+
+                        containableIdentifiers ??= Enumerable.Empty<Identifier>();
                         foreach (var statusEffect in statusEffects)
                         {
-                            if ((statusEffect.TargetIdentifiers == null || statusEffect.TargetIdentifiers.None()) && !statusEffect.HasConditions) { continue; }
+                            IEnumerable<Identifier> statusEffectTargetIdentifiers =
+                                statusEffect.TargetIdentifiers == null ?
+                                containableIdentifiers :
+                                containableIdentifiers.Concat(statusEffect.TargetIdentifiers);
+
+                            if (statusEffectTargetIdentifiers.None() && !statusEffect.HasConditions) { continue; }
                             switch (TargetItemCondition)
                             {
                                 case AIObjectiveLoadItems.ItemCondition.Empty:
@@ -119,26 +130,23 @@ namespace Barotrauma
                                 default:
                                     continue;
                             }
-                            useDefaultContainableItemIdentifiers = false;
-                            if (statusEffect.TargetIdentifiers != null)
+                            foreach (Identifier target in statusEffectTargetIdentifiers)
                             {
-                                foreach (Identifier target in statusEffect.TargetIdentifiers)
+                                foreach (var prefab in potentialContainablePrefabs)
                                 {
-                                    foreach (var prefab in potentialContainablePrefabs)
+                                    if (CheckPrefab(prefab, () => (prefab.Tags.Contains(target) || prefab.Identifier == target) && 
+                                        (statusEffect.MatchesTagConditionals(prefab))) == CheckStatus.Finished)
                                     {
-                                        if (CheckPrefab(prefab, () => prefab.Tags.Contains(target)) == CheckStatus.Finished) { return CheckStatus.Finished; }
+                                        return CheckStatus.Finished; 
                                     }
                                 }
-                            }
-                            foreach (var prefab in potentialContainablePrefabs)
-                            {
-                                if (CheckPrefab(prefab, () => statusEffect.MatchesTagConditionals(prefab)) == CheckStatus.Finished) { return CheckStatus.Finished; }
-                            }
+                            }            
                             CheckStatus CheckPrefab(ItemPrefab prefab, Func<bool> isValid)
                             {
                                 if (validContainableItemIdentifiers.Contains(prefab.Identifier)) { return CheckStatus.Unfinished; }
                                 if (!isValid()) { return CheckStatus.Unfinished; }
                                 validContainableItemIdentifiers.Add(prefab.Identifier);
+                                useDefaultContainableItemIdentifiers = false;
                                 if (potentialContainablePrefabs.Any(p => !validContainableItemIdentifiers.Contains(p.Identifier))) { return CheckStatus.Unfinished; }
                                 return CheckStatus.Finished;
                             }
@@ -150,7 +158,7 @@ namespace Barotrauma
             var identifiers = useDefaultContainableItemIdentifiers ?
                 potentialContainablePrefabs.Select(p => p.Identifier).ToImmutableHashSet() :
                 validContainableItemIdentifiers.ToImmutableHashSet();
-            AllValidContainableItemIdentifiers.Add(Container.Prefab, identifiers);
+            AllValidContainableItemIdentifiers.TryAdd(Container.Prefab, identifiers);
             return identifiers;
         }
 
@@ -257,7 +265,7 @@ namespace Barotrauma
             }
             else
             {
-                if(moveItemObjective == null && !IsValidContainable(targetItem))
+                if (moveItemObjective == null && !IsValidContainable(targetItem))
                 {
                     IgnoreTargetItem();
                     Reset();
@@ -272,6 +280,7 @@ namespace Barotrauma
                         RemoveExistingWhenNecessary = true,
                         RemoveExistingPredicate = (i) => !ValidContainableItemIdentifiers.Contains(i.Prefab.Identifier) || AIObjectiveLoadItems.ItemMatchesTargetCondition(i, TargetItemCondition),
                         RemoveExistingMax = 1,
+                        StoreRemovedItems = true,
                         AllowToFindDivingGear = objectiveManager.HasOrder<AIObjectiveLoadItems>()
                     },
                     onCompleted: () =>
@@ -288,31 +297,56 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Top-level containables plus the ones defined inside SubContainers.
+        /// </summary>
+        private static IEnumerable<RelatedItem> GetAllContainableItems(ItemContainer container)
+        {
+            if (container.ContainableItems != null)
+            {
+                foreach (var containable in container.ContainableItems)
+                {
+                    yield return containable;
+                }
+            }
+            if (container.AllSubContainableItems != null)
+            {
+                foreach (var containable in container.AllSubContainableItems)
+                {
+                    yield return containable;
+                }
+            }
+        }
+
         private bool IsValidContainable(Item item)
         {
             if (item == null) { return false; }
             if (item.Removed) { return false; }
             if (!ValidContainableItemIdentifiers.Contains(item.Prefab.Identifier)) { return false; }
             if (ignoredItems.Contains(item)) { return false; }
-            if ((item.Illegitimate) == character.IsOnPlayerTeam) { return false; }
-            if ((item.SpawnedInCurrentOutpost && !item.AllowStealing) == character.IsOnPlayerTeam) { return false; }
+            if (character.IsOnPlayerTeam && item.Illegitimate) { return false; }
             if (item.GetRootInventoryOwner() is Character owner && owner != character) { return false; }
             Item parentItem = item.Container;
             while (parentItem != null)
             {
-                if (parentItem.HasTag(Tags.DontTakeItems)) { return false; }
+                if (parentItem.HasTag(Tags.DontTakeItems) || parentItem.HasTag(Tags.DontTakeItemsUnlessEmergency)) { return false; }
                 parentItem = parentItem.Container;
             }
             if (!item.HasAccess(character)) { return false; }
             if (!character.HasItem(item) && !CanEquip(item, allowWearing: false)) { return false; }
             if (!ItemContainer.CanBeContained(item)) { return false; }
             if (AIObjectiveLoadItems.ItemMatchesTargetCondition(item, TargetItemCondition)) { return false; }
+            // Ignore items that have had their condition increase recently (= being refilled)
+            if (item.ConditionIncreasedRecently) { return false; }
             if (TargetItemCondition == AIObjectiveLoadItems.ItemCondition.Full)
             {
-                // Ignore items that have had their condition increase recently
-                if (TargetItemCondition == AIObjectiveLoadItems.ItemCondition.Full && item.ConditionIncreasedRecently) { return false; }
                 // Ignore items inside their (condition-restricted) primary containers
                 if (item.ParentInventory is ItemInventory itemInventory && item.IsContainerPreferred(itemInventory.Container, out bool _, out bool isSecondary, requireConditionRestriction: true) && !isSecondary) { return false; }
+            }
+            else if (TargetItemCondition == AIObjectiveLoadItems.ItemCondition.Empty)
+            {
+                //don't take tanks from diving gear when trying to replace empty tanks in some device - diving gear is (probably) more important to be filled!
+                if (item.Container != null && item.Container.HasTag(Tags.DivingGear)) { return false; }
             }
             // Ignore items inside another valid container
             if (AIObjectiveLoadItems.IsValidTarget(item.Container, character, TargetContainerTags)) { return false; }

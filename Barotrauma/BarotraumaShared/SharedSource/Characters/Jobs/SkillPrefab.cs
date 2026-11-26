@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    class SkillPrefab
+    public class SkillPrefab
     {
         public readonly Identifier Identifier;
 

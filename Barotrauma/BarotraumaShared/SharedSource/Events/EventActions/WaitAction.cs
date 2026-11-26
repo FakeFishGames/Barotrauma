@@ -1,4 +1,4 @@
-namespace Barotrauma
+﻿namespace Barotrauma
 {
     /// <summary>
     /// Waits for a specific amount of time before continuing the execution of the event.
@@ -19,7 +19,7 @@ namespace Barotrauma
         {
             return timeRemaining <= 0;
         }
-        public override void Reset()
+        public override void Reset(bool shouldEndConversations = true)
         {
             timeRemaining = Time;
         }

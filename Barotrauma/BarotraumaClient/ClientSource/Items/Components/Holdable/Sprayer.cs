@@ -1,13 +1,10 @@
-﻿using Barotrauma.Networking;
-using Barotrauma.Particles;
+﻿using Barotrauma.Particles;
 using FarseerPhysics;
-using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -23,15 +20,34 @@ namespace Barotrauma.Items.Components
             get { return Vector2.Zero; }
         }
 
+        /// <summary>
+        /// Particles emitted from the barrel of the sprayer towards the position it's aimed at.
+        /// </summary>
         private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
+
+        /// <summary>
+        /// Particles emitted from the position of the wall section the spray hits.
+        /// </summary>
+        private readonly List<ParticleEmitter> particleEmittersHitPosition = new List<ParticleEmitter>();
         private Hull targetHull;
 
         private Vector2 rayStartWorldPosition;
 
         private Color color;
 
+        private LocalizedString inventoryHotkeyTooltip;
+        public override LocalizedString InventoryHotkeyTooltip
+        {
+            get => inventoryHotkeyTooltip;
+        }
+
         partial void InitProjSpecific(ContentXElement element)
         {
+            inventoryHotkeyTooltip = TextManager.GetWithVariables(
+                "sprayer.firemodehotkey.tooltip", 
+                ("[previousfiremode]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.PreviousFireMode)),
+                ("[nextfiremode]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.NextFireMode)));
+
             currentCrossHairPointerScale = element.GetAttributeFloat("crosshairscale", 0.1f);
 
             foreach (var subElement in element.Elements())
@@ -39,7 +55,18 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "particleemitter":
-                        particleEmitters.Add(new ParticleEmitter(subElement));
+                        {
+                            var emitter = new ParticleEmitter(subElement);
+                            particleEmitters.Add(emitter);
+                            TryAddParticleEmitterByID(emitter);
+                        }
+                        break;
+                    case "particleemitterhitposition":
+                        {
+                            var emitter = new ParticleEmitter(subElement);
+                            particleEmittersHitPosition.Add(emitter);
+                            TryAddParticleEmitterByID(emitter);
+                        }
                         break;
                 }
             }
@@ -48,12 +75,12 @@ namespace Barotrauma.Items.Components
         private readonly List<BackgroundSection> targetSections = new List<BackgroundSection>();
 
         // 0 = 1x1, 1 = 2x2, 2 = 3x3
-        private int spraySetting = 0;
+        private int spraySetting = 2;
         private readonly Point[] sprayArray = new Point[8];
 
         public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
-            if (character == null || !character.IsKeyDown(InputType.Aim)) return;
+            if (character == null || !character.IsKeyDown(InputType.Aim)) { return; }
 
             if (PlayerInput.KeyHit(InputType.PreviousFireMode))
             {
@@ -88,8 +115,10 @@ namespace Barotrauma.Items.Components
             Vector2 rayStart;
             Vector2 sourcePos = character?.AnimController == null ? item.SimPosition : character.AnimController.AimSourceSimPos;
             Vector2 barrelPos = item.SimPosition + TransformedBarrelPos;
+            var blockingBody = Submarine.PickBody(sourcePos, barrelPos, collisionCategory: Physics.CollisionItem | Physics.CollisionItemBlocking | Physics.CollisionWall);
+
             //make sure there's no obstacles between the base of the item (or the shoulder of the character) and the end of the barrel
-            if (Submarine.PickBody(sourcePos, barrelPos, collisionCategory: Physics.CollisionItem | Physics.CollisionItemBlocking | Physics.CollisionWall) == null)
+            if (blockingBody == null || (blockingBody.UserData is Item blockingItem && blockingItem.GetComponent<SelectiveColliderComponent>()?.ShouldBlockCharacter(character) == false))
             {
                 //no obstacles -> we start the raycast at the end of the barrel
                 rayStart = ConvertUnits.ToSimUnits(item.WorldPosition) + TransformedBarrelPos;
@@ -131,6 +160,8 @@ namespace Barotrauma.Items.Components
                 {
                     var door = item.GetComponent<Door>();
                     if (door != null && (door.IsOpen || door.IsBroken)) { continue; }
+
+                    if (item.GetComponent<SelectiveColliderComponent>()?.ShouldBlockCharacter(character) == false) { continue; }
                 }
 
                 targetHull = null;
@@ -248,7 +279,8 @@ namespace Barotrauma.Items.Components
             {
                 // Ethanol or other cleaning solvent
                 if (color.A == 0) { isCleaning = true; }
-                float sizeAdjustedSprayStrength = SprayStrength / targetSections.Count;
+                float sprayStrength = isCleaning ? CleanStrength : SprayStrength;
+                float sizeAdjustedSprayStrength = sprayStrength / targetSections.Count;
                 if (!isCleaning)
                 {
                     for (int i = 0; i < targetSections.Count; i++)
@@ -278,14 +310,24 @@ namespace Barotrauma.Items.Components
             //the cursor position is not exact for remote players, we only know the direction they're aiming at but not the distance
             // -> use 50% range, looks good enough
             float dist = Math.Min(Vector2.Distance(particleStartPos, particleEndPos), Range * 0.5f);
+            float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
             foreach (ParticleEmitter particleEmitter in particleEmitters)
             {
-                float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                 float particleRange = particleEmitter.Prefab.Properties.VelocityMax * particleEmitter.Prefab.ParticlePrefab.LifeTime;
                 particleEmitter.Emit(
                     deltaTime, particleStartPos,
                     item.CurrentHull, particleAngle, particleEmitter.Prefab.Properties.CopyEntityAngle ? -particleAngle : 0, velocityMultiplier: dist / particleRange * 1.5f,
                     colorMultiplier: new Color(color.R, color.G, color.B, (byte)255));
+            }
+            if (targetSections.Any())
+            {
+                foreach (ParticleEmitter particleEmitter in particleEmittersHitPosition)
+                {
+                    particleEmitter.Emit(
+                        deltaTime, particleEndPos,
+                        item.CurrentHull, 0.0f, particleEmitter.Prefab.Properties.CopyEntityAngle ? -particleAngle : 0,
+                        colorMultiplier: new Color(color.R, color.G, color.B, (byte)255));
+                }
             }
         }
 

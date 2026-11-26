@@ -78,9 +78,10 @@ namespace Barotrauma.Sounds
         }
     }
 
-    class SoundChannel : IDisposable
+    public class SoundChannel : IDisposable
     {
         private const int STREAM_BUFFER_SIZE = 8820;
+        public const int StreamBufferCount = 4;
         private readonly short[] streamShortBuffer;
 
         private string debugName = "SoundChannel";
@@ -495,7 +496,7 @@ namespace Barotrauma.Sounds
             FilledByNetwork = sound is VoipSound;
             decayTimer = 0;
             streamSeekPos = 0; reachedEndSample = false;
-            buffersToRequeue = 4;
+            buffersToRequeue = StreamBufferCount;
             muffled = muffle;
 
             if (IsStream)
@@ -563,10 +564,10 @@ namespace Barotrauma.Sounds
 
                         streamShortBuffer = new short[STREAM_BUFFER_SIZE];
 
-                        streamBuffers = new uint[4];
-                        unqueuedBuffers = new uint[4];
-                        streamBufferAmplitudes = new float[4];
-                        for (int i = 0; i < 4; i++)
+                        streamBuffers = new uint[StreamBufferCount];
+                        unqueuedBuffers = new uint[StreamBufferCount];
+                        streamBufferAmplitudes = new float[StreamBufferCount];
+                        for (int i = 0; i < StreamBufferCount; i++)
                         {
                             Al.GenBuffer(out streamBuffers[i]);
 
@@ -678,7 +679,7 @@ namespace Barotrauma.Sounds
                             throw new Exception("Failed to reset buffer for streamed source: " + debugName + ", " + Al.GetErrorString(alError));
                         }
                         
-                        for (int i = 0; i < 4; i++)
+                        for (int i = 0; i < StreamBufferCount; i++)
                         {
                             Al.DeleteBuffer(streamBuffers[i]);
                             alError = Al.GetError();
@@ -810,7 +811,7 @@ namespace Barotrauma.Sounds
                             }
 
                             Al.SourceQueueBuffer(alSource, streamBuffers[index]);
-                            queueStartIndex = (queueStartIndex + 1) % 4;
+                            queueStartIndex = (queueStartIndex + 1) % StreamBufferCount;
 
                             alError = Al.GetError();
                             if (alError != Al.NoError)

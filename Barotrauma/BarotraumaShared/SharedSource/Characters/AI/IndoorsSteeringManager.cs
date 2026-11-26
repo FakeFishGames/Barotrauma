@@ -5,10 +5,12 @@ using System;
 using System.Linq;
 using FarseerPhysics;
 using System.Diagnostics;
+using System.Collections.Generic;
+using FarseerPhysics.Dynamics;
 
 namespace Barotrauma
 {
-    class IndoorsSteeringManager : SteeringManager
+    public class IndoorsSteeringManager : SteeringManager
     {
         private readonly PathFinder pathFinder;
         private SteeringPath currentPath;
@@ -31,6 +33,12 @@ namespace Barotrauma
         private float findPathTimer;
 
         private const float ButtonPressCooldown = 1;
+        private const float WanderRaycastDelay = 1f;
+
+        private Body wanderLeftBody;
+        private Body wanderRightBody;
+
+        private float wanderRaycastTimer;
         private float checkDoorsTimer;
         private float buttonPressTimer;
 
@@ -90,6 +98,7 @@ namespace Barotrauma
             base.Update(speed);
             float step = 1.0f / 60.0f;
             checkDoorsTimer -= step;
+            wanderRaycastTimer -= step;
             if (lastDoor.door == null || !lastDoor.shouldBeOpen || lastDoor.door.IsFullyOpen)
             {
                 buttonPressTimer = 0;
@@ -119,7 +128,20 @@ namespace Barotrauma
         {
             steering += base.DoSteeringSeek(targetSimPos, weight);
         }
-        
+
+        /// <summary>
+        /// The transient state while going in or out through a gap is a bit weird and needs to be accounted for separately.
+        /// The ragdoll keeps Character.Submarine with hysteresis while near a gap (see Ragdoll.FindHull), but Character.CurrentHull is exact.
+        /// </summary>
+        public static bool IsPassingThroughGap(Character c) => c.Submarine != null && c.CurrentHull == null;
+
+        /// <summary>
+        /// Start node filter that keeps the path starting on the character's side of the hull boundary, so a node that's closer but behind the wall isn't chosen.
+        /// While passing through a gap, either side is fine, otherwise the character might steer back mid-entry (and be stuck spinning on the threshold).
+        /// </summary>
+        public bool IsStartNodeOnCharactersSide(PathNode node) =>
+            IsPassingThroughGap(character) || (node.Waypoint.CurrentHull == null) == (character.CurrentHull == null);
+
         /// <summary>
         /// </summary>
         /// <param name="outsideNodePenalty">Additional cost applied to outside nodes. When the character is inside an extra cost of 100 is also automatically added for outside nodes, unless the character is protected from the pressure. Used for example to prevent monsters from preferring outside nodes when they already are inside.</param>
@@ -186,7 +208,12 @@ namespace Barotrauma
                     Vector2 currentPos = host.SimPosition;
                     pathFinder.InsideSubmarine = character.Submarine != null && !character.Submarine.Info.IsRuin;
                     pathFinder.ApplyPenaltyToOutsideNodes = character.Submarine != null && !character.IsProtectedFromPressure;
-                    var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", minGapSize, startNodeFilter, endNodeFilter, nodeFilter, checkVisibility: checkVisibility, outsideNodePenalty);
+                    var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", minGapSize, 
+                        startNodeFilter, endNodeFilter, nodeFilter, 
+                        checkVisibility: checkVisibility, outsideNodePenalty: outsideNodePenalty, 
+                        currentStairs: character.AnimController?.Stairs,
+                        currentPath: currentPath,
+                        startHull: character.CurrentHull);
                     bool useNewPath = needsNewPath;
                     if (!useNewPath && currentPath?.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
                     {
@@ -279,9 +306,35 @@ namespace Barotrauma
                                 pathDistance -= CurrentPath.GetLength(startIndex: i - 1, endIndex: i);
                                 continue;
                             }
+                            // Before accepting this waypoint, also check "shoulders" to make sure the character's
+                            // full width can pass through, avoiding issues with turrets and other protrusions
+                            // (and account for potentially different coordinate spaces between here and there)
+                            Vector2 diff = ConvertUnits.ToSimUnits(waypoint.WorldPosition - character.WorldPosition);
+                            if (!CanPassWithShoulders(character.SimPosition, character.SimPosition + diff))
+                            {
+                                pathDistance -= CurrentPath.GetLength(startIndex: i - 1, endIndex: i);
+                                continue;
+                            }
                             CurrentPath.SkipToNode(i);
                             break;
                         }
+                    }
+
+                    bool CanPassWithShoulders(Vector2 from, Vector2 to)
+                    {
+                        Vector2 dir = to - from;
+                        if (dir.LengthSquared() < 0.0001f) { return true; }
+                        dir = Vector2.Normalize(dir);
+                        Vector2 perpendicular = new Vector2(-dir.Y, dir.X);
+                        // Check left shoulder
+                        Vector2 leftStart = from + perpendicular * ShoulderRaycastWidth;
+                        Vector2 leftEnd = to + perpendicular * ShoulderRaycastWidth;
+                        if (Submarine.CheckVisibility(leftStart, leftEnd) != null) { return false; }
+                        // Check right shoulder
+                        Vector2 rightStart = from - perpendicular * ShoulderRaycastWidth;
+                        Vector2 rightEnd = to - perpendicular * ShoulderRaycastWidth;
+                        if (Submarine.CheckVisibility(rightStart, rightEnd) != null) { return false; }
+                        return true;
                     }
                 }
             }
@@ -313,7 +366,7 @@ namespace Barotrauma
             }
             bool doorsChecked = false;
             checkDoorsTimer = Math.Min(checkDoorsTimer, GetDoorCheckTime());
-            if (!character.LockHands && checkDoorsTimer <= 0.0f)
+            if (!character.BothHandsDisabled && checkDoorsTimer <= 0.0f)
             {
                 CheckDoorsInPath();
                 doorsChecked = true;
@@ -621,14 +674,15 @@ namespace Barotrauma
 
         public bool CanAccessDoor(Door door, Func<Controller, bool> buttonFilter = null)
         {
-            if (door.CanBeTraversed) { return true; }
+            // When closing an open door, the buttonFilter still has to run below to pick the button to close it with
+            if (door.CanBeTraversed && (buttonFilter == null || door.IsBroken)) { return true; }
             if (door.IsClosed)
             {
                 if (!door.Item.IsInteractable(character)) { return false; }
                 if (!ShouldBreakDoor(door))
                 {
                     if (door.IsStuck || door.IsJammed) { return false; }
-                    if (!canOpenDoors || character.LockHands) { return false; }
+                    if (!canOpenDoors || character.BothHandsDisabled) { return false; }
                 }
             }
             if (door.HasIntegratedButtons)
@@ -699,15 +753,20 @@ namespace Barotrauma
         {
             checkDoorsTimer = GetDoorCheckTime();
             if (!canOpenDoors) { return; }
+            //handle opening doors at the current waypoint, and closing them once the bot is far enough through the door to not close it on themselves
             for (int i = 0; i < 5; i++)
             {
                 WayPoint currentWaypoint = null;
                 WayPoint nextWaypoint = null;
                 Door door = null;
                 bool shouldBeOpen = false;
-                if (currentPath.Nodes.Count == 1)
+                //if the door is at the only node in the path, or next node, we can just open it
+                Door nextDoorOnPath = currentPath.NextNode?.ConnectedDoor;
+                if (currentPath.Nodes.Count == 1 || nextDoorOnPath != null)
                 {
-                    door = currentPath.Nodes.First().ConnectedDoor;
+                    door = currentPath.Nodes.Count == 1
+                        ? currentPath.Nodes[0].ConnectedDoor
+                        : nextDoorOnPath;
                     shouldBeOpen = door != null;
                     if (i > 0) { break; }
                 }
@@ -745,6 +804,7 @@ namespace Barotrauma
                     }
                     else
                     {
+                        //close the door behind the bot once far enough from it
                         float colliderLength = GetColliderLength();
                         door = currentWaypoint.ConnectedDoor;
                         if (door.LinkedGap.IsHorizontal)
@@ -771,7 +831,9 @@ namespace Barotrauma
                     {
                         if (character.AIController is HumanAIController humanAI)
                         {
-                            bool keepDoorsClosed = character.IsBot && door.Item.Submarine?.TeamID == character.TeamID || character.Params.AI != null && character.Params.AI.KeepDoorsClosed;
+                            bool keepDoorsClosed = 
+                                character.IsBot && (door.Item.Submarine != null && character.IsOnFriendlyTeam(door.Item.Submarine.TeamID)) || 
+                                character.Params.AI != null && character.Params.AI.KeepDoorsClosed;
                             if (!keepDoorsClosed) { return; }
                             bool isInAirlock = door.Item.CurrentHull is { IsWetRoom: true } || character.CurrentHull is { IsWetRoom: true };
                             if (!isInAirlock)
@@ -820,7 +882,7 @@ namespace Barotrauma
                         bool pressButton = buttonPressTimer <= 0 || lastDoor.door != door || lastDoor.shouldBeOpen != shouldBeOpen;
                         if (door.HasIntegratedButtons)
                         {
-                            if (pressButton && character.CanSeeTarget(door.Item))
+                            if (pressButton && character.CanInteractWith(door.Item))
                             {
                                 if (door.Item.TryInteract(character, forceSelectKey: true))
                                 {
@@ -876,7 +938,7 @@ namespace Barotrauma
             bool nextNodeAboveWaterLevel = nextNode.Waypoint.CurrentHull != null && nextNode.Waypoint.CurrentHull.Surface < nextNode.Waypoint.Position.Y;
             if (!character.CanClimb && node.Waypoint.Stairs == null && nextNode.Waypoint.Stairs == null)
             {
-                if (node.Waypoint.Ladders != null && nextNode.Waypoint.Ladders != null && (!nextNode.Waypoint.Ladders.Item.IsInteractable(character) || character.LockHands) ||
+                if (node.Waypoint.Ladders != null && nextNode.Waypoint.Ladders != null && (!nextNode.Waypoint.Ladders.Item.IsInteractable(character) || character.BothHandsDisabled) ||
                     (nextNodePosition.Y - node.Position.Y > 1.0f && //more than one sim unit to climb up
                      nextNodeAboveWaterLevel)) //upper node not underwater
                 {
@@ -971,7 +1033,7 @@ namespace Barotrauma
         }
 
         // TODO: Long and complex. Consider refactoring.
-        public static float smallRoomSize = 500;
+        public static float smallRoomSize = 400;
         public void Wander(float deltaTime, float wallAvoidDistance = 150, bool stayStillInTightSpace = true)
         {
             //steer away from edges of the hull
@@ -996,6 +1058,7 @@ namespace Barotrauma
                 {
                     bool isVerySmallRoom = roomWidth < smallRoomSize;
                     Hull nextRoom = null;
+
                     if (!stayStillInTightSpace && isVerySmallRoom)
                     {
                         float closestDistance = 0;
@@ -1048,8 +1111,30 @@ namespace Barotrauma
                             Reset();
                             return;
                         }
+
                         float leftDist = character.Position.X - currentHull.Rect.X;
                         float rightDist = currentHull.Rect.Right - character.Position.X;
+
+                        if (wanderRaycastTimer <= 0)
+                        {
+
+                            // Check the left and right side and adjust the distance if there's something blocking the way
+                            Vector2 raycastDist = new Vector2(10.0f, 0.0f); //10 meters
+                            wanderLeftBody = Submarine.PickBody(character.SimPosition, character.SimPosition - raycastDist, collisionCategory: Physics.CollisionWall | Physics.CollisionItemBlocking);
+                            wanderRightBody = Submarine.PickBody(character.SimPosition, character.SimPosition + raycastDist, collisionCategory: Physics.CollisionWall | Physics.CollisionItemBlocking);
+                            wanderRaycastTimer = WanderRaycastDelay;
+                        }
+
+                        if (wanderLeftBody != null)
+                        {
+                            leftDist = ConvertUnits.ToDisplayUnits(character.SimPosition.X - wanderLeftBody.Position.X);
+                        }
+
+                        if (wanderRightBody != null)
+                        {
+                            rightDist = ConvertUnits.ToDisplayUnits(wanderRightBody.Position.X - character.SimPosition.X);
+                        }
+
                         if (leftDist < wallAvoidDistance && rightDist < wallAvoidDistance)
                         {
                             float diff = rightDist - leftDist;

@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Immutable;
 using System.Linq;
@@ -101,7 +101,7 @@ namespace Barotrauma.Networking
     }
 
     [NetworkSerialize]
-    internal readonly struct PeerDisconnectPacket : INetSerializableStruct
+    public readonly struct PeerDisconnectPacket : INetSerializableStruct
     {
         public readonly DisconnectReason DisconnectReason;
 
@@ -130,7 +130,8 @@ namespace Barotrauma.Networking
                 DisconnectReason.Kicked => TextManager.GetWithVariable("servermessage.kickedfromserver", "[client]", name),
                 _ => TextManager.GetWithVariables("ChatMsg.DisconnectedWithReason",
                         ("[client]", name),
-                        ("[reason]", TextManager.Get($"ChatMsg.DisconnectReason.{DisconnectReason}")))
+                        ("[reason]", 
+                            TextManager.Get($"ChatMsg.DisconnectReason.{DisconnectReason}").Fallback($"DisconnectReason.{DisconnectReason}")))
             };
             if (!string.IsNullOrEmpty(AdditionalInformation) &&
                 DisconnectReason is DisconnectReason.Banned or DisconnectReason.Kicked)
@@ -280,6 +281,9 @@ namespace Barotrauma.Networking
         [NetworkSerialize]
         public string Name = "";
 
+        [NetworkSerialize]
+        public string Version = "";
+
         [NetworkSerialize(ArrayMaxSize = ushort.MaxValue)]
         public byte[] HashBytes = Array.Empty<byte>();
 
@@ -291,6 +295,12 @@ namespace Barotrauma.Networking
 
         [NetworkSerialize]
         public bool IsMandatory;
+
+        [NetworkSerialize]
+        public bool CanBeDownloaded;
+
+        [NetworkSerialize]
+        public string SteamAppId = "";
 
         [NetworkSerialize]
         public bool IsVanilla;
@@ -323,11 +333,14 @@ namespace Barotrauma.Networking
         public ServerContentPackage(ContentPackage contentPackage, SerializableDateTime referenceTime)
         {
             Name = contentPackage.Name;
+            Version = contentPackage.ModVersion;
             Hash = contentPackage.Hash;
             UgcId = contentPackage.UgcId.TryUnwrap(out var ugcId)
                 ? ugcId.StringRepresentation
                 : "";
-            IsMandatory = !contentPackage.Files.All(f => f is SubmarineFile);
+            IsMandatory = !contentPackage.AllFiles.All(static f => f is SubmarineFile);
+            CanBeDownloaded = !contentPackage.AllFiles.Any(static f => !f.CanBeDownloadedFromServer);
+            SteamAppId = contentPackage.SteamDlcAppId.TryUnwrap(out var teamAppId) ? teamAppId.ToString() : "";
             IsVanilla = contentPackage == ContentPackageManager.VanillaCorePackage;
             InstallTimeDiffInSeconds =
                 contentPackage.InstallTime.TryUnwrap(out var installTime)

@@ -27,6 +27,8 @@ namespace Barotrauma
             /// </summary>
             public float? EndZoom;
 
+            public bool UseMovementNoise = true;
+
             private float startDelay;
             public float StartDelay
             {
@@ -46,9 +48,40 @@ namespace Barotrauma
             public bool Finished;
         }
 
+        public class MissionIcon
+        {
+            public Mission Mission;
+            public float PositionBetweenLocations;
+
+            public MissionIcon(Mission mission, float positionBetweenLocations)
+            {
+                Mission = mission;
+                PositionBetweenLocations = positionBetweenLocations;
+            }
+
+            public bool ShouldAnimateIcon => Mission.Prefab.TimeLimitWorldSteps > 0;
+
+            public float TargetPositionBetweenLocations =>
+                Math.Min((Mission.WorldStepsSinceUnlocked + CampaignMode.GetElapsedWholeWorldStepsInCurrentRound()) / (float)Mission.Prefab.TimeLimitWorldSteps, 1.0f);
+
+            public bool AnimationDone => PositionBetweenLocations >= TargetPositionBetweenLocations;
+        }
+
         private readonly Queue<MapAnim> mapAnimQueue = new Queue<MapAnim>();
 
         public Location HighlightedLocation { get; private set; }
+        private const float LocationHighlightRadiusMultiplier = 1.1f;
+
+        private float locationInfoOverlayTimer;
+        
+        public bool IsLocationInfoPanelVisible => HighlightedLocation != null && locationInfoOverlayTimer > LocationInfoOverlayDelay;
+
+        /// <summary>
+        /// Delay before the location info overlay is shown when hovering over a location.
+        /// </summary>
+        private const float LocationInfoOverlayDelay = 0.5f;
+
+        private bool isNotificationBubbleHighlighted;
 
         private static Sprite noiseOverlay;
 
@@ -67,18 +100,23 @@ namespace Barotrauma
 
         private float connectionHighlightState;
 
-        private (Rectangle targetArea, RichString tip)? tooltip;
+        /// <summary>
+        /// Currently active tooltip: isBlocking determines whether the tooltip should disable interaction with elements such as shortcut icons
+        /// </summary>
+        private (Rectangle targetArea, RichString tip, bool isBlocking)? tooltip;
+
+        public bool HasBlockingTooltip => tooltip is { isBlocking: true };
+
+        /// <summary>
+        /// Is some custom element (implemented by a plugin) currently blocking interaction with the map icons/buttons.
+        /// </summary>
+        public bool IsCustomElementBlocking;
 
         private SubmarineInfo.PendingSubInfo pendingSubInfo;
 
         private RichString beaconStationActiveText, beaconStationInactiveText;
 
         private GUIComponent locationInfoOverlay;
-
-        /*private (Rectangle targetArea, string tip)? connectionTooltip;
-        private string sanitizedConnectionTooltip;
-        private List<RichTextData> connectionTooltipRichTextData;
-        private string prevConnectionTooltip;*/
 
 #if DEBUG
         private GUIComponent editor;
@@ -216,13 +254,23 @@ namespace Barotrauma
                 currLocationIndicatorPos = CurrentLocation.MapPosition;
             }
 
-            if (newLocation.Visited)
+            if (newLocation is { Visited: true })
             {
                 RemoveFogOfWar(newLocation);
             }
         }
 
         partial void RemoveFogOfWarProjSpecific(Location location) => RemoveFogOfWar(location);
+
+        partial void ClearLocationHistoryProjSpecific()
+        {
+            //the news may refer to things that happened before the history was cleared
+            mapNotifications.Clear();
+            if (tileDiscovered == null) { return; }
+            Array.Clear(tileDiscovered);
+            //clear fog of war at the start of the map, the same as when the map is initialized
+            RemoveFogOfWar(StartLocation);
+        }
 
         private void RemoveFogOfWar(Location location, bool removeFromAdjacentLocations = true)
         {
@@ -304,7 +352,12 @@ namespace Barotrauma
                 .Replace("[name]", $"‖color:gui.yellow‖{location.DisplayName}‖end‖");
             location.LastTypeChangeMessage = msg;
 
-            mapNotifications.Add(new MapNotification(msg, GUIStyle.SubHeadingFont, mapNotifications, location));           
+            AddMapNotification(msg, location);           
+        }
+
+        public void AddMapNotification(LocalizedString message, Location relatedLocation)
+        {
+            mapNotifications.Add(new MapNotification(message.Value, GUIStyle.SubHeadingFont, mapNotifications, relatedLocation));
         }
 
         public void DrawNotifications(SpriteBatch spriteBatch, GUICustomComponent container)
@@ -366,16 +419,26 @@ namespace Barotrauma
 
         private void CreateLocationInfoOverlay(Location location)
         {
+            CleanupLocationInfoOverlay();
+
             locationInfoOverlay = new GUIFrame(new RectTransform(new Point(GUI.IntScale(350), GUI.IntScale(350)), GUI.Canvas), style: "GUIToolTip")
             {
                 UserData = location
             };
             locationInfoOverlay.Color *= 0.8f;
 
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), locationInfoOverlay.RectTransform, Anchor.Center))
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), locationInfoOverlay.RectTransform, Anchor.Center))
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
+            };
+
+            // Capture the overlay locally so the handler doesn't crash on edge cases like resolution changes
+            var overlay = locationInfoOverlay;
+            overlay.RectTransform.SizeChanged += () =>
+            {
+                content.RectTransform.Resize(absoluteSize:
+                    new Point(overlay.Rect.Width - GUI.IntScale(35), overlay.Rect.Height - GUI.IntScale(25)));
             };
 
             bool showReputation = hudVisibility > 0.0f && location.Type.HasOutpost && location.Reputation != null;
@@ -386,6 +449,12 @@ namespace Barotrauma
             if (!location.Type.Name.IsNullOrEmpty())
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), locationTypeToDisplay.Name, font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero };
+            }
+
+            if (location.IsBelowInsufficientPopulationThreshold && !location.LocationTypeChangesBlocked)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.Get("location.insufficientpopulation"), 
+                    textColor: GUIStyle.Orange, wrap: true) { Padding = Vector4.Zero };
             }
 
             CreateSpacing(10);
@@ -431,10 +500,10 @@ namespace Barotrauma
 
             void CreateTextWithIcon(LocalizedString text, Sprite iconSprite = null, string iconStyle = null)
             {
-                GUITextBlock textBox = new(new RectTransform(new Vector2(0.9f, 0f), content.RectTransform), text, wrap: true);
+                GUITextBlock textBox = new(new RectTransform(new Vector2(0.9f, 0f), content.RectTransform), text, wrap: true, font: GUIStyle.SmallFont);
 
                 if (iconSprite == null && iconStyle == null) { return; }
-                float iconSize = GUIStyle.Font.LineHeight * 1.5f;
+                float iconSize = textBox.Font.LineHeight * 1.5f;
 
                 textBox.Padding = textBox.Padding with { X = iconSize + 5f };
                 RectTransform iconTF = new(new Point((int)iconSize), textBox.RectTransform, Anchor.CenterLeft) { IsFixedSize = true };
@@ -478,16 +547,33 @@ namespace Barotrauma
                 new GUIImage(new RectTransform(new Vector2(0.25f, 0.5f), locationInfoOverlay.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.05f) }, 
                     location.Faction.Prefab.Icon, scaleToFit: true)
                 {
+                    CanBeFocused = false,
                     Color = location.Faction.Prefab.IconColor * 0.5f
                 };
                 CreateSpacing(20);
             }
 
-            float childWidth = Math.Max(locationInfoOverlay.Rect.Width, content.Children.Max(c => c is GUITextBlock textBlock ? textBlock.TextSize.X + textBlock.Padding.X + textBlock.Padding.Z : c.RectTransform.MinSize.X));
-            childWidth = Math.Max(locationInfoOverlay.Rect.Width, childWidth);
-            float childHeight = content.Children.Sum(c => c.Rect.Height);
+            foreach (var hook in PluginData.GetHooks<PluginCreateLocationInfoOverlayDelegate>())
+            {
+                hook(location, locationInfoOverlay);
+            }
+
+            int minWidth = GUI.IntScale(450);
+            float childWidth = Math.Max(
+                locationInfoOverlay.Rect.Width, 
+                content.Children.Max(c => c is GUITextBlock textBlock ? textBlock.TextSize.X + textBlock.Padding.X + textBlock.Padding.Z : c.RectTransform.MinSize.X));
+            childWidth = Math.Max(minWidth, childWidth);
+
+            float childHeight = content.Children.Where(static c => !c.IgnoreLayoutGroups).Sum(static c => c.Rect.Height);
             Vector2 childSize = new Vector2(childWidth, childHeight) / content.RectTransform.RelativeSize;
             locationInfoOverlay.RectTransform.NonScaledSize = childSize.ToPoint();
+        }
+
+        private void CleanupLocationInfoOverlay()
+        {
+            if (locationInfoOverlay == null) { return; }
+            locationInfoOverlay.RectTransform.Parent = null;
+            locationInfoOverlay = null;
         }
 
         partial void ClearAnimQueue()
@@ -497,7 +583,7 @@ namespace Barotrauma
 
         public void Update(CampaignMode campaign, float deltaTime, GUICustomComponent mapContainer)
         {
-            Rectangle rect = mapContainer.Rect;
+            Rectangle mapRect = mapContainer.Rect;
 
             UpdateNotifications(deltaTime, mapContainer);
 
@@ -553,10 +639,25 @@ namespace Barotrauma
 
             Radiation?.MapUpdate(deltaTime);
 
+            foreach (var connection in Connections)
+            {
+                if (connection.MissionIcons.None()) { continue; }
+                foreach (var missionIcon in connection.MissionIcons)
+                {
+                    if (missionIcon.ShouldAnimateIcon)
+                    {
+                        const float MovementSpeed = 0.1f;
+                        missionIcon.PositionBetweenLocations = Math.Min(missionIcon.PositionBetweenLocations + deltaTime * MovementSpeed, missionIcon.TargetPositionBetweenLocations);
+                    }
+                }
+                connection.MissionIcons.RemoveAll(icon => 
+                    (icon.Mission.Completed || icon.Mission.Failed || !connection.AvailableMissions.Contains(icon.Mission)) && (!icon.ShouldAnimateIcon || icon.AnimationDone));
+            }
+
             if (mapAnimQueue.Count > 0)
             {
                 hudVisibility = Math.Max(hudVisibility - deltaTime, 0.0f);
-                UpdateMapAnim(mapAnimQueue.Peek(), deltaTime);
+                UpdateMapAnim(mapAnimQueue.Peek(), deltaTime, mapContainer);
                 if (mapAnimQueue.Peek().Finished)
                 {
                     mapAnimQueue.Dequeue();
@@ -565,12 +666,12 @@ namespace Barotrauma
             }
 
             hudVisibility = Math.Min(hudVisibility + deltaTime, 0.75f + (float)Math.Sin(Timing.TotalTime * 3.0f) * 0.25f);
-            
-            Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
+
+            Vector2 mapCenter = new Vector2(mapRect.Center.X, mapRect.Center.Y);
             Vector2 viewOffset = DrawOffset + drawOffsetNoise;
-            if (HighlightedLocation != null)
+            if (IsLocationInfoPanelVisible)
             {
-                Vector2 highlightedLocationDrawPos = rectCenter + (HighlightedLocation.MapPosition + viewOffset) * zoom;
+                Vector2 highlightedLocationDrawPos = mapCenter + (HighlightedLocation.MapPosition + viewOffset) * zoom;
                 if (locationInfoOverlay == null || locationInfoOverlay.UserData != HighlightedLocation)
                 {
                     CreateLocationInfoOverlay(HighlightedLocation);
@@ -578,57 +679,112 @@ namespace Barotrauma
 
                 Point offsetFromLocationIcon = new Point(GUI.IntScale(25));
                 var locationInfoRt = locationInfoOverlay.RectTransform;
-                if (locationInfoRt.Pivot == Pivot.BottomLeft || locationInfoRt.Pivot == Pivot.BottomRight)
+                if (locationInfoRt.Pivot is Pivot.BottomLeft or Pivot.BottomRight)
                 {
                     offsetFromLocationIcon.Y = -offsetFromLocationIcon.Y;
                 }
-                if (locationInfoRt.Pivot == Pivot.TopRight || locationInfoRt.Pivot == Pivot.BottomRight)
+                if (locationInfoRt.Pivot is Pivot.TopRight or Pivot.BottomRight)
                 {
                     offsetFromLocationIcon.X = -offsetFromLocationIcon.X;
                 }
                 locationInfoRt.ScreenSpaceOffset = highlightedLocationDrawPos.ToPoint() + offsetFromLocationIcon;
-                if (locationInfoOverlay.Rect.Bottom > rect.Bottom)
+                if (locationInfoOverlay.Rect.Bottom > mapRect.Bottom)
                 {
-                    locationInfoRt.Pivot = Pivot.BottomLeft;
+                    locationInfoRt.Pivot =
+                        locationInfoRt.Rect.Height > locationInfoRt.ScreenSpaceOffset.Y ?
+                        Pivot.CenterLeft :
+                        Pivot.BottomLeft;
                 }
-                if (locationInfoOverlay.Rect.Right > rect.Right)
+                if (locationInfoOverlay.Rect.Right > mapRect.Right)
                 {
-                    locationInfoRt.Pivot = locationInfoRt.Pivot == Pivot.TopLeft ? Pivot.TopRight : Pivot.BottomRight;
+                    locationInfoRt.Pivot = 
+                        locationInfoRt.Pivot == Pivot.TopLeft ? 
+                        Pivot.TopRight :
+                         locationInfoRt.Rect.Height > locationInfoRt.ScreenSpaceOffset.Y ?
+                            Pivot.CenterRight :
+                            Pivot.BottomRight;
                 }
+                locationInfoRt.RecalculateChildren(resize: false, scale: false);
+            }
+
+            if (HighlightedLocation != null)
+            {
                 locationInfoOverlay?.AddToGUIUpdateList(order: 1);
             }
 
-            float closestDist = 0.0f;
-            HighlightedLocation = null;
-            if ((GUI.MouseOn == null || GUI.MouseOn == mapContainer))
+            float closestDist = float.MaxValue;
+
+            bool mouseOnLocationInfoOverlay = false;
+            if (locationInfoOverlay != null)
             {
-                for (int i = 0; i < Locations.Count; i++)
+                Location locationDisplayedInOverlay = locationInfoOverlay.UserData as Location;
+
+                Vector2 locationPos = mapCenter + (locationDisplayedInOverlay.MapPosition + viewOffset) * zoom;
+                Point iconDimensions = new Point((int)generationParams.LocationIconSize);
+                Rectangle locationRect = new Rectangle(locationPos.ToPoint() - new Point(iconDimensions.X / 2, iconDimensions.Y / 2), iconDimensions);
+
+                bool isMouseOn = GUI.IsMouseOn(locationInfoOverlay);
+                Rectangle locationInfoOverlayRect = Rectangle.Union(locationInfoOverlay.Rect, locationRect);
+                mouseOnLocationInfoOverlay = (isMouseOn || locationInfoOverlayRect.Contains(PlayerInput.MousePosition));
+
+                if (!isMouseOn && 
+                    HighlightedLocation != null && 
+                    HighlightedLocation != locationDisplayedInOverlay)
                 {
-                    Location location = Locations[i];
+                    mouseOnLocationInfoOverlay = false;
+                }
+            }
+
+            if (!mouseOnLocationInfoOverlay) { HighlightedLocation = null; }
+
+            bool anyLocationHighlighted = false;
+            if ((GUI.MouseOn == null || GUI.MouseOn == mapContainer) && !isNotificationBubbleHighlighted)
+            {
+                foreach (var location in Locations)
+                {
                     if (IsInFogOfWar(location) && !(currentDisplayLocation?.Connections.Any(c => c.Locations.Contains(location)) ?? false) && !GameMain.DebugDraw) { continue; }
 
-                    Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
-                    if (!rect.Contains(pos)) { continue; }
+                    Vector2 pos = mapCenter + (location.MapPosition + viewOffset) * zoom;
+                    if (!mapRect.Contains(pos)) { continue; }
 
-                    Sprite locationSprite = location.IsCriticallyRadiated() ? location.Type.RadiationSprite ?? location.Type.Sprite : location.Type.Sprite;
+                    Sprite locationSprite = location.IsCriticallyRadiated()
+                                                ? location.Type.RadiationSprite ?? location.Type.Sprite
+                                                : location.Type.Sprite;
+
                     float iconScale = generationParams.LocationIconSize / locationSprite.size.X;
                     if (location == currentDisplayLocation) { iconScale *= 1.2f; }
 
-                    Rectangle drawRect = locationSprite.SourceRect;
-                    drawRect.Width = (int)(drawRect.Width * iconScale * zoom * 1.4f);
-                    drawRect.Height = (int)(drawRect.Height * iconScale * zoom * 1.4f);
-                    drawRect.X = (int)pos.X - drawRect.Width / 2;
-                    drawRect.Y = (int)pos.Y - drawRect.Width / 2;
-
-                    if (!drawRect.Contains(PlayerInput.MousePosition)) { continue; }
-
+                    float highlightRadius = ((locationSprite.size.X * iconScale * zoom) / 2) * LocationHighlightRadiusMultiplier;
                     float dist = Vector2.Distance(PlayerInput.MousePosition, pos);
-                    if (HighlightedLocation == null || dist < closestDist)
+                    if (dist <= highlightRadius)
                     {
-                        closestDist = dist;
-                        HighlightedLocation = location; 
+                        // There might theoretically be multiple matches inside the radius, so also keep track of the actually closest one to avoid flicker
+                        if (dist < closestDist)
+                        {
+                            closestDist = dist;
+                            anyLocationHighlighted = true;
+                            HighlightedLocation = location;
+                            locationInfoOverlayTimer += deltaTime;
+                        }
                     }
                 }
+            }
+
+            if (!anyLocationHighlighted && locationInfoOverlay == null)
+            {
+                locationInfoOverlayTimer = 0.0f;
+                HighlightedLocation = null;
+            }
+
+            if ((isNotificationBubbleHighlighted || IsCustomElementBlocking) && !IsLocationInfoPanelVisible)
+            {
+                locationInfoOverlayTimer = 0.0f;
+                HighlightedLocation = null;
+            }
+
+            if (HighlightedLocation == null)
+            {
+                CleanupLocationInfoOverlay();
             }
 
             if (SelectedConnection != null)
@@ -693,53 +849,133 @@ namespace Barotrauma
                 {
                     if (PlayerInput.DoubleClicked() && HighlightedLocation != null)
                     {
-                        var passedConnection = currentDisplayLocation.Connections.Find(c => c.OtherLocation(currentDisplayLocation) == HighlightedLocation);
-                        if (passedConnection != null)
+                        bool loadLevelImmediately = PlayerInput.KeyDown(Keys.LeftAlt) || PlayerInput.KeyDown(Keys.RightAlt);
+                        Teleport(CurrentLocation, HighlightedLocation, campaign, loadNewLevel: loadLevelImmediately);
+                        if (loadLevelImmediately)
                         {
-                            passedConnection.Passed = true;
-                        }
-
-                        Location prevLocation = currentDisplayLocation;
-                        CurrentLocation = HighlightedLocation;
-                        Level.Loaded.DebugSetStartLocation(CurrentLocation);
-                        Level.Loaded.DebugSetEndLocation(null);
-
-                        Discover(CurrentLocation);
-                        Visit(CurrentLocation);
-                        OnLocationChanged?.Invoke(new LocationChangeInfo(prevLocation, CurrentLocation));
-                        SelectLocation(-1);
-                        if (GameMain.Client == null)
-                        {
-                            CurrentLocation.CreateStores();
-                            ProgressWorld(campaign);
-                            Radiation?.OnStep(1);
-                            mapAnimQueue.Clear();
-                        }
-                        else
-                        {
-                            GameMain.Client.SendCampaignState();
+                            campaign.ShowCampaignUI = false;
                         }
                     }
-
                     if (PlayerInput.PrimaryMouseButtonClicked() && HighlightedLocation == null)
                     {
                         SelectLocation(-1);
                     }
                 }
             }
+
+            foreach (var hook in PluginData.GetHooks<PluginCampaignMapUpdateDelegate>())
+            {
+                hook(campaign, this, deltaTime);
+            }
         }
-        
+
+        /// <summary>
+        /// Smoothly pan the map view to center on a specific Location.
+        /// </summary>
+        /// <param name="location">The Location to center on</param>
+        /// <param name="maxDuration">Maximum duration of the pan animation in seconds (0 for instant)</param>
+        public void PanToLocation(Location location, float maxDuration = 0.5f)
+        {
+            if (location == null) { return; }
+            mapAnimQueue.Enqueue(new MapAnim()
+            {
+                EndLocation = location,
+                Duration = MathHelper.Clamp(Vector2.Distance(-DrawOffset, location.MapPosition) / 1000.0f, 0.1f, maxDuration),
+                UseMovementNoise = false
+            });
+        }
+
+        /// <summary>
+        /// Snap the map view quickly to a given position. Can be used with eg. Location.MapPosition or stored Map.DrawOffset.
+        /// </summary>
+        public void SnapToPosition(Vector2 mapPosition)
+        {
+            DrawOffset = mapPosition;
+        }
+
+        public void Teleport(Location prevLocation, Location destination, CampaignMode campaign, bool loadNewLevel)
+        {
+            var passedConnection = prevLocation.Connections.Find(c => c.OtherLocation(prevLocation) == HighlightedLocation);
+            if (passedConnection != null)
+            {
+                passedConnection.Passed = true;
+            }
+
+            bool hasOutpost = destination.HasOutpost();
+            if (loadNewLevel && !hasOutpost) { DebugConsole.AddWarning("Attempted to load location with no outpost while teleporting."); }
+            if (loadNewLevel && hasOutpost)
+            {
+                LocationToTeleportTo = destination;
+                if (GameMain.Client != null)
+                {
+                    //tell the server we want to teleport (the server will trigger the transition)
+                    GameMain.Client?.SendCampaignState();
+                }
+                else if (GameMain.Instance.Paused) // in single player, the game is always paused while the map screen is open
+                {
+                    //if the game is paused, the transition logic isn't updated, so we need to trigger it manually
+                    campaign.LoadNewLevel();
+                }
+            }
+            else
+            {
+                //"fake" teleportation, move to the new location without actually loading that level
+                CurrentLocation = destination;
+                Level.Loaded.DebugSetStartLocation(CurrentLocation);
+                Level.Loaded.DebugSetEndLocation(null);
+
+                Discover(CurrentLocation);
+                Visit(CurrentLocation);
+                OnLocationChanged?.Invoke(new LocationChangeInfo(prevLocation, CurrentLocation));
+                SelectLocation(-1);
+                if (GameMain.Client == null)
+                {
+                    CurrentLocation.CreateStores();
+                    ProgressWorld(campaign);
+                    campaign.TotalPassedLevels++;
+                    Radiation?.OnStep(1);
+                    mapAnimQueue.Clear();
+                }
+                else
+                {
+                    GameMain.Client.SendCampaignState();
+                }
+            }
+        }
+
+        private Vector2 ClampDrawOffset(Vector2 drawOffset, Rectangle mapRect)
+        {
+            Vector2 minOffset = GetMinDrawOffset(mapRect);
+            Vector2 maxOffset = GetMaxDrawOffset(mapRect);
+            drawOffset.X = MathHelper.Clamp(DrawOffset.X, minOffset.X, minOffset.Y);
+            drawOffset.Y = MathHelper.Clamp(DrawOffset.Y, maxOffset.X, maxOffset.Y);
+            return drawOffset;
+        }
+
+        private Vector2 GetMinDrawOffset(Rectangle mapRect)
+        {
+            Vector2 viewSize = new Vector2(mapRect.Width / zoom, mapRect.Height / zoom);
+            Vector2 edgeBuffer = new Vector2(mapRect.Width * 0.05f);
+            return new Vector2(-Width - edgeBuffer.X + viewSize.X / 2.0f, -Height - edgeBuffer.Y + viewSize.Y / 2.0f);
+        }
+
+        private Vector2 GetMaxDrawOffset(Rectangle mapRect)
+        {
+            Vector2 viewSize = new Vector2(mapRect.Width / zoom, mapRect.Height / zoom);
+            Vector2 edgeBuffer = new Vector2(mapRect.Width * 0.05f);
+            return new Vector2(edgeBuffer.X - viewSize.X / 2.0f, edgeBuffer.Y - viewSize.Y / 2.0f);
+        }
+
         public void Draw(CampaignMode campaign, SpriteBatch spriteBatch, GUICustomComponent mapContainer)
         {
             tooltip = null;
+            isNotificationBubbleHighlighted = false;
+            IsCustomElementBlocking = false;
             var currentDisplayLocation = campaign?.GetCurrentDisplayLocation();
 
-            Rectangle rect = mapContainer.Rect;
+            Rectangle mapRect = mapContainer.Rect;
 
-            Vector2 viewSize = new Vector2(rect.Width / zoom, rect.Height / zoom);
-            Vector2 edgeBuffer = new Vector2(rect.Width * 0.05f);
-            DrawOffset.X = MathHelper.Clamp(DrawOffset.X, -Width - edgeBuffer.X + viewSize.X / 2.0f, edgeBuffer.X - viewSize.X / 2.0f);
-            DrawOffset.Y = MathHelper.Clamp(DrawOffset.Y, -Height - edgeBuffer.Y + viewSize.Y / 2.0f, edgeBuffer.Y - viewSize.Y / 2.0f);
+            DrawOffset = ClampDrawOffset(DrawOffset, mapRect);
 
             drawOffsetNoise = new Vector2(
                 (float)PerlinNoise.CalculatePerlin(Timing.TotalTime * 0.1f % 255, Timing.TotalTime * 0.1f % 255, 0) - 0.5f, 
@@ -747,23 +983,21 @@ namespace Barotrauma
 
             Vector2 viewOffset = DrawOffset + drawOffsetNoise;
 
-            Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
-
-            float missionIconScale = generationParams.MissionIcon != null ? 18.0f / generationParams.MissionIcon.SourceRect.Width : 1.0f;
+            Vector2 mapCenter = new Vector2(mapRect.Center.X, mapRect.Center.Y);
 
             Rectangle prevScissorRect = GameMain.Instance.GraphicsDevice.ScissorRectangle;
             spriteBatch.End();
-            spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, rect);
+            spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, mapRect);
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
 
-            Vector2 topLeft = rectCenter + viewOffset - rect.Location.ToVector2();
+            Vector2 topLeft = mapCenter + viewOffset - mapRect.Location.ToVector2();
             Vector2 bottomRight = topLeft + new Vector2(Width, Height);
             Vector2 mapTileSize = mapTiles[0, 0].size * generationParams.MapTileScale;
 
             int startX = (int)Math.Floor(-topLeft.X / mapTileSize.X) - 1;
             int startY = (int)Math.Floor(-topLeft.Y / mapTileSize.Y) - 1;
-            int endX = (int)Math.Ceiling((-topLeft.X + rect.Width) / mapTileSize.X);
-            int endY = (int)Math.Ceiling((-topLeft.Y + rect.Height) / mapTileSize.Y);
+            int endX = (int)Math.Ceiling((-topLeft.X + mapRect.Width) / mapTileSize.X);
+            int endY = (int)Math.Ceiling((-topLeft.Y + mapRect.Height) / mapTileSize.Y);
 
             float noiseT = (float)(Timing.TotalTime * 0.01f);
             cameraNoiseStrength = (float)PerlinNoise.CalculatePerlin(noiseT, noiseT * 0.5f, noiseT * 0.2f);
@@ -775,8 +1009,8 @@ namespace Barotrauma
                 {
                     int tileX = Math.Abs(x) % mapTiles.GetLength(0);
                     int tileY = Math.Abs(y) % mapTiles.GetLength(1);
-                    Vector2 tilePos = rectCenter + (viewOffset + new Vector2(x, y) * mapTileSize) * zoom;
-                    mapTiles[tileX, tileY].Draw(spriteBatch, tilePos, Color.White, origin: Vector2.Zero, scale: generationParams.MapTileScale * zoom);
+                    Vector2 tilePos = mapCenter + (viewOffset + new Vector2(x, y) * mapTileSize) * zoom;
+                    mapTiles[tileX, tileY].Draw(spriteBatch, tilePos, generationParams.MapTileColor, origin: Vector2.Zero, scale: generationParams.MapTileScale * zoom);
 
                     if (GameMain.DebugDraw) { continue; }
                     if (!tileDiscovered[tileX, tileY] || x < 0 || y < 0 || x >= tileDiscovered.GetLength(0) || y >= tileDiscovered.GetLength(1))
@@ -792,56 +1026,52 @@ namespace Barotrauma
 
             if (GameMain.DebugDraw)
             {
-                if (topLeft.X > rect.X)
-                    GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Y, (int)(topLeft.X - rect.X), rect.Height), Color.Black * 0.5f, true);
-                if (topLeft.Y > rect.Y)
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)topLeft.X, rect.Y, (int)(bottomRight.X - topLeft.X), (int)(topLeft.Y - rect.Y)), Color.Black * 0.5f, true);
-                if (bottomRight.X < rect.Right)
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)bottomRight.X, rect.Y, (int)(rect.Right - bottomRight.X), rect.Height), Color.Black * 0.5f, true);
-                if (bottomRight.Y < rect.Bottom)
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)topLeft.X, (int)bottomRight.Y, (int)(bottomRight.X - topLeft.X), (int)(rect.Bottom - bottomRight.Y)), Color.Black * 0.5f, true);
+                if (topLeft.X > mapRect.X)
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(mapRect.X, mapRect.Y, (int)(topLeft.X - mapRect.X), mapRect.Height), Color.Black * 0.5f, true);
+                if (topLeft.Y > mapRect.Y)
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)topLeft.X, mapRect.Y, (int)(bottomRight.X - topLeft.X), (int)(topLeft.Y - mapRect.Y)), Color.Black * 0.5f, true);
+                if (bottomRight.X < mapRect.Right)
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)bottomRight.X, mapRect.Y, (int)(mapRect.Right - bottomRight.X), mapRect.Height), Color.Black * 0.5f, true);
+                if (bottomRight.Y < mapRect.Bottom)
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)topLeft.X, (int)bottomRight.Y, (int)(bottomRight.X - topLeft.X), (int)(mapRect.Bottom - bottomRight.Y)), Color.Black * 0.5f, true);
             }
 
-            float rawNoiseScale = 1.0f + PerlinNoise.GetPerlin((int)(Timing.TotalTime * 1 - 1), (int)(Timing.TotalTime * 1 - 1));
-            DrawNoise(spriteBatch, rect, rawNoiseScale);
+            float rawNoiseScale = 1.0f + PerlinNoise.GetPerlin((int)(Timing.TotalTime * 0.1f - 1), (int)(Timing.TotalTime * 0.1f - 1));
+            DrawNoise(spriteBatch, mapRect, rawNoiseScale);
 
-            Radiation?.Draw(spriteBatch, rect, zoom);
+            foreach (var hook in PluginData.GetHooks<PluginCampaignMapBeforeDrawDelegate>())
+            {
+                hook(campaign, this, spriteBatch, mapContainer, zoom, generationParams);
+            }
+
+            Radiation?.Draw(spriteBatch, mapRect, zoom);
 
             if (generationParams.ShowLocations)
             {
                 foreach (LocationConnection connection in Connections)
                 {
-                    if (IsInFogOfWar(connection.Locations[0]) && IsInFogOfWar(connection.Locations[1])) { continue; }
-                    DrawConnection(spriteBatch, connection, rect, viewOffset, currentDisplayLocation);
+                    if (!connection.Locations[0].Discovered && IsInFogOfWar(connection.Locations[0]) &&
+                        !connection.Locations[1].Discovered && IsInFogOfWar(connection.Locations[1])) 
+                    { 
+                        continue; 
+                    }
+                    DrawConnection(spriteBatch, connection, mapRect, viewOffset, currentDisplayLocation);
                 }
-                
-                for (int i = 0; i < Locations.Count; i++)
+
+                foreach (Location location in Locations)
                 {
-                    Location location = Locations[i];
                     if (!location.Discovered && IsInFogOfWar(location)) { continue; }
                     bool isEndLocation = endLocations.Contains(location);
                     if (!GameMain.DebugDraw && isEndLocation && location != endLocations.First()) { continue; }
-                    Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
+                    Vector2 iconPos = mapCenter + (location.MapPosition + viewOffset) * zoom;
 
                     Sprite locationSprite = location.IsCriticallyRadiated() ? location.Type.RadiationSprite ?? location.Type.Sprite : location.Type.Sprite;
 
-                    Rectangle drawRect = locationSprite.SourceRect;
-                    drawRect.X = (int)pos.X - drawRect.Width / 2;
-                    drawRect.Y = (int)pos.Y - drawRect.Width / 2;
+                    Rectangle iconRect = locationSprite.SourceRect;
+                    iconRect.X = (int)iconPos.X - iconRect.Width / 2;
+                    iconRect.Y = (int)iconPos.Y - iconRect.Width / 2;
 
-                    if (drawRect.X > rect.Right - GUI.IntScale(100) && generationParams.MissionIcon != null && location.AvailableAndVisibleMissions.Any(m => m.Prefab.ShowInMenus))
-                    {
-                        Vector2 offScreenMissionIconPos = new Vector2(rect.Right - GUI.IntScale(50), drawRect.Center.Y);
-                        generationParams.MissionIcon.Draw(spriteBatch,
-                            offScreenMissionIconPos,
-                            generationParams.IndicatorColor, scale: missionIconScale * zoom);
-                        GUI.Arrow.Draw(spriteBatch,
-                            offScreenMissionIconPos + Vector2.UnitX * generationParams.MissionIcon.size.X * missionIconScale * zoom,
-                            generationParams.IndicatorColor, MathHelper.PiOver2, scale: 0.5f);
-                    }
-
-
-                    if (!rect.Intersects(drawRect)) { continue; }
+                    if (!mapRect.Intersects(iconRect)) { continue; }
 
                     Color color = location.OverrideIconColor ?? location.Type.SpriteColor;
                     if (!location.Visited) { color = Color.White; }
@@ -882,19 +1112,19 @@ namespace Barotrauma
                             color = Color.Green;
                         }
 
-                        GUI.DrawString(spriteBatch, pos + Vector2.One * 20, "Time since visited: " +location.WorldStepsSinceVisited, Color.Yellow);
+                        GUI.DrawString(spriteBatch, iconPos + Vector2.One * 20, "Time since visited: " +location.WorldStepsSinceVisited, Color.Yellow);
                     }
 #endif
 
-                    locationSprite.Draw(spriteBatch, pos, color,
+                    locationSprite.Draw(spriteBatch, iconPos, color,
                         scale: generationParams.LocationIconSize / locationSprite.size.X * iconScale * zoom);
 
                     if (location.Faction != null)
                     {
                         float factionIconScale = iconScale * 0.7f;
                         Sprite factionIcon = location.Faction.Prefab.IconSmall ?? location.Faction.Prefab.Icon;
-                        Color factionIconColor = Color.Lerp(color, location.Faction.Prefab.IconColor, notificationColorLerp);
-                        factionIcon.Draw(spriteBatch, pos + new Vector2(-15, 15) * zoom, factionIconColor,
+                        Color factionIconColor = Color.Lerp(location.Faction.Prefab.IconColor, GUIStyle.Yellow, notificationColorLerp);
+                        factionIcon.Draw(spriteBatch, iconPos + new Vector2(-20, 20) * zoom, factionIconColor,
                             scale: generationParams.LocationIconSize / factionIcon.size.X * factionIconScale * zoom);
                     }
 
@@ -904,14 +1134,14 @@ namespace Barotrauma
                         {
                             Vector2 dir = Vector2.Normalize(SelectedLocation.MapPosition - currLocationIndicatorPos);                                
                             GUI.Arrow.Draw(spriteBatch, 
-                                rectCenter + (currLocationIndicatorPos + viewOffset) * zoom + dir * generationParams.LocationIconSize * 0.6f * zoom,
+                                mapCenter + (currLocationIndicatorPos + viewOffset) * zoom + dir * generationParams.LocationIconSize * 0.6f * zoom,
                                 generationParams.IndicatorColor,
                                 GUI.Arrow.Origin,
                                 rotate: MathUtils.VectorToAngle(dir) + MathHelper.PiOver2,
                                 new Vector2(0.5f, 1.0f) * zoom);
                         }  
                         generationParams.CurrentLocationIndicator.Draw(spriteBatch,
-                            rectCenter + (currLocationIndicatorPos + viewOffset) * zoom,
+                            mapCenter + (currLocationIndicatorPos + viewOffset) * zoom,
                             generationParams.IndicatorColor,
                             generationParams.CurrentLocationIndicator.Origin, 0, Vector2.One * (generationParams.LocationIconSize / generationParams.CurrentLocationIndicator.size.X) * 0.8f * zoom);
                                                   
@@ -920,48 +1150,17 @@ namespace Barotrauma
                     if (location == SelectedLocation)
                     {
                         generationParams.SelectedLocationIndicator.Draw(spriteBatch,
-                            rectCenter + (location.MapPosition + viewOffset) * zoom,
+                            mapCenter + (location.MapPosition + viewOffset) * zoom,
                             generationParams.IndicatorColor,
                             generationParams.SelectedLocationIndicator.Origin, 0, Vector2.One * (generationParams.LocationIconSize / generationParams.SelectedLocationIndicator.size.X) * 1.7f * zoom);
                     }
 
-                    if (location.TimeSinceLastTypeChange < 1 && !string.IsNullOrEmpty(location.LastTypeChangeMessage) && generationParams.TypeChangeIcon != null)
-                    {
-                        Vector2 typeChangeIconPos = pos + new Vector2(1.35f, -0.35f) * generationParams.LocationIconSize * 0.5f * zoom;
-                        float typeChangeIconScale = 18.0f / generationParams.TypeChangeIcon.SourceRect.Width;
-                        Color iconColor = GUIStyle.Red;
-                        color = Color.Lerp(color, GUIStyle.Yellow, notificationColorLerp);
-                        iconScale *= notificationPulseAmount;                        
-                        generationParams.TypeChangeIcon.Draw(spriteBatch, typeChangeIconPos, iconColor, scale: typeChangeIconScale * zoom);
-                        if (Vector2.Distance(PlayerInput.MousePosition, typeChangeIconPos) < generationParams.TypeChangeIcon.SourceRect.Width * zoom &&
-                            (tooltip == null || IsPreferredTooltip(typeChangeIconPos)))
-                        {
-                            tooltip = (new Rectangle(typeChangeIconPos.ToPoint(), new Point(30)), RichString.Rich(location.LastTypeChangeMessage));
-                        }
-                    }
-                    if (location != CurrentLocation && generationParams.MissionIcon != null)
-                    {
-                        var currentLocationVisibleMissions = CurrentLocation.AvailableAndVisibleMissions;
-                        if ((CurrentLocation == currentDisplayLocation && currentLocationVisibleMissions.Any(m => m.Locations.Contains(location))) || 
-                            location.AvailableAndVisibleMissions.Any(m => m.Locations[0] == m.Locations[1]))
-                        {
-                            Vector2 missionIconPos = pos + new Vector2(1.35f, 0.35f) * generationParams.LocationIconSize * 0.5f * zoom;
-                            generationParams.MissionIcon.Draw(spriteBatch, missionIconPos, generationParams.IndicatorColor, scale: missionIconScale * zoom);
-                            if (Vector2.Distance(PlayerInput.MousePosition, missionIconPos) < generationParams.MissionIcon.SourceRect.Width * zoom && IsPreferredTooltip(missionIconPos))
-                            {
-                                var allVisibleMissions = currentLocationVisibleMissions
-                                    .Where(m => m.Locations.Contains(location))
-                                    .Concat(location.AvailableAndVisibleMissions.Where(m => m.Locations[0] == m.Locations[1]))
-                                    .Distinct();
-                                tooltip = (new Rectangle(missionIconPos.ToPoint(), new Point(30)), TextManager.Get("mission") + '\n'+ string.Join('\n', allVisibleMissions.Select(m => "- " + m.Name)));
-                            }
-                        }
-                    }
+                    DrawNotificationIcons(spriteBatch, location, currentDisplayLocation, iconPos, iconScale, notificationPulseAmount);
 
                     if (GameMain.DebugDraw)
                     {
                         //move the debug texts upwards so they don't go under the info panel that appears when highlighted
-                        Vector2 dPos = pos + new Vector2(15, -100);
+                        Vector2 dPos = iconPos + new Vector2(15, -100);
                         if (location == HighlightedLocation)
                         {
                             GUI.DrawString(spriteBatch, dPos, "Faction: " + (location.Faction?.Prefab.Name ?? "none"), Color.White, Color.Black, font: GUIStyle.SubHeadingFont);
@@ -980,10 +1179,37 @@ namespace Barotrauma
                             GUI.DrawString(spriteBatch, dPos, $"Biome: {location.LevelData.Biome.DisplayName} ({location.LevelData.GenerationParams.Identifier})", Color.White, Color.Black, font: GUIStyle.SmallFont);
                         }
                     }
+                    
+                    foreach (var hook in PluginData.GetHooks<PluginCampaignMapDrawLocationDelegate>())
+                    {
+                        hook(location, campaign, this, mapContainer, spriteBatch, iconPos, zoom, generationParams);
+                    }
+                }
+            
+                //draw the mission icons after the location icons so they all render in front
+                foreach (Location location in Locations)
+                {
+                    if (!location.Discovered && IsInFogOfWar(location)) { continue; }
+                    Vector2 iconPos = mapCenter + (location.MapPosition + viewOffset) * zoom;                    
+                    if (location.Type.ShowOffScreenIndicator)
+                    {
+                        float iconScale = 42.0f / location.Type.Sprite.SourceRect.Width;
+                        DrawOffScreenMissionIcon(spriteBatch, mapRect, campaign, location.OverrideIconColor ?? location.Type.SpriteColor, iconPos, location, iconScale, location.Type.Sprite);
+                    }
+                    else if (location.AvailableAndVisibleMissions.FirstOrDefault(m => m.Prefab.ShowInMenus &&
+                        //only show the arrow pointing towards the mission if the mission takes place in the location rather than between them
+                        m.Locations[0] == m.Locations[1]) is Mission availableMission)
+                    {
+                        Color iconColor =
+                            availableMission.Prefab.ContentPackage != GameMain.VanillaContent ?
+                            availableMission.Prefab.ContentPackage.GetAccentColor() :
+                            generationParams.IndicatorColor;
+                        DrawOffScreenMissionIcon(spriteBatch, mapRect, campaign, iconColor, iconPos, location, GenericMissionIconScale);
+                    }
                 }
             }
 
-            DrawDecorativeHUD(spriteBatch, rect);
+            DrawDecorativeHUD(spriteBatch, mapRect);
 
             bool drawRadiationTooltip = HighlightedLocation == null;            
             if (tooltip != null)
@@ -995,6 +1221,11 @@ namespace Barotrauma
             if (drawRadiationTooltip)
             {
                 Radiation?.DrawFront(spriteBatch);
+            }
+            
+            foreach (var hook in PluginData.GetHooks<PluginCampaignMapAfterDrawDelegate>())
+            {
+                hook(campaign, this, spriteBatch, mapContainer, zoom, generationParams);
             }
 
             spriteBatch.End();
@@ -1008,6 +1239,38 @@ namespace Barotrauma
 #endif
         }
 
+        private float GenericMissionIconScale => generationParams.MissionIcon != null ? 18.0f / generationParams.MissionIcon.SourceRect.Width : 1.0f;
+
+        private void DrawOffScreenMissionIcon(SpriteBatch spriteBatch, Rectangle mapRect, CampaignMode campaign, Color iconColor, Vector2 iconPos, Location location, float missionIconScale,
+            Sprite overrideIcon = null)
+        {
+            Sprite icon = overrideIcon ?? generationParams.MissionIcon;
+
+            if (generationParams.MissionIcon == null) { return; }
+
+            int rightBound = mapRect.Right - GUI.IntScale(40);
+            int leftBound = mapRect.X + GUI.IntScale(40);
+            if (campaign.CampaignUI.LocationInfoPanel is { Visible: true } locationInfoPanel)
+            {
+                rightBound = campaign.CampaignUI.LocationInfoPanel.Rect.X;
+            }
+
+            bool outsideRightBound = iconPos.X > rightBound;
+            bool outsideLeftBound = iconPos.X < leftBound;
+            if (outsideRightBound || outsideLeftBound)                
+            {
+                Vector2 offScreenMissionIconPos = new Vector2(
+                    outsideRightBound ? rightBound - GUI.IntScale(60) : leftBound + GUI.IntScale(60),
+                    iconPos.Y);
+                icon.Draw(spriteBatch,
+                    offScreenMissionIconPos,
+                    iconColor, scale: missionIconScale * zoom);
+                GUI.Arrow.Draw(spriteBatch,
+                    offScreenMissionIconPos + (outsideRightBound ? Vector2.UnitX : -Vector2.UnitX) * icon.size.X * missionIconScale * zoom,
+                    iconColor, outsideRightBound ? MathHelper.PiOver2 : MathHelper.PiOver2 + MathHelper.Pi, scale: 0.5f);
+            }
+        }
+
         public static void DrawNoise(SpriteBatch spriteBatch, Rectangle rect, float strength)
         {
             noiseOverlay ??= new Sprite("Content/UI/noise.png", Vector2.Zero);
@@ -1019,17 +1282,17 @@ namespace Barotrauma
 
             noiseOverlay.DrawTiled(spriteBatch, rect.Location.ToVector2(), rect.Size.ToVector2(), 
                 startOffset: new Vector2(Rand.Range(0.0f, noiseOverlay.SourceRect.Width), Rand.Range(0.0f, noiseOverlay.SourceRect.Height)),
-                color : Color.White * strength * 0.1f,
+                color : Color.White * strength * 0.05f,
                 textureScale: Vector2.One * rawNoiseScale);
 
             noiseOverlay.DrawTiled(spriteBatch, rect.Location.ToVector2(), rect.Size.ToVector2(),
                 startOffset: new Vector2(Rand.Range(0.0f, noiseOverlay.SourceRect.Width), Rand.Range(0.0f, noiseOverlay.SourceRect.Height)),
-                color: new Color(20,20,20,50),
+                color: new Color(20,20,20,25),
                 textureScale: Vector2.One * rawNoiseScale * 2);
 
             noiseOverlay.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight),
                 startOffset: new Vector2(Rand.Range(0.0f, noiseOverlay.SourceRect.Width), Rand.Range(0.0f, noiseOverlay.SourceRect.Height)),
-                color: Color.White * strength * 0.1f,
+                color: Color.White * strength * 0.05f,
                 textureScale: Vector2.One * noiseScale);
         }
 
@@ -1116,11 +1379,11 @@ namespace Barotrauma
                 float a = 1.0f;
                 if (!connection.Locations[0].Visited && !connection.Locations[1].Visited)
                 {
-                    if (IsInFogOfWar(connection.Locations[0]))
+                    if (!connection.Locations[0].Discovered && IsInFogOfWar(connection.Locations[0]))
                     {
                         a = (float)i / connection.CrackSegments.Count;
                     }
-                    else if (IsInFogOfWar(connection.Locations[1]))
+                    else if (!connection.Locations[1].Discovered && IsInFogOfWar(connection.Locations[1]))
                     {
                         a = 1.0f - (float)i / connection.CrackSegments.Count;
                     }
@@ -1142,19 +1405,24 @@ namespace Barotrauma
                     }
                 }
 
-                spriteBatch.Draw(connectionSprite.Texture,
-                    new Rectangle((int)start.X, (int)start.Y, (int)(dist - 1 * zoom), segmentWidth),
-                    connectionSprite.SourceRect, segmentColor * a, 
-                    MathUtils.VectorToAngle(end - start),
-                    new Vector2(0, connectionSprite.size.Y / 2), SpriteEffects.None, 0.01f);
+                connectionSprite.Draw(
+                    spriteBatch: spriteBatch,
+                    pos: start,
+                    color: segmentColor * a,
+                    origin: new Vector2(0, connectionSprite.size.Y / 2),
+                    rotate: MathUtils.VectorToAngle(end - start),
+                    scale: new Vector2((dist - 1 * zoom) / connectionSprite.SourceRect.Width, (float)segmentWidth / connectionSprite.SourceRect.Height),
+                    spriteEffect: SpriteEffects.None,
+                    depth: 0.01f);
             }
 
-            int iconCount = 0, iconIndex = 0;
+            int iconIndex = 0;
             if (connectionStart.HasValue && connectionEnd.HasValue)
             {
-                if (connection.LevelData.HasBeaconStation) { iconCount++; }
-                if (connection.LevelData.HasHuntingGrounds) { iconCount++; }
-                if (connection.Locked) { iconCount++; }
+                connection.IconCount = 0;
+                if (connection.LevelData.HasBeaconStation) { connection.IconCount++; }
+                if (connection.LevelData.HasHuntingGrounds) { connection.IconCount++; }
+                if (connection.Locked) { connection.IconCount++; }
                 string tooltip = null;
 
                 float subCrushDepth = SubmarineInfo.GetSubCrushDepth(SubmarineSelection.CurrentOrPendingSubmarine(), ref pendingSubInfo);
@@ -1169,7 +1437,7 @@ namespace Barotrauma
                 //"high warning" if the sub spawns at/below crush depth
                 if (spawnDepth * Physics.DisplayToRealWorldRatio > subCrushDepth)
                 {
-                    iconCount++;
+                    connection.IconCount++;
                     crushDepthWarningIconStyle = "CrushDepthWarningHighIcon";
                     tooltip = "crushdepthwarninghigh";
                 }
@@ -1177,7 +1445,7 @@ namespace Barotrauma
                 //(i.e. the crush depth is pretty close to the spawn pos, possibly inside the level or at least close enough that many parts of the abyss are unreachable)
                 else if ((spawnDepth + connection.LevelData.Size.Y) * Physics.DisplayToRealWorldRatio > subCrushDepth)
                 {
-                    iconCount++;
+                    connection.IconCount++;
                     crushDepthWarningIconStyle = "CrushDepthWarningLowIcon";
                     tooltip = "crushdepthwarninglow";
                 }
@@ -1202,7 +1470,7 @@ namespace Barotrauma
                         Faction unlockFaction = null;
                         if (!unlockEvent.Faction.IsEmpty)
                         {
-                            unlockFaction = GameMain.GameSession.Campaign.Factions.Find(f => f.Prefab.Identifier == unlockEvent.Faction);
+                            unlockFaction = GameMain.GameSession.Campaign.GetFaction(unlockEvent.Faction);
                             unlockReputation = unlockFaction?.Reputation;
                         }
                         if (unlockReputation != null)
@@ -1233,7 +1501,134 @@ namespace Barotrauma
                                 ("[initialdepth]", $"‖color:gui.orange‖{(int)(connection.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio)}‖end‖"),
                                 ("[submarinecrushdepth]", $"‖color:gui.orange‖{(int)subCrushDepth}‖end‖"))));
                 }
+
+                foreach (var availableMission in connection.AvailableMissions)
+                {
+                    if (!availableMission.Prefab.ShowOnMap && !GameMain.DebugDraw) { continue; }
+                    MissionIcon missionIcon = connection.MissionIcons.FirstOrDefault(missionIcon => missionIcon.Mission == availableMission);
+                    if (missionIcon == null)
+                    {
+                        bool movesBetweenLocations = availableMission.Prefab.TimeLimitWorldSteps > -1;
+                        missionIcon = new MissionIcon(availableMission, positionBetweenLocations: movesBetweenLocations ? 0.0f : 0.5f);
+                        connection.MissionIcons.Add(missionIcon);
+                    }
+                }
+
+                foreach (var missionIcon in connection.MissionIcons)
+                {
+                    var mission = missionIcon.Mission;
+                    //don't start at the very ends of the connection because the icon would overlap with the location icon
+                    const float StartPos = 0.15f;
+                    const float EndPos = 0.85f;
+
+                    Vector2 missionStart = connectionStart.Value;
+                    Vector2 missionEnd = connectionEnd.Value;
+                    //if the mission is "in reverse" through the connection, flip the positions
+                    if (connection.Locations[0] == mission.Locations[1])
+                    {
+                        (missionStart, missionEnd) = (missionEnd, missionStart);
+                    }
+                    Vector2 connectionDir = (missionEnd - missionStart);
+                    Vector2 missionIconPos =
+                        missionStart + connectionDir *
+                        MathHelper.Lerp(StartPos, EndPos, missionIcon.PositionBetweenLocations);
+
+                    if (connection.IconCount > 0)
+                    {
+                        //if there's icons, offset the mission icon a bit to the side of the connection to avoid overlaps
+                        Vector2 connectionNormal = Vector2.Normalize(new Vector2(-connectionDir.Y, connectionDir.X));
+                        //value that goes from 0 to 1 when the mission icon reaches the center of the connection,
+                        //and then from 1 to 0 when heading towards the end of the connection.
+                        //(sqrt to make the path curved)
+                        float offsetFactor = MathF.Sqrt(1.0f - Math.Abs(0.5f - missionIcon.PositionBetweenLocations) * 2.0f);
+                        missionIconPos += connectionNormal * 15.0f * offsetFactor * zoom;
+                    }
+
+                    var icon = mission.Prefab.MapIcon ?? generationParams.MissionIcon;
+                    Color iconColor = mission.Prefab.MapIconColor;
+                    if (iconColor == Color.White &&
+                        mission is SubmarineEncounterMission submarineEncounterMission && !submarineEncounterMission.Faction.IsEmpty &&
+                        GameMain.GameSession.Campaign.GetFaction(submarineEncounterMission.Faction) is Faction faction)
+                    {
+                        iconColor = faction.Prefab.IconColor;
+                    }
+
+                    if ((!mission.Name.IsNullOrEmpty() || GameMain.DebugDraw) &&
+                        HighlightedLocation == null &&
+                        Vector2.Distance(PlayerInput.MousePosition, missionIconPos) < icon.SourceRect.Width * mission.Prefab.MapIconScale * zoom)
+                    {
+                        LocalizedString toolTip = mission.Name;
+
+                        //Destination is the final destination of the mission (not necessarily the end of this connection in multi-level missions)
+                        if (mission.Destination is { } destination)
+                        {
+                            toolTip += "\n" + TextManager.GetWithVariable("missiontooltip.destination", "[location]", destination.DisplayName);
+                        }
+                        if (mission.Prefab.ShowArrivalTime &&
+                            mission.GetWorldStepsUntilDestinationReached() is int worldStepsUntilArrival)
+                        {
+                            //take into account the steps elapsed during the current round (not applied to the mission until the round ends)
+                            worldStepsUntilArrival = Math.Max(worldStepsUntilArrival - CampaignMode.GetElapsedWholeWorldStepsInCurrentRound(), 0);
+                            LocalizedString arrivalTime;
+                            if (worldStepsUntilArrival > 0)
+                            {
+                                arrivalTime = TextManager.GetWithVariable(
+                                    worldStepsUntilArrival == 1 ? "timeonmission.valuesingular" : "timeonmission.valueplural",
+                                    "[worldsteps]", worldStepsUntilArrival.ToString());
+                                toolTip += "\n" + TextManager.GetWithVariable("missionmapicon.arrivingin", "[time]", arrivalTime);
+                            }
+                            else
+                            {
+                                toolTip += "\n" + TextManager.Get("missionmapicon.arrivingin0");
+                            }
+                        }
+                        if (GameMain.DebugDraw)
+                        {
+                            toolTip += $" [{mission.Prefab.Identifier}]";
+                            if (mission.MorePathToDestinationRemaining)
+                            {
+                                toolTip += "\n" + string.Join(" -> ", mission.PathToDestination.Select(location => location.DisplayName));
+                            }
+                        }
+                        this.tooltip = (new Rectangle(missionIconPos.ToPoint(), new Point(30)), RichString.Rich(toolTip), isBlocking: false);
+                        iconColor = Color.Lerp(iconColor, Color.White, 0.5f);
+                    }
+
+                    float iconScale = mission.Prefab.MapIconScale * zoom;
+
+                    Vector2 dir = Vector2.Normalize(connectionDir);
+                    icon.Draw(spriteBatch, missionIconPos, iconColor,
+                        rotate: MathUtils.VectorToAngle(dir) +
+                        MathHelper.PiOver2, scale: iconScale);
+
+                    //if the map icon doesn't rotate, lets indicate the direction with an arrow instead
+                    if (!mission.Prefab.RotateMapIcon)
+                    {
+                        GUI.Arrow.Draw(spriteBatch,
+                            missionIconPos + dir * icon.SourceRect.Width * mission.Prefab.MapIconScale * 0.5f * zoom,
+                            iconColor,
+                            GUI.Arrow.Origin,
+                            rotate: MathUtils.VectorToAngle(dir) + MathHelper.PiOver2,
+                            new Vector2(0.5f, 0.5f) * zoom);
+                    }
+                }
+
+                //draw the mission icons after the location icons so they all render in front
+                foreach (var missionIcon in connection.MissionIcons)
+                {
+                    Vector2 missionIconPos = (connectionStart.Value + connectionEnd.Value) / 2;
+                    var mission = missionIcon.Mission;
+                    float iconScale = mission.Prefab.MapIconScale * zoom;
+                    if (mission.Prefab.PulsateMapIcon)
+                    {
+                        float sin = MathF.Sin((float)Timing.TotalTime * 5.0f);
+                        float pulseAmount = Math.Max(sin + 0.5f, 1.0f);
+                        iconScale *= pulseAmount;
+                        DrawOffScreenMissionIcon(spriteBatch, viewArea, GameMain.GameSession.Campaign, mission.Prefab.MapIconColor, missionIconPos, mission.Locations[0], GenericMissionIconScale);
+                    }
+                }
             }
+
 
             if (GameMain.DebugDraw && zoom > (1.0f * GUI.Scale) && generationParams.ShowLevelTypeNames)
             {
@@ -1251,7 +1646,7 @@ namespace Barotrauma
                 Vector2 iconPos = (connectionStart.Value + connectionEnd.Value) / 2;
                 Vector2 iconDiff = Vector2.Normalize(connectionEnd.Value - connectionStart.Value) * iconSize;
 
-                iconPos += (iconDiff * -(iconCount - 1) / 2.0f) + iconDiff * iconIndex;
+                iconPos += (iconDiff * -(connection.IconCount - 1) / 2.0f) + iconDiff * iconIndex;
 
                 var style = GUIStyle.GetComponentStyle(iconStyle);
                 bool mouseOn = Vector2.DistanceSquared(iconPos, PlayerInput.MousePosition) < iconSize * iconSize && IsPreferredTooltip(iconPos);
@@ -1260,9 +1655,120 @@ namespace Barotrauma
                     scale: iconSize / iconSprite.size.X);
                 if (mouseOn)
                 {
-                    tooltip = (new Rectangle((iconPos - Vector2.One * iconSize / 2).ToPoint(), new Point(iconSize)), tooltipText);
+                    tooltip = (new Rectangle((iconPos - Vector2.One * iconSize / 2).ToPoint(), new Point(iconSize)), tooltipText, isBlocking: true);
                 }
                 iconIndex++;
+            }
+        }
+
+        private void DrawNotificationIcons(SpriteBatch spriteBatch, Location location, Location currentDisplayLocation, Vector2 iconPos, float iconScale,
+            float pulseAmount)
+        {
+            bool drawTypeChangeIcon = 
+                location.TimeSinceLastTypeChange < 3 && !
+                string.IsNullOrEmpty(location.LastTypeChangeMessage) && generationParams.TypeChangeIcon != null;
+            bool drawMissionIcon = false;
+
+            IEnumerable<Mission> availableMissions = [];
+            if (location != CurrentLocation && generationParams.MissionIcon != null)
+            {
+                var currentLocationMissions = CurrentLocation.AvailableAndVisibleMissions;
+                var otherLocationMissions = location.AvailableAndVisibleMissions;
+                if ((CurrentLocation == currentDisplayLocation && currentLocationMissions.Any(m => m.Locations.Contains(location))) ||
+                    otherLocationMissions.Any(m => m.Locations[0] == m.Locations[1]))
+                {
+                    availableMissions = currentLocationMissions
+                        .Where(m => m.Locations.Contains(location))
+                        .Concat(otherLocationMissions.Where(m => m.Locations[0] == m.Locations[1]))
+                        .Distinct();
+                    drawMissionIcon = availableMissions.Any();
+                }
+            }
+            if (!drawTypeChangeIcon && !drawMissionIcon) { return; }
+
+            int iconCount = drawTypeChangeIcon && drawMissionIcon ? 2 : 1;
+
+            GUIComponentStyle bubbleStyle = GUIStyle.GetComponentStyle(iconCount > 1 ? "MapIconBubbleTwoIcons" : "MapIconBubbleSingleIcon");
+            Sprite bubbleSprite = bubbleStyle?.GetDefaultSprite();
+
+            float bubbleScale = 0.6f * zoom;
+            //backwards compatibility: use the hardcoded size as a fallback if bubble sprite doesn't exist
+            Vector2 bubbleSize = (bubbleSprite?.size ?? new Vector2(100, 50)) * bubbleScale;
+
+            Vector2 bubblePos =
+                //above location icon
+                iconPos - Vector2.UnitY * generationParams.LocationIconSize * 0.5f * zoom
+                //offset by half the bubble size (centering the sprite at the position above the location icon)
+                - bubbleSize / 2;
+
+            float desiredIconHeight = bubbleSize.Y / 2;
+
+            Vector2 firstIconPos, secondIconPos;
+            if (iconCount == 1)
+            {
+                firstIconPos = secondIconPos = bubblePos + new Vector2(0.5f, 0.4f) * bubbleSize;
+            }
+            else
+            {
+                firstIconPos = bubblePos + new Vector2(0.25f, 0.4f) * bubbleSize;
+                secondIconPos = bubblePos + new Vector2(0.75f, 0.4f) * bubbleSize;
+            }
+
+            isNotificationBubbleHighlighted |=
+                PlayerInput.MousePosition.X > bubblePos.X &&
+                PlayerInput.MousePosition.Y > bubblePos.Y &&
+                PlayerInput.MousePosition.X < bubblePos.X + bubbleSize.X &&
+                PlayerInput.MousePosition.Y < bubblePos.Y + bubbleSize.Y;
+
+            if (bubbleSprite != null)
+            {
+                bubbleSprite.Draw(spriteBatch, bubblePos, scale: bubbleScale, color: bubbleStyle.Color);
+            }
+
+            if (drawTypeChangeIcon)
+            {
+                Vector2 typeChangeIconPos = firstIconPos;
+                Color iconColor = GUIStyle.Red;
+                iconColor = Color.Lerp(iconColor, GUIStyle.Yellow, pulseAmount - 1.0f);
+                if (!IsCustomElementBlocking &&
+                    Vector2.Distance(PlayerInput.MousePosition, typeChangeIconPos) < desiredIconHeight / 2 &&
+                    (tooltip == null || IsPreferredTooltip(typeChangeIconPos)))
+                {
+                    iconColor = Color.Lerp(Color.White, iconColor, 0.5f);
+                    tooltip = (new Rectangle(typeChangeIconPos.ToPoint(), new Point(30)), RichString.Rich(location.LastTypeChangeMessage), isBlocking: false);
+                }
+                generationParams.TypeChangeIcon.Draw(spriteBatch, typeChangeIconPos, iconColor, scale: desiredIconHeight / generationParams.TypeChangeIcon.SourceRect.Height);
+            }
+            if (drawMissionIcon)
+            {
+                Color iconColor =
+                    availableMissions.FirstOrDefault(m => m.Prefab.ContentPackage != GameMain.VanillaContent)?.Prefab.ContentPackage.GetAccentColor() ??
+                    generationParams.IndicatorColor;
+
+                Vector2 missionIconPos = iconCount == 1 ? firstIconPos : secondIconPos;
+                if (!IsCustomElementBlocking && 
+                    Vector2.Distance(PlayerInput.MousePosition, missionIconPos) < desiredIconHeight / 2 && IsPreferredTooltip(missionIconPos))
+                {
+                    iconColor = Color.Lerp(Color.White, iconColor, 0.5f);
+                    RichString text = RichString.Rich(
+                        $"‖color:{GUIStyle.TextColorBright.Value.ToStringHex()}‖{TextManager.Get("mission")}‖color:end‖" +
+                        '\n' + string.Join('\n', availableMissions.Select(GetMissionNameToDisplay)));
+                    tooltip = (new Rectangle(missionIconPos.ToPoint(), new Point(30)), text,
+                        isBlocking: true);
+                    static LocalizedString GetMissionNameToDisplay(Mission mission)
+                    {
+                        return GameMain.DebugDraw ? $"- {mission.Name} ({mission.Prefab.Identifier})" : $"- {mission.NameWithContentPackage.Replace("\n", " ")}";
+                    }
+                }                
+                generationParams.MissionIcon.Draw(spriteBatch, missionIconPos, iconColor, scale: desiredIconHeight / generationParams.MissionIcon.SourceRect.Height);
+            }
+        }
+
+        public void RemoveMissionIcon(Mission mission)
+        {
+            foreach (var connection in Connections)
+            {
+                connection.MissionIcons.RemoveAll(m => m.Mission == mission);
             }
         }
 
@@ -1280,15 +1786,30 @@ namespace Barotrauma
                 new Vector2(rect.X, rect.Bottom - (generationParams.DecorativeGraphSprite.FrameSize.Y + 30) * GUI.Scale), 
                 Color.White, Vector2.Zero, 0, Vector2.One * GUI.Scale, SpriteEffects.FlipVertically);
 
+            Color decorationColor = generationParams.IndicatorColor * hudVisibility;
+
             GUI.DrawString(spriteBatch,
                 new Vector2(rect.Right - GUI.IntScale(170), rect.Y + GUI.IntScale(5)),
-                "JOVIAN FLUX " + ((cameraNoiseStrength + Rand.Range(-0.02f, 0.02f)) * 500), generationParams.IndicatorColor * hudVisibility, font: GUIStyle.SmallFont);
+                "JOVIAN FLUX " + ((cameraNoiseStrength + Rand.Range(-0.02f, 0.02f)) * 500), decorationColor, font: GUIStyle.SmallFont);
             GUI.DrawString(spriteBatch,
                 new Vector2(rect.X + GUI.IntScale(5), rect.Y + GUI.IntScale(5)),
-                "LAT " + (-DrawOffset.Y / 100.0f) + "   LON " + (-DrawOffset.X / 100.0f), generationParams.IndicatorColor * hudVisibility, font: GUIStyle.SmallFont);
+                "LAT " + (-DrawOffset.Y / 100.0f) + "   LON " + (-DrawOffset.X / 100.0f), decorationColor, font: GUIStyle.SmallFont);
+
+            Vector2 progressBarSize = new Vector2(GUI.IntScale(300), GUI.IntScale(10));
+            Vector2 topCenter = new Vector2(rect.Center.X, rect.Y + GUI.IntScale(10));
+            GUI.DrawRectangle(spriteBatch, topCenter - progressBarSize /2, progressBarSize, Color.Black * 0.8f, isFilled: true);
+            GUI.DrawRectangle(spriteBatch, topCenter - progressBarSize / 2, progressBarSize, decorationColor, isFilled: false);
+
+            float scrollAmount = 1.0f - MathUtils.InverseLerp(GetMinDrawOffset(rect).X, GetMaxDrawOffset(rect).X, DrawOffset.X);
+
+            GUI.DrawRectangle(spriteBatch, 
+                topCenter - progressBarSize / 2 + Vector2.UnitX * scrollAmount * progressBarSize.X, 
+                new Vector2(GUI.IntScale(5), progressBarSize.Y), 
+                decorationColor,
+                isFilled: true);
         }
 
-        private void UpdateMapAnim(MapAnim anim, float deltaTime)
+        private void UpdateMapAnim(MapAnim anim, float deltaTime, GUICustomComponent mapContainer)
         {
             //pause animation while there are messageboxes (other than hints) on screen
             if (GUIMessageBox.MessageBoxes.Count(c => !(c is GUIMessageBox mb) || mb.MessageBoxType != GUIMessageBox.Type.Hint) > 0) { return; }
@@ -1309,9 +1830,14 @@ namespace Barotrauma
             anim.Timer = Math.Min(anim.Timer + deltaTime, anim.Duration);
             float t = anim.Duration <= 0.0f ? 1.0f : Math.Max(anim.Timer / anim.Duration, 0.0f);
             DrawOffset = -Vector2.SmoothStep(anim.StartPos.Value, anim.EndLocation.MapPosition, t);
-            DrawOffset += new Vector2(
-                (float)PerlinNoise.CalculatePerlin(Timing.TotalTime * 0.3f % 255, Timing.TotalTime * 0.4f % 255, 0) - 0.5f,
-                (float)PerlinNoise.CalculatePerlin(Timing.TotalTime * 0.4f % 255, Timing.TotalTime * 0.3f % 255, 0.5f) - 0.5f) * 50.0f * (float)Math.Sin(t * MathHelper.Pi);
+
+            Vector2 noise = new Vector2(
+                    (float)PerlinNoise.CalculatePerlin(Timing.TotalTime * 0.3f % 255, Timing.TotalTime * 0.4f % 255, 0) - 0.5f,
+                    (float)PerlinNoise.CalculatePerlin(Timing.TotalTime * 0.4f % 255, Timing.TotalTime * 0.3f % 255, 0.5f) - 0.5f) * 50.0f * (float)Math.Sin(t * MathHelper.Pi);
+            if (anim.UseMovementNoise)
+            {
+                DrawOffset += noise;
+            }
 
             zoom =
                 MathHelper.Lerp(generationParams.MinZoom, generationParams.MaxZoom,
@@ -1338,10 +1864,12 @@ namespace Barotrauma
             pendingSubInfo = new SubmarineInfo.PendingSubInfo();
         }
 
-        partial void RemoveProjSpecific()
+        public void ClearAllSelections()
         {
-            noiseOverlay?.Remove();
-            noiseOverlay = null;
+            SelectedLocation = null;
+            SelectedConnection = null;
+            HighlightedLocation = null;
+            CleanupLocationInfoOverlay();
         }
     }
 }

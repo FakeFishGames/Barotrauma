@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    class HumanWalkParams : HumanGroundedParams
+    public class HumanWalkParams : HumanGroundedParams
     {
         public static HumanWalkParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanWalkParams>(character, AnimationType.Walk);
         public static HumanWalkParams GetAnimParams(Character character, Either<string, ContentPath> file, bool throwErrors = true)
@@ -13,7 +13,7 @@ namespace Barotrauma
         public override void StoreSnapshot() => StoreSnapshot<HumanWalkParams>();
     }
 
-    class HumanRunParams : HumanGroundedParams
+    public class HumanRunParams : HumanGroundedParams
     {
         public static HumanRunParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanRunParams>(character, AnimationType.Run);
         public static HumanRunParams GetAnimParams(Character character, Either<string, ContentPath> file, bool throwErrors = true)
@@ -24,7 +24,7 @@ namespace Barotrauma
         public override void StoreSnapshot() => StoreSnapshot<HumanRunParams>();
     }
 
-    class HumanCrouchParams : HumanGroundedParams
+    public class HumanCrouchParams : HumanGroundedParams
     {
         [Serialize(0.0f, IsPropertySaveable.Yes, description: "How much lower the character's head and torso move when stationary."), Editable(MinValueFloat = 0, MaxValueFloat = 2, DecimalCount = 2)]
         public float MoveDownAmountWhenStationary { get; set; }
@@ -44,7 +44,7 @@ namespace Barotrauma
         public override void StoreSnapshot() => StoreSnapshot<HumanCrouchParams>();
     }
 
-    class HumanSwimFastParams: HumanSwimParams
+    public class HumanSwimFastParams: HumanSwimParams
     {
         public static HumanSwimFastParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanSwimFastParams>(character, AnimationType.SwimFast);
         public static HumanSwimFastParams GetAnimParams(Character character, Either<string, ContentPath> file, bool throwErrors = true)
@@ -56,7 +56,7 @@ namespace Barotrauma
         public override void StoreSnapshot() => StoreSnapshot<HumanSwimFastParams>();
     }
 
-    class HumanSwimSlowParams : HumanSwimParams
+    public class HumanSwimSlowParams : HumanSwimParams
     {
         public static HumanSwimSlowParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanSwimSlowParams>(character, AnimationType.SwimSlow);
         public static HumanSwimSlowParams GetAnimParams(Character character, Either<string, ContentPath> file, bool throwErrors = true)
@@ -67,7 +67,7 @@ namespace Barotrauma
         public override void StoreSnapshot() => StoreSnapshot<HumanSwimSlowParams>();
     }
 
-    abstract class HumanSwimParams : SwimParams, IHumanAnimation
+    public abstract class HumanSwimParams : SwimParams, IHumanAnimation
     {
         [Header("Legs")]
         [Serialize(0.5f, IsPropertySaveable.Yes), Editable(DecimalCount = 2)]
@@ -112,7 +112,7 @@ namespace Barotrauma
         public bool FixedHeadAngle { get; set; }
     }
 
-    abstract class HumanGroundedParams : GroundedMovementParams, IHumanAnimation
+    public abstract class HumanGroundedParams : GroundedMovementParams, IHumanAnimation
     {
         [Header("Standing")]
         [Serialize(0.3f, IsPropertySaveable.Yes, description: "How much force is used to force the character upright."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]

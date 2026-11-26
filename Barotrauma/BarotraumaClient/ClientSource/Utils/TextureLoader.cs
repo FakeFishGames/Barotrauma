@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Threading.Tasks;
 using Barotrauma.IO;
@@ -45,17 +45,30 @@ namespace Barotrauma
         private static byte[] CompressDxt5(byte[] data, int width, int height)
         {
             var output = new byte[width * height];
-            Parallel.For(
-                fromInclusive: 0,
-                toExclusive: width * height / 16,
-                i =>
+            int blockCount = width * height / 16;
+            if (System.Threading.Thread.CurrentThread == GameMain.MainThread)
+            {
+                // Don't use Parallel.For on the main thread: it waits for thread pool workers, and if the pool is saturated
+                // by threads waiting on the main thread (CrossThread.RequestExecutionOnMainThread), neither side can progress
+                // until the pool spawns more threads, freezing the game for seconds
+                for (int i = 0; i < blockCount; i++)
                 {
-                    int i4 = i * 4;
-                    int inputOffset = (i4 % width + (i4 / width) * 4 * width) * 4;
-                    int outputOffset = i * 16;
-                    CompressDxt5Block(data, inputOffset, width, output, outputOffset);
-                });
+                    CompressBlock(i);
+                }
+            }
+            else
+            {
+                Parallel.For(fromInclusive: 0, toExclusive: blockCount, CompressBlock);
+            }
             return output;
+
+            void CompressBlock(int i)
+            {
+                int i4 = i * 4;
+                int inputOffset = (i4 % width + (i4 / width) * 4 * width) * 4;
+                int outputOffset = i * 16;
+                CompressDxt5Block(data, inputOffset, width, output, outputOffset);
+            }
         }
 
         private static void CompressDxt5Block(byte[] data, int inputOffset, int width, byte[] output, int outputOffset)
@@ -157,7 +170,7 @@ namespace Barotrauma
             return FromStream(fileStream, path, compress, mipmap, contentPackage);
         }
 
-        public static Texture2D FromStream(System.IO.Stream stream, string path = null, bool compress = true, bool mipmap = false, ContentPackage contentPackage = null)
+        public static Texture2D FromStream(System.IO.Stream stream, string path = null, bool compress = true, bool mipmap = false, ContentPackage contentPackage = null, bool handleExceptions = true)
         {
             try
             {
@@ -176,8 +189,20 @@ namespace Barotrauma
                     }
                     else
                     {
-                        DebugConsole.AddWarning($"Could not compress a texture because the dimensions aren't a multiple of 4 (path: {path ?? "null"}, size: {width}x{height})",
-                            contentPackage);
+                        string errorMsg = $"Could not compress a texture because the dimensions aren't a multiple of 4 (path: {path ?? "null"}, size: {width}x{height})";
+
+                        bool isFromVanilla = contentPackage == null || 
+                            ContentPackageManager.VanillaCorePackage == contentPackage || 
+                            ContentPackageManager.DlcPackages.Contains(contentPackage);
+
+                        if (isFromVanilla)
+                        {
+                            DebugConsole.ThrowError(errorMsg, contentPackage: contentPackage);
+                        }
+                        else
+                        {
+                            DebugConsole.AddWarning(errorMsg, contentPackage: contentPackage);
+                        }
                     }
                 }
 
@@ -195,10 +220,16 @@ namespace Barotrauma
 #if WINDOWS
                 if (e is SharpDX.SharpDXException) { throw; }
 #endif
-
-                DebugConsole.ThrowError(string.IsNullOrEmpty(path) ? "Loading texture from stream failed!" :
-                                                                     "Loading texture \"" + path + "\" failed!", e);
-                return null;
+                if (handleExceptions)
+                {
+                    DebugConsole.ThrowError(string.IsNullOrEmpty(path) ? "Loading texture from stream failed!" :
+                                                                         "Loading texture \"" + path + "\" failed!", e);
+                    return null;
+                }
+                else
+                {
+                    throw;
+                }
             }
         }
         

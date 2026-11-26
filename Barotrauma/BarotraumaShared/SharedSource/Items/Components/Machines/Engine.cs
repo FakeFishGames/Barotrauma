@@ -1,14 +1,16 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Globalization;
 using System.Xml.Linq;
-using Barotrauma.Networking;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Engine : Powered, IServerSerializable, IClientSerializable, IDeteriorateUnderStress
+    public partial class Engine : Powered, IServerSerializable, IClientSerializable, IDeteriorateUnderStress
     {
         private float force;
+
+        private Turret turret;
 
         /// <summary>
         /// Latest signal the set_force connection received, used to set <see cref="targetForce"/> in the Update method.
@@ -70,10 +72,31 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Editable, Serialize(false, IsPropertySaveable.Yes)]
+        public bool DisablePropellerParticles
+        {
+            get;
+            set;
+        }
+
+        [Editable, Serialize(true, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public bool RotationAffectsThrustDirection
+        {
+            get;
+            set;
+        }
+
+        [Serialize(true, IsPropertySaveable.No)]
+        public bool AllowBackwardsThrust
+        {
+            get;
+            set;
+        }
+
         public float Force
         {
             get { return force;}
-            set { force = MathHelper.Clamp(value, -100.0f, 100.0f); }
+            set { force = MathHelper.Clamp(value, MinThrust, MaxThrust); }
         }
 
         public float CurrentVolume => CurrentStress;
@@ -87,8 +110,26 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private float MinThrust => AllowBackwardsThrust ? -100.0f : 0.0f;
+        private const float MaxThrust = 100.0f;
+
         public float CurrentStress => Math.Abs((force / 100.0f) * (MinVoltage <= 0.0f ? 1.0f : Math.Min(prevVoltage, 1.0f)));
-    
+
+        /// <summary>
+        /// Is the engine currently operating (i.e. active, functional and applying a force on the sub)
+        /// </summary>
+        public bool IsOperating => Math.Abs(Force) > 1.0f;
+
+        /// <summary>
+        /// Engines deteriorate when running
+        /// </summary>
+        public override bool ShouldCauseDeterioration => Math.Abs(Force) > 1.0f;
+
+        private float Rotation =>
+            turret == null ?
+                item.RotationRad :
+                turret.BarrelRotation - MathHelper.Pi;
+
         private const float TinkeringForceIncrease = 1.5f;
 
         public Engine(Item item, ContentXElement element)
@@ -107,6 +148,26 @@ namespace Barotrauma.Items.Components
             }
 
             InitProjSpecific(element);
+        }
+
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
+        {
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
+
+            //backwards compatibility: making rotation affect the direction of thrust was added in v1.15 (DLC companion update),
+            //in any subs saved before that any rotation was purely cosmetic - let's keep it that way unless the creator of the sub enables RotationAffectsThrustDirection
+            //Done here instead of OnItemLoaded, so it only applies to engines loaded from a saved sub, not to newly placed ones.
+            //GameVersion is null if the sub hasn't been saved yet, in which case there's nothing to be backwards compatible with.
+            if (item.Submarine?.Info.GameVersion is Version savedVersion && savedVersion < new Version(1, 15))
+            {
+                RotationAffectsThrustDirection = false;
+            }
+        }
+
+        public override void OnItemLoaded()
+        {
+            base.OnItemLoaded();
+            turret = item.GetComponent<Turret>();
         }
 
         partial void InitProjSpecific(ContentXElement element);
@@ -134,7 +195,7 @@ namespace Barotrauma.Items.Components
                 targetForce = lastReceivedTargetForce.Value;
             }
             Force = MathHelper.Lerp(force, (Voltage < MinVoltage) ? 0.0f : targetForce, deltaTime * 10.0f);
-            if (Math.Abs(Force) > 1.0f)
+            if (IsOperating)
             {
                 float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, MaxOverVoltageFactor);
                 float currForce = force * MathF.Pow(voltageFactor, PowerToForceExponent);
@@ -158,24 +219,23 @@ namespace Barotrauma.Items.Components
 
                 //less effective when in a bad condition
                 currForce *= MathHelper.Lerp(0.5f, 2.0f, condition);
-                if (item.Submarine.FlippedX) { currForce *= -1; }
-                Vector2 forceVector = new Vector2(currForce, 0);
+                //if either the submarine or the engine is flipped (but not both, that'd be double negation), flip the force
+                if (item.Submarine.FlippedX ^ (item.FlippedX && turret != null)) { currForce *= -1; }
+                Vector2 forceVector = Vector2.UnitX * currForce;
+                forceVector = GetRotatedVector(forceVector);
                 item.Submarine.ApplyForce(forceVector * deltaTime * Timing.FixedUpdateRate);
                 UpdatePropellerDamage(deltaTime);
-#if CLIENT
-                float particleInterval = 1.0f / particlesPerSec;
-                particleTimer += deltaTime;
-                while (particleTimer > particleInterval)
+                EmitParticles(deltaTime, forceVector);
+
+                //if the item has both a turret and engine component (= rotatable engine), consider using the engine as firing the turret
+                if (turret != null)
                 {
-                    Vector2 particleVel = -forceVector.ClampLength(5000.0f) / 5.0f;
-                    GameMain.ParticleManager.CreateParticle("bubbles", item.WorldPosition + PropellerPos * item.Scale,
-                        particleVel * Rand.Range(0.8f, 1.1f),
-                        0.0f, item.CurrentHull);
-                    particleTimer -= particleInterval;
+                    turret.LastFiredTime = (float)Timing.TotalTimeUnpaused;
                 }
-#endif
             }
         }
+
+        partial void EmitParticles(float deltaTime, Vector2 forceVector);
 
         /// <summary>
         /// Power consumption of the engine. Only consume power when active and adjust consumption based on condition and target force.
@@ -229,7 +289,7 @@ namespace Barotrauma.Items.Components
 
             float scaledDamageRange = propellerDamage.DamageRange * item.Scale;
 
-            Vector2 propellerWorldPos = item.WorldPosition + PropellerPos * item.Scale; 
+            Vector2 propellerWorldPos = item.WorldPosition + GetRotatedVector(PropellerPos, onlyIfRotationAffectsThrustDirection: false) * item.Scale; 
             float broadRange = Math.Max(scaledDamageRange * 2, 500);
             foreach (Character character in Character.CharacterList)
             {
@@ -247,6 +307,22 @@ namespace Barotrauma.Items.Components
                     break;
                 }
             }
+        }
+
+
+        /// <summary>
+        /// Rotates the specified vector (e.g. propeller position, engine force) according to the rotation of the engine.
+        /// </summary>
+        /// <param name="onlyIfRotationAffectsThrustDirection">Should the vector only be rotated if the engine's rotation is set to affect the thrust direction?</param>
+        private Vector2 GetRotatedVector(Vector2 vector, bool onlyIfRotationAffectsThrustDirection = true)
+        {
+            if (onlyIfRotationAffectsThrustDirection)
+            {
+                if (turret == null && !RotationAffectsThrustDirection) { return vector; }
+            }
+            if (turret != null && item.FlippedX) { vector.X = -vector.X; }
+            vector = MathUtils.RotatePoint(vector, -Rotation);
+            return vector;
         }
 
         partial void UpdateAnimation(float deltaTime);
@@ -276,7 +352,7 @@ namespace Barotrauma.Items.Components
                 if (float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float tempForce))
                 {
                     controlLockTimer = 0.1f;
-                    lastReceivedTargetForce = MathHelper.Clamp(tempForce, -100.0f, 100.0f);
+                    lastReceivedTargetForce = MathHelper.Clamp(tempForce, MinThrust, MaxThrust);
                     User = signal.sender;
                 }
             }  

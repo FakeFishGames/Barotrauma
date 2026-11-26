@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    partial class Structure : MapEntity, IDamageable, IServerSerializable, ISerializableEntity
+    public partial class Structure : MapEntity, IDamageable, IServerSerializable, ISerializableEntity
     {
         partial void OnHealthChangedProjSpecific(Character attacker, float damageAmount)
         {

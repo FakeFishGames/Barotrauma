@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Immutable;
 
@@ -73,6 +74,11 @@ namespace Barotrauma
         public static RichString Plain(LocalizedString str)
         {
             return new RichString(str, false, postProcess: null);
+        }
+
+        public static RichString ColorizeText(LocalizedString text, Color color)
+        {
+            return Rich($"‖color:{color.ToStringHex()}‖{text}‖color:end‖");
         }
 
         public static implicit operator LocalizedString(RichString richStr) => richStr.NestedStr;
@@ -195,6 +201,7 @@ namespace Barotrauma
         }
 
         public override bool Loaded => RichStr.NestedStr.Loaded;
+        public override bool UsingDefaultLanguageAsFallback => RichStr.NestedStr.UsingDefaultLanguageAsFallback;
         public override void RetrieveValue()
         {
             cachedValue = RichStr.SanitizedValue;

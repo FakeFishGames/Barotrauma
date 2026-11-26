@@ -10,7 +10,7 @@ namespace Barotrauma
         {
             if (TargetItem.Condition <= 0f) { return; }
 
-            if (TargetItemComponent is Reactor reactor && -reactor.CurrPowerConsumption < float.Epsilon)
+            if (TargetItemComponent is ReactorBase reactor && -reactor.CurrPowerConsumption < float.Epsilon)
             {
                 Importance = 40f;
             }

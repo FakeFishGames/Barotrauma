@@ -8,12 +8,12 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    class AIObjectiveContainItem: AIObjective
+    public class AIObjectiveContainItem: AIObjective
     {
         public override Identifier Identifier { get; set; } = "contain item".ToIdentifier();
-        protected override bool AllowWhileHandcuffed => false;
+        protected override bool RequireOneHandAvailable => true;
 
-        public Func<Item, float> GetItemPriority;
+        public Func<Item, float> GetItemFetchPriority;
 
         public ImmutableHashSet<Identifier> ignoredContainerIdentifiers;
         public bool checkInventory = true;
@@ -26,6 +26,8 @@ namespace Barotrauma
         public readonly ItemContainer container;
         private readonly Item item;
         public Item ItemToContain { get; private set; }
+
+        public event Action<Item> ItemToContainFound;
 
         public int? TargetSlot;
 
@@ -46,6 +48,10 @@ namespace Barotrauma
         public bool RemoveExistingWhenNecessary { get; set; }
         public Func<Item, bool> RemoveExistingPredicate { get; set; }
         public int? RemoveMax { get; set; }
+        /// <summary>
+        /// Should the items removed from the container be put in a suitable container instead of leaving them on the floor?
+        /// </summary>
+        public bool StoreRemovedItems { get; set; }
 
         public bool MoveWholeStack { get; set; }
         
@@ -101,7 +107,9 @@ namespace Barotrauma
             int containedItemCount = 0;
             foreach (Item it in container.Inventory.AllItems)
             {
-                if (CheckItem(it) && IsInTargetSlot(it))
+                // GetItemFetchPriority returns 0 for fuel inside reactors (to prevent bots from stealing from reactors to fill
+                // other reactors), so checking it here would prevent a reactor from ever being considered sufficiently fueled
+                if (CheckItem(it, checkGetItemFetchPriority: false) && IsInTargetSlot(it))
                 {
                     containedItemCount++;
                 }
@@ -109,9 +117,14 @@ namespace Barotrauma
             return containedItemCount >= ItemCount;
         }
 
-        private bool CheckItem(Item item)
+        private bool CheckItem(Item item, bool checkGetItemFetchPriority = true)
         {
-            return item.HasIdentifierOrTags(itemIdentifiers) && item.ConditionPercentage >= ConditionLevel && item.HasAccess(character) && container.ShouldBeContained(item, out _);
+            return
+                item.HasIdentifierOrTags(itemIdentifiers) &&
+                item.ConditionPercentage >= ConditionLevel &&
+                item.HasAccess(character) &&
+                container.ShouldBeContained(item, out _) &&
+                (!checkGetItemFetchPriority || GetItemFetchPriority == null || GetItemFetchPriority(item) > 0);
         }
 
         protected override void Act(float deltaTime)
@@ -133,6 +146,9 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
+
+                ItemToContainFound?.Invoke(ItemToContain);
+
                 if (character.CanInteractWith(container.Item, checkLinked: false))
                 {
                     static bool CanBePut(Inventory inventory, int? targetSlot, Item itemToContain)
@@ -147,6 +163,7 @@ namespace Barotrauma
                         }
                     }
 
+                    var itemsBeforeRemoval = StoreRemovedItems ? container.Inventory.AllItems.ToList() : null;
                     if (RemoveExisting || (RemoveExistingWhenNecessary && !CanBePut(container.Inventory, TargetSlot, ItemToContain)))
                     {
                         HumanAIController.UnequipContainedItems(container.Item, predicate: RemoveExistingPredicate, unequipMax: RemoveMax, allowDestroying: spawnItemIfNotFound);
@@ -154,6 +171,14 @@ namespace Barotrauma
                     else if (RemoveEmpty)
                     {
                         HumanAIController.UnequipEmptyItems(container.Item, allowDestroying: spawnItemIfNotFound);
+                    }
+                    if (itemsBeforeRemoval != null)
+                    {
+                        //no parent inventory = the item was dropped on the floor
+                        foreach (Item removedItem in itemsBeforeRemoval.Where(it => it.ParentInventory == null))
+                        {
+                            HumanAIController.StoreItem(removedItem);
+                        }
                     }
                     Inventory originalInventory = ItemToContain.ParentInventory;
                     var slots = originalInventory?.FindIndices(ItemToContain);
@@ -186,7 +211,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (ItemToContain.ParentInventory == character.Inventory && character.IsInFriendlySub)
+                        if (ItemToContain.ParentInventory == character.Inventory && character.IsInSameTeamSub)
                         {
                             ItemToContain.Drop(character);
                         }
@@ -223,7 +248,7 @@ namespace Barotrauma
                     TryAddSubObjective(ref getItemObjective, () =>
                         new AIObjectiveGetItem(character, itemIdentifiers, objectiveManager, equip: Equip, checkInventory: checkInventory, spawnItemIfNotFound: spawnItemIfNotFound)
                         {
-                            GetItemPriority = GetItemPriority,
+                            GetItemPriority = GetItemFetchPriority,
                             ignoredContainerIdentifiers = ignoredContainerIdentifiers,
                             ignoredItems = containedItems,
                             AllowToFindDivingGear = AllowToFindDivingGear,

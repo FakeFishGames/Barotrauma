@@ -24,6 +24,26 @@ namespace Barotrauma
     }
 
     [AttributeUsage(AttributeTargets.Property)]
+    public sealed class CustomDefaultValueAttribute(Type type) : Attribute
+    {
+        public object GetCustomDefaultValue(object entity)
+        {
+            MethodInfo defaultValueMethod = type.GetMethod(nameof(ICustomDefaultValueProvider.GetDefaultValue), BindingFlags.Public | BindingFlags.Static);
+            if (defaultValueMethod is null)
+            {
+                throw new InvalidOperationException($"The type {type.FullName} does not implement the required static method GetDefaultValue.");
+            }
+
+            return defaultValueMethod.Invoke(null, [entity]);
+        }
+    }
+
+    public interface ICustomDefaultValueProvider
+    {
+        static abstract object GetDefaultValue(object obj);
+    }
+
+    [AttributeUsage(AttributeTargets.Property)]
     public sealed class Serialize : Attribute
     {
         public readonly object DefaultValue;
@@ -42,7 +62,7 @@ namespace Barotrauma
         /// </summary>
         /// <param name="defaultValue">The property is set to this value during deserialization if the value is not defined in XML.</param>
         /// <param name="isSaveable">Is the value saved to XML when serializing.</param>
-        /// <param name="translationTextTag">If set to anything else than null, SerializableEntityEditors will show what the text gets translated to or warn if the text is not found in the language files.
+        /// <param name="translationTextTag">If set to anything else than null, SerializableEntityEditors will show what the text gets translated to or warn if the text is not found in the language files.</param>
         /// <param name="alwaysUseInstanceValues">If set to true, the instance values saved in a submarine file will always override the prefab values, even if using a mod that normally overrides instance values.
         /// Setting the value to a non-empty string will let the user select the text from one whose tag starts with the given string (e.g. RoomName. would show all texts with a RoomName.* tag)</param>
         public Serialize(object defaultValue, IsPropertySaveable isSaveable, string description = "", string translationTextTag = "", bool alwaysUseInstanceValues = false)
@@ -72,6 +92,7 @@ namespace Barotrauma
         {
             { typeof(bool), "bool" },
             { typeof(int), "int" },
+            { typeof(ushort), "ushort" },
             { typeof(float), "float" },
             { typeof(string), "string" },
             { typeof(Identifier), "identifier" },
@@ -90,19 +111,19 @@ namespace Barotrauma
         private static readonly Dictionary<Type, Dictionary<Identifier, SerializableProperty>> cachedProperties = 
             new Dictionary<Type, Dictionary<Identifier, SerializableProperty>>();
         public readonly string Name;
-        public readonly AttributeCollection Attributes;
+        public readonly Attribute[] Attributes;
         public readonly Type PropertyType;
 
         public readonly bool OverridePrefabValues;
 
         public readonly PropertyInfo PropertyInfo;
 
-        public SerializableProperty(PropertyDescriptor property)
+        public SerializableProperty(PropertyInfo property)
         {
             Name = property.Name;
-            PropertyInfo = property.ComponentType.GetProperty(property.Name);
+            PropertyInfo = property;
             PropertyType = property.PropertyType;
-            Attributes = property.Attributes;
+            Attributes = property.GetCustomAttributes().ToArray();
             OverridePrefabValues = GetAttribute<Serialize>()?.AlwaysUseInstanceValues ?? false;
         }
 
@@ -171,6 +192,16 @@ namespace Barotrauma
                         {
                             if (TrySetFloatValueWithoutReflection(parentObject, intVal)) { return true; }
                             PropertyInfo.SetValue(parentObject, intVal, null);
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                        break;
+                    case "ushort":
+                        if (ushort.TryParse(value, out ushort ushortVal))
+                        {
+                            PropertyInfo.SetValue(parentObject, ushortVal, null);
                         }
                         else
                         {
@@ -501,35 +532,6 @@ namespace Barotrauma
             return typeName;
         }
 
-        private readonly ImmutableDictionary<Identifier, Func<object, object>> valueGetters =
-            new Dictionary<Identifier, Func<object, object>>()
-            {
-                {"Voltage".ToIdentifier(), (obj) => obj is Powered p ? p.Voltage : (object) null},
-                {"Charge".ToIdentifier(), (obj) => obj is PowerContainer p ? p.Charge : (object) null},
-                {"Overload".ToIdentifier(), (obj) => obj is PowerTransfer p ? p.Overload : (object) null},
-                {"AvailableFuel".ToIdentifier(), (obj) => obj is Reactor r ? r.AvailableFuel : (object) null},
-                {"FissionRate".ToIdentifier(), (obj) => obj is Reactor r ? r.FissionRate : (object) null},
-                {"OxygenFlow".ToIdentifier(), (obj) => obj is Vent v ? v.OxygenFlow : (object) null},
-                {
-                    "CurrFlow".ToIdentifier(),
-                    (obj) => obj is Pump p ? (object) p.CurrFlow :
-                                   obj is OxygenGenerator o ? (object)o.CurrFlow :
-                                   null
-                },
-                {"CurrentVolume".ToIdentifier(), (obj) => obj is Engine e ? e.CurrentVolume : (object)null},
-                {"MotionDetected".ToIdentifier(), (obj) => obj is MotionSensor m ? m.MotionDetected : (object)null},
-                {"Oxygen".ToIdentifier(), (obj) => obj is Character c ? c.Oxygen : (object)null},
-                {"Health".ToIdentifier(), (obj) => obj is Character c ? c.Health : (object)null},
-                {"OxygenAvailable".ToIdentifier(), (obj) => obj is Character c ? c.OxygenAvailable : (object)null},
-                {"PressureProtection".ToIdentifier(), (obj) => obj is Character c ? c.PressureProtection : (object)null},
-                {"IsDead".ToIdentifier(), (obj) => obj is Character c ? c.IsDead : (object)null},
-                {"IsHuman".ToIdentifier(), (obj) => obj is Character c ? c.IsHuman : (object)null},
-                {"IsOn".ToIdentifier(), (obj) => obj is LightComponent l ? l.IsOn : (object)null},
-                {"Condition".ToIdentifier(), (obj) => obj is Item i ? i.Condition : (object)null},
-                {"ContainerIdentifier".ToIdentifier(), (obj) => obj is Item i ? i.ContainerIdentifier : (object)null},
-                {"PhysicsBodyActive".ToIdentifier(), (obj) => obj is Item i ? i.PhysicsBodyActive : (object)null},
-            }.ToImmutableDictionary();
-        
         /// <summary>
         /// Try getting the values of some commonly used properties directly without reflection
         /// </summary>
@@ -608,7 +610,10 @@ namespace Barotrauma
                     { if (parentObject is Reactor reactor) { value = reactor.Temperature; return true; } }
                     break;
                 case nameof(Vent.OxygenFlow):
-                    if (parentObject is Vent vent) { value = vent.OxygenFlow; return true; }
+                    { if (parentObject is Vent vent) { value = vent.OxygenFlow; return true; } }
+                    break;
+                case nameof(Vent.TotalOxygenFlow):
+                    { if (parentObject is Vent vent) { value = vent.TotalOxygenFlow; return true; } }
                     break;
                 case nameof(Pump.CurrFlow):
                     { if (parentObject is Pump pump) { value = pump.CurrFlow; return true; } }
@@ -674,6 +679,9 @@ namespace Barotrauma
                     break;
                 case nameof(Door.Stuck):
                     { if (parentObject is Door door) { value = door.Stuck; return true; } }
+                    break;
+                case nameof(Planter.PlantLightAmount):
+                    { if (parentObject is Planter planter) { value = planter.PlantLightAmount; return true; } }
                     break;
             }
             return false;
@@ -872,15 +880,17 @@ namespace Barotrauma
                 return cachedProperties[objType];
             }
 
-            var properties = TypeDescriptor.GetProperties(obj.GetType()).Cast<PropertyDescriptor>();
+            var properties = obj.GetType().GetProperties();
             Dictionary<Identifier, SerializableProperty> dictionary = new Dictionary<Identifier, SerializableProperty>();
             foreach (var property in properties)
             {
-                //if the getter is private, we must get it from the declaring type to access it and check if it exists
                 SerializableProperty serializableProperty = null;
                 try
                 {
-                    serializableProperty = new SerializableProperty(property);
+                    //if the getter is private, we must get it from the declaring type to access it and check if it exists
+                    var propertyFromDeclaringType = property.DeclaringType.GetProperty(property.Name);
+                    if (propertyFromDeclaringType.GetMethod is null) { continue; }
+                    serializableProperty = new SerializableProperty(propertyFromDeclaringType);
                 }
                 catch (AmbiguousMatchException)
                 {
@@ -911,6 +921,12 @@ namespace Barotrauma
 #endif
             foreach (var property in dictionary.Values)
             {
+                if (property.GetAttribute<CustomDefaultValueAttribute>() is { } customDefaultValueProvider)
+                {
+                    property.TrySetValue(obj, customDefaultValueProvider.GetCustomDefaultValue(obj));
+                    continue;
+                }
+
                 //set the value of the property to the default value if there is one
                 foreach (var ini in property.Attributes.OfType<Serialize>())
                 {
@@ -934,6 +950,67 @@ namespace Barotrauma
             return dictionary;
         }
 
+        /// <summary>
+        /// Deserializes a single named property on the given object from the XML element if a matching attribute exists,
+        /// otherwise resets it to the default.
+        /// Basically a singular version of <see cref="DeserializeProperties"/>.
+        /// </summary>
+        public static void DeserializeProperty(object obj, string propertyName, XElement element = null)
+        {
+            if (!GetProperties(obj).TryGetValue(propertyName.ToIdentifier(), out SerializableProperty property))
+            {
+#if DEBUG
+                // Developer QoL
+                var nonPublicProperty = obj.GetType().GetProperty(propertyName, BindingFlags.NonPublic | BindingFlags.Instance);
+                if (nonPublicProperty?.GetAttribute<Serialize>() != null)
+                {
+                    DebugConsole.ThrowError($"The property {property.Name} in class {obj.GetType()} is set as serializable, but isn't public. Serializable properties must have at least a public getter.");
+                }
+#endif
+                throw new KeyNotFoundException($"No serializable property named \"{propertyName}\" on {obj.GetType()}.");
+            }
+
+            // Find the matching attribute in the XML element, and reset the value of the property to that (if it is initializable)
+            if (element?.GetAttribute(propertyName) is XAttribute attribute)
+            {
+                property.TrySetValue(obj, attribute.Value);
+                return;
+            }
+
+            // Otherwise, set the value of the property to the default value if there is one
+            if (property.GetAttribute<CustomDefaultValueAttribute>() is { } customDefaultValueProvider)
+            {
+                property.TrySetValue(obj, customDefaultValueProvider.GetCustomDefaultValue(obj));
+            }
+            else
+            {
+                if (property.Attributes.OfType<Serialize>().FirstOrDefault() is { } serialize)
+                {
+                    property.TrySetValue(obj, serialize.DefaultValue);
+                }
+            }
+
+        }
+
+        public static void AdditionalDeserializeProperties(object obj, XElement element = null)
+        {
+            Dictionary<Identifier, SerializableProperty> dictionary = GetProperties(obj);
+
+            if (element != null)
+            {
+                //go through all the attributes in the xml element 
+                //and set the value of the matching property if it is initializable
+                foreach (XAttribute attribute in element.Attributes())
+                {
+                    if (!dictionary.TryGetValue(attribute.NameAsIdentifier(), out SerializableProperty property)) { continue; }
+                    if (property.Attributes.OfType<Serialize>().FirstOrDefault() is not { } serialize) { continue; }
+                    string defaultValue = serialize.DefaultValue.ToString() ?? string.Empty;
+                    if (string.Equals(defaultValue, attribute.Value, StringComparison.OrdinalIgnoreCase)) { continue; }
+                    property.TrySetValue(obj, attribute.Value);
+                }
+            }
+        }
+
         public static void SerializeProperties(ISerializableEntity obj, XElement element, bool saveIfDefault = false, bool ignoreEditable = false)
         {
             var saveProperties = GetProperties<Serialize>(obj);
@@ -950,14 +1027,13 @@ namespace Barotrauma
                     bool save = false;
                     foreach (var attribute in property.Attributes.OfType<Serialize>())
                     {
-                        if ((attribute.IsSaveable == IsPropertySaveable.Yes && !attribute.DefaultValue.Equals(value)) ||
+                        if ((attribute.IsSaveable == IsPropertySaveable.Yes && !XMLExtensions.DefaultValueEquals(attribute.DefaultValue, value)) ||
                             (!ignoreEditable && property.Attributes.OfType<Editable>().Any()))
                         {
                             save = true;
                             break;
                         }
                     }
-
                     if (!save) continue;
                 }
 
@@ -1021,6 +1097,13 @@ namespace Barotrauma
         /// <summary>
         /// Upgrade the properties of an entity saved with an older version of the game. Properties that should be upgraded are defined using "Upgrade" elements in the config file.
         /// for example, <Upgrade gameversion="0.9.2.0" scale="0.5"/> would force the scale of the entity to 0.5 if it was saved with a version prior to 0.9.2.0.
+        /// An upgrade can also target a specific component of an item, either by defining it inside the component:
+        /// eg. <Repairable><Upgrade gameversion="0.9.2.0" RepairThreshold="80"/></Repairable>
+        /// or by naming the component inside the Upgrade element:
+        /// eg. <Upgrade gameversion="0.9.2.0"><Repairable RepairThreshold="80"/></Upgrade>
+        /// NOTE (especially for Holdable): Upgrades inside a component are applied while the component is loading, item-level
+        /// ones only after all the components have loaded. Holdable caches the message and the required items while loading
+        /// and then restores them when attached, so it has to be upgraded from inside the component.
         /// </summary>
         /// <param name="entity">The entity to upgrade</param>
         /// <param name="configElement">The XML element to get the upgrade instructions from (e.g. the config of an item prefab)</param>
@@ -1030,7 +1113,27 @@ namespace Barotrauma
             foreach (var subElement in configElement.Elements())
             {
                 if (!subElement.Name.ToString().Equals("upgrade", StringComparison.OrdinalIgnoreCase)) { continue; }
-                var upgradeVersion = new Version(subElement.GetAttributeString("gameversion", "0.0.0.0"));
+                if (subElement.GetAttribute("gameversion") == null)
+                {
+                    // Note that empty Upgrade elements seem to be also used to get rid of previous Upgrades they'd otherwise
+                    // inherit from the base prefab. And though normally both the empty element and the one it removes don't
+                    // make it to the actual merged XML, if the base prefab has no matching element to remove, then the
+                    // empty element is copied as-is and ends up here.
+                    // But if it is incomplete rather than fully empty, let's make noise about that.
+                    if (subElement.Attributes().Any() || subElement.Elements().Any())
+                    {
+                        DebugConsole.ThrowError($"Error in the config of '{entity.Name}': an upgrade element with no 'gameversion' attribute. This upgrade will never get applied.",
+                            contentPackage: subElement.ContentPackage);
+                    }
+                    continue;
+                }
+                string upgradeVersionStr = subElement.GetAttributeString("gameversion", "0.0.0.0");
+                if (!Version.TryParse(upgradeVersionStr, out Version upgradeVersion))
+                {
+                    DebugConsole.ThrowError($"Error in the config of '{entity.Name}': '{upgradeVersionStr}' is not a valid 'gameversion' value. This upgrade will never get applied.",
+                        contentPackage: subElement.ContentPackage);
+                    continue;
+                }
                 if (subElement.GetAttributeBool("campaignsaveonly", false))
                 {
                     if ((GameMain.GameSession?.LastSaveVersion ?? GameMain.Version) >= upgradeVersion) { continue; }
@@ -1044,8 +1147,10 @@ namespace Barotrauma
                     var attributeName = attribute.NameAsIdentifier();
                     if (attributeName == "gameversion" || attributeName == "campaignsaveonly") { continue; }
 
+                    bool applied = false;
                     if (attributeName == "refreshrect")
                     {
+                        applied = true;
                         if (entity is Structure structure)
                         {
                             if (!structure.ResizeHorizontal)
@@ -1079,6 +1184,7 @@ namespace Barotrauma
                     }
                     else if (attributeName == "unlockrecipe" || attributeName == "unlockrecipes")
                     {
+                        applied = true;
                         var recipes = subElement.GetAttributeIdentifierImmutableHashSet("unlockrecipes",
                             def: subElement.GetAttributeIdentifierImmutableHashSet("unlockrecipe", ImmutableHashSet<Identifier>.Empty));
                         foreach (var recipe in recipes)
@@ -1089,11 +1195,10 @@ namespace Barotrauma
 
                     if (entity.SerializableProperties.TryGetValue(attributeName, out SerializableProperty property))
                     {
-                        FixValue(property, entity, attribute);
-                        if (property.Name == nameof(ItemComponent.Msg) && entity is ItemComponent component)
-                        {
-                            component.ParseMsg();
-                        }
+                        // The entity here can also be an ItemComponent (instead of Item) when the Upgrade is defined inside
+                        // the component, so we apply the upgrade attributes here.
+                        ApplyUpgradeValue(property, entity, attribute);
+                        applied = true;
                     }
                     else if (entity is Item item1)
                     {
@@ -1101,13 +1206,79 @@ namespace Barotrauma
                         {
                             if (component.SerializableProperties.TryGetValue(attributeName, out SerializableProperty componentProperty))
                             {
-                                FixValue(componentProperty, component, attribute);
-                                if (componentProperty.Name == nameof(ItemComponent.Msg))
-                                {
-                                    ((ItemComponent)component).ParseMsg();
-                                }
+                                ApplyUpgradeValue(componentProperty, component, attribute);
+                                applied = true;
                             }
                         }
+                    }
+                    if (!applied)
+                    {
+                        WarnAboutUnknownProperty(entity, attributeName, subElement);
+                    }
+                }
+
+                static void WarnAboutUnknownProperty(ISerializableEntity target, Identifier attributeName, ContentXElement upgradeElement)
+                {
+                    // Only warn on the client, some properties don't exist on the server at all
+#if CLIENT
+                    string targetName = target is ItemComponent component ?
+                        $"{component.Item.Name} ({component.Name})" :
+                        target.Name;
+                    DebugConsole.AddWarning($"Potential error in the config of '{targetName}': an Upgrade sets '{attributeName}', but there's no property with that name.",
+                        contentPackage: upgradeElement.ContentPackage);
+#endif
+                }
+
+                static void ApplyUpgradeValue(SerializableProperty property, object parentObject, XAttribute attribute)
+                {
+                    FixValue(property, parentObject, attribute);
+                    if (property.Name == nameof(ItemComponent.Msg) && parentObject is ItemComponent component)
+                    {
+                        component.ParseMsg();
+                    }
+                }
+
+                static void ApplyUpgradeToComponent(ItemComponent itemComponent, ContentXElement upgradeElement, bool applyAttributes)
+                {
+                    if (applyAttributes)
+                    {
+                        foreach (XAttribute attribute in upgradeElement.Attributes())
+                        {
+                            var attributeName = attribute.NameAsIdentifier();
+                            if (itemComponent.SerializableProperties.TryGetValue(attributeName, out SerializableProperty property))
+                            {
+                                ApplyUpgradeValue(property, itemComponent, attribute);
+                            }
+                            else
+                            {
+                                WarnAboutUnknownProperty(itemComponent, attributeName, upgradeElement);
+                            }
+                        }
+                    }
+
+                    bool requiredItemsCleared = false;
+                    foreach (var element in upgradeElement.Elements())
+                    {
+                        switch (element.Name.ToString().ToLowerInvariant())
+                        {
+                            case "requireditem":
+                            case "requireditems":
+                                if (!requiredItemsCleared)
+                                {
+                                    // The required items in the upgrade replace the existing ones, but only clear them
+                                    // once so several required items in the same upgrade don't overwrite each other
+                                    itemComponent.RequiredItems.Clear();
+                                    itemComponent.DisabledRequiredItems.Clear();
+                                    requiredItemsCleared = true;
+                                }
+                                itemComponent.SetRequiredItems(element, allowEmpty: true);
+                                break;
+                        }
+                    }
+                    if (itemComponent is ItemContainer itemContainer &&
+                        (upgradeElement.GetChildElement("containable") != null || upgradeElement.GetChildElement("subcontainer") != null))
+                    {
+                        itemContainer.ReloadContainableRestrictions(upgradeElement);
                     }
                 }
 
@@ -1165,38 +1336,29 @@ namespace Barotrauma
 
                 if (entity is Item item2)
                 {
-                    var componentElement = subElement.FirstElement();
-                    if (componentElement == null) { continue; }
-                    ItemComponent itemComponent = item2.Components.FirstOrDefault(c => c.Name == componentElement.Name.ToString());
-                    if (itemComponent == null) { continue; }
-                    foreach (XAttribute attribute in componentElement.Attributes())
+                    // The child elements of an item's upgrade are the components the upgrade applies to
+                    foreach (var componentElement in subElement.Elements())
                     {
-                        var attributeName = attribute.NameAsIdentifier();
-                        if (itemComponent.SerializableProperties.TryGetValue(attributeName, out SerializableProperty property))
+                        ItemComponent itemComponent = item2.Components.FirstOrDefault(c => c.Name.Equals(componentElement.Name.ToString(), StringComparison.OrdinalIgnoreCase));
+                        if (itemComponent == null)
                         {
-                            FixValue(property, itemComponent, attribute);
+                            DebugConsole.ThrowError($"Error in the config of '{item2.Name}': an upgrade tries to apply to the component '{componentElement.Name}', but the item has no such component.",
+                                contentPackage: subElement.ContentPackage);
+                            continue;
                         }
+                        ApplyUpgradeToComponent(itemComponent, componentElement, applyAttributes: true);
                     }
-                    foreach (var element in componentElement.Elements())
-                    {
-                        switch (element.Name.ToString().ToLowerInvariant())
-                        {
-                            case "requireditem":
-                            case "requireditems":
-                                itemComponent.RequiredItems.Clear();
-                                itemComponent.DisabledRequiredItems.Clear();
-
-                                itemComponent.SetRequiredItems(element, allowEmpty: true);
-                                break;
-                        }
-                    }          
-                    if (itemComponent is ItemContainer itemContainer &&
-                        (componentElement.GetChildElement("containable") != null || componentElement.GetChildElement("subcontainer") != null))
-                    {
-                        itemContainer.ReloadContainableRestrictions(componentElement);
-                    }
+                }
+                else if (entity is ItemComponent upgradedComponent)
+                {
+                    // The attributes of an upgrade defined inside a component have already been applied above in the
+                    // attribute loop. Only the upgrade's child elements are left here.
+                    ApplyUpgradeToComponent(upgradedComponent, subElement, applyAttributes: false);
                 }
             }
         }
+
+        public static void PurgeCache()
+            => cachedProperties.Clear();
     }
 }

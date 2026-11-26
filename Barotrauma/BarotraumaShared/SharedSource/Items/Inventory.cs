@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class Inventory
+    public partial class Inventory
     {
         public const int MaxPossibleStackSize = (1 << 6) - 1; //the max value that will fit in 6 bits, i.e 63
 
@@ -28,6 +28,13 @@ namespace Barotrauma
             {
                 this.inventory = inventory;
             }
+
+            public bool ShowEquipButton =>
+                items.First() is { } item &&
+                //if the item doesn't go in some other slot than Any, don't show the equip button
+                item.AllowedSlots.Any(slot => slot != InvSlotType.Any) &&
+                //there must be more than one option on where the item can be put for equipping to make sense
+                item.AllowedSlots.Count() > 1;
 
             public bool CanBePut(Item item, bool ignoreCondition = false)
             {
@@ -141,17 +148,17 @@ namespace Barotrauma
             {
                 if (item == null)
                 {
-                    throw new InvalidOperationException("Tried to add a null item to an inventory slot.");
+                    throw new InvalidOperationException($"Tried to add a null item to an inventory slot (inventory: {inventory.Owner?.ToString() ?? "null"}).");
                 }
                 if (items.Count > 0)
                 {
                     if (items[0].Prefab.Identifier != item.Prefab.Identifier)
                     {
-                        throw new InvalidOperationException("Tried to stack different types of items.");
+                        throw new InvalidOperationException($"Tried to stack different types of items ({items[0].Prefab.Identifier} and {item.Prefab.Identifier}) in the inventory of {inventory.Owner?.ToString() ?? "null"}.");
                     }
                     else if (items.Count + 1 > item.Prefab.GetMaxStackSize(inventory))
                     {
-                        throw new InvalidOperationException($"Tried to add an item to a full inventory slot (stack already full, x{items.Count} {items.First().Prefab.Identifier}).");
+                        throw new InvalidOperationException($"Tried to add an item to a full inventory slot (stack already full, x{items.Count} {items.First().Prefab.Identifier}) in the inventory of {inventory.Owner?.ToString() ?? "null"}.");
                     }
                 }
                 if (items.Contains(item)) { return; }
@@ -262,7 +269,8 @@ namespace Barotrauma
             }
         }
 
-        private readonly List<Item> allItemsList = new List<Item>();
+        private readonly Stack<List<Item>> allItemsBuffer = new();
+
         /// <summary>
         /// All items contained in the inventory. Allows modifying the contents of the inventory while being enumerated.
         /// </summary>
@@ -270,9 +278,23 @@ namespace Barotrauma
         {
             get
             {
-                allItemsList.Clear();
-                allItemsList.AddRange(AllItems);
-                return allItemsList;
+                // Keep a stack of reusable item lists to prevent garbage from being generated while allowing the enumeration to be nested
+                List<Item> itemList = allItemsBuffer.Count > 0 ? allItemsBuffer.Pop() : new List<Item>();
+
+                itemList.Clear();
+                itemList.AddRange(AllItems);
+
+                try
+                {
+                    foreach (var item in itemList)
+                    {
+                        yield return item;
+                    }
+                }
+                finally
+                {
+                    allItemsBuffer.Push(itemList);
+                }
             }
         }
 
@@ -423,7 +445,7 @@ namespace Barotrauma
             return null;
         }
 
-        private bool IsIndexInRange(int index)
+        protected bool IsIndexInRange(int index)
         {
             return index >= 0 && index < slots.Length;
         }
@@ -523,7 +545,7 @@ namespace Barotrauma
         /// <summary>
         /// Can the item be put in the specified slot.
         /// </summary>
-        public virtual bool CanBePutInSlot(Item item, int i, bool ignoreCondition = false)
+        public virtual bool CanBePutInSlot(Item item, int i, bool ignoreCondition = false, bool allowReplacingIntactLimb = false)
         {
             if (ItemOwnsSelf(item)) { return false; }
             if (!IsIndexInRange(i)) { return false; }
@@ -569,8 +591,11 @@ namespace Barotrauma
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
         /// </summary>
-        public virtual bool TryPutItem(Item item, Character user, IEnumerable<InvSlotType> allowedSlots = null, bool createNetworkEvent = true, bool ignoreCondition = false, bool triggerOnInsertedEffects = true)
+        public virtual bool TryPutItem(Item item, Character user, IEnumerable<InvSlotType> allowedSlots = null, bool createNetworkEvent = true, bool ignoreCondition = false, bool triggerOnInsertedEffects = true, 
+            bool ignoreStuckInHand = false, bool allowReplacingIntactLimb = false)
         {
+            if (!ignoreStuckInHand && item.IsStuckInHandSlot) { return false; }
+
             int slot = FindAllowedSlot(item, ignoreCondition);
             if (slot < 0) { return false; }
 
@@ -578,7 +603,8 @@ namespace Barotrauma
             return true;
         }
 
-        public virtual bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true, bool ignoreCondition = false, bool triggerOnInsertedEffects = true)
+        public virtual bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true, bool ignoreCondition = false, bool triggerOnInsertedEffects = true, 
+            bool ignoreStuckInHand = false, bool allowReplacingIntactLimb = false)
         {
             if (!IsIndexInRange(i))
             {
@@ -600,7 +626,9 @@ namespace Barotrauma
                 return false;
             }
 
-            if (Owner == null) return false;
+            if (Owner == null) { return false; }
+            if (!ignoreStuckInHand && item.IsStuckInHandSlot) { return false; }
+
             //there's already an item in the slot
             if (slots[i].Any() && allowCombine)
             {
@@ -609,12 +637,12 @@ namespace Barotrauma
                     //item in the slot removed as a result of combining -> put this item in the now free slot
                     if (!slots[i].Any())
                     {
-                        return TryPutItem(item, i, allowSwapping, allowCombine, user, createNetworkEvent, ignoreCondition, triggerOnInsertedEffects);
+                        return TryPutItem(item, i, allowSwapping, allowCombine, user, createNetworkEvent, ignoreCondition, triggerOnInsertedEffects, ignoreStuckInHand, allowReplacingIntactLimb);
                     }
                     return true;
                 }
             }
-            if (CanBePutInSlot(item, i, ignoreCondition))
+            if (CanBePutInSlot(item, i, ignoreCondition, allowReplacingIntactLimb))
             {
                 PutItem(item, i, user, true, createNetworkEvent, triggerOnInsertedEffects);
                 return true;
@@ -625,13 +653,13 @@ namespace Barotrauma
                 if (itemInSlot.OwnInventory != null && 
                     !itemInSlot.OwnInventory.Contains(item) &&
                     itemInSlot.GetComponent<ItemContainer>()?.GetMaxStackSize(0) == 1 && 
-                    itemInSlot.OwnInventory.TrySwapping(0, item, user, createNetworkEvent, swapWholeStack: false))
+                    itemInSlot.OwnInventory.TrySwapping(0, item, user, createNetworkEvent, swapWholeStack: false, triggerOnInsertedEffects: triggerOnInsertedEffects))
                 {
                     return true;
                 }
                 return
-                    TrySwapping(i, item, user, createNetworkEvent, swapWholeStack: true) || 
-                    TrySwapping(i, item, user, createNetworkEvent, swapWholeStack: false);
+                    TrySwapping(i, item, user, createNetworkEvent, swapWholeStack: true, triggerOnInsertedEffects: triggerOnInsertedEffects) || 
+                    TrySwapping(i, item, user, createNetworkEvent, swapWholeStack: false, triggerOnInsertedEffects: triggerOnInsertedEffects);
             }
             else
             {
@@ -754,21 +782,29 @@ namespace Barotrauma
             return true;
         }
 
-        protected bool TrySwapping(int index, Item item, Character user, bool createNetworkEvent, bool swapWholeStack)
+        protected bool TrySwapping(int index, Item item, Character user, bool createNetworkEvent, bool swapWholeStack, bool triggerOnInsertedEffects)
         {
             if (item?.ParentInventory == null || !slots[index].Any()) { return false; }
-            if (slots[index].Items.Any(it => !it.IsInteractable(user))) { return false; }
+            if (slots[index].Items.Any(it => !it.IsInteractable(user) || it.IsStuckInHandSlot)) { return false; }
             if (!AllowSwappingContainedItems) { return false; }
 
             //swap to InvSlotType.Any if possible
             Inventory otherInventory = item.ParentInventory;
             bool otherIsEquipped = false;
             int otherIndex = -1;
-            for (int i = 0; i < otherInventory.slots.Length; i++)
+
+            CharacterInventory characterInventory = item.ParentInventory as CharacterInventory;
+            if (characterInventory != null)
             {
-                if (!otherInventory.slots[i].Contains(item)) { continue; }
-                if (otherInventory is CharacterInventory characterInventory)
+                //don't allow swapping items in health interface slots,
+                //items need to be manually removed from the slots first
+                if (characterInventory.IsInHealthInterfaceSlot(item))
                 {
+                    return false;
+                }
+                for (int i = 0; i < otherInventory.slots.Length; i++)
+                {
+                    if (!otherInventory.slots[i].Contains(item)) { continue; }
                     if (characterInventory.SlotTypes[i] == InvSlotType.Any)
                     {
                         otherIndex = i;
@@ -777,9 +813,10 @@ namespace Barotrauma
                     else
                     {
                         otherIsEquipped = true;
-                    }
+                    }                
                 }
             }
+
             if (otherIndex == -1)
             {
                 otherIndex = otherInventory.FindIndex(item);
@@ -794,6 +831,22 @@ namespace Barotrauma
             if (swapWholeStack)
             {
                 existingItems.AddRange(slots[index].Items);
+            }
+            else
+            {
+                existingItems.Add(slots[index].FirstOrDefault());
+            }
+            if (characterInventory != null)
+            {
+                //don't allow swapping items in health interface slots,
+                //items need to be manually removed from the slots first
+                if (existingItems.Any(characterInventory.IsInHealthInterfaceSlot))
+                {
+                    return false;
+                }
+            }
+            if (swapWholeStack)
+            {
                 for (int j = 0; j < capacity; j++)
                 {
                     if (existingItems.Any(existingItem => slots[j].Contains(existingItem))) { slots[j].RemoveAllItems(); }
@@ -801,7 +854,6 @@ namespace Barotrauma
             }
             else
             {
-                existingItems.Add(slots[index].FirstOrDefault());
                 for (int j = 0; j < capacity; j++)
                 {
                     if (existingItems.Any(existingItem => slots[j].Contains(existingItem))) { slots[j].RemoveItem(existingItems.First()); }
@@ -832,27 +884,28 @@ namespace Barotrauma
             if (otherIsEquipped)
             {
                 swapSuccessful =
-                    stackedItems.Distinct().All(stackedItem => TryPutItem(stackedItem, index, false, false, user, createNetworkEvent))
+                    stackedItems.Distinct().All(stackedItem => 
+                        TryPutItem(stackedItem, index, false, false, user, createNetworkEvent, triggerOnInsertedEffects: triggerOnInsertedEffects))
                     &&
-                    (existingItems.All(existingItem => otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent)) ||
-                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(), user, CharacterInventory.AnySlot, createNetworkEvent));
+                    (existingItems.All(existingItem => otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent, triggerOnInsertedEffects: triggerOnInsertedEffects)) ||
+                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(), user, CharacterInventory.AnySlot, createNetworkEvent, triggerOnInsertedEffects: triggerOnInsertedEffects));
             }
             else
             {
                 swapSuccessful =
-                    (existingItems.All(existingItem => otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent)) ||
-                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(), user, CharacterInventory.AnySlot, createNetworkEvent))
+                    (existingItems.All(existingItem => otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent, triggerOnInsertedEffects: triggerOnInsertedEffects)) ||
+                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(), user, CharacterInventory.AnySlot, createNetworkEvent, triggerOnInsertedEffects: triggerOnInsertedEffects))
                     &&
-                    stackedItems.Distinct().All(stackedItem => TryPutItem(stackedItem, index, false, false, user, createNetworkEvent));
+                    stackedItems.Distinct().All(stackedItem => TryPutItem(stackedItem, index, false, false, user, createNetworkEvent, triggerOnInsertedEffects: triggerOnInsertedEffects));
 
                 if (!swapSuccessful && existingItems.Count == 1 && existingItems[0].AllowDroppingOnSwapWith(item))
                 {
-                    if (!(existingItems[0].Container?.ParentInventory is CharacterInventory characterInv) ||
-                        !characterInv.TryPutItem(existingItems[0], user, new List<InvSlotType>() { InvSlotType.Any }))
+                    if (existingItems[0].Container?.ParentInventory is not CharacterInventory characterInv ||
+                        !characterInv.TryPutItem(existingItems[0], user, new List<InvSlotType>() { InvSlotType.Any }, triggerOnInsertedEffects: triggerOnInsertedEffects))
                     {
                         existingItems[0].Drop(user, createNetworkEvent);
                     }
-                    swapSuccessful = stackedItems.Distinct().Any(stackedItem => TryPutItem(stackedItem, index, false, false, user, createNetworkEvent));
+                    swapSuccessful = stackedItems.Distinct().Any(stackedItem => TryPutItem(stackedItem, index, false, false, user, createNetworkEvent, triggerOnInsertedEffects: triggerOnInsertedEffects));
 #if CLIENT
                     if (swapSuccessful)
                     {

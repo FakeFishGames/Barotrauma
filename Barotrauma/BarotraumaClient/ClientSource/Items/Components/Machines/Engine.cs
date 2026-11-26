@@ -1,8 +1,10 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Particles;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Xml.Linq;
+using System.Collections.Generic;
 
 namespace Barotrauma.Items.Components
 {
@@ -16,9 +18,12 @@ namespace Barotrauma.Items.Components
         private GUIScrollBar forceSlider;
         private GUITickBox autoControlIndicator;
 
+        [Obsolete("Use particleEmitters instead.")]
         private int particlesPerSec = 60;
+        [Obsolete("Use particleEmitters instead.")]
         private float particleTimer;
 
+        private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
 
         public float AnimSpeed
         {
@@ -34,6 +39,18 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(ContentXElement element)
         {
+            foreach (var subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "particleemitter":
+                        var emitter = new ParticleEmitter(subElement);
+                        particleEmitters.Add(emitter);
+                        TryAddParticleEmitterByID(emitter);
+                        break;
+                }
+            }
+
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.85f, 0.65f), GuiFrame.RectTransform, Anchor.Center)
             {
                 RelativeOffset = new Vector2(0, 0.04f)
@@ -75,10 +92,11 @@ namespace Barotrauma.Items.Components
             forceSlider = new GUIScrollBar(new RectTransform(new Vector2(0.95f, 0.45f), sliderArea.RectTransform, Anchor.Center), barSize: 0.1f, style: "DeviceSlider")
             {
                 Step = 0.05f,
+                Range = new Vector2(MinThrust, MaxThrust),
                 OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
                 {
                     lastReceivedTargetForce = null;
-                    float newTargetForce = barScroll * 200.0f - 100.0f;
+                    float newTargetForce = scrollBar.BarScrollValue;
                     if (Math.Abs(newTargetForce - targetForce) < 0.01) { return false; }
 
                     targetForce = newTargetForce;
@@ -94,7 +112,7 @@ namespace Barotrauma.Items.Components
             };
 
             var textsArea = new GUIFrame(new RectTransform(new Vector2(1, 0.25f), sliderArea.RectTransform, Anchor.BottomCenter), style: null);
-            var backwardsLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), textsArea.RectTransform, Anchor.CenterLeft), TextManager.Get("EngineBackwards"),
+            var backwardsLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), textsArea.RectTransform, Anchor.CenterLeft), TextManager.Get( AllowBackwardsThrust ? "EngineBackwards" : "EngineOff"),
                 textColor: GUIStyle.TextColorNormal, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft);
             var forwardsLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), textsArea.RectTransform, Anchor.CenterRight), TextManager.Get("EngineForwards"),
                 textColor: GUIStyle.TextColorNormal, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterRight);
@@ -120,10 +138,9 @@ namespace Barotrauma.Items.Components
 
             if (!PlayerInput.PrimaryMouseButtonHeld())
             {
-                float newScroll = (targetForce + 100.0f) / 200.0f;
-                if (Math.Abs(newScroll - forceSlider.BarScroll) > 0.01f)
+                if (Math.Abs(targetForce - forceSlider.BarScrollValue) > 0.01f)
                 {
-                    forceSlider.BarScroll = newScroll;
+                    forceSlider.BarScrollValue = targetForce;
                 }
             }
         }
@@ -142,12 +159,38 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        partial void EmitParticles(float deltaTime, Vector2 forceVector)
+        {
+            if (DisablePropellerParticles) { return; }
+
+            Vector2 particlePos =
+                turret == null ?
+                item.WorldPosition :
+                new Vector2(item.WorldRect.X + turret.TransformedBarrelPos.X, item.WorldRect.Y - turret.TransformedBarrelPos.Y);                
+            particlePos += GetRotatedVector(PropellerPos, onlyIfRotationAffectsThrustDirection: false) * item.Scale;
+            foreach (var particleEmitter in particleEmitters)
+            {
+                particleEmitter.Emit(deltaTime, particlePos, angle: -Rotation + MathHelper.Pi, particleRotation: Rotation + MathHelper.Pi, velocityMultiplier: Math.Abs(force) / 100.0f);
+            }
+
+            float particleInterval = 1.0f / particlesPerSec;
+            particleTimer += deltaTime;
+            while (particleTimer > particleInterval)
+            {
+                Vector2 particleVel = -forceVector.ClampLength(5000.0f) / 5.0f;
+                GameMain.ParticleManager.CreateParticle("bubbles", particlePos,
+                    particleVel * Rand.Range(0.8f, 1.1f),
+                    0.0f, item.CurrentHull);
+                particleTimer -= particleInterval;
+            }
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
             if (propellerSprite != null)
             {
                 Vector2 drawPos = item.DrawPosition;
-                drawPos += PropellerPos;
+                drawPos += GetRotatedVector(PropellerPos, onlyIfRotationAffectsThrustDirection: false) * item.Scale;
                 drawPos.Y = -drawPos.Y;
                 propellerSprite.Draw(spriteBatch, (int)Math.Floor(spriteIndex), drawPos, overrideColor ?? Color.White, propellerSprite.Origin, 0.0f, Vector2.One);
             }
@@ -155,7 +198,7 @@ namespace Barotrauma.Items.Components
             if (editing && !DisablePropellerDamage && propellerDamage != null && !GUI.DisableHUD)
             {
                 Vector2 drawPos = item.DrawPosition;
-                drawPos += PropellerPos * item.Scale;
+                drawPos += GetRotatedVector(PropellerPos, onlyIfRotationAffectsThrustDirection: false) * item.Scale;
                 drawPos.Y = -drawPos.Y;
                 spriteBatch.DrawCircle(drawPos, propellerDamage.DamageRange * item.Scale, 16, GUIStyle.Red, thickness: 2);
             }

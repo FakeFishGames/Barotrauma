@@ -1,11 +1,11 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma;
 
-partial class UIHighlightAction : EventAction
+public partial class UIHighlightAction : EventAction
 {
     private static readonly Color highlightColor = Color.Orange;
 

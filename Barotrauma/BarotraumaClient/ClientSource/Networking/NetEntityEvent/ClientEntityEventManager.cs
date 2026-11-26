@@ -42,7 +42,8 @@ namespace Barotrauma.Networking
             thisClient = client;
         }
 
-        public void CreateEvent(IClientSerializable entity, NetEntityEvent.IData extraData = null, bool requireControlledCharacter = true)
+        /// <inheritdoc cref="NetworkMember.CreateEntityEvent" />
+        public void CreateEvent(IClientSerializable entity, NetEntityEvent.IData extraData = null, bool requireControlledCharacter = true, Option<uint> pluginContentPackageHash = default)
         {
             if (GameMain.Client == null) { return; }
             if (requireControlledCharacter && GameMain.Client.Character == null) { return; }
@@ -52,7 +53,8 @@ namespace Barotrauma.Networking
             var newEvent = new ClientEntityEvent(
                 entity,
                 eventId: (UInt16)(ID + 1),
-                characterStateId: GameMain.Client.Character?.LastNetworkUpdateID ?? Entity.NullEntityID);
+                characterStateId: GameMain.Client.Character?.LastNetworkUpdateID ?? Entity.NullEntityID,
+                pluginContentPackageHash: pluginContentPackageHash);
             if (extraData != null) { newEvent.SetData(extraData); }
 
             for (int i = events.Count - 1; i >= 0; i--)
@@ -127,6 +129,12 @@ namespace Barotrauma.Networking
                         "received midround syncing msg, unreceived: " + unreceivedEntityEventCount +
                         ", first new ID: " + firstNewID, Microsoft.Xna.Framework.Color.Yellow);
                 }
+                
+                // Notify plugins that midround sync has started
+                foreach (var midroundSyncStarted in PluginData.GetHooks<PluginMidRoundSyncReceiveStartedDelegate>())
+                {
+                    midroundSyncStarted();
+                }
             }
             else
             {
@@ -140,6 +148,12 @@ namespace Barotrauma.Networking
                     }
                     lastReceivedID = (UInt16)(firstNewID - 1);
                     firstNewID = null;
+                    
+                    // Notify plugins that midround sync has completed
+                    foreach (var midroundSyncEnded in PluginData.GetHooks<PluginMidRoundSyncReceiveCompletedDelegate>())
+                    {
+                        midroundSyncEnded();
+                    }
                 }
             }
 
@@ -176,8 +190,13 @@ namespace Barotrauma.Networking
                     return false;
                 }
 
-                UInt16 thisEventID = (UInt16)(firstEventID + (UInt16)i);                
+                UInt16 thisEventID = (UInt16)(firstEventID + (UInt16)i);
                 UInt16 entityID = msg.ReadUInt16();
+
+                // 0 if vanilla, otherwise the hash of the content package
+                uint pluginContentPackageHash = msg.ReadUInt32();
+
+                int msgLength = (int)msg.ReadVariableUInt32();
 
                 if (entityID == Entity.NullEntityID)
                 {
@@ -190,8 +209,6 @@ namespace Barotrauma.Networking
                     if (thisEventID == (UInt16)(lastReceivedID + 1)) { lastReceivedID++; }
                     continue;
                 }
-
-                int msgLength = (int)msg.ReadVariableUInt32();
                 
                 IServerSerializable entity = Entity.FindEntityByID(entityID) as IServerSerializable;
                 tempEntityList.Add(entity);
@@ -218,8 +235,14 @@ namespace Barotrauma.Networking
                         GameMain.Client.ReportError(ClientNetError.MISSING_ENTITY, eventId: thisEventID, entityId: entityID);
                         return false;
                     }
-                    
-                    msg.BitPosition += msgLength * 8;
+                    try
+                    {
+                        msg.BitPosition += msgLength * 8;
+                    }
+                    catch (Exception innerException)
+                    {
+                        throw new EntityEventException("Failed to read event.", entity as Entity, innerException);
+                    }
                 }
                 else
                 {
@@ -232,7 +255,14 @@ namespace Barotrauma.Networking
                     lastReceivedID++;
                     try
                     {
-                        ReadEvent(msg, entity, sendingTime);
+                        if (pluginContentPackageHash == VanillaEventHash)
+                        {
+                            ReadEvent(msg, entity, sendingTime);
+                        }
+                        else
+                        {
+                            PluginData.ReadClientEvent(pluginContentPackageHash, msg, entity, sendingTime);
+                        }
                         msg.ReadPadBits();
                     }
                     catch (Exception exception)

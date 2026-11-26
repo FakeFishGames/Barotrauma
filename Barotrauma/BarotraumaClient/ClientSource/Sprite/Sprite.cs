@@ -45,11 +45,11 @@ namespace Barotrauma
 
         private static readonly List<WeakReference<Sprite>> list = new List<WeakReference<Sprite>>();
 
-        static partial void AddToList(Sprite elem)
+        static partial void AddToList(Sprite sprite)
         {
             lock (list)
             {
-                list.Add(new WeakReference<Sprite>(elem));
+                list.Add(new WeakReference<Sprite>(sprite));
             }
         }
 
@@ -219,10 +219,10 @@ namespace Barotrauma
             Identifier fullPath = Path.GetFullPath(file).CleanUpPathCrossPlatform(correctFilenameCase: false).ToIdentifier();
             lock (list)
             {
-                if (textureRefCounts.ContainsKey(fullPath))
+                if (textureRefCounts.TryGetValue(fullPath, out TextureRefCounter textureRefCounter))
                 {
-                    textureRefCounts[fullPath].RefCount++;
-                    return textureRefCounts[fullPath].Texture;
+                    textureRefCounter.RefCount++;
+                    return textureRefCounter.Texture;
                 }
             }
 
@@ -236,15 +236,20 @@ namespace Barotrauma
                 }
 
                 Texture2D newTexture = TextureLoader.FromFile(file, compress, contentPackage: contentPackage);
+                bool requestDispose = false;
                 lock (list)
                 {
                     if (!textureRefCounts.TryAdd(fullPath,
                             new TextureRefCounter { RefCount = 1, Texture = newTexture }))
                     {
-                        CrossThread.RequestExecutionOnMainThread(() => newTexture.Dispose());
+                        requestDispose = true;
                         textureRefCounts[fullPath].RefCount++;
                         return textureRefCounts[fullPath].Texture;
                     }
+                }
+                if (requestDispose)
+                {
+                    CrossThread.RequestExecutionOnMainThread(newTexture.Dispose);
                 }
                 return newTexture;
             }

@@ -5,7 +5,7 @@ using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
-    partial class Character
+    public partial class Character
     {
         public static Character Controlled => null;
 

@@ -151,7 +151,8 @@ namespace Barotrauma.Sounds
             int alError = Al.GetError();
             if (alError != Al.NoError)
             {
-                throw new Exception("Failed to set regular buffer data for non-streamed audio! " + Al.GetErrorString(alError));
+                OnBufferDataFailed("regular", alError);
+                return;
             }
 
             Al.BufferData(buffers.AlMuffledBuffer, ALFormat, muffleBuffer,
@@ -160,7 +161,17 @@ namespace Barotrauma.Sounds
             alError = Al.GetError();
             if (alError != Al.NoError)
             {
-                throw new Exception("Failed to set muffled buffer data for non-streamed audio! " + Al.GetErrorString(alError));
+                OnBufferDataFailed("muffled", alError);
+                return;
+            }
+
+            void OnBufferDataFailed(string bufferType, int error)
+            {
+                // Buffers taken from another sound may still be attached to its source for a moment, as OpenAL implementations
+                // (such as Apple's) can stop sources asynchronously.
+                // So we return the buffers to the pool and skip the sound instead of crashing.
+                DebugConsole.AddWarning($"Failed to set {bufferType} buffer data for non-streamed audio ({Filename})! {Al.GetErrorString(error)}");
+                buffers.Dispose();
             }
         }
 

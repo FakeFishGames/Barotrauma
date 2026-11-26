@@ -1,13 +1,10 @@
-using System;
-using System.Collections.Immutable;
-using System.Reflection;
-using System.Xml.Linq;
+﻿using System;
 
 namespace Barotrauma
 {
     [RequiredByCorePackage]
 #if CLIENT
-    sealed class SoundsFile : GenericPrefabFile<SoundPrefab>
+    public sealed class SoundsFile : GenericPrefabFile<SoundPrefab>
     {
         public SoundsFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

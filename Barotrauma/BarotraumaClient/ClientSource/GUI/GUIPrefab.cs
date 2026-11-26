@@ -82,6 +82,9 @@ namespace Barotrauma
 
         public LanguageIdentifier Language { get; private set; }
 
+        public ImmutableDictionary<Identifier, uint> IconFontCharacterMap { get; private set; }
+            = ImmutableDictionary<Identifier, uint>.Empty;
+
         public GUIFontPrefab(ContentXElement element, UIStyleFile file) : base(element, file)
         {
             this.element = element;
@@ -101,10 +104,12 @@ namespace Barotrauma
                 size,
                 GameMain.Instance.GraphicsDevice,
                 dynamicLoading,
-                shcc)
+                iconFont: ExtractIconFont(element, out var iconCharacterMap),
+                speciallyHandledCharCategory: shcc)
             {
                 ForceUpperCase = element.GetAttributeBool("forceuppercase", false)
             };
+            IconFontCharacterMap = iconCharacterMap;
 
             var fallbackFonts = new Dictionary<TextManager.SpeciallyHandledCharCategory, ScalableFont>();
             foreach (var flag in TextManager.SpeciallyHandledCharCategories)
@@ -126,6 +131,32 @@ namespace Barotrauma
             font = null;
             specialHandlingFonts?.Values.ForEach(f => f.Dispose());
             specialHandlingFonts = null;
+        }
+
+        private ScalableFont? ExtractIconFont(ContentXElement element, out ImmutableDictionary<Identifier, uint> characterMap)
+        {
+            foreach (var subElement in element.Elements().Reverse())
+            {
+                if (subElement.NameAsIdentifier() != "icons") { continue; }
+                uint overrideFontSize = GetFontSize(subElement, defaultSize: font?.Size ?? 14);
+
+                uint[] arrayRange = subElement.GetAttributeUIntArray("iconrange", [0, 0x10FFFF]);
+                if (arrayRange.Length != 2)
+                {
+                    DebugConsole.ThrowError($"Invalid range for character map: {subElement}");
+                    continue;
+                }
+
+                Range<uint> range = new Range<uint>(arrayRange[0], arrayRange[1]);
+                characterMap = ScalableFont.GetGlyphNamesForFont(subElement.GetAttributeContentPath("file")!.FullPath, range).ToImmutableDictionary();
+
+                return new ScalableFont(subElement, overrideFontSize, GameMain.Instance.GraphicsDevice,
+                                        charRanges: [TextManager.IconRange.Start, TextManager.IconRange.End],
+                                        baseChar: TextManager.IconRange.Start);
+            }
+
+            characterMap = ImmutableDictionary<Identifier, uint>.Empty;
+            return null;
         }
 
         private ScalableFont? ExtractFont(TextManager.SpeciallyHandledCharCategory flag, ContentXElement element)
@@ -245,41 +276,36 @@ namespace Barotrauma
         
         public ScalableFont? GetFontForStr(string str) =>
             Prefabs.ActivePrefab?.GetFontForCategory(TextManager.GetSpeciallyHandledCategories(str));
-        
-        public void DrawString(SpriteBatch sb, LocalizedString text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects spriteEffects, float layerDepth)
-        {
-            DrawString(sb, text.Value, position, color, rotation, origin, scale, spriteEffects, layerDepth);
-        }
 
-        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects spriteEffects, float layerDepth)
-        {
-            GetFontForStr(text)?.DrawString(sb, text, position, color, rotation, origin, scale, spriteEffects, layerDepth);
-        }
+        public void DrawString(SpriteBatch sb, LocalizedString text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects spriteEffects, float layerDepth, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, Strikethrough? strikethrough = null)
+            => GetFontForStr(text)?.DrawString(sb, text.Value, position, color, rotation, origin, scale, spriteEffects, layerDepth, alignment, forceUpperCase, strikethrough);
 
-        public void DrawString(SpriteBatch sb, LocalizedString text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects spriteEffects, float layerDepth, Alignment alignment = Alignment.TopLeft)
-        {
-            DrawString(sb, text.Value, position, color, rotation, origin, scale, spriteEffects, layerDepth, alignment);
-        }
+        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects spriteEffects, float layerDepth, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, Strikethrough? strikethrough = null)
+            => GetFontForStr(text)?.DrawString(sb, text, position, color, rotation, origin, scale, spriteEffects, layerDepth, alignment, forceUpperCase, strikethrough);
 
-        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects spriteEffects, float layerDepth, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit)
-        {
-            GetFontForStr(text)?.DrawString(sb, text, position, color, rotation, origin, scale, spriteEffects, layerDepth, alignment, forceUpperCase);
-        }
+        public void DrawString(SpriteBatch sb, LocalizedString text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects spriteEffects, float layerDepth, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, Strikethrough? strikethrough = null)
+            => GetFontForStr(text)?.DrawString(sb, text.Value, position, color, rotation, origin, scale, spriteEffects, layerDepth, alignment, forceUpperCase, strikethrough);
 
-        public void DrawString(SpriteBatch sb, LocalizedString text, Vector2 position, Color color, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, bool italics = false)
-        {
-            DrawString(sb, text.Value, position, color, forceUpperCase, italics);
-        }
+        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects spriteEffects, float layerDepth, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, Strikethrough? strikethrough = null)
+            => GetFontForStr(text)?.DrawString(sb, text, position, color, rotation, origin, scale, spriteEffects, layerDepth, alignment, forceUpperCase, strikethrough);
 
-        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, bool italics = false)
-        {
-            GetFontForStr(text)?.DrawString(sb, text, position, color, forceUpperCase, italics);
-        }
+        public void DrawString(SpriteBatch sb, LocalizedString text, Vector2 position, Color color, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, bool italics = false, Strikethrough? strikethrough = null)
+            => GetFontForStr(text)?.DrawString(sb, text.Value, position, color, forceUpperCase, italics, strikethrough);
 
-        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects spriteEffects, float layerDepth, in ImmutableArray<RichTextData>? richTextData, int rtdOffset = 0, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit)
-        {
-            GetFontForStr(text)?.DrawStringWithColors(sb, text, position, color, rotation, origin, scale, spriteEffects, layerDepth, richTextData, rtdOffset, alignment, forceUpperCase);
-        }
+        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, bool italics = false, Strikethrough? strikethrough = null)
+            => GetFontForStr(text)?.DrawString(sb, text, position, color, forceUpperCase, italics, strikethrough);
+
+        public void DrawStringWithColors(SpriteBatch sb, LocalizedString text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects spriteEffects, float layerDepth, in ImmutableArray<RichTextData>? richTextData, int rtdOffset = 0, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, Strikethrough? strikethrough = null)
+            => GetFontForStr(text)?.DrawStringWithColors(sb, text.Value, position, color, rotation, origin, scale, spriteEffects, layerDepth, richTextData, rtdOffset, alignment, forceUpperCase, strikethrough);
+
+        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects spriteEffects, float layerDepth, in ImmutableArray<RichTextData>? richTextData, int rtdOffset = 0, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, Strikethrough? strikethrough = null)
+            => GetFontForStr(text)?.DrawStringWithColors(sb, text, position, color, rotation, origin, scale, spriteEffects, layerDepth, richTextData, rtdOffset, alignment, forceUpperCase, strikethrough);
+
+        public void DrawStringWithColors(SpriteBatch sb, LocalizedString text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects spriteEffects, float layerDepth, in ImmutableArray<RichTextData>? richTextData, int rtdOffset = 0, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, Strikethrough? strikethrough = null)
+            => GetFontForStr(text)?.DrawStringWithColors(sb, text.Value, position, color, rotation, origin, scale, spriteEffects, layerDepth, richTextData, rtdOffset, alignment, forceUpperCase, strikethrough);
+
+        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects spriteEffects, float layerDepth, in ImmutableArray<RichTextData>? richTextData, int rtdOffset = 0, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, Strikethrough? strikethrough = null)
+            => GetFontForStr(text)?.DrawStringWithColors(sb, text, position, color, rotation, origin, scale, spriteEffects, layerDepth, richTextData, rtdOffset, alignment, forceUpperCase, strikethrough);
 
         public Vector2 MeasureString(LocalizedString str, bool removeExtraSpacing = false)
         {

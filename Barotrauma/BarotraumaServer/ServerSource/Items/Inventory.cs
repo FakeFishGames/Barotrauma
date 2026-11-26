@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class Inventory : IClientSerializable
+    public partial class Inventory : IClientSerializable
     {
         private readonly Dictionary<Client, List<ushort>[]> receivedItemIds = new Dictionary<Client, List<ushort>[]>();
 
@@ -109,15 +109,39 @@ namespace Barotrauma
                 
                 return itemAccessibility;
             }
+            
+            // More restricted "adding" of handcuffs: we can't allow putting handcuffs on a player just because dragging and dropping is allowed
+            bool IsHandcuffingDenied(Item item) =>
+                item.HasTag(Tags.HandLockerItem) &&
+                !sender.Character.CanAccessInventory(this, CharacterInventory.AccessLevel.AllowBotsAndPets);
 
             void HandleRemovedItems()
             {
+                CharacterInventory characterInventory = this as CharacterInventory;
                 for (int slotIndex = 0; slotIndex < capacity; slotIndex++)
                 {
                     foreach (Item item in slots[slotIndex].Items.ToList())
                     {
-                        bool shouldBeRemoved = !receivedItemIdsFromClient[slotIndex].Contains(item.ID) && 
-                                               item.IsInteractable(sender.Character); // item is interactable to sender: not hidden and player team
+                        bool isReceivedItem = !receivedItemIdsFromClient[slotIndex].Contains(item.ID);
+
+                        if (isReceivedItem && item.IsStuckInHandSlot && characterInventory != null)
+                        {
+                            // The client wants the slot emptied, but the item is forcibly held (e.g. a swappable prosthetic's tool/weapon).
+                            // Let whatever is keeping it there decide whether to release it for the particular item the client is trying to replace it with.
+                            foreach (ushort id in receivedItemIdsFromClient[slotIndex])
+                            {
+                                if (Entity.FindEntityByID(id) is Item itemToEquip &&
+                                    itemToEquip.IsInteractable(sender.Character) && !IsHandcuffingDenied(itemToEquip))
+                                {
+                                    characterInventory.AttemptToFreeHandsFor(itemToEquip);
+                                    // The item is no longer in the slot, no need to continue
+                                    if (!slots[slotIndex].Contains(item)) { break; }
+                                }
+                            }
+                            if (!slots[slotIndex].Contains(item)) { continue; }
+                        }
+
+                        bool shouldBeRemoved = isReceivedItem && item.IsInteractable(sender.Character) && !item.IsStuckInHandSlot;
                         if (shouldBeRemoved)
                         {
                             bool itemAccessDenied = prevItems.Contains(item) && // if the item was in the inventory before
@@ -193,12 +217,8 @@ namespace Barotrauma
                                                     (item.PreviousParentInventory == null || 
                                                     !sender.Character.CanAccessInventory(item.PreviousParentInventory));
 
-                            //more restricted "adding" of handcuffs: we can't allow putting handcuffs on a player just because dragging and dropping is allowed
-                            if (item.HasTag(Tags.HandLockerItem) && !itemAccessDenied)
-                            {
-                                itemAccessDenied =
-                                    !sender.Character.CanAccessInventory(this, CharacterInventory.AccessLevel.AllowBotsAndPets);
-                            }
+                            itemAccessDenied |= IsHandcuffingDenied(item);
+
                             if (itemAccessDenied)
                             {
 #if DEBUG || UNSTABLE
@@ -262,7 +282,15 @@ namespace Barotrauma
                     {
                         GameServer.Log($"{GameServer.CharacterLogName(sender.Character)} removed {amountText}{item.Name} from the inventory of {Owner}", ServerLog.MessageType.Inventory);
                     }
-                    item.CreateDroppedStack(matchingItems, allowClientExecute: true);                
+
+                    // Create a stack if
+                    // 1. the items were actually dropped (not moved to another inventory)
+                    // 2. they have a physics body as CreateDroppedStack requires, otherwise it'll spam the log with errors
+                    var actuallyDroppedItems = matchingItems.Where(it => it.ParentInventory == null && it.body != null).ToList();
+                    if (actuallyDroppedItems.Count > 1)
+                    {
+                        actuallyDroppedItems[0].CreateDroppedStack(actuallyDroppedItems, allowClientExecute: true);
+                    }
                 }
             }
             #endregion

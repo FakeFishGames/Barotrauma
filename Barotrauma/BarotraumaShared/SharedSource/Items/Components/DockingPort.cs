@@ -13,7 +13,7 @@ using Barotrauma.Lights;
 
 namespace Barotrauma.Items.Components
 {
-    partial class DockingPort : ItemComponent, IDrawableComponent, IServerSerializable
+    public partial class DockingPort : ItemComponent, IDrawableComponent, IServerSerializable
     {
         public enum DirectionType
         {
@@ -313,6 +313,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            bool sendOnDockedSignal = false;
             if (joint is not WeldJoint)
             {
                 DockingDir = GetDir(DockingTarget);
@@ -340,8 +341,7 @@ namespace Barotrauma.Items.Components
 
                 ConnectWireBetweenPorts();
                 CreateJoint(true);
-                item.SendSignal("1", "on_dock");
-                DockingTarget.Item.SendSignal("1", "on_dock");
+                sendOnDockedSignal = true;
 
 #if SERVER
                 if (GameMain.Server != null && (!item.Submarine?.Loading ?? true))
@@ -356,7 +356,6 @@ namespace Barotrauma.Items.Components
                 }
 #endif
             }
-
 
             List<MapEntity> removedEntities = item.linkedTo.Where(e => e.Removed).ToList();
             foreach (MapEntity removed in removedEntities) { item.linkedTo.Remove(removed); }
@@ -378,6 +377,14 @@ namespace Barotrauma.Items.Components
                     myWayPoint.ConnectTo(targetWayPoint);
                 }
             }
+
+            //send these signals last, since they might be wired in a way that toggles docking,
+            //which would cause issues if we do it mid-way through the method (e.g. DockingTarget set to null when we still need it)
+            if (sendOnDockedSignal)
+            {
+                item.SendSignal("1", "on_dock");
+                DockingTarget.Item.SendSignal("1", "on_dock");
+            }
         }
 
 
@@ -389,10 +396,7 @@ namespace Barotrauma.Items.Components
                 joint = null;
             }
 
-            Vector2 offset = IsHorizontal ?
-                Vector2.UnitX * DockingDir :
-                Vector2.UnitY * DockingDir;
-            offset *= DockedDistance * 0.5f * item.Scale;
+            Vector2 offset = GetDockedOffsetFromThisPort() * 0.5f;
 
             Vector2 pos1 = item.WorldPosition + offset;
             Vector2 pos2 = DockingTarget.item.WorldPosition - offset;
@@ -419,6 +423,37 @@ namespace Barotrauma.Items.Components
                 joint = distanceJoint;
                 joint.CollideConnected = true;
             }
+        }
+
+        /// <summary>
+        /// Offset from this port to the port it's docked to when fully docked.
+        /// The ports aren't at the same position when docked, but kept <see cref="DockedDistance"/> (scaled) apart by the joint between the subs.
+        /// </summary>
+        public Vector2 GetDockedOffset()
+        {
+            if (DockingTarget == null) { return Vector2.Zero; }
+            //the port that created the joint determines the distance
+            if (joint == null && DockingTarget.joint != null)
+            {
+                return -DockingTarget.GetDockedOffsetFromThisPort();
+            }
+            return GetDockedOffsetFromThisPort();
+        }
+
+        /// <summary>
+        /// The world position <paramref name="subPort"/>'s submarine needs to be at to be docked to <paramref name="targetPort"/> from below,
+        /// with the ports kept <see cref="DockedDistance"/> apart. Works before docking, unlike <see cref="Submarine.CalculateDockOffset"/>.
+        /// </summary>
+        public static Vector2 GetSubPositionForDockingFromBelow(DockingPort subPort, DockingPort targetPort)
+        {
+            Vector2 subPortOffset = subPort.Item.WorldPosition - subPort.Item.Submarine.WorldPosition;
+            return targetPort.Item.WorldPosition - subPortOffset - Vector2.UnitY * targetPort.DockedDistance;
+        }
+
+        private Vector2 GetDockedOffsetFromThisPort()
+        {
+            Vector2 dir = IsHorizontal ? Vector2.UnitX : Vector2.UnitY;
+            return dir * DockingDir * DockedDistance * item.Scale;
         }
 
         public int GetDir(DockingPort dockingTarget = null)
@@ -1143,7 +1178,11 @@ namespace Barotrauma.Items.Components
             if (!obstructedWayPointsDisabled && dockingState >= 0.99f)
             {
                 Item.Submarine.RefreshOutdoorNodes();
-                Item.Submarine.DisableObstructedWayPoints(DockingTarget?.Item.Submarine);
+                foreach (var connectedSub in Item.Submarine.GetConnectedSubs())
+                {
+                    if (connectedSub == Item.Submarine) { continue; }
+                    Item.Submarine.DisableObstructedWayPoints(connectedSub);
+                }
                 obstructedWayPointsDisabled = true;
             }
         }
@@ -1156,6 +1195,24 @@ namespace Barotrauma.Items.Components
             hulls[1]?.Remove(); hulls[1] = null;
             gap?.Remove(); gap = null;
             RemoveConvexHulls();
+
+            if (doorBody != null)
+            {
+                GameMain.World.Remove(doorBody);
+                doorBody = null;
+            }
+
+            if (bodies != null)
+            {
+                for (int i = 0; i < bodies.Length; i++)
+                {
+                    if (bodies[i] != null)
+                    {
+                        GameMain.World.Remove(bodies[i]);
+                        bodies[i] = null;
+                    }
+                }
+            }
 
             overlaySprite?.Remove();
             overlaySprite = null;

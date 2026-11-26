@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class EntitySpawner : Entity, IServerSerializable
+    public partial class EntitySpawner : Entity, IServerSerializable
     {
         private enum SpawnableType { Item, Character };
         
@@ -28,6 +28,10 @@ namespace Barotrauma
             public readonly Option<float> Condition;
             public readonly Option<int> Quality;
 
+            /// <summary>
+            /// Should the item spawn even if it can't fit in the inventory it's supposed to spawn in?
+            /// Setting this to false also prevents the item from spawning if the inventory has been removed.
+            /// </summary>
             public bool SpawnIfInventoryFull = true;
             public bool IgnoreLimbSlots = false;
             public InvSlotType Slot = InvSlotType.None;
@@ -70,7 +74,8 @@ namespace Barotrauma
                 Item spawnedItem;
                 if (Inventory?.Owner != null)
                 {
-                    if (!SpawnIfInventoryFull && !Inventory.CanProbablyBePut(Prefab))
+                    if (!SpawnIfInventoryFull && 
+                        (!Inventory.CanProbablyBePut(Prefab) || Inventory.Owner.Removed))
                     {
                         return null;
                     }
@@ -80,7 +85,7 @@ namespace Barotrauma
                     SetItemProperties(spawnedItem);
 
                     var slot = Slot != InvSlotType.None ? Slot.ToEnumerable() : spawnedItem.AllowedSlots;
-                    if (!Inventory.Owner.Removed && !Inventory.TryPutItem(spawnedItem, null, slot))
+                    if (!Inventory.Owner.Removed && !Inventory.TryPutItem(spawnedItem, user: null, allowedSlots: slot, allowReplacingIntactLimb: true))
                     {
                         if (IgnoreLimbSlots)
                         {
@@ -204,7 +209,20 @@ namespace Barotrauma
             }
         }
 
-        private readonly Queue<Either<IEntitySpawnInfo, Entity>> spawnOrRemoveQueue;
+
+        class EntityRemoveInfo
+        {
+            public readonly Entity Entity;
+            public readonly Action<Entity> OnRemoved;
+
+            public EntityRemoveInfo(Entity entity, Action<Entity> onRemoved)
+            {
+                Entity = entity;
+                OnRemoved = onRemoved;
+            }
+        }
+
+        private readonly Queue<Either<IEntitySpawnInfo, EntityRemoveInfo>> spawnOrRemoveQueue;
 
         public abstract class SpawnOrRemove : NetEntityEvent.IData
         {
@@ -227,7 +245,7 @@ namespace Barotrauma
             protected SpawnOrRemove(Entity entity)
             {
                 Entity = entity;
-                if (!(entity is Item { ParentInventory: { Owner: { } } } item)) { return; }
+                if (entity is not Item item || item.ParentInventory == null) { return; }
 
                 InventoryID = item.ParentInventory.Owner.ID;
                 SlotIndex = item.ParentInventory.FindIndex(item);
@@ -264,7 +282,7 @@ namespace Barotrauma
         public EntitySpawner()
             : base(null, Entity.EntitySpawnerID)
         {
-            spawnOrRemoveQueue = new Queue<Either<IEntitySpawnInfo, Entity>>();
+            spawnOrRemoveQueue = new Queue<Either<IEntitySpawnInfo, EntityRemoveInfo>>();
         }
 
         public override string ToString()
@@ -355,11 +373,11 @@ namespace Barotrauma
             spawnOrRemoveQueue.Enqueue(new CharacterSpawnInfo(speciesName, worldPosition, characterInfo, onSpawn));
         }
 
-        public void AddEntityToRemoveQueue(Entity entity)
+        public void AddEntityToRemoveQueue(Entity entity, Action<Entity> onRemoved = null)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (entity == null || IsInRemoveQueue(entity) || entity.Removed || entity.IdFreed) { return; }
-            if (entity is Item item) { AddItemToRemoveQueue(item); return; }
+            if (entity is Item item) { AddItemToRemoveQueue(item, onRemoved); return; }
             if (entity is Character)
             {
                 Character character = entity as Character;
@@ -375,15 +393,15 @@ namespace Barotrauma
 #endif
             }
 
-            spawnOrRemoveQueue.Enqueue(entity);
+            spawnOrRemoveQueue.Enqueue(new EntityRemoveInfo(entity, onRemoved));
         }
 
-        public void AddItemToRemoveQueue(Item item)
+        public void AddItemToRemoveQueue(Item item, Action<Entity> onRemoved = null)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (IsInRemoveQueue(item) || item.Removed) { return; }
 
-            spawnOrRemoveQueue.Enqueue(item);
+            spawnOrRemoveQueue.Enqueue(new EntityRemoveInfo(item, onRemoved));
             item.IsInRemoveQueue = true;
 
             foreach (var containedItem in item.ContainedItems)
@@ -424,7 +442,7 @@ namespace Barotrauma
         {
             foreach (var spawnOrRemove in spawnOrRemoveQueue)
             {
-                if (spawnOrRemove.TryGet(out Entity entityToRemove) && entityToRemove == entity) { return true; }
+                if (spawnOrRemove.TryGet(out EntityRemoveInfo entityRemoveInfo) && entityRemoveInfo.Entity == entity) { return true; }
             }
             return false;
         }
@@ -432,28 +450,39 @@ namespace Barotrauma
         public void Update(bool createNetworkEvents = true)
         {
             if (GameMain.NetworkMember is { IsClient: true }) { return; }
+            ProcessAll(createNetworkEvents);
+        }
+
+        public void ProcessAll(bool createNetworkEvents = true)
+        {
             while (spawnOrRemoveQueue.Count > 0)
             {
                 var spawnOrRemove = spawnOrRemoveQueue.Dequeue();
-                if (spawnOrRemove.TryGet(out Entity entityToRemove))
+                if (spawnOrRemove.TryGet(out EntityRemoveInfo entityRemoveInfo))
                 {
-                    if (entityToRemove is Item item)
+                    if (entityRemoveInfo.Entity is Item item)
                     {
                         item.SendPendingNetworkUpdates();
                     }
                     if (createNetworkEvents)
                     {
-                        CreateNetworkEventProjSpecific(new RemoveEntity(entityToRemove));
+                        //if the ID has already been freed (item removed manually?),
+                        //we should not, and cannot, create an event about removing it.
+                        if (!entityRemoveInfo.Entity.IdFreed)
+                        {
+                            CreateNetworkEventProjSpecific(new RemoveEntity(entityRemoveInfo.Entity));
+                        }
                     }
-                    entityToRemove.Remove();
+                    entityRemoveInfo.Entity.Remove();
+                    entityRemoveInfo.OnRemoved?.Invoke(entityRemoveInfo.Entity);
                 }
                 else if (spawnOrRemove.TryGet(out IEntitySpawnInfo spawnInfo))
-                { 
+                {
                     var spawnedEntity = spawnInfo.Spawn();
                     if (spawnedEntity == null) { continue; }
-                    if (createNetworkEvents) 
-                    { 
-                        CreateNetworkEventProjSpecific(new SpawnEntity(spawnedEntity)); 
+                    if (createNetworkEvents)
+                    {
+                        CreateNetworkEventProjSpecific(new SpawnEntity(spawnedEntity));
                     }
                     spawnInfo.OnSpawned(spawnedEntity);
                     GameMain.GameSession?.EventManager?.EntitySpawned(spawnedEntity);

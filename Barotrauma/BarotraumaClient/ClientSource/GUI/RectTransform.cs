@@ -50,7 +50,7 @@ namespace Barotrauma
                 parent = value;
                 if (parent != null && !parent.children.Contains(this))
                 {
-                    parent.children.Add(this);
+                    ModifyChildList(parent, children => children.Add(this));
                     RecalculateAll(false, true, true);
                     Parent.ChildrenChanged?.Invoke(this);
                 }
@@ -426,7 +426,10 @@ namespace Barotrauma
         private void Init(RectTransform parent = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
         {
             this.parent = parent;
-            parent?.children.Add(this);
+            if (parent != null)
+            {
+                ModifyChildList(parent, children => children.Add(this));
+            }
             Anchor = anchor;
             Pivot = pivot ?? MatchPivotToAnchor(Anchor);
         }
@@ -542,7 +545,9 @@ namespace Barotrauma
                 }
                 return false;
             }
-            if (!Parent.children.Remove(this))
+            bool removed = false;
+            ModifyChildList(Parent, children => removed = children.Remove(this));
+            if (!removed)
             {
                 if (displayErrors)
                 {
@@ -551,6 +556,22 @@ namespace Barotrauma
                 return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// GUICanvas children can get modified from a background thread (e.g. when a round is loaded asynchronously),
+        /// but GUICanvas.RefreshChildren processes them on the main thread -> modify them on the main thread to avoid modifying the list while enumerating it in another thread.
+        /// </summary>
+        private static void ModifyChildList(RectTransform parent, Action<List<RectTransform>> modify)
+        {
+            if (parent is GUICanvas)
+            {
+                CrossThread.RequestExecutionOnMainThread(() => modify(parent.children));
+            }
+            else
+            {
+                modify(parent.children);
+            }
         }
         #endregion
 
@@ -688,7 +709,7 @@ namespace Barotrauma
         {
             if (IsLastChild) { return; }
             if (!RemoveFromHierarchy(displayErrors: true)) { return; }
-            parent.children.Add(this);
+            ModifyChildList(parent, children => children.Add(this));
             RecalculateAll(false, true, true);
             parent.ChildrenChanged?.Invoke(this);
         }
@@ -702,15 +723,21 @@ namespace Barotrauma
         public bool RepositionChildInHierarchy(int index)
         {
             if (!RemoveFromHierarchy(displayErrors: true)) { return false; }
-            try
+            bool inserted = false;
+            ModifyChildList(Parent, children =>
             {
-                Parent.children.Insert(index, this);
-            }
-            catch (ArgumentOutOfRangeException e)
-            {
-                DebugConsole.ThrowError(e.ToString());
-                return false;
-            }
+                //catch inside the delegate, it may be executed on the main thread
+                try
+                {
+                    children.Insert(index, this);
+                    inserted = true;
+                }
+                catch (ArgumentOutOfRangeException e)
+                {
+                    DebugConsole.ThrowError(e.ToString());
+                }
+            });
+            if (!inserted) { return false; }
             RecalculateAll(false, true, true);
             Parent.ChildrenChanged?.Invoke(this);
             return true;
@@ -781,21 +808,30 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Sets the minimum height of the transfrom to equal to the largest of the children's minimum heights
+        /// (i.e. makes the rect at least large enough to fit the largest element in it vertically)
+        /// </summary>
+        public void InheritChildrenMinHeight(int additionalHeight = 0)
+        {
+            MinSize = new Point(MinSize.X, children.Max(c => c.MinSize.Y) + additionalHeight);
+        }
+
+        /// <summary>
         /// Sets the minimum height of the transfrom to equal to the sum of the minimum heights of the children 
         /// (i.e. makes the rect at least large enough to fit all the children vertically)
         /// </summary>
-        public void InheritTotalChildrenMinHeight()
+        public void InheritTotalChildrenMinHeight(int additionalHeight = 0)
         {
-            MinSize = new Point(MinSize.X, children.Sum(c => c.MinSize.Y));
+            MinSize = new Point(MinSize.X, children.Sum(c => c.MinSize.Y) + additionalHeight);
         }
 
         /// <summary>
         /// Sets the minimum height of the transfrom to equal to the sum of the heights of the children 
         /// (i.e. makes the rect at least large enough to fit all the children vertically)
         /// </summary>
-        public void InheritTotalChildrenHeight()
+        public void InheritTotalChildrenHeight(int additionalHeight = 0)
         {
-            MinSize = new Point(MinSize.X, children.Sum(c => c.Rect.Height));
+            MinSize = new Point(MinSize.X, children.Sum(c => c.Rect.Height) + additionalHeight);
         }
         #endregion
 

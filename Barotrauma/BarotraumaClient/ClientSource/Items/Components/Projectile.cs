@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Particles;
+using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -11,8 +12,11 @@ namespace Barotrauma.Items.Components
     {
         private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
 
-        public void ClientEventRead(IReadMessage msg, float sendingTime)
+        public virtual void ClientEventRead(IReadMessage msg, float sendingTime)
         {
+            // Skip reading base class data if unknown data was supplied (e.g. when overridden).
+            if (!msg.ReadBoolean()) { return; }
+
             bool launch = msg.ReadBoolean();
             if (launch)
             {
@@ -24,7 +28,14 @@ namespace Barotrauma.Items.Components
                 ushort submarineID = msg.ReadUInt16();
                 if (User != null)
                 {
-                    Shoot(User, simPosition, simPosition, rotation, ignoredBodies: User.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList(), createNetworkEvent: false);
+                    List<Body> ignoredBodies = null;
+                    if (!DamageUser)
+                    {
+                        ignoredBodies = User.AnimController.GetAllPhysicsBodies().ToList();
+                    }
+                    Shoot(User, simPosition, simPosition, rotation,
+                        ignoredBodies,
+                        createNetworkEvent: false);
                     item.Submarine = Entity.FindEntityByID(submarineID) as Submarine;
                 }
                 else
@@ -74,22 +85,38 @@ namespace Barotrauma.Items.Components
                         }
                         break;
                     case StickTargetType.Limb:
-                        UInt16 characterId = msg.ReadUInt16();
-                        byte limbIndex = msg.ReadByte();
-                        if (Entity.FindEntityByID(characterId) is Character character)
                         {
-                            if (limbIndex >= character.AnimController.Limbs.Length)
+                            UInt16 characterId = msg.ReadUInt16();
+                            byte limbIndex = msg.ReadByte();
+                            if (Entity.FindEntityByID(characterId) is Character character)
                             {
-                                DebugConsole.ThrowError($"Failed to read a projectile update from the server. Limb index out of bounds ({limbIndex}, character: {character})");
-                                return;
+                                if (limbIndex >= character.AnimController.Limbs.Length)
+                                {
+                                    DebugConsole.ThrowError($"Failed to read a projectile update from the server. Limb index out of bounds ({limbIndex}, character: {character})");
+                                    return;
+                                }
+                                if (character.Removed) { return; }
+                                var limb = character.AnimController.Limbs[limbIndex];
+                                StickToTarget(limb.body.FarseerBody, axis);
                             }
-                            if (character.Removed) { return; }
-                            var limb = character.AnimController.Limbs[limbIndex];
-                            StickToTarget(limb.body.FarseerBody, axis);
+                            else
+                            {
+                                DebugConsole.AddWarning($"\"{this.item.Prefab.Identifier}\" failed to stick to a limb. Could not find a character with the ID {characterId}");
+                            }
                         }
-                        else
+                        break;
+                    case StickTargetType.Character:
                         {
-                            DebugConsole.AddWarning($"\"{this.item.Prefab.Identifier}\" failed to stick to a limb. Could not find a character with the ID {characterId}");
+                            UInt16 characterId = msg.ReadUInt16();
+                            if (Entity.FindEntityByID(characterId) is Character character)
+                            {
+                                if (character.Removed) { return; }
+                                StickToTarget(character.AnimController.Collider.FarseerBody, axis);
+                            }
+                            else
+                            {
+                                DebugConsole.AddWarning($"\"{this.item.Prefab.Identifier}\" failed to stick to a character. Could not find a character with the ID {characterId}");
+                            }
                         }
                         break;
                     case StickTargetType.Item:
@@ -184,7 +211,8 @@ namespace Barotrauma.Items.Components
                         //backwards compatibility: previously it was not possible to change if the particles use tracer points, they were always used on projectiles
                         //now emitters don't use them by default, except on projectiles
                         emitter.Prefab.Properties.UseTracerPoints = subElement.GetAttributeBool(nameof(emitter.Prefab.Properties.UseTracerPoints), true);
-                        particleEmitters.Add(emitter);                        
+                        particleEmitters.Add(emitter);
+                        TryAddParticleEmitterByID(emitter);
                         break;
                 }
             }

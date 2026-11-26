@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    internal class PurchasedUpgrade
+    public class PurchasedUpgrade
     {
         public readonly UpgradeCategory Category;
         public readonly UpgradePrefab Prefab;
@@ -30,7 +30,11 @@ namespace Barotrauma
         }
     }
 
-    internal class PurchasedItemSwap
+    /// <summary>
+    /// A record so that swaps have value equality: swaps read from network messages are new instances,
+    /// and must still compare equal to the ones in <see cref="UpgradeManager.PurchasedItemSwaps"/>.
+    /// </summary>
+    public record PurchasedItemSwap
     {
         public readonly Item ItemToRemove;
         public readonly ItemPrefab ItemToInstall;
@@ -52,7 +56,7 @@ namespace Barotrauma
     /// The target level of an upgrade is stored in the metadata and is what the store displays and modifies while this class will make sure that
     /// the upgrades on the items match the values stored in the metadata.
     /// </remarks>
-    partial class UpgradeManager
+    public partial class UpgradeManager
     {
         /// <summary>
         /// This one toggles whether or not connected submarines get upgraded too.
@@ -301,10 +305,15 @@ namespace Barotrauma
         /// <summary>
         /// Purchases an item swap and handles logic for deducting the credit.
         /// </summary>
-        public void PurchaseItemSwap(Item itemToRemove, ItemPrefab itemToInstall, bool isNetworkMessage = false, Client? client = null)
+#if SERVER
+        public void PurchaseItemSwap(Item itemToRemove, ItemPrefab itemToInstall, bool isNetworkMessage, Client client)
         {
             if (!HasPermissionToManageUpgrades(client)) { return; }
-
+#else
+        public void PurchaseItemSwap(Item itemToRemove, ItemPrefab itemToInstall, bool isNetworkMessage, Client? client = null)
+        {
+            if (!HasPermissionToManageUpgrades(client) && !isNetworkMessage) { return; }
+#endif
             if (!CanUpgradeSub())
             {
                 DebugConsole.ThrowError("Cannot swap items when switching to another submarine.");
@@ -325,21 +334,30 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Cannot swap item \"{itemToRemove.Name}\" because it's configured to be non-swappable.");
                 return;
             }
-            if (!UpgradeCategory.Categories.Any(c => c.ItemTags.Any(t => itemToRemove.HasTag(t)) && c.ItemTags.Any(t => itemToInstall.Tags.Contains(t))))
+            if (itemToInstall != null && !UpgradeCategory.Categories.Any(c => c.ItemTags.Any(itemToRemove.HasTag) && c.ItemTags.Any(t => itemToInstall.Tags.Contains(t))))
             {
                 DebugConsole.ThrowError($"Failed to swap item \"{itemToRemove.Name}\" with \"{itemToInstall.Name}\" (not in the same upgrade category).");
                 return;
             }
 
-            if (((MapEntity)itemToRemove).Prefab == itemToInstall)
-            {
-                DebugConsole.ThrowError($"Failed to swap item \"{itemToRemove.Name}\" (trying to swap with the same item!).");
-                return;
-            }
             SwappableItem? swappableItem = itemToRemove.Prefab.SwappableItem;
             if (swappableItem == null)
             {
                 DebugConsole.ThrowError($"Failed to swap item \"{itemToRemove.Name}\" (not configured as a swappable item).");
+                return;
+            }
+            
+            if (itemToInstall == null || itemToInstall == itemToRemove.Prefab)
+            {
+                string msg = isNetworkMessage ? "(network msg) " : "";
+                DebugLog(msg + $"Cancelling item swap \"{itemToRemove.Name}\"", Color.Orange);
+                CancelItemSwap(itemToRemove, force: isNetworkMessage, client: client);
+                return;
+            }
+
+            if (itemToRemove.IsSwapRestrictedBySubmarineType(itemToInstall))
+            {
+                DebugConsole.ThrowError($"Failed to swap item \"{itemToRemove.Name}\" with \"{itemToInstall.Name}\" (the item cannot be installed in this type of submarine).");
                 return;
             }
 
@@ -351,14 +369,16 @@ namespace Barotrauma
                 price = itemToInstall.SwappableItem.GetPrice(Campaign.Map?.CurrentLocation) * linkedItems.Count;
             }
 
-            if (isNetworkMessage)
+            //clients don't need to check the price or deduct funds, that's handled and synced by the server
+            bool forcePurchaseWithoutDeductingFunds = isNetworkMessage && GameMain.NetworkMember is { IsClient: true };
+            if (forcePurchaseWithoutDeductingFunds)
             {
                 price = 0;
             }
 
             //do not try to purchase if this is a network message (if the server is telling us that an item swap was purchased)
             //we want to do the purchase no matter what, and the server handles deducting the money
-            if (isNetworkMessage || Campaign.TryPurchase(client, price))
+            if (forcePurchaseWithoutDeductingFunds || Campaign.TryPurchase(client, price))
             {
                 PurchasedItemSwaps.RemoveAll(p => linkedItems.Contains(p.ItemToRemove));
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
@@ -376,21 +396,22 @@ namespace Barotrauma
                 foreach (Item itemToSwap in linkedItems)
                 {
                     itemToSwap.AvailableSwaps.Add(itemToSwap.Prefab);
-                    if (itemToInstall != null && !itemToSwap.AvailableSwaps.Contains(itemToInstall)) 
+                    if (!itemToSwap.AvailableSwaps.Contains(itemToInstall)) 
                     {
                         itemToSwap.PurchasedNewSwap = true;
                         itemToSwap.AvailableSwaps.Add(itemToInstall); 
                     }
 
-                    if (itemToSwap.Prefab != itemToInstall && itemToInstall != null)
+                    string msg = isNetworkMessage ? "(network msg) " : "";
+                    if (itemToSwap.Prefab != itemToInstall)
                     {
                         itemToSwap.PendingItemSwap = itemToInstall;
                         PurchasedItemSwaps.Add(new PurchasedItemSwap(itemToSwap, itemToInstall));
-                        DebugLog($"CLIENT: Swapped item \"{itemToSwap.Name}\" with \"{itemToInstall.Name}\".", Color.Orange);
+                        DebugLog(msg + $"Swapped item \"{itemToSwap.Name}\" with \"{itemToInstall.Name}\".", Color.Orange);
                     }
                     else
                     {
-                        DebugLog($"CLIENT: Cancelled swapping the item \"{itemToSwap.Name}\" with \"{(itemToSwap.PendingItemSwap?.Name ?? null)}\".", Color.Orange);
+                        DebugLog(msg + $"Cancelled swapping the item \"{itemToSwap.Name}\" with \"{(itemToSwap.PendingItemSwap?.Name ?? null)}\".", Color.Orange);
                     }
                 }
 
@@ -406,7 +427,11 @@ namespace Barotrauma
         /// <summary>
         /// Cancels the currently pending item swap, or uninstalls the item if there's no swap pending
         /// </summary>
+#if SERVER
+        public void CancelItemSwap(Item itemToRemove, bool force, Client client)
+#else
         public void CancelItemSwap(Item itemToRemove, bool force = false, Client? client = null)
+#endif
         {
             if (!HasPermissionToManageUpgrades(client)) { return; }
 
@@ -445,6 +470,7 @@ namespace Barotrauma
             {
                 if (itemToCancel.PendingItemSwap == null)
                 {
+                    //no pending swap -> uninstall the item
                     if (MapEntityPrefab.FindByIdentifier(swappableItem.ReplacementOnUninstall) is not ItemPrefab replacement)
                     {
                         DebugConsole.ThrowError($"Failed to uninstall item \"{itemToCancel.Name}\". Could not find the replacement item \"{swappableItem.ReplacementOnUninstall}\".");
@@ -452,7 +478,8 @@ namespace Barotrauma
                     }
                     PurchasedItemSwaps.RemoveAll(p => p.ItemToRemove == itemToCancel);
                     PurchasedItemSwaps.Add(new PurchasedItemSwap(itemToCancel, replacement));
-                    DebugLog($"Uninstalled item item \"{itemToCancel.Name}\".", Color.Orange);
+                    DebugLog($"Uninstalled item \"{itemToCancel.Name}\".", Color.Orange);
+                    itemToCancel.AvailableSwaps.Add(itemToCancel.Prefab);
                     itemToCancel.PendingItemSwap = replacement;
                 }
                 else
@@ -465,7 +492,7 @@ namespace Barotrauma
 
 #if CLIENT
             OnUpgradesChanged?.Invoke(this);
-#endif       
+#endif
         }
 
         public static ICollection<Item> GetLinkedItemsToSwap(Item item)
@@ -476,9 +503,7 @@ namespace Barotrauma
                 foreach (MapEntity secondLinkedEntity in linkedEntity.linkedTo)
                 {
                     if (secondLinkedEntity is not Item linkedItem || linkedItem == item) { continue; }
-                    if (linkedItem.AllowSwapping &&
-                        linkedItem.Prefab.SwappableItem != null && (linkedItem.Prefab.SwappableItem.CanBeBought || item.Prefab.SwappableItem.ReplacementOnUninstall == ((MapEntity)linkedItem).Prefab.Identifier) &&
-                        linkedItem.Prefab.SwappableItem.SwapIdentifier.Equals(item.Prefab.SwappableItem.SwapIdentifier, StringComparison.OrdinalIgnoreCase))
+                    if (linkedItem.CanBeSwappedTo(item.Prefab, item.Prefab.SwappableItem?.ReplacementOnUninstall))
                     {
                         linkedItems.Add(linkedItem);
                     }

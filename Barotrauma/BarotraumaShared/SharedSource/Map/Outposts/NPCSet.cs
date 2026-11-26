@@ -1,10 +1,11 @@
 ﻿#nullable enable
+using Barotrauma.Extensions;
 using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma
 {
-    internal class NPCSet : Prefab
+    public sealed class NPCSet : Prefab
     {
         public readonly static PrefabCollection<NPCSet> Sets = new PrefabCollection<NPCSet>();
 
@@ -28,6 +29,25 @@ namespace Barotrauma
                 return null;
             }
             return prefab;
+        }
+
+        /// <summary>
+        /// Gets a random NPC from the specified set.
+        /// </summary>
+        public static HumanPrefab? Get(Identifier setIdentifier, Rand.RandSync randSync, bool logError = true, ContentPackage? contentPackageToLogInError = null)
+        {
+            var sets = Sets.Where(set => set.Identifier == setIdentifier);
+            if (sets.None())
+            {
+                if (logError)
+                {
+                    DebugConsole.ThrowError($"Could not find NPC sets with the identifier \"{setIdentifier}\".", contentPackage: contentPackageToLogInError);
+                }
+                return null;
+            }
+
+            var prefabs = sets.SelectMany(npcSet => npcSet.Humans);
+            return prefabs.GetRandomByWeight(npc => npc.Commonness, randSync);
         }
 
         public override void Dispose() { }

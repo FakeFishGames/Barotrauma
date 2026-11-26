@@ -6,14 +6,14 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    class AIObjectiveExtinguishFire : AIObjective
+    public class AIObjectiveExtinguishFire : AIObjective
     {
         public override Identifier Identifier { get; set; } = "extinguish fire".ToIdentifier();
         public override bool ForceRun => true;
         protected override bool ConcurrentObjectives => true;
         public override bool KeepDivingGearOn => true;
         protected override bool AllowInAnySub => true;
-        protected override bool AllowWhileHandcuffed => false;
+        protected override bool RequireBothHandsAvailable => true;
 
         private readonly Hull targetHull;
 
@@ -152,7 +152,7 @@ namespace Barotrauma
                     }
                     if (moveCloser)
                     {
-                        if (TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(fs, character, objectiveManager, closeEnough: extinguisher.Range * 0.8f)
+                        if (TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(fs, character, objectiveManager, minimumCloseEnoughDistance: extinguisher.Range * 0.8f)
                         {
                             DialogueIdentifier = AIObjectiveGoTo.DialogCannotReachFire,
                             TargetName = fs.Hull.DisplayName

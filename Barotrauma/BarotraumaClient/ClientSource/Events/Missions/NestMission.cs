@@ -50,7 +50,7 @@ namespace Barotrauma
                 items.Add(item);
                 if (item.body != null)
                 {
-                    item.body.FarseerBody.BodyType = BodyType.Kinematic;
+                    item.body.BodyType = BodyType.Kinematic;
                 }
             }
         }

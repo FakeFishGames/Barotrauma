@@ -20,7 +20,7 @@ namespace Barotrauma.RuinGeneration
         Wall, Back, Door, Hatch, Prop
     }
 
-    class RuinGenerationParams : OutpostGenerationParams
+    public class RuinGenerationParams : OutpostGenerationParams
     {
         public readonly static PrefabCollection<RuinGenerationParams> RuinParams =
             new PrefabCollection<RuinGenerationParams>();

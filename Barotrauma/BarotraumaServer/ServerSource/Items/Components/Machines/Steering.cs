@@ -71,7 +71,7 @@ namespace Barotrauma.Items.Components
 
             if (dockingButtonClicked)
             {
-                item.SendSignal(new Signal("1", sender: c.Character), "toggle_docking");
+                item.SendSignal(new Signal("1", sender: c.Character), "toggle_docking");                
                 item.CreateServerEvent(this, new EventData(dockingButtonClicked: true));
             }
 

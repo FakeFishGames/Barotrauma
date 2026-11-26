@@ -5,7 +5,7 @@ using System;
 
 namespace Barotrauma
 {
-    class CampaignEndScreen : Screen
+    public class CampaignEndScreen : Screen
     {
         private readonly CreditsPlayer creditsPlayer;
 

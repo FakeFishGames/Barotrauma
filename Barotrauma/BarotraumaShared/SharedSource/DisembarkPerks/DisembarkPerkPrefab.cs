@@ -3,7 +3,7 @@ using Barotrauma.PerkBehaviors;
 
 namespace Barotrauma
 {
-    internal sealed class DisembarkPerkPrefab : PrefabWithUintIdentifier
+    public sealed class DisembarkPerkPrefab : PrefabWithUintIdentifier
     {
         public static readonly PrefabCollection<DisembarkPerkPrefab> Prefabs = new PrefabCollection<DisembarkPerkPrefab>();
 

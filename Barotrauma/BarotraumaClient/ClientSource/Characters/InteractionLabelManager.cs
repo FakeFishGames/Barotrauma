@@ -72,8 +72,9 @@ public static class InteractionLabelManager
     
     private static readonly  List<Item> interactablesInRange = new();
 
-    internal static Item? HoveredItem { get; private set; }
-    
+    private static Item? hoveredItem;
+    internal static Item? HoveredItem => hoveredItem is { Removed: false } ? hoveredItem : null;
+
     internal static void RefreshInteractablesInRange(List<Item> interactables)
     {
         interactablesInRange.Clear();
@@ -236,7 +237,12 @@ public static class InteractionLabelManager
 
     internal static void Update(Character character, Camera cam)
     {
-        if (RefreshSettings()) { shouldRecalculate = true; recalculateEverything = true; }
+        if (RefreshSettings() ||
+            labels.Any(l => l.Item is { Removed: true })) 
+        { 
+            shouldRecalculate = true;
+            recalculateEverything = true;
+        }
         
         if (shouldRecalculate)
         {
@@ -264,7 +270,7 @@ public static class InteractionLabelManager
 
         if (!isMouseOnLabel)
         {
-            HoveredItem = null;
+            hoveredItem = null;
         }
 
         // draw order: draw lines for labels first
@@ -289,8 +295,8 @@ public static class InteractionLabelManager
         if (isMouseOnLabel)
         {
             var labelData = labels[mouseOnLabelIndex];
-            
-            HoveredItem = labelData.Item;
+
+            hoveredItem = labelData.Item;
             
             DrawLineForLabel(spriteBatch, cam, labelData, GUIStyle.InteractionLabelHoverColor * LineAlpha);
             DrawLabelForItem(spriteBatch, cam,labelData, GUIStyle.InteractionLabelHoverColor);
@@ -339,5 +345,11 @@ public static class InteractionLabelManager
             layerDepth: 0.0f,
             richTextData: labelData.Text.RichTextData,
             forceUpperCase: ForceUpperCase.No);
+    }
+
+    public static void CleanUpStaticReferences()
+    {
+        labels.Clear();
+        interactablesInRange.Clear();
     }
 }

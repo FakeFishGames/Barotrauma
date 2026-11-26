@@ -55,8 +55,7 @@ namespace Barotrauma
         public enum CustomDimensions03
         {
             UnknownPlatform,
-            Steam,
-            EGS
+            Steam
         }
 
         public enum ResourceCurrency
@@ -581,10 +580,6 @@ namespace Barotrauma
                 if (SteamManager.IsInitialized)
                 {
                     platform = CustomDimensions03.Steam;
-                }
-                else if (EosInterface.IdQueries.IsLoggedIntoEosConnect)
-                {
-                    platform = CustomDimensions03.EGS;
                 }
                 SetCustomDimension03(platform);
             }

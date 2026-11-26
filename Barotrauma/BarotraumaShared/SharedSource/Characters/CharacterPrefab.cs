@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    class CharacterPrefab : PrefabWithUintIdentifier, IImplementsVariants<CharacterPrefab>
+    public class CharacterPrefab : PrefabWithUintIdentifier, IImplementsVariants<CharacterPrefab>
     {
         public readonly static PrefabCollection<CharacterPrefab> Prefabs = new PrefabCollection<CharacterPrefab>();
 

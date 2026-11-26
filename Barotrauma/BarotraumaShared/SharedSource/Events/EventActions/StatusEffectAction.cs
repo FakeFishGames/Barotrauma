@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -40,7 +40,7 @@ namespace Barotrauma
         {
             return isFinished;
         }
-        public override void Reset()
+        public override void Reset(bool shouldEndConversations = true)
         {
             isFinished = false;
         }
@@ -75,11 +75,11 @@ namespace Barotrauma
             {
                 if (target is Item targetItem)
                 {
-                    effect.Apply(effect.type, deltaTime, target, targetItem.AllPropertyObjects);
+                    effect.Apply(effect.Type, deltaTime, target, targetItem.AllPropertyObjects);
                 }
                 else
                 {
-                    effect.Apply(effect.type, deltaTime, target, target as ISerializableEntity);
+                    effect.Apply(effect.Type, deltaTime, target, target as ISerializableEntity);
                 }
             }
         }

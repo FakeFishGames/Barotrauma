@@ -15,7 +15,7 @@ namespace Barotrauma
         public override bool KeepDivingGearOn => true;
         protected override bool AllowOutsideSubmarine => true;
         protected override bool AllowInAnySub => true;
-        protected override bool AllowWhileHandcuffed => false;
+        protected override bool RequireBothHandsAvailable => true;
 
         const float TreatmentDelay = 0.5f;
 
@@ -330,8 +330,8 @@ namespace Barotrauma
                 return;
             }
 
-            // Find treatments outside of own inventory only if inside the own sub.
-            if (character.Submarine != null && character.Submarine.TeamID == character.TeamID)
+            // Find treatments outside of own inventory only if inside the own sub (or e.g. a dweller in a player-owned outpost).
+            if (character.Submarine != null && character.IsAllowedToInteractWithItemsOnSub(character.Submarine))
             {
                 //get "overall" suitability for no specific limb at this point
                 Target.CharacterHealth.GetSuitableTreatments(
@@ -407,7 +407,7 @@ namespace Barotrauma
 
                         RemoveSubObjective(ref getItemObjective);
                         TryAddSubObjective(ref getItemObjective,
-                            constructor: () => new AIObjectiveGetItem(character, itemsToFind, objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+                            constructor: () => new AIObjectiveGetItem(character, itemsToFind, objectiveManager, equip: true, spawnItemIfNotFound: character.CanSpawnMissingItems)
                             {
                                 GetItemPriority = it => currentTreatmentSuitabilities.GetValueOrDefault(it.Prefab.Identifier)
                             },

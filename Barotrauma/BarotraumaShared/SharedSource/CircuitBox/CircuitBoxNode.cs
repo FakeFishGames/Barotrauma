@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    internal partial class CircuitBoxNode : CircuitBoxSelectable
+    public partial class CircuitBoxNode : CircuitBoxSelectable
     {
         public Vector2 Size;
         public RectangleF Rect;

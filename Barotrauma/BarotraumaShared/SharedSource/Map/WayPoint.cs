@@ -13,7 +13,7 @@ namespace Barotrauma
     [Flags]
     public enum SpawnType { Path = 0, Human = 1, Enemy = 2, Cargo = 4, Corpse = 8, Submarine = 16, ExitPoint = 32, Disabled = 64 };
 
-    partial class WayPoint : MapEntity
+    public partial class WayPoint : MapEntity
     {
         public static List<WayPoint> WayPointList = new List<WayPoint>();
 
@@ -21,21 +21,31 @@ namespace Barotrauma
 
         public const float LadderWaypointInterval = 75.0f;
 
+        /// <summary>
+        /// How high above the floor the waypoint generator aims to place the waypoints. 
+        /// </summary>
+        public const float WayPointHeightFromFloor = 110f;
+
         protected SpawnType spawnType;
         private string[] idCardTags;
         private ushort ladderId;
         public Ladder Ladders;
         public Structure Stairs;
 
-        private HashSet<Identifier> tags;
+        public readonly HashSet<Item> BlockingItems = new HashSet<Item>();
 
-        public bool IsObstructed;
+        private HashSet<Identifier> tags;
+        
+        /// <summary>
+        /// Connections to other waypoints that are currently obstructed (non-traversable)
+        /// </summary>
+        public readonly HashSet<WayPoint> ObstructedConnections = [];
 
         public bool IsInWater => CurrentHull == null || CurrentHull.Surface > Position.Y;
 
         // Waypoints linked to doors are traversable, unless they are obstructed, because we filter them out in the setter of Gap.Open.
         // The only way to add the open gaps should be by calling OnGapStateSchanged.
-        public bool IsTraversable => !IsObstructed && (openGaps == null || openGaps.Count == 0 || IsInWater);
+        public bool IsTraversable => (openGaps == null || openGaps.Count == 0 || IsInWater) && !IsDisabled;
 
         private HashSet<Gap> openGaps;
         /// <summary>
@@ -231,7 +241,7 @@ namespace Barotrauma
             bool isRuin = submarine.Info.ShouldBeRuin;
             float diffFromHullEdge = 50;
             float minDist = 100.0f;
-            float heightFromFloor = 110.0f;
+            float heightFromFloor = WayPointHeightFromFloor;
             float hullMinHeight = 100;
 
             var removals = new HashSet<WayPoint>();
@@ -934,6 +944,21 @@ namespace Barotrauma
             }
         }
 
+        public void RemoveConnectionTo(WayPoint wayPoint2)
+        {
+            System.Diagnostics.Debug.Assert(this != wayPoint2);
+            if (linkedTo.Contains(wayPoint2))
+            {
+                linkedTo.Remove(wayPoint2);
+                OnLinksChanged?.Invoke(this);
+            }
+            if (wayPoint2.linkedTo.Contains(this))
+            {
+                wayPoint2.linkedTo.Remove(this);
+                wayPoint2.OnLinksChanged?.Invoke(wayPoint2);
+            }
+        }
+
         public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, JobPrefab assignedJob = null, Submarine sub = null, bool useSyncedRand = false, string spawnPointTag = null, bool ignoreSubmarine = false)
         {
             return WayPointList.GetRandom(wp =>
@@ -1031,11 +1056,11 @@ namespace Barotrauma
                     potentialSpawnPoints = potentialSpawnPoints.FindAll(wp => wp.Tags.Contains(teamSpawnTag));
                 }
             }
-            else
+            //prefer airlock spawnpoints if spawning in a different team's outpost
+            else if (Level.Loaded.StartOutpost.TeamID != teamID)
             {
                 potentialSpawnPoints = potentialSpawnPoints.FindAll(wp =>
-                    wp.CurrentHull?.OutpostModuleTags != null &&
-                    wp.CurrentHull.OutpostModuleTags.Contains(Barotrauma.Tags.Airlock));
+                    (wp.CurrentHull?.OutpostModuleTags != null && wp.CurrentHull.OutpostModuleTags.Contains(Barotrauma.Tags.Airlock)) || wp.Tags.Contains(Barotrauma.Tags.Airlock));
             }
             if (potentialSpawnPoints.None()) { return potentialSpawnPoints.ToArray(); }
 
@@ -1062,6 +1087,32 @@ namespace Barotrauma
             }
             return spawnPoints.ToArray();
         }
+
+        public override void SetDisabled(bool disabled)
+        {
+            base.SetDisabled(disabled);
+            if (disabled)
+            {
+                SpawnType = SpawnType.AddFlag(SpawnType.Disabled);
+                WayPointList.Remove(this);
+            }
+            else
+            {
+                SpawnType = SpawnType.RemoveFlag(SpawnType.Disabled);
+                if (!WayPointList.Contains(this)) { WayPointList.Add(this); }
+            }
+        }
+        /// <summary>
+        /// Goes through every waypoint and re-checks which hull they are in
+        /// </summary>
+        public static void UpdateHulls()
+        {
+            foreach (WayPoint wp in WayPointList)
+            {
+                wp.FindHull();
+            }
+        }
+
 
         public void FindHull()
         {
@@ -1124,7 +1175,8 @@ namespace Barotrauma
             WayPoint w = new WayPoint(spawnType == SpawnType.Path ? Type.WayPoint : Type.SpawnPoint, rect, submarine, idRemap.GetOffsetId(element))
             {
                 spawnType = spawnType,
-                Layer = element.GetAttributeString(nameof(Layer), null)
+                Layer = element.GetAttributeString(nameof(Layer), null),
+                IsDisabled = element.GetAttributeBool(nameof(IsDisabled), false)
             };
 
             string idCardDescString = element.GetAttributeString("idcarddesc", "");
@@ -1180,6 +1232,7 @@ namespace Barotrauma
                 new XAttribute("x", (int)(rect.X - Submarine.HiddenSubPosition.X)),
                 new XAttribute("y", (int)(rect.Y - Submarine.HiddenSubPosition.Y)),
                 new XAttribute("spawn", spawnType),
+                new XAttribute(nameof(IsDisabled), IsDisabled),
                 new XAttribute(nameof(Layer), Layer ?? string.Empty));
             if (SpawnType == SpawnType.ExitPoint)
             {
@@ -1234,6 +1287,11 @@ namespace Barotrauma
             Ladders = null;
             OnLinksChanged = null;
             WayPointList.Remove(this);
-        } 
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(WayPoint)} ({ID})";
+        }
     }
 }

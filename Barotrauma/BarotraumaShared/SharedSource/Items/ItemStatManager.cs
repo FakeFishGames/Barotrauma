@@ -7,7 +7,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
     [NetworkSerialize]
-    internal readonly record struct TalentStatIdentifier(ItemTalentStats Stat, Identifier TalentIdentifier, Option<UInt32> UniqueCharacterId, bool Save) : INetSerializableStruct
+    public readonly record struct TalentStatIdentifier(ItemTalentStats Stat, Identifier TalentIdentifier, Option<UInt32> UniqueCharacterId, bool Save) : INetSerializableStruct
     {
         /// <summary>
         /// Stackable identifiers feature a unique ID to allow multiple stats applied by the same talent from different characters to coexist.
@@ -44,7 +44,7 @@ namespace Barotrauma
         }
     }
 
-    internal sealed class ItemStatManager
+    public sealed class ItemStatManager
     {
         private readonly Dictionary<TalentStatIdentifier, float> talentStats = new();
         private readonly Item item;

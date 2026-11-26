@@ -7,7 +7,7 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma.SpriteDeformations
 {
-    abstract class SpriteDeformationParams : ISerializableEntity
+    public abstract class SpriteDeformationParams : ISerializableEntity
     {
         /// <summary>
         /// A negative value means that the deformation is used only by one sprite only (default). 
@@ -93,7 +93,7 @@ namespace Barotrauma.SpriteDeformations
         }
     }
 
-    abstract class SpriteDeformation
+    public abstract class SpriteDeformation
     {
         public enum DeformationBlendMode
         {

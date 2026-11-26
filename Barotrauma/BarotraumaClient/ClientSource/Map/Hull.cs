@@ -38,8 +38,6 @@ namespace Barotrauma
 
         private readonly HashSet<Decal> pendingDecalUpdates = new HashSet<Decal>();
 
-        private double lastAmbientLightEditTime;
-
         private float drawSurface;
 
         public float DrawSurface
@@ -242,6 +240,8 @@ namespace Barotrauma
             if (hull == null || hull.IdFreed) { return; }
             if (EditWater)
             {
+                if (!IsEditingPermitted("water".ToIdentifier())) { return; }
+
                 const float waterIncrement = 100000.0f;
                 if (primaryMouseButtonHeld)
                 {
@@ -271,6 +271,8 @@ namespace Barotrauma
             }
             else if (EditFire)
             {
+                if (!IsEditingPermitted("fire".ToIdentifier())) { return; }
+
                 bool networkUpdate = false;
                 
                 if (primaryMouseButtonHeld)
@@ -304,6 +306,15 @@ namespace Barotrauma
                     hull.serverUpdateDelay = 0.5f;
                 }
             }
+
+            static bool IsEditingPermitted(Identifier commandName)
+            {
+                if (Screen.Selected is { IsEditor: true } || GameMain.Client == null)
+                {
+                    return true;
+                }
+                return GameMain.Client.HasConsoleCommandPermission(commandName);
+            }
         }
 
         private void DrawDecals(SpriteBatch spriteBatch)
@@ -332,13 +343,6 @@ namespace Barotrauma
 
             if (!editing && (!GameMain.DebugDraw || Screen.Selected.Cam.Zoom < 0.1f)) { return; }
 
-            float alpha = 1.0f;
-            float hideTimeAfterEdit = 3.0f;
-            if (lastAmbientLightEditTime > Timing.TotalTime - hideTimeAfterEdit * 2.0f)
-            {
-                alpha = Math.Min((float)(Timing.TotalTime - lastAmbientLightEditTime) / hideTimeAfterEdit - 1.0f, 1.0f);
-            }
-
             Rectangle drawRect =
                 Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
 
@@ -349,7 +353,7 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch,
                         new Vector2(drawRect.X, -drawRect.Y),
                         new Vector2(rect.Width, rect.Height),
-                        (IsHighlighted ? Color.LightBlue * 0.8f : GUIStyle.Red * 0.5f) * alpha, false, 0, (int)Math.Max(5.0f / Screen.Selected.Cam.Zoom, 1.0f));
+                        IsHighlighted ? Color.LightBlue * 0.8f : GUIStyle.Red * 0.5f, false, 0, (int)Math.Max(5.0f / Screen.Selected.Cam.Zoom, 1.0f));
                 }
 
                 float waterHeight = WaterVolume / rect.Width;
@@ -362,11 +366,11 @@ namespace Barotrauma
             GUI.DrawRectangle(spriteBatch,
                 new Vector2(drawRect.X, -drawRect.Y),
                 new Vector2(rect.Width, rect.Height),
-                Color.Blue * alpha, false, (ID % 255) * 0.000001f, (int)Math.Max(MathF.Ceiling(1.5f / Screen.Selected.Cam.Zoom), 1.0f));
+                Color.Blue, false, (ID % 255) * 0.000001f, (int)Math.Max(MathF.Ceiling(1.5f / Screen.Selected.Cam.Zoom), 1.0f));
 
             GUI.DrawRectangle(spriteBatch,
                 new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height),
-                GUIStyle.Red * ((100.0f - OxygenPercentage) / 400.0f) * alpha, true, 0, (int)Math.Max(MathF.Ceiling(1.5f / Screen.Selected.Cam.Zoom), 1.0f));
+                GUIStyle.Red * ((100.0f - OxygenPercentage) / 400.0f), true, 0, (int)Math.Max(MathF.Ceiling(1.5f / Screen.Selected.Cam.Zoom), 1.0f));
 
             if (GameMain.DebugDraw && Screen.Selected?.Cam is { Zoom: > 0.5f })
             {
@@ -452,7 +456,7 @@ namespace Barotrauma
             }
         }
 
-        public void DrawSectionColors(SpriteBatch spriteBatch)
+        public void DrawSectionColors(SpriteBatch spriteBatch, float depth = 0.8f)
         {
             if (BackgroundSections == null || BackgroundSections.Count == 0) { return; }
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
@@ -470,13 +474,13 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch,
                         new Vector2(drawOffset.X + rect.X + section.Rect.X, -(drawOffset.Y + rect.Y + section.Rect.Y)),
                         new Vector2(sectionSize.X, sectionSize.Y),
-                        section.GetStrengthAdjustedColor(), true, 0.0f, (int)Math.Max(1.5f / Screen.Selected.Cam.Zoom, 1.0f));
+                        section.GetStrengthAdjustedColor(), isFilled: true, depth: depth, thickness: (int)Math.Max(1.5f / Screen.Selected.Cam.Zoom, 1.0f));
                 }
                 else
                 {
                     Vector2 sectionPos = new Vector2(drawPos.X + section.Rect.Location.X, -(drawPos.Y + section.Rect.Location.Y));
                     Vector2 randomOffset = new Vector2(section.Noise.X - 0.5f, section.Noise.Y - 0.5f) * 15.0f;
-                    section.GrimeSprite.Draw(spriteBatch, sectionPos + randomOffset, section.GetStrengthAdjustedColor(), scale: 1.25f);
+                    section.GrimeSprite.Draw(spriteBatch, sectionPos + randomOffset, section.GetStrengthAdjustedColor(), scale: 1.25f, depth: depth);
                 }
             }
         }
@@ -808,7 +812,7 @@ namespace Barotrauma
                         decalPosX += Submarine.Position.X;
                         decalPosY += Submarine.Position.Y;
                     }
-                    Decal decal = AddDecal(remoteDecal.DecalId, new Vector2(decalPosX, decalPosY), remoteDecal.Scale, isNetworkEvent: true, spriteIndex: remoteDecal.SpriteIndex);
+                    Decal decal = AddDecal(remoteDecal.DecalId, new Vector2(decalPosX, decalPosY), remoteDecal.Scale, isNetworkEvent: true, multiplyByPrefabScale: false, spriteIndex: remoteDecal.SpriteIndex);
                     decal.BaseAlpha = remoteDecal.DecalAlpha;
                 }
                 remoteDecals.Clear();

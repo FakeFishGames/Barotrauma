@@ -42,9 +42,10 @@ namespace Barotrauma
             }
         }
 
+        public void ClearAll()
+            => events.Clear();
+
         public void Dispose()
-        {
-            events.Clear();
-        }
+            => ClearAll();
     }
 }

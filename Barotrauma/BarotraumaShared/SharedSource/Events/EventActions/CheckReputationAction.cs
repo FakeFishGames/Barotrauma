@@ -19,7 +19,7 @@ namespace Barotrauma
             {
                 case ReputationAction.ReputationType.Faction:
                 {
-                    Faction? faction = campaignMode.Factions.Find(f => f.Prefab.Identifier == Identifier);
+                    Faction? faction = campaignMode.GetFaction(Identifier);
                     if (faction != null) { return faction.Reputation.Value; }
                     break;
                 }

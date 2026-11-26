@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveIdle : AIObjective
+    public class AIObjectiveIdle : AIObjective
     {
         public override Identifier Identifier { get; set; } = "idle".ToIdentifier();
         public override bool AllowAutomaticItemUnequipping => true;
@@ -58,7 +58,11 @@ namespace Barotrauma
             Patrol,
             Passive,
             StayInHull,
-            Active
+            Active,
+            /// <summary>
+            /// Normally not used, used in character params as a default value
+            /// </summary>
+            Undefined
         }
         public Hull TargetHull { get; set; }
         private Hull currentTarget;
@@ -81,7 +85,7 @@ namespace Barotrauma
 
         public AIObjectiveIdle(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
-            Behavior = BehaviorType.Passive;
+            Behavior = character.Params.HumanAIIdleBehavior == BehaviorType.Undefined ? BehaviorType.Passive : character.Params.HumanAIIdleBehavior;
             standStillTimer = Rand.Range(-10.0f, 10.0f);
             walkDuration = Rand.Range(0.0f, 10.0f);
             chairCheckTimer = Rand.Range(0.0f, chairCheckInterval);
@@ -201,19 +205,9 @@ namespace Barotrauma
             }
             if (currentTarget != null && !currentTargetIsInvalid)
             {
-                if (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsEscorted)
+                if (!IsSuitableSubmarine(currentTarget.Submarine))
                 {
-                    if (currentTarget.Submarine.TeamID != character.TeamID)
-                    {
-                        currentTargetIsInvalid = true;
-                    }
-                }
-                else
-                {
-                    if (currentTarget.Submarine != character.Submarine)
-                    {
-                        currentTargetIsInvalid = true;
-                    }
+                    currentTargetIsInvalid = true;
                 }
             }
 
@@ -257,10 +251,9 @@ namespace Barotrauma
                 {
                     //choose a random available hull
                     currentTarget = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
-                    bool isInWrongSub = (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsEscorted) && character.Submarine.TeamID != character.TeamID;
-                    bool isCurrentHullAllowed = !isInWrongSub && !IsForbidden(character.CurrentHull);
+                    bool isCurrentHullAllowed = IsSuitableSubmarine(character.Submarine) && !IsForbidden(character.CurrentHull);
                     Vector2 targetPos = character.GetRelativeSimPosition(currentTarget);
-                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, targetPos, character.Submarine, nodeFilter: node =>
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, targetPos, character.Submarine, startHull: character.CurrentHull, nodeFilter: node =>
                     {
                         if (node.Waypoint.CurrentHull == null) { return false; }
                         // Check that there is no unsafe hulls on the way to the target
@@ -343,7 +336,41 @@ namespace Barotrauma
                 PathSteering.SteeringSeek(character.GetRelativeSimPosition(target), weight: 1, 
                     nodeFilter: node => node.Waypoint.CurrentHull != null, 
                     endNodeFilter: node => node.Waypoint.Ladders == null && node.Waypoint.Stairs == null);
+                if (PathSteering.CurrentPath is { Unreachable: true })
+                {
+                    SteeringManager.Reset();
+                }
             }
+        }
+
+        /// <summary>
+        /// Is it the character allowed to idle in the specific submarine?
+        /// </summary>
+        private bool IsSuitableSubmarine(Submarine sub)
+        {
+            if (sub == null) { return false; }
+            //hostile subs/outposts are never ok to idle in
+            if (!character.IsOnFriendlyTeam(sub.TeamID)) { return false; }
+
+            if (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsEscorted)
+            {
+                // Don't allow npcs to idle in a sub that's not in their team (like the player sub)
+                // Hanging out in a friendly outpost is fine though, even if it belongs to a different team (e.g. the player)
+                if (sub.TeamID != character.TeamID && !sub.Info.IsOutpost)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                // Don't allow to idle in the subs that are not in the same team as the current sub
+                // -> the crew ai bots can't change the sub from outpost to main sub or vice versa on their own
+                if (sub.TeamID != character.Submarine?.TeamID)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public void Wander(float deltaTime)
@@ -457,23 +484,7 @@ namespace Barotrauma
                 if (HumanAIController.UnsafeHulls.Contains(hull)) { continue; }
                 if (hull.Submarine == null) { continue; }
                 if (hull.Submarine.Info.IsRuin || hull.Submarine.Info.IsWreck) { continue; }
-                if (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsEscorted)
-                {
-                    if (hull.Submarine.TeamID != character.TeamID)
-                    {
-                        // Don't allow npcs to idle in a sub that's not in their team (like the player sub)
-                        continue;
-                    }
-                }
-                else
-                {
-                    if (hull.Submarine.TeamID != character.Submarine.TeamID)
-                    {
-                        // Don't allow to idle in the subs that are not in the same team as the current sub
-                        // -> the crew ai bots can't change the sub from outpost to main sub or vice versa on their own
-                        continue;
-                    }
-                }
+                if (!IsSuitableSubmarine(hull.Submarine)) { continue; }
                 if (IsForbidden(hull)) { continue; }
                 // Check that the hull is linked
                 if (!character.Submarine.IsConnectedTo(hull.Submarine)) { continue; }
@@ -529,8 +540,9 @@ namespace Barotrauma
             {
                 checkItemsTimer = checkItemsInterval * Rand.Range(0.9f, 1.1f);
                 if (character.Submarine is not Submarine sub) { return; }
-                if (sub.TeamID != character.TeamID) { return; }
+                if (!character.IsAllowedToInteractWithItemsOnSub(sub)) { return; }
                 if (character.CurrentHull is not Hull currentHull) { return; }
+                if (!character.HasBothHands) { return; }
                 itemsToClean.Clear();
                 foreach (Item item in Item.CleanableItems)
                 {

@@ -9,9 +9,10 @@ using Barotrauma.IO;
 
 namespace Barotrauma.Sounds
 {
-    class SoundManager : IDisposable
+    public class SoundManager : IDisposable
     {
         public const int SourceCount = 32;
+        public const int VoiceSourceCount = 16;
         public static readonly Identifier SoundCategoryDefault = "default".ToIdentifier();
         public static readonly Identifier SoundCategoryUi = "ui".ToIdentifier();
         public static readonly Identifier SoundCategoryWaterAmbience = "waterambience".ToIdentifier();
@@ -210,7 +211,7 @@ namespace Barotrauma.Sounds
 
             sourcePools = new SoundSourcePool[2];
             playingChannels[(int)SourcePoolIndex.Default] = new SoundChannel[SourceCount];
-            playingChannels[(int)SourcePoolIndex.Voice] = new SoundChannel[16];
+            playingChannels[(int)SourcePoolIndex.Voice] = new SoundChannel[VoiceSourceCount];
 
             string deviceName = GameSettings.CurrentConfig.Audio.AudioOutputDevice;
 
@@ -340,7 +341,7 @@ namespace Barotrauma.Sounds
             }
 
             sourcePools[(int)SourcePoolIndex.Default] = new SoundSourcePool(SourceCount);
-            sourcePools[(int)SourcePoolIndex.Voice] = new SoundSourcePool(16);
+            sourcePools[(int)SourcePoolIndex.Voice] = new SoundSourcePool(VoiceSourceCount);
 
             ReloadSounds();
 

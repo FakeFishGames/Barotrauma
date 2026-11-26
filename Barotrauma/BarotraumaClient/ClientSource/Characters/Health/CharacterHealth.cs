@@ -62,9 +62,10 @@ namespace Barotrauma
 
         private GUIFrame healthWindow;
 
+        private GUIComponent limbSelection;
         private GUITextBlock deadIndicator;
 
-        //private GUIComponent lowSkillIndicator;
+        private GUITickBox prosthesesTickBox;
 
         private GUIButton cprButton;
 
@@ -126,10 +127,17 @@ namespace Barotrauma
 
         public float DisplayedVitality, DisplayVitalityDelay;
 
+        // Stored state for smoothing affliction bar values jittered by syncing in MP
+        private readonly Dictionary<Affliction, (float value, float velocity)> displayedAfflictionStrengths = new Dictionary<Affliction, (float, float)>();
+        // The time in seconds (roughly) the bar takes to catch up to a change in strength
+        private const float AfflictionStrengthBarSmoothTime = 0.25f;
+
         public bool MouseOnElement
         {
             get { return highlightedLimbIndex > -1; }
         }
+
+        public bool ProsthesisOverlayEnabled => prosthesesTickBox is { Selected: true };
 
         private static CharacterHealth openHealthWindow;
         public static CharacterHealth OpenHealthWindow
@@ -155,14 +163,17 @@ namespace Barotrauma
 
                 openHealthWindow = value;
                 toggledThisFrame = true;
+                if (value != null) { value.prosthesesTickBox.Selected = false; }
                 if (Character.Controlled == null) { return; }
 
                 if (value == null &&
-                    Character.Controlled?.SelectedCharacter?.CharacterHealth != null &&
+                    Character.Controlled.SelectedCharacter?.CharacterHealth != null &&
                     Character.Controlled.SelectedCharacter.CharacterHealth == prevOpenHealthWindow)
                 {
                     Character.Controlled.DeselectCharacter();
                 }
+
+                Character.Controlled.Inventory?.ClearInventoryHighlights();
 
                 Character.Controlled.DisableInteract = true;
                 if (openHealthWindow != null)
@@ -258,47 +269,9 @@ namespace Barotrauma
                 //RelativeSpacing = 0.05f
             };
 
-            GUIFrame left = new(new RectTransform(new Vector2(0.25f, 1f), characterIndicatorArea.RectTransform), style: null);
+            GUIFrame left = new(new RectTransform(new Vector2(0.2f, 1f), characterIndicatorArea.RectTransform), style: null);
 
-            InventorySlotContainer = new GUICustomComponent(new RectTransform(Vector2.One, left.RectTransform),
-                (spriteBatch, component) =>
-                {
-                    for (int i = 0; i < character.Inventory.Capacity; i++)
-                    {
-                        if (character.Inventory.SlotTypes[i] != InvSlotType.HealthInterface) { continue; }
-                        if (character.Inventory.HideSlot(i)) { continue; }
-
-                        int width = Character.Inventory.visualSlots[i].Rect.Width;
-                        left.RectTransform.MinSize = new Point(width, left.RectTransform.MinSize.Y);
-                        if (afflictionIconList != null) { afflictionIconList.RectTransform.MinSize = new Point(width, afflictionIconList.RectTransform.MinSize.Y); }
-
-                        //don't draw the item if it's being dragged out of the slot
-                        bool drawItem = !Inventory.DraggingItems.Any() || !Character.Inventory.GetItemsAt(i).All(it => Inventory.DraggingItems.Contains(it)) || character.Inventory.visualSlots[i].MouseOn();
-
-                        Inventory.DrawSlot(spriteBatch, Character.Inventory, Character.Inventory.visualSlots[i], Character.Inventory.GetItemAt(i), i, drawItem, Character.Inventory.SlotTypes[i]);
-
-                        if (medUIExtra != null) 
-                        { 
-                            float overlayScale = Math.Min(
-                                Character.Inventory.visualSlots[i].Rect.Width / (float)medUIExtra.FrameSize.X,
-                                Character.Inventory.visualSlots[i].Rect.Height / (float)medUIExtra.FrameSize.Y);
-
-                            int frame = (int)medUIExtraAnimState;
-
-                            medUIExtra.Draw(spriteBatch, frame, Character.Inventory.visualSlots[i].Rect.Center.ToVector2(), Color.Gray, origin: medUIExtra.FrameSize.ToVector2() / 2, rotate: 0.0f,
-                                scale: Vector2.One * overlayScale);
-                        }
-                    }
-                },
-                (dt, component) =>
-                {
-                    if (!GameMain.Instance.Paused)
-                    {
-                        medUIExtraAnimState = (medUIExtraAnimState + dt * 10.0f) % 16.0f;
-                    }
-                });
-
-            cprButton = new GUIButton(new RectTransform(new Vector2(0.75f), left.RectTransform, Anchor.BottomLeft, scaleBasis: ScaleBasis.Smallest), text: "", style: "CPRButton")
+            cprButton = new GUIButton(new RectTransform(new Vector2(1.0f), left.RectTransform, Anchor.BottomLeft, scaleBasis: ScaleBasis.Smallest), text: "", style: "CPRButton")
             {
                 UserData = UIHighlightAction.ElementId.CPRButton,
                 OnClicked = (button, userData) =>
@@ -325,7 +298,7 @@ namespace Barotrauma
                 Visible = false
             };
 
-            var limbSelection = new GUICustomComponent(new RectTransform(new Vector2(0.5f, 1.0f), characterIndicatorArea.RectTransform),
+            limbSelection = new GUICustomComponent(new RectTransform(new Vector2(0.5f, 1.0f), characterIndicatorArea.RectTransform),
                 (spriteBatch, component) =>
                 {
                     DrawHealthWindow(spriteBatch, component.RectTransform.Rect, true);
@@ -335,6 +308,70 @@ namespace Barotrauma
                     UpdateLimbIndicators(deltaTime, component.RectTransform.Rect);
                 }
             );
+
+            InventorySlotContainer = new GUICustomComponent(new RectTransform(Vector2.One, characterIndicatorArea.RectTransform),
+                (spriteBatch, component) =>
+                {
+                    for (int i = 0; i < character.Inventory.Capacity; i++)
+                    {
+                        if (!CharacterInventory.HealthInterfaceSlots.HasFlag(character.Inventory.SlotTypes[i])) { continue; }
+                        if (character.Inventory.HideSlot(i)) { continue; }
+
+                        int width = Character.Inventory.visualSlots[i].Rect.Width;
+                        left.RectTransform.MinSize = new Point(width, left.RectTransform.MinSize.Y);
+                        if (afflictionIconList != null) { afflictionIconList.RectTransform.MinSize = new Point(width, afflictionIconList.RectTransform.MinSize.Y); }
+
+                        var visualSlot = Character.Inventory.visualSlots[i];
+                        //don't draw the item if it's being dragged out of the slot
+                        bool drawItem = Inventory.DraggingItems.None() || !Character.Inventory.GetItemsAt(i).All(it => Inventory.DraggingItems.Contains(it)) || visualSlot.MouseOn();
+
+                        Inventory.DrawSlot(spriteBatch, Character.Inventory, visualSlot, Character.Inventory.GetItemAt(i), i, drawItem, Character.Inventory.SlotTypes[i]);
+
+                        if (medUIExtra != null && character.Inventory.SlotTypes[i] == InvSlotType.HealthInterface)
+                        {
+                            float overlayScale = Math.Min(
+                                visualSlot.Rect.Width / (float)medUIExtra.FrameSize.X,
+                                visualSlot.Rect.Height / (float)medUIExtra.FrameSize.Y);
+
+                            int frame = (int)medUIExtraAnimState;
+
+                            medUIExtra.Draw(spriteBatch, frame, visualSlot.Rect.Center.ToVector2(), Color.Gray, origin: medUIExtra.FrameSize.ToVector2() / 2, rotate: 0.0f,
+                                scale: Vector2.One * overlayScale);
+                        }
+                        if (CharacterInventory.LimbSlotIcons.TryGetValue(character.Inventory.SlotTypes[i], out Sprite slotIcon))
+                        {
+                            slotIcon.Draw(spriteBatch, visualSlot.Rect.Center.ToVector2(),
+                                color: Color.White * 0.5f,
+                                origin: slotIcon.Origin,
+                                scale: Math.Min(visualSlot.Rect.Width / slotIcon.size.X, visualSlot.Rect.Height / slotIcon.size.Y) * 0.6f);
+                        }
+                        
+                        // Dim the prosthetics slot if the corresponding limb is still intact
+                        if (CharacterInventory.ProstheticSlots.HasFlag(character.Inventory.SlotTypes[i]) &&
+                            Inventory.IsLimbIntactForSlot(character.Inventory.SlotTypes[i], character))
+                        {
+                            GUI.DrawRectangle(spriteBatch, visualSlot.Rect, Color.Black * 0.65f, isFilled: true);
+                        }
+                    }
+                },
+                (dt, component) =>
+                {
+                    if (!GameMain.Instance.Paused)
+                    {
+                        medUIExtraAnimState = (medUIExtraAnimState + dt * 10.0f) % 16.0f;
+                    }
+                })
+            {
+                IgnoreLayoutGroups = true,
+                Visible = false,
+                CanBeFocused = false
+            };
+            InventorySlotContainer.RectTransform.SizeChanged += () =>
+            {
+                if (character == null || character.Removed) { return; }
+                character?.Inventory?.RefreshSlotPositions();
+            };
+
             deadIndicator = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.1f), limbSelection.RectTransform, Anchor.Center),
                 text: TextManager.Get("Deceased"), font: GUIStyle.LargeFont, textAlignment: Alignment.Center, style: "GUIToolTip")
             {
@@ -360,7 +397,7 @@ namespace Barotrauma
                 Stretch = false
             };
 
-            recommendedTreatmentContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), treatmentLayout.RectTransform, Anchor.Center, Pivot.Center), isHorizontal: true, style: null)
+            recommendedTreatmentContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), treatmentLayout.RectTransform, Anchor.Center, Pivot.Center), isHorizontal: true)
             {
                 Spacing = GUI.IntScale(4),
                 KeepSpaceForScrollBar = false,
@@ -371,6 +408,24 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
+
+            prosthesesTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), healthWindowVerticalLayout.RectTransform), TextManager.Get("augmentsandprostheses"), font: GUIStyle.SmallFont)
+            {
+                OnSelected = (tickbox) =>
+                {
+                    InventorySlotContainer.Visible = tickbox.Selected;
+                    if (InventorySlotContainer.Visible)
+                    {
+                        displayedAfflictions.Clear();
+                        highlightedLimbIndex = -1;
+                        selectedLimbIndex = -1;
+                    }
+                    return true;
+                },
+                ClampMouseRectToParent = false
+            };
+
+            characterIndicatorArea.Recalculate();
 
             healthBarHolder = new GUIFrame(new RectTransform(Point.Zero, GUI.Canvas), style: null)
             {
@@ -624,7 +679,7 @@ namespace Barotrauma
                 if (blood != null)
                 {
                     blood.Size *= bloodParticleSize;
-                    if (!inWater && !string.IsNullOrEmpty(Character.BloodDecalName) && Rand.Range(0.0f, 1.0f) < 0.05f)
+                    if (!inWater && !Character.BloodDecalName.IsEmpty && Rand.Range(0.0f, 1.0f) < 0.05f)
                     {
                         blood.OnCollision += (Vector2 pos, Hull hull) =>
                         {
@@ -646,6 +701,33 @@ namespace Barotrauma
             return Character.Controlled.CharacterHealth.healthBar.State == GUIComponent.ComponentState.Hover;
         }
 
+        /// <summary>
+        /// Can the given character access this character's augment/prosthesis slots in the health interface?
+        /// </summary>
+        public bool CanAccessProsthesisInterface(Character accessor)
+        {
+            if (Character == null || accessor == null) { return false; }
+            return Character.IsInventoryAccessibleTo(accessor);
+        }
+
+        public void ToggleProsthesisInterface(bool flashTickBox)
+        {
+            SetProsthesisInterfaceOpen(!prosthesesTickBox.Selected, flashTickBox);
+        }
+
+        public void SetProsthesisInterfaceOpen(bool isOpen, bool flashTickBox)
+        {
+            prosthesesTickBox.Selected = isOpen;
+            if (flashTickBox)
+            {
+                CoroutineManager.Invoke(() => { prosthesesTickBox.Flash(GUIStyle.Green); }, delay: 0.5f);
+            }
+            if (isOpen)
+            {
+                HintManager.OnShowProstheticInterface();
+            }
+        }
+
         public void UpdateHUD(float deltaTime)
         {
             if (GUI.DisableHUD) { return; }
@@ -656,6 +738,14 @@ namespace Barotrauma
                     openHealthWindow = null;
                     return;
                 }
+            }
+
+            bool canAccessProsthesisInterface = CanAccessProsthesisInterface(Character.Controlled);
+            prosthesesTickBox.Visible = canAccessProsthesisInterface;
+            if (!canAccessProsthesisInterface)
+            {
+                // Unselect if the user had it selected previously
+                prosthesesTickBox.Selected = false;
             }
 
             bool forceAfflictionContainerUpdate = false;
@@ -838,8 +928,12 @@ namespace Barotrauma
             if (OpenHealthWindow == this)
             {
                 var highlightedLimb = highlightedLimbIndex < 0 ? null : limbHealths[highlightedLimbIndex];
-                if (highlightedLimbIndex < 0 && selectedLimbIndex < 0)
+                if (highlightedLimbIndex < 0 && selectedLimbIndex < 0 && !InventorySlotContainer.Visible)
                 {
+                    // We shouldn't auto-focus a limb whose parts are all severed, nothing left to treat there
+                    bool HasNonSeveredLimb(int healthIndex) =>
+                        Character.AnimController.Limbs.Any(l => l.HealthIndex == healthIndex && !l.IsSevered);
+
                     // If no limb is selected or highlighted, select the one with the most critical afflictions.
                     var affliction = SortAfflictionsBySeverity(GetAllAfflictions(a => a.Prefab.IndicatorLimb != LimbType.None)).FirstOrDefault();
                     if (affliction != null && (affliction.DamagePerSecond > 0 || affliction.Strength > 0))
@@ -847,14 +941,32 @@ namespace Barotrauma
                         var limbHealth = GetMatchingLimbHealth(affliction);
                         if (limbHealth != null)
                         {
-                            selectedLimbIndex = limbHealths.IndexOf(limbHealth);
+                            int candidateIndex = limbHealths.IndexOf(limbHealth);
+                            if (HasNonSeveredLimb(candidateIndex))
+                            {
+                                selectedLimbIndex = candidateIndex;
+                            }
                         }
                     }
                     else
                     {
                         // If no affliction is critical, select the limb which has most damage.
-                        var limbHealth = limbHealths.OrderByDescending(l => GetTotalDamage(l)).FirstOrDefault();
-                        selectedLimbIndex = limbHealths.IndexOf(limbHealth);
+                        var limbHealth = limbHealths
+                            .Where(lh => HasNonSeveredLimb(limbHealths.IndexOf(lh)) && GetTotalDamage(lh) > 0) // skip if 0 damage
+                            .OrderByDescending(l => GetTotalDamage(l)).FirstOrDefault();
+                        if (limbHealth != null)
+                        {
+                            selectedLimbIndex = limbHealths.IndexOf(limbHealth);
+                        }
+                        else
+                        {
+                            // Nothing is damaged, default to the main limb
+                            int mainLimbHealthIndex = Character.AnimController.MainLimb?.HealthIndex ?? -1;
+                            if (mainLimbHealthIndex >= 0 && HasNonSeveredLimb(mainLimbHealthIndex))
+                            {
+                                selectedLimbIndex = mainLimbHealthIndex;
+                            }
+                        }
                     }
                 }
                 LimbHealth selectedLimb = selectedLimbIndex < 0 ? highlightedLimb : limbHealths[selectedLimbIndex];
@@ -864,14 +976,15 @@ namespace Barotrauma
                     currentDisplayedLimb = selectedLimb;
                 }
 
-                UpdateAfflictionInfos(displayedAfflictions.Select(d => d.affliction));
+                UpdateAfflictionInfos(displayedAfflictions.Select(d => d.affliction), deltaTime);
 
                 foreach (GUIComponent component in recommendedTreatmentContainer.Content.Children)
                 {
                     var treatmentButton = component.GetChild<GUIButton>();
                     if (treatmentButton?.UserData is not ItemPrefab itemPrefab) { continue; }
                     var matchingItem = AIObjectiveRescue.FindMedicalItem(Character.Controlled.Inventory, itemPrefab.Identifier);
-                    treatmentButton.Enabled = matchingItem != null;  
+                    treatmentButton.Enabled = matchingItem != null &&
+                        Character.AnimController.FunctionalHandCount >= matchingItem.Prefab.UseInHealthInterfaceMinHandsRequired;
                     if (treatmentButton.Enabled && treatmentButton.State == GUIComponent.ComponentState.Hover)
                     {
                         //highlight the slot the treatment item is in
@@ -1007,7 +1120,7 @@ namespace Barotrauma
 
         public void AddToGUIUpdateList()
         {
-            if (GUI.DisableHUD) { return; }
+            if (GUI.DisableHUD || CharacterHUD.HideHUD) { return; }
             if (OpenHealthWindow == this)
             {
                 healthWindow.AddToGUIUpdateList();
@@ -1200,7 +1313,7 @@ namespace Barotrauma
                         {
                             matchingIcon.ToolTip = TextManager.Get("PressureHUDWarning");
                         }
-                        else if (affliction == pressureAffliction)
+                        else if (affliction == oxygenLowAffliction)
                         {
                             matchingIcon.ToolTip = TextManager.Get("OxygenHUDWarning");
                         }
@@ -1314,6 +1427,8 @@ namespace Barotrauma
             if (selectedLimb == null)
             {
                 afflictionIconList.Content.ClearChildren();
+                displayedAfflictions.Clear();
+                displayedAfflictionStrengths.Clear();
                 return;
             }
 
@@ -1350,6 +1465,7 @@ namespace Barotrauma
         {
             afflictionIconList.ClearChildren();
             displayedAfflictions.Clear();
+            displayedAfflictionStrengths.Clear();
 
             Affliction mostSevereAffliction = SortAfflictionsBySeverity(afflictions, excludeBuffs: false).FirstOrDefault();
             GUIButton buttonToSelect = null;
@@ -1450,7 +1566,7 @@ namespace Barotrauma
                 }
             }
 
-            if (!treatmentSuitability.Any())
+            if (treatmentSuitability.None(treatment => treatment.Value > 0))
             {
                 new GUITextBlock(new RectTransform(Vector2.One, recommendedTreatmentContainer.Content.RectTransform), TextManager.Get("none"), textAlignment: Alignment.Center)
                 {
@@ -1642,7 +1758,7 @@ namespace Barotrauma
             return false;
         }
 
-        private void UpdateAfflictionInfos(IEnumerable<Affliction> afflictions)
+        private void UpdateAfflictionInfos(IEnumerable<Affliction> afflictions, float deltaTime)
         {
             var potentialTreatment = Inventory.DraggingItems.FirstOrDefault();
             if (potentialTreatment == null && GUI.MouseOn?.UserData is ItemPrefab itemPrefab)
@@ -1666,33 +1782,36 @@ namespace Barotrauma
 
                 var child = afflictionIconList.Content.FindChild(affliction);
 
-                var afflictionStrengthPredictionBar = child.GetChild<GUILayoutGroup>().GetChildByUserData("afflictionstrengthprediction") as GUIProgressBar;
-                afflictionStrengthPredictionBar.BarSize = 0.0f;
-                var afflictionStrengthBar = afflictionStrengthPredictionBar.GetChildByUserData("afflictionstrength") as GUIProgressBar;
-                afflictionStrengthBar.BarSize = affliction.Strength / affliction.Prefab.MaxStrength;
-                afflictionStrengthBar.Color = afflictionEffectColor;
-
-                float afflictionStrengthPrediction = GetAfflictionStrengthPrediction(potentialTreatment, affliction);
-                if (!MathUtils.NearlyEqual(afflictionStrengthPrediction, affliction.Strength))
+                if (child?.GetChild<GUILayoutGroup>()?.GetChildByUserData("afflictionstrengthprediction") is GUIProgressBar afflictionStrengthPredictionBar &&
+                    afflictionStrengthPredictionBar.GetChildByUserData("afflictionstrength") is GUIProgressBar afflictionStrengthBar)
                 {
-                    float t = (float)Math.Max(0.5f, (Math.Sin(Timing.TotalTime * 5) + 1.0f) / 2.0f);
-                    if (afflictionStrengthPrediction < affliction.Strength)
-                    {
-                        afflictionStrengthBar.Color =  afflictionEffectColor;
-                        afflictionStrengthPredictionBar.Color = GUIStyle.Blue * t;
-                        afflictionStrengthPredictionBar.BarSize = afflictionStrengthBar.BarSize;
-                        afflictionStrengthBar.BarSize = afflictionStrengthPrediction / affliction.Prefab.MaxStrength;
-                    }
-                    else
-                    {
-                        afflictionStrengthPredictionBar.Color = Color.Red * t;
-                        afflictionStrengthPredictionBar.BarSize = afflictionStrengthPrediction / affliction.Prefab.MaxStrength;
-                    }
-                }
+                    afflictionStrengthPredictionBar.BarSize = 0.0f;
+                    float target = affliction.Strength / affliction.Prefab.MaxStrength;
+                    afflictionStrengthBar.BarSize = GameMain.NetworkMember == null ? target : GetDisplayedAfflictionStrengthSmoothed(affliction, target, deltaTime);
+                    afflictionStrengthBar.Color = afflictionEffectColor;
 
-                if (!affliction.Prefab.ShowBarInHealthMenu)
-                {
-                    afflictionStrengthBar.BarSize = 1f;
+                    float afflictionStrengthPrediction = GetAfflictionStrengthPrediction(potentialTreatment, affliction);
+                    if (!MathUtils.NearlyEqual(afflictionStrengthPrediction, affliction.Strength))
+                    {
+                        float t = (float)Math.Max(0.5f, (Math.Sin(Timing.TotalTime * 5) + 1.0f) / 2.0f);
+                        if (afflictionStrengthPrediction < affliction.Strength)
+                        {
+                            afflictionStrengthBar.Color =  afflictionEffectColor;
+                            afflictionStrengthPredictionBar.Color = GUIStyle.Blue * t;
+                            afflictionStrengthPredictionBar.BarSize = afflictionStrengthBar.BarSize;
+                            afflictionStrengthBar.BarSize = afflictionStrengthPrediction / affliction.Prefab.MaxStrength;
+                        }
+                        else
+                        {
+                            afflictionStrengthPredictionBar.Color = Color.Red * t;
+                            afflictionStrengthPredictionBar.BarSize = afflictionStrengthPrediction / affliction.Prefab.MaxStrength;
+                        }
+                    }
+
+                    if (!affliction.Prefab.ShowBarInHealthMenu)
+                    {
+                        afflictionStrengthBar.BarSize = 1f;
+                    }
                 }
 
                 if (afflictionTooltip != null && afflictionTooltip.UserData == affliction)
@@ -1702,6 +1821,35 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Returns the [0..1] value for the affliction's strength bar in the health interface, smoothed to account for
+        /// jitter and jumpiness caused by the client locally projecting the strength between syncs. Only relevant in MP.
+        /// </summary>
+        private float GetDisplayedAfflictionStrengthSmoothed(Affliction affliction, float target, float deltaTime)
+        {
+            // No sync jitter in SP, no need for smoothing
+            if (GameMain.NetworkMember == null) { return target; }
+
+            // Start a freshly displayed affliction at its real value rather than easing in from 0
+            if (!displayedAfflictionStrengths.TryGetValue(affliction, out (float value, float velocity) afflictionState))
+            {
+                afflictionState = (value: target, velocity: 0.0f);
+            }
+
+            float value = MathUtils.SmoothDamp(afflictionState.value, target, ref afflictionState.velocity, AfflictionStrengthBarSmoothTime, deltaTime);
+
+            // Settle the value when close enough, to stop the spring from chasing the target forever
+            if (Math.Abs(value - target) < 0.0005f)
+            {
+                value = target;
+                afflictionState.velocity = 0.0f;
+            }
+
+            // Persist the per-affliction state between calls
+            displayedAfflictionStrengths[affliction] = (value, afflictionState.velocity);
+            return value;
+        }
+
         private float GetAfflictionStrengthPrediction(Item item, Affliction affliction)
         {
             float strength = affliction.Strength;
@@ -1709,19 +1857,17 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in item.Components)
             {
-                if (ic.statusEffectLists == null) { continue; }
-                if (!ic.statusEffectLists.TryGetValue(ActionType.OnUse, out List<StatusEffect> statusEffects)) { continue; }
-                foreach (StatusEffect effect in statusEffects)
+                foreach (StatusEffect statusEffect in ic.GetStatusEffectsOfType(ActionType.OnUse))
                 {
-                    foreach (var reduceAffliction in effect.ReduceAffliction)
+                    foreach (var reduceAffliction in statusEffect.ReduceAffliction)
                     {
                         if (reduceAffliction.AfflictionIdentifier != affliction.Identifier && reduceAffliction.AfflictionIdentifier != affliction.Prefab.AfflictionType) { continue; }
-                        strength -= reduceAffliction.ReduceAmount * (effect.Duration > 0 ? effect.Duration : 1.0f);
+                        strength -= reduceAffliction.ReduceAmount * (statusEffect.Duration > 0 ? statusEffect.Duration : 1.0f);
                     }
-                    foreach (var addAffliction in effect.Afflictions)
+                    foreach (var addAffliction in statusEffect.Afflictions)
                     {
                         if (addAffliction.Prefab != affliction.Prefab) { continue; }
-                        strength += addAffliction.Strength * (effect.Duration > 0 ? effect.Duration : 1.0f);
+                        strength += addAffliction.Strength * (statusEffect.Duration > 0 ? statusEffect.Duration : 1.0f);
                     }
                 }
             }
@@ -1775,6 +1921,11 @@ namespace Barotrauma
                 return false;
             }
 
+            if (item.ParentInventory != Character.Inventory)
+            {
+                HumanAIController.ItemTaken(item, Character.Controlled);
+            }
+
             //can't apply treatment to dead characters
             if (Character.IsDead) { return true; }
             if (item == null || !item.UseInHealthInterface) { return true; }
@@ -1786,12 +1937,50 @@ namespace Barotrauma
                 }
             }
 
-            Limb targetLimb = 
-                Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex) ?? 
+            if (Character.Controlled.AnimController.FunctionalHandCount < item.Prefab.UseInHealthInterfaceMinHandsRequired)
+            {
+                if (item.Prefab.UseInHealthInterfaceMinHandsRequired == 1)
+                {
+                    GUI.AddMessage(
+                        TextManager.Get("Warning.RequiresUserIntactHand"),
+                        GUIStyle.Red);
+                }
+                else
+                {
+                    GUI.AddMessage(
+                        TextManager.GetWithVariable("Warning.RequiresUserIntactHands",
+                            "[count]", item.Prefab.UseInHealthInterfaceMinHandsRequired.ToString()),
+                        GUIStyle.Red);
+                }
+                return true;
+            }
+
+            if (item.Prefab.RequireAmputableLimb)
+            {
+                Limb amputableTarget = Character.AnimController.Limbs.FirstOrDefault(l =>
+                    l.HealthIndex == selectedLimbIndex && l.IsAmputable && !l.IsSevered && !l.HiddenByProsthesis);
+                if (amputableTarget == null)
+                {
+                    // Distinguish between limb choice missing/fundamentally wrong vs limb already having been amputated
+                    bool limbHealthHasAmputableLimb = Character.AnimController.Limbs.Any(l =>
+                        l.HealthIndex == selectedLimbIndex && l.IsAmputable);
+                    GUI.AddMessage(
+                        TextManager.Get(limbHealthHasAmputableLimb ? "Warning.NothingToAmputate" : "Warning.RequiresLimbSelection"),
+                        GUIStyle.Red);
+                    return true;
+                }
+                item.ApplyTreatment(Character.Controlled, Character, amputableTarget);
+                return true;
+            }
+
+            // Most treatments: any limb part in the selected "big" limb (LimbHealth), falling back to the main limb (usually torso)
+            Limb targetLimb =
+                Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex) ??
                 Character.AnimController.MainLimb;
             item.ApplyTreatment(Character.Controlled, Character, targetLimb);
             return true;
         }
+
         private void UpdateLimbIndicators(float deltaTime, Rectangle drawArea)
         {
             if (!GameMain.Instance.Paused)
@@ -1800,15 +1989,14 @@ namespace Barotrauma
             }
 
             highlightedLimbIndex = -1;
+            if (InventorySlotContainer.Visible) { return; }
+
             int i = 0;
             foreach (LimbHealth limbHealth in limbHealths)
             {
-                if (limbHealth.IndicatorSprite == null) { continue; }
-                
+                if (limbHealth.IndicatorSprite == null) { continue; }                
                 float scale = Math.Min(drawArea.Width / (float)limbHealth.IndicatorSprite.SourceRect.Width, drawArea.Height / (float)limbHealth.IndicatorSprite.SourceRect.Height);
-
                 Rectangle highlightArea = GetLimbHighlightArea(limbHealth, drawArea);
-
                 if (highlightArea.Contains(PlayerInput.MousePosition))
                 {
                     highlightedLimbIndex = i;
@@ -1820,6 +2008,25 @@ namespace Barotrauma
             {
                 selectedLimbIndex = highlightedLimbIndex;
             }
+        }
+
+        public Vector2? GetInventorySlotPosition(InvSlotType slotType, Point slotSize)
+        {
+            LimbType limbType = slotType switch
+            {
+                InvSlotType.LeftLegProsthetic => LimbType.LeftLeg,
+                InvSlotType.RightLegProsthetic => LimbType.RightLeg,
+                InvSlotType.LeftHandProsthetic => LimbType.LeftHand,
+                InvSlotType.RightHandProsthetic => LimbType.RightHand,
+                _ => LimbType.None
+            };
+            if (limbType == LimbType.None) { return null; }
+
+            Limb limb = Character.AnimController.GetLimb(limbType, excludeSevered: false);
+            if (limb == null) { return null; }
+
+            Rectangle limbArea = GetLimbHighlightArea(GetMatchingLimbHealth(limb), limbSelection.Rect);
+            return new Vector2(limbArea.Center.X - slotSize.X / 2, limbArea.Bottom - slotSize.Y * 1.5f);
         }
 
         private static readonly List<Affliction> afflictionsDisplayedOnLimb = new List<Affliction>();
@@ -1886,7 +2093,12 @@ namespace Barotrauma
                     }
                 }
 
-                if (Character.IsDead)
+                if (Character.AnimController.Limbs.Any(limb => (limb.IsSevered || limb.HiddenByProsthesis) && GetMatchingLimbHealth(limb) == limbHealth))
+                {
+                    color1 = Color.Lerp(color1, Color.Black, 0.9f);
+                    color2 = Color.Lerp(color2, Color.Black, 0.9f);
+                }
+                else if (Character.IsDead)
                 {
                     color1 = Color.Lerp(color1, Color.Black, 0.75f);
                     color2 = Color.Lerp(color2, Color.Black, 0.75f);
@@ -2204,6 +2416,16 @@ namespace Barotrauma
                 limb.DamageOverlayStrength = 0.0f;
             }
 
+            //make severed limbs (and the limb they were severed from) appear damaged
+            foreach (var limbJoint in Character.AnimController.LimbJoints)
+            {
+                if (limbJoint.IsSevered)
+                {
+                    limbJoint.LimbA.DamageOverlayStrength += 0.5f;
+                    limbJoint.LimbB.DamageOverlayStrength += 0.5f;
+                }
+            }
+
             foreach ((Affliction affliction, LimbHealth limbHealth) in afflictions)
             {
                 if (affliction.Prefab.BurnOverlayAlpha <= 0.0f && affliction.Prefab.DamageOverlayAlpha <= 0.0f) { continue; }
@@ -2241,6 +2463,9 @@ namespace Barotrauma
             medUIExtra = null;
 
             Character.OnAttacked -= OnAttacked;
+
+            healthWindow.Parent?.RemoveChild(healthWindow);
+            healthWindow = null;
 
             limbIndicatorOverlay?.Remove();
             limbIndicatorOverlay = null;

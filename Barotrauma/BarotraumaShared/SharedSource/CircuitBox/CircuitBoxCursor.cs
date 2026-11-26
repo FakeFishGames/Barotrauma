@@ -6,9 +6,9 @@ using Microsoft.Xna.Framework;
 namespace Barotrauma
 {
     [NetworkSerialize]
-    internal readonly record struct NetCircuitBoxCursorInfo(Vector2[] RecordedPositions, Option<Vector2> DragStart, Option<Identifier> HeldItem, ushort CharacterID = 0) : INetSerializableStruct;
+    public readonly record struct NetCircuitBoxCursorInfo(Vector2[] RecordedPositions, Option<Vector2> DragStart, Option<Identifier> HeldItem, ushort CharacterID = 0) : INetSerializableStruct;
 
-    internal sealed class CircuitBoxCursor
+    public sealed class CircuitBoxCursor
     {
         public NetCircuitBoxCursorInfo Info;
 

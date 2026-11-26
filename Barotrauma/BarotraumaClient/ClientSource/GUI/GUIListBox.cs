@@ -20,11 +20,26 @@ namespace Barotrauma
         /// </summary>
         public OnSelectedHandler OnSelected;
 
+        public delegate bool OnHoverStartedHandler(GUIComponent component, object obj);
+        /// <summary>
+        /// Triggers once when hover starts on a list item.
+        /// </summary>
+        public OnHoverStartedHandler OnHoverStarted;
+        
+        public delegate bool OnHoverEndedHandler();
+        /// <summary>
+        /// Triggers once when hover starts on a list item.
+        /// </summary>
+        public OnHoverEndedHandler OnHoverEnded;
+        private bool isMouseOverSomething; // helper for dealing with hover ending
+
         /// <summary>
         /// Triggers after some element has been selected from the listbox.
         /// </summary>
         public OnSelectedHandler AfterSelected;
 
+        private GUIComponent hovered;
+        
         public delegate object CheckSelectedHandler();
         public CheckSelectedHandler CheckSelected;
 
@@ -45,21 +60,22 @@ namespace Barotrauma
         private readonly Dictionary<GUIComponent, bool> childVisible = new Dictionary<GUIComponent, bool>();
           
         private int totalSize;
-        private bool childrenNeedsRecalculation;
-        private bool scrollBarNeedsRecalculation;
-        private bool dimensionsNeedsRecalculation;
+        private bool childrenNeedsRecalculation, scrollBarNeedsRecalculation, dimensionsNeedsRecalculation;
+        public bool ChildrenNeedRecalculation { get => childrenNeedsRecalculation; set => childrenNeedsRecalculation |= value; }
+        public bool ScrollBarNeedsRecalculation { get => scrollBarNeedsRecalculation; set => scrollBarNeedsRecalculation |= value; }
+        public bool DimensionsNeedRecalculation { get => dimensionsNeedsRecalculation; set => dimensionsNeedsRecalculation |= value; }
 
         // TODO: Define in styles?
         private int ScrollBarSize
+            => GetScrollBarSize(Rect);
+
+        public static int GetScrollBarSize(Rectangle rect)
         {
-            get
-            {
-                //use the average of the "desired" size and the scaled size
-                //scaling the bar linearly with the resolution tends to make them too large on large resolutions
-                float desiredSize = 25.0f;
-                float scaledSize = desiredSize * GUI.Scale;
-                return (int)Math.Min((desiredSize + scaledSize) / 2.0f, Rect.Height / 3);
-            }
+            //use the average of the "desired" size and the scaled size
+            //scaling the bar linearly with the resolution tends to make them too large on large resolutions
+            float desiredSize = 25.0f;
+            float scaledSize = desiredSize * GUI.Scale;
+            return (int)Math.Min((desiredSize + scaledSize) / 2.0f, rect.Height / 3);
         }
 
         public enum SelectMode
@@ -165,6 +181,8 @@ namespace Barotrauma
             set { isSelected = value; }
         }
 
+        private readonly List<int> alreadySelected = [];
+
         public IReadOnlyList<GUIComponent> AllSelected => selected;
 
         public object SelectedData
@@ -248,9 +266,10 @@ namespace Barotrauma
         {
             NoDragging,
             DragWithinBox,
-            DragOutsideBox
+            DragOutsideBox,
+            DragOutsideBoxWithoutRepositioning
         }
-        
+
         private DragMode currentDragMode = DragMode.NoDragging;
         public DragMode CurrentDragMode
         {
@@ -303,7 +322,7 @@ namespace Barotrauma
         //This exists to work around the fact that rendering child
         //elements on top of the listbox's siblings is a clusterfuck.
         public bool HideDraggedElement = false;
-        
+
         private readonly bool isHorizontal;
 
         /// <summary>
@@ -369,6 +388,7 @@ namespace Barotrauma
             this.useMouseDownToSelect = useMouseDownToSelect;
             ContentBackground = new GUIFrame(new RectTransform(Vector2.One, rectT), style)
             {
+                ClampMouseRectToParent = true,
                 CanBeFocused = false                
             };
             Content = new GUIFrame(new RectTransform(Vector2.One, ContentBackground.RectTransform), style: null)
@@ -644,8 +664,18 @@ namespace Barotrauma
             if (!PlayerInput.PrimaryMouseButtonHeld())
             {
                 var draggedElem = draggedElement;
+
+                if (CurrentDragMode == DragMode.DragOutsideBoxWithoutRepositioning)
+                {
+                    DraggedElement = null;
+                    return true;
+                }
+
+                // OnRearranged must be called first before setting DraggedElement to null
                 OnRearranged?.Invoke(this, draggedElem.UserData);
+
                 DraggedElement = null;
+
                 if (PlaySoundOnDragStop)
                 {
                     SoundPlayer.PlayUISound(SoundOnDragStop);
@@ -655,15 +685,16 @@ namespace Barotrauma
             }
             else
             {
-                Vector2 topOffset = CalculateTopOffset();
                 var mousePos = PlayerInput.MousePosition.ToPoint();
                 draggedElement.RectTransform.AbsoluteOffset = mousePos - Content.Rect.Location - dragMousePosRelativeToTopLeftCorner;
-                if (CurrentDragMode != DragMode.DragOutsideBox)
+                if (CurrentDragMode == DragMode.DragWithinBox)
                 {
                     var offset = draggedElement.RectTransform.AbsoluteOffset;
                     draggedElement.RectTransform.AbsoluteOffset =
                         isHorizontal ? new Point(offset.X, 0) : new Point(0, offset.Y);
                 }
+
+                if (CurrentDragMode == DragMode.DragOutsideBoxWithoutRepositioning) { return true; }
 
                 int index = Content.RectTransform.GetChildIndex(draggedElement.RectTransform);
                 int newIndex = index;
@@ -707,7 +738,7 @@ namespace Barotrauma
                         }
                     }
                 }
-                
+
                 if (isHorizontal)
                 {
                     shiftIndices(
@@ -752,6 +783,9 @@ namespace Barotrauma
         private void UpdateChildrenRect()
         {
             if (UpdateDragging()) { return; }
+            
+            bool wasMouseOverSomething = isMouseOverSomething;
+            isMouseOverSomething = false;
 
             if (SelectTop)
             {
@@ -765,6 +799,7 @@ namespace Barotrauma
                 }
             }
             
+            alreadySelected.Clear();
             if (SelectTop && Content.Children.Any() && scrollToElement == null)
             {
                 GUIComponent component = Content.Children.FirstOrDefault(c => (c.Rect.Y - Content.Rect.Y) / (float)c.Rect.Height > -0.1f);
@@ -774,6 +809,7 @@ namespace Barotrauma
                     int index = Content.Children.ToList().IndexOf(component);
                     if (index >= 0)
                     {
+                        alreadySelected.Add(index);
                         Select(index, autoScroll: AutoScroll.Disabled, takeKeyBoardFocus: TakeKeyBoardFocus.Yes);
                     }
                 }
@@ -788,6 +824,12 @@ namespace Barotrauma
                 if (Enabled && (CanBeFocused || CanInteractWhenUnfocusable) && child.CanBeFocused && child.Rect.Contains(PlayerInput.MousePosition) && GUI.IsMouseOn(child))
                 {
                     child.State = ComponentState.Hover;
+                    isMouseOverSomething = true;
+                    if (OnHoverStarted != null && hovered != child)
+                    {
+                        hovered = child;
+                        OnHoverStarted.Invoke(child, child.UserData);
+                    }
 
                     var mouseDown = useMouseDownToSelect ? PlayerInput.PrimaryMouseButtonDown() : PlayerInput.PrimaryMouseButtonClicked();
                     
@@ -797,7 +839,7 @@ namespace Barotrauma
                         {
                             ScrollToElement(child);
                         }
-                        Select(i, autoScroll: AutoScroll.Disabled, takeKeyBoardFocus: TakeKeyBoardFocus.Yes, playSelectSound: PlaySelectSound.Yes);
+                        Select(i, autoScroll: AutoScroll.Disabled, takeKeyBoardFocus: TakeKeyBoardFocus.Yes, playSelectSound: PlaySelectSound.Yes, onSelectedAlreadyCalled: alreadySelected.Contains(i));
                     }
 
                     if (CurrentDragMode != DragMode.NoDragging
@@ -819,6 +861,16 @@ namespace Barotrauma
                 else
                 {
                     child.State = !child.ExternalHighlight ? ComponentState.None : ComponentState.Hover;
+                }
+                
+                if (!isMouseOverSomething && wasMouseOverSomething)
+                {
+                    // Reset hover tracking when mouse leaves any of the list elements
+                    hovered = null;
+                    if (OnHoverEnded != null)
+                    {
+                        OnHoverEnded.Invoke();
+                    }
                 }
             }
         }
@@ -1065,7 +1117,7 @@ namespace Barotrauma
             }
         }
 
-        public void Select(int childIndex, Force force = Force.No, AutoScroll autoScroll = AutoScroll.Enabled, TakeKeyBoardFocus takeKeyBoardFocus = TakeKeyBoardFocus.No, PlaySelectSound playSelectSound = PlaySelectSound.No)
+        public void Select(int childIndex, Force force = Force.No, AutoScroll autoScroll = AutoScroll.Enabled, TakeKeyBoardFocus takeKeyBoardFocus = TakeKeyBoardFocus.No, PlaySelectSound playSelectSound = PlaySelectSound.No, bool onSelectedAlreadyCalled = false)
         {
             if (childIndex >= Content.CountChildren || childIndex < 0 || CurrentSelectMode == SelectMode.None) { return; }
 
@@ -1076,8 +1128,7 @@ namespace Barotrauma
             bool wasSelected = true;
             if (OnSelected != null)
             {
-                // TODO: The callback is called twice, fix this!
-                wasSelected = force == Force.Yes || OnSelected(child, child.UserData);
+                wasSelected = force == Force.Yes || (!onSelectedAlreadyCalled && OnSelected(child, child.UserData));
             }
 
             if (!wasSelected) { return; }
@@ -1244,7 +1295,7 @@ namespace Barotrauma
                 {
                     totalSize += (ScrollBar.IsHorizontal) ? child.Rect.Width : child.Rect.Height;
                 }
-                totalSize += Content.CountChildren * Spacing;
+                totalSize += Content.Children.Count(c => c.Visible) * Spacing;
                 if (PadBottom)
                 {
                     GUIComponent last = Content.Children.LastOrDefault();
@@ -1305,7 +1356,8 @@ namespace Barotrauma
             foreach (GUIComponent child in Content.Children)
             {
                 if (!child.Visible) { continue; }
-                if (child == draggedElement && CurrentDragMode == DragMode.DragOutsideBox) { continue; }
+
+                if (child == draggedElement && CurrentDragMode is DragMode.DragOutsideBox or DragMode.DragOutsideBoxWithoutRepositioning) { continue; }
                 if (!IsChildInsideFrame(child))
                 {
                     if (lastVisible > 0) { break; }
@@ -1316,7 +1368,7 @@ namespace Barotrauma
                 i++;
             }
 
-            if (isDraggingElement && CurrentDragMode == DragMode.DragOutsideBox && HideDraggedElement)
+            if (isDraggingElement && CurrentDragMode is DragMode.DragOutsideBox or DragMode.DragOutsideBoxWithoutRepositioning && HideDraggedElement)
             {
                 Rectangle drawRect = DraggedElement.Rect;
                 int draggedElementIndex = Content.GetChildIndex(DraggedElement);
@@ -1337,7 +1389,7 @@ namespace Barotrauma
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
 
-            if (isDraggingElement && CurrentDragMode == DragMode.DragOutsideBox && !HideDraggedElement)
+            if (isDraggingElement && (CurrentDragMode is DragMode.DragOutsideBox or DragMode.DragOutsideBoxWithoutRepositioning) && !HideDraggedElement)
             {
                 draggedElement.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
             }

@@ -12,10 +12,13 @@ namespace Barotrauma.Items.Components
         private readonly struct EventData : IEventData
         {
             public readonly CustomInterfaceElement BtnElement;
+
+            public readonly Character User;
             
-            public EventData(CustomInterfaceElement btnElement)
+            public EventData(CustomInterfaceElement btnElement, Character user)
             {
                 BtnElement = btnElement;
+                User = user;
             }
         }
         
@@ -54,6 +57,12 @@ namespace Barotrauma.Items.Components
             public const string DefaultNumberInputMin = "0", DefaultNumberInputMax = "99", DefaultNumberInputStep = "1";
             public const int DefaultNumberInputDecimalPlaces = 0;
             public InputTypeOption InputType { get; }
+
+            /// <summary>
+            /// Optional key binding that activates the element (only supported for buttons).
+            /// </summary>
+            public InputType? KeyBind { get; }
+
             public NumberType? NumberType { get; }
             public bool HasPropertyName { get; }
             public bool ShouldSetProperty { get; set; }
@@ -90,6 +99,21 @@ namespace Barotrauma.Items.Components
                 GetValueInterval = element.GetAttributeFloat(nameof(GetValueInterval), -1.0f);
 
                 InputType = inputType;
+
+                // Would use GetAttributeEnum here, but we don't have InputType.None or Default it seems
+                string keyBindStr = element.GetAttributeString("keybind", string.Empty);
+                if (!string.IsNullOrEmpty(keyBindStr))
+                {
+                    if (Enum.TryParse(keyBindStr, ignoreCase: true, out InputType keyBind))
+                    {
+                        KeyBind = keyBind;
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError($"Error in custom interface element (label {Label}) - \"{keyBindStr}\" is not a valid input type.",
+                            contentPackage: element.ContentPackage);
+                    }
+                }
 
                 HasPropertyName = !PropertyName.IsEmpty;
                 if (HasPropertyName)
@@ -203,8 +227,18 @@ namespace Barotrauma.Items.Components
             set;            
         }
 
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool IsEnabled
+        {
+            get;
+            set;
+        }
+
         private readonly List<CustomInterfaceElement> customInterfaceElementList = new List<CustomInterfaceElement>();
-        
+
+        public IEnumerable<InputType> GetKeyBinds
+            => customInterfaceElementList.Select(static cie => cie.KeyBind).OfType<InputType>();
+
         public CustomInterface(Item item, ContentXElement element)
             : base(item, element)
         {
@@ -261,7 +295,7 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < labels.Length; i++)
             {
                 labels[i] = i < newLabels.Length ? newLabels[i] : customInterfaceElementList[i].Label;
-                customInterfaceElementList[i].Label = labels[i];                
+                customInterfaceElementList[i].Label = labels[i];
             }
             UpdateLabelsProjSpecific();
         }
@@ -359,16 +393,19 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific();     
         
-        private void ButtonClicked(CustomInterfaceElement btnElement)
+        private void ButtonClicked(CustomInterfaceElement btnElement, Character user)
         {
-            if (btnElement == null) return;
+            if (btnElement == null) { return; }
+            //assume the interface was used by the character whose inventory it was in if not specified
+            //(seems to have been implemented for the clown exosuit in 5bb7a302, may be redundant now)
+            user ??= item.ParentInventory?.Owner as Character;
             if (btnElement.Connection != null)
             {
-                item.SendSignal(new Signal(btnElement.Signal, 0, null, item), btnElement.Connection);
+                item.SendSignal(new Signal(btnElement.Signal, 0, user, item), btnElement.Connection);
             }
             foreach (StatusEffect effect in btnElement.StatusEffects)
             {
-                item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, character: item.ParentInventory?.Owner as Character);
+                item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, character: user);
             }
         }
 
@@ -433,6 +470,24 @@ namespace Barotrauma.Items.Components
                 {
                     item.ApplyStatusEffect(effect, ciElement.State ? ActionType.OnUse : ActionType.OnSecondaryUse, 1.0f, null, null, null, true, false);
                 }
+            }
+        }
+
+        public override void ReceiveSignal(Signal signal, Connection connection)
+        {
+            switch (connection.Name)
+            {
+                case "toggle":
+                    if (signal.value != "0")
+                    {
+                        IsEnabled = !IsEnabled;
+                    }
+                    break;
+                case "set_active":
+                case "set_state":
+                case "set_enabled":
+                    IsEnabled = signal.value != "0";
+                    break;
             }
         }
 

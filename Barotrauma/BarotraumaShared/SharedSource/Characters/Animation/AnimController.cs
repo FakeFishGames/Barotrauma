@@ -8,7 +8,7 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    abstract class AnimController : Ragdoll, ISerializableEntity
+    public abstract class AnimController : Ragdoll, ISerializableEntity
     {
         /// <summary>
         /// Most of the properties in this class are read-only, but can be useful for conditionals
@@ -123,22 +123,58 @@ namespace Barotrauma
         protected float deathAnimTimer, deathAnimDuration = 5.0f;
 
         /// <summary>
+        /// Is the character currently running or swimming fast?
         /// Note: Presupposes that the slow speed is lower than the high speed. Otherwise will give invalid results.
         /// </summary>
-        public bool IsMovingFast
+        public bool IsMovingFast => UseFastMovementAnimations(takeSpeedMultiplierIntoAccount: true);
+
+        /// <summary>
+        /// Is the character currently running or swimming fast?
+        /// Unlike IsMovingFast, this excludes speed multipliers: i.e. a player who's not holding shift would not be considered "moving fast" even if they have some buff that makes them move fast regardless of whether they're holding shift or not.
+        /// </summary>
+        public bool IsMovingFastWithoutSpeedMultiplier => UseFastMovementAnimations(takeSpeedMultiplierIntoAccount: false);
+
+        /// <summary>
+        /// Is the character moving fast enough for the fast movement animations (<see cref="RunParams"/> and <see cref="SwimFastParams"/>) to be used?
+        /// </summary>
+        private bool UseFastMovementAnimations(bool takeSpeedMultiplierIntoAccount)
         {
-            get
+            //note: the check is not backwards even if it may seem like it
+            //if we don't want to take the speed multiplier into account, we compare the current speed to "default speed * speedMultiplier" rather than the default speed
+            float speedMultiplier = takeSpeedMultiplierIntoAccount ? 1.0f : Character.SpeedMultiplier;
+
+            if (InWater || !CanWalk)
             {
-                if (InWater || !CanWalk)
+                float slowSwimSpeed = SwimSlowParams.MovementSpeed;
+                float fastSwimSpeed = SwimFastParams?.MovementSpeed ?? slowSwimSpeed;
+                float avgSpeed = (slowSwimSpeed + fastSwimSpeed) / 2;
+                if (!takeSpeedMultiplierIntoAccount)
                 {
-                    return TargetMovement.LengthSquared() > MathUtils.Pow2(SwimSlowParams.MovementSpeed + 0.0001f);
+                    //take temporary speed limits (such as reduced movement speed due to missing/damaged limbs) into account too
+                    avgSpeed = Character.ApplyTemporarySpeedLimits(avgSpeed);
+                }
+                return TargetMovement.Length() > avgSpeed * speedMultiplier + 0.0001f;
+            }
+            else
+            {
+                float movementSpeed;
+                float avgSpeed;
+                if (IsClimbing)
+                {
+                    avgSpeed = (WalkParams.ClimbSpeed + RunParams.ClimbSpeed) / 2;
+                    movementSpeed = TargetMovement.Y;
                 }
                 else
                 {
-                    float movementSpeed = IsClimbing ? TargetMovement.Y : TargetMovement.X;
-                    return Math.Abs(movementSpeed) > (WalkParams.MovementSpeed + RunParams.MovementSpeed) / 2.0f;
+                    avgSpeed = (WalkParams.MovementSpeed + RunParams.MovementSpeed) / 2;
+                    movementSpeed = TargetMovement.X;
                 }
-            }
+                if (!takeSpeedMultiplierIntoAccount)
+                {
+                    avgSpeed = Character.ApplyTemporarySpeedLimits(avgSpeed);
+                }
+                return Math.Abs(movementSpeed) > avgSpeed * speedMultiplier;
+            }            
         }
 
         /// <summary>
@@ -217,6 +253,18 @@ namespace Barotrauma
             UpdateTemporaryAnimations();
             UpdateAnim(deltaTime);
             CheckRopeState();
+        }
+
+        public void UpdateAnimationsAfterPhysicsStep()
+        {
+            if (queuedHoldParams.Count == 0) { return; }
+            foreach (HoldParams holdParams in queuedHoldParams.Values)
+            {
+                //the item may have been dropped or moved elsewhere after the params were queued (e.g. while the character was disabled)
+                if (holdParams.Item.ParentInventory?.Owner != character) { continue; }
+                DoHoldItem(holdParams.DeltaTime, holdParams.Item, holdParams.HandlePos, holdParams.ItemPos, holdParams.Aim, holdParams.HoldAngle, holdParams.ItemAngleRelativeToHoldAngle, holdParams.AimMelee, holdParams.TargetPos);
+            }
+            queuedHoldParams.Clear();
         }
 
         protected abstract void UpdateAnim(float deltaTime);
@@ -330,14 +378,27 @@ namespace Barotrauma
         
         protected void UpdateConstantTorque(float deltaTime)
         {
+            if (Character.IsIncapacitated) { return; }
             foreach (var limb in Limbs)
             {
                 if (limb.IsSevered) { continue; }
                 if (Math.Abs(limb.Params.ConstantTorque) > 0)
                 {
-                    // TODO: not sure if this works on ground
+                    Vector2 movement = InWater || IsClimbing ? TargetMovement : new Vector2(TargetMovement.X, 0);
+
+                    if (limb.Params.OnlyApplyConstantTorqueWhenMoving && (character.IsIncapacitated || movement.LengthSquared() < 0.01f))
+                    {
+                        continue;
+                    }
                     float movementFactor = Math.Max(character.AnimController.Collider.LinearVelocity.Length() * 0.5f, 1);
-                    limb.body.SmoothRotate(MainLimb.Rotation + MathHelper.ToRadians(limb.Params.ConstantAngle) * Dir, limb.Mass * limb.Params.ConstantTorque * movementFactor, wrapAngle: true);
+                    if (limb.Params.IgnoreConstantAngle)
+                    {
+                        limb.body.ApplyTorque(limb.Mass * limb.Params.ConstantTorque * Dir * movementFactor);
+                    }
+                    else
+                    {
+                        limb.body.SmoothRotate(MainLimb.Rotation + MathHelper.ToRadians(limb.Params.ConstantAngle) * Dir, limb.Mass * limb.Params.ConstantTorque * movementFactor, wrapAngle: true);
+                    }
                 }
             }
         }
@@ -353,7 +414,14 @@ namespace Barotrauma
             }
         }
 
-        public void UpdateUseItem(bool allowMovement, Vector2 handWorldPos)
+        /// <summary>
+        /// Makes the character do an animation that represents using/repairing some item (putting their hand on it and optionally doing some movement with the hand).
+        /// </summary>
+        /// <param name="allowMovement">Is the character allowed to move to get closer to the item if needed?</param>
+        /// <param name="handWorldPos">The world position where the character should place their hand.</param>
+        /// <param name="handMoveAmount">Optional extra movement to apply to the hand, in display coordinates. 
+        /// Passed separately from handWorldPos so this additional movement doesn't affect whether the character thinks they should be crouching or not, or whether they need to move closer to the target.</param>
+        public void UpdateUseItem(bool allowMovement, Vector2 handWorldPos, Vector2 handMoveAmount)
         {
             useItemTimer = 0.05f;
             StartUsingItem();
@@ -389,7 +457,7 @@ namespace Barotrauma
 
             if (!character.Enabled) { return; }
 
-            Vector2 handSimPos = ConvertUnits.ToSimUnits(handWorldPos);
+            Vector2 handSimPos = ConvertUnits.ToSimUnits(handWorldPos + handMoveAmount);
             if (character.Submarine != null)
             {
                 handSimPos -= character.Submarine.SimPosition;
@@ -420,14 +488,25 @@ namespace Barotrauma
                 rightHand.PullJointWorldAnchorB = handSimPos;
             }
 
+            //calculate the height the character would be at if it wasn't crouching
+            //if we just use the height as-is, it can lead to the character being indecisive about whether to crouch:
+            //they'd crouch, and then be low enough for crouching to no longer be needed, uncrouch, repeat...
+            float characterHeightDisregardingCrouching = character.WorldPosition.Y;
+            if (this is HumanoidAnimController humanAnimController && ColliderIndex == 1)
+            {
+                characterHeightDisregardingCrouching += ConvertUnits.ToDisplayUnits(humanAnimController.HumanCrouchParams.MoveDownAmountWhenStationary);
+            }
+
             //make the character crouch if using an item some distance below them (= on the floor)
-            if (!inWater && 
-                character.WorldPosition.Y - handWorldPos.Y > ConvertUnits.ToDisplayUnits(CurrentGroundedParams.TorsoPosition) / 4 &&
+            if (!inWater &&
+                characterHeightDisregardingCrouching - handWorldPos.Y > ConvertUnits.ToDisplayUnits(ArmLength) &&
                 this is HumanoidAnimController humanoidAnimController)
             {
-                humanoidAnimController.Crouch();
-                // TODO: is this redundant/required?
-                humanoidAnimController.ForceSelectAnimationType = AnimationType.Crouch;
+                //don't use Crouch() here, it'd set the crouch input, which the client would send to the server.
+                //The server would then crouch with the crouching collider, while the client may not (e.g. when this is called from UpdateAnim
+                //after the collider has already been chosen), causing the client and server to disagree about the character's position.
+                //Both the client and the server call this method independently, so there's no need to sync the input.
+                humanoidAnimController.Crouching = true;
             }
         }
 
@@ -445,11 +524,28 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Latest hold params per item (a character can hold 2 items at once). Only the latest params of each item are kept,
+        /// so they can't pile up if HoldItem gets called when UpdateAnimationsAfterPhysicsStep doesn't (e.g. when the character is disabled).
+        /// </summary>
+        private readonly Dictionary<Item, HoldParams> queuedHoldParams = new Dictionary<Item, HoldParams>();
+        public readonly record struct HoldParams(float DeltaTime, Item Item, Vector2[] HandlePos, Vector2 ItemPos, bool Aim, float HoldAngle, float ItemAngleRelativeToHoldAngle, bool AimMelee, Vector2? TargetPos);
+
+        public void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 itemPos, bool aim, float holdAngle, float itemAngleRelativeToHoldAngle = 0.0f, bool aimMelee = false, Vector2? targetPos = null)
+        {
+            //We need the holding to happen after physics have been simulated:
+            //otherwise we'd put the item at the position of the character's hand, then move the character, then when we render the item may no longer be exactly at the position of the hand.
+            //Do this by queuing the parameters and processing them in UpdateAnimationsAfterPhysicsStep
+            queuedHoldParams[item] = new HoldParams(deltaTime, item, handlePos, itemPos, aim, holdAngle, itemAngleRelativeToHoldAngle, aimMelee, targetPos);
+        }
+
         private Direction previousDirection;
         private readonly Vector2[] transformedHandlePos = new Vector2[2];
         //TODO: refactor this method, it's way too convoluted
-        public void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 itemPos, bool aim, float holdAngle, float itemAngleRelativeToHoldAngle = 0.0f, bool aimMelee = false, Vector2? targetPos = null)
+        private void DoHoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 itemPos, bool aim, float holdAngle, float itemAngleRelativeToHoldAngle = 0.0f, bool aimMelee = false, Vector2? targetPos = null)
         {
+            if (item.body == null || item.Removed || character.Removed) { return; }
+
             aimingMelee = aimMelee;
             if (character.Stun > 0.0f || character.IsIncapacitated)
             {
@@ -481,6 +577,11 @@ namespace Barotrauma
             bool equippedInRightHand = rightHandItem == item && rightHand is { IsSevered: false };
             Item leftHandItem = character.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand);
             bool equippedInLeftHand = leftHandItem == item && leftHand is { IsSevered: false };
+
+            //it's possible that the item is no longer held in either hand if e.g. the arms got severed after HoldItem was called
+            //but before DoHoldItem was called after the physics update
+            if (!equippedInRightHand && !equippedInLeftHand) { return; }
+
             if (aim && !isClimbing && !usingController && character.Stun <= 0.0f && itemPos != Vector2.Zero && !character.IsIncapacitated)
             {
                 targetPos ??= ConvertUnits.ToSimUnits(character.SmoothedCursorPosition);
@@ -528,8 +629,8 @@ namespace Barotrauma
                 }
             }
 
-            if (rightShoulder == null) { return; }
-            Vector2 transformedHoldPos = rightShoulder.WorldAnchorA;
+            if (rightShoulder == null && leftShoulder == null) { return; }
+            Vector2 transformedHoldPos = (rightShoulder ?? leftShoulder).WorldAnchorA;
             if (itemPos == Vector2.Zero || isClimbing || usingController)
             {
                 if (equippedInRightHand)
@@ -547,13 +648,12 @@ namespace Barotrauma
             {
                 if (equippedInRightHand)
                 {
-                    transformedHoldPos = rightShoulder.WorldAnchorA;
+                    if (rightShoulder != null) { transformedHoldPos = rightShoulder.WorldAnchorA; }                   
                     rightHand.Disabled = true;
                 }
                 if (equippedInLeftHand)
                 {
-                    if (leftShoulder == null) { return; }
-                    transformedHoldPos = leftShoulder.WorldAnchorA;
+                    if (leftShoulder != null) { transformedHoldPos = leftShoulder.WorldAnchorA; }
                     leftHand.Disabled = true;
                 }
                 itemPos.X *= Dir;
@@ -628,8 +728,11 @@ namespace Barotrauma
                             item.Prefab.ContentPackage);
                     }
 #endif
+                    var hand = i == 0 ? rightHand : leftHand;
+                    if (hand == null) { continue; }
+
                     HandIK(
-                        i == 0 ? rightHand : leftHand, transformedHoldPos + transformedHandlePos[i],
+                        hand, transformedHoldPos + transformedHandlePos[i],
                         CurrentAnimationParams.ArmIKStrength,
                         CurrentAnimationParams.HandIKStrength,
                         maxAngularVelocity: 15.0f);
@@ -640,21 +743,61 @@ namespace Barotrauma
         private float GetAimWobble(Limb rightHand, Limb leftHand, Item heldItem)
         {
             float wobbleStrength = 0.0f;
-            if (character.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand) == heldItem)
+            float t = GetAimWobbleTime();
+            if (rightHand != null && character.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand) == heldItem)
             {
                 wobbleStrength += Character.CharacterHealth.GetLimbDamage(rightHand, afflictionType: AfflictionPrefab.DamageType);
+                wobbleStrength += GetLimbSpecificAimWobble(rightHand);
+                //modify time per-limb so both limbs don't wobble in unison
+                t += 5.0f;
             }
-            if (character.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand) == heldItem)
+            if (leftHand != null && character.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand) == heldItem)
             {
                 wobbleStrength += Character.CharacterHealth.GetLimbDamage(leftHand, afflictionType: AfflictionPrefab.DamageType);
+                wobbleStrength += GetLimbSpecificAimWobble(leftHand);
+                t += 10.0f;
             }
+
             if (wobbleStrength <= 0.1f) { return 0.0f; }
-            wobbleStrength = (float)Math.Min(wobbleStrength, 1.0f);
+            wobbleStrength = MathF.Min(wobbleStrength, 1.0f);
 
-            float lowFreqNoise = PerlinNoise.GetPerlin((float)Timing.TotalTime / 320.0f, (float)Timing.TotalTime / 240.0f) - 0.5f;
-            float highFreqNoise = PerlinNoise.GetPerlin((float)Timing.TotalTime / 40.0f, (float)Timing.TotalTime / 50.0f) - 0.5f;
 
-            return (lowFreqNoise * 1.0f + highFreqNoise * 0.1f) * wobbleStrength;
+            //the numbers here are just arbitrary values chosen by experimentation to make the wobble look nice
+            float lowFreqNoise = PerlinNoise.GetPerlin(t / 220.0f, t / 240.0f) - 0.5f;
+            float highFreqNoise = PerlinNoise.GetPerlin(t / 20.0f, t / 30.0f) - 0.5f;
+
+            return (lowFreqNoise * 1.0f + highFreqNoise * 0.25f) * wobbleStrength;
+
+            static float GetLimbSpecificAimWobble(Limb limb)
+            {
+                float aimWobble = 0.0f;
+                foreach (var wearingItem in limb.WearingItems)
+                {
+                    aimWobble += wearingItem.WearableComponent.WearableStatValues.GetValueOrDefault(StatTypes.AimWobble);
+                }
+                return aimWobble;
+            }
+        }
+
+        /// <summary>
+        /// Time used to drive the aim wobble noise. The wobble affects where shots go, so for player-controlled characters in MP
+        /// it needs to match between the client and the server. Timing.TotalTime differs between the processes,
+        /// so we use the ID of the input frame being processed instead (the same input has the same ID on both sides).
+        /// </summary>
+        private float GetAimWobbleTime()
+        {
+#if CLIENT
+            if (GameMain.Client != null && character == Character.Controlled)
+            {
+                return character.LastNetworkUpdateID / (float)Timing.FixedUpdateRate;
+            }
+#elif SERVER
+            if (GameMain.Server != null && character.IsRemotePlayer)
+            {
+                return character.LastProcessedID / (float)Timing.FixedUpdateRate;
+            }
+#endif
+            return (float)Timing.TotalTime;
         }
 
         public void HandIK(Limb hand, Vector2 pos, float armTorque = 1.0f, float handTorque = 1.0f, float maxAngularVelocity = float.PositiveInfinity)
@@ -747,8 +890,9 @@ namespace Barotrauma
             Limb head       = GetClimbingLimb(LimbType.Head);
             Limb torso      = GetClimbingLimb(LimbType.Torso);
 
-            Limb leftHand   = GetClimbingLimb(LimbType.LeftHand);
-            Limb rightHand  = GetClimbingLimb(LimbType.RightHand);
+            //use the arms to kind of awkwardly climb the ladder if hands are missing/severed
+            Limb leftHand   = GetClimbingLimb(LimbType.LeftHand) ?? GetClimbingLimb(LimbType.LeftArm);
+            Limb rightHand  = GetClimbingLimb(LimbType.RightHand) ?? GetClimbingLimb(LimbType.RightArm);
 
             Vector2 ladderSimPos = ConvertUnits.ToSimUnits(
                 ladder.Item.Rect.X + ladder.Item.Rect.Width / 2.0f,
@@ -780,17 +924,22 @@ namespace Barotrauma
             float bottomPos = Collider.SimPosition.Y - ColliderHeightFromFloor - Collider.Radius - Collider.Height / 2.0f;
             float torsoPos = TorsoPosition ?? 0;
             float bodyMoveForce = animParams.ClimbBodyMoveForce;
-            if (torso != null)
+            float bodyMoveDist = animParams.ClimbBodyMoveDistance * Dir;
+            //if the character has lost its feet, don't move the torso, just let it hang freely
+            bool hasLostFeet = 
+                rightFoot == null && leftFoot == null && 
+                GetLimb(LimbType.RightFoot, excludeSevered: false) != null && GetLimb(LimbType.LeftFoot, excludeSevered: false) != null;
+            if (torso != null && !hasLostFeet)
             {
-                MoveLimb(torso, new Vector2(ladderSimPos.X - 0.35f * Dir, bottomPos + torsoPos), bodyMoveForce);   
+                MoveLimb(torso, new Vector2(ladderSimPos.X - 0.35f * bodyMoveDist, bottomPos + torsoPos), bodyMoveForce);   
             }
             if (head != null)
             {
                 float headPos = HeadPosition ?? 0;
-                MoveLimb(head, new Vector2(ladderSimPos.X - 0.2f * Dir, bottomPos + headPos), bodyMoveForce);    
+                MoveLimb(head, new Vector2(ladderSimPos.X - 0.2f * bodyMoveDist, bottomPos + headPos), bodyMoveForce);    
             }
 
-            Collider.MoveToPos(new Vector2(ladderSimPos.X - 0.1f * Dir, Collider.SimPosition.Y), bodyMoveForce);
+            Collider.MoveToPos(new Vector2(ladderSimPos.X - 0.1f * bodyMoveDist, Collider.SimPosition.Y), bodyMoveForce);
             
             Vector2 handPos = new Vector2(
                 ladderSimPos.X,
@@ -1053,7 +1202,6 @@ namespace Barotrauma
             //calculate arm and forearm length (atm this assumes that both arms are the same size)
             Limb rightForearm = GetLimb(LimbType.RightForearm);
             Limb rightHand = GetLimb(LimbType.RightHand);
-            if (rightHand == null) { return; }
 
             rightShoulder = 
                 GetJointBetweenLimbs(LimbType.Torso, LimbType.RightArm) ?? 
@@ -1082,7 +1230,7 @@ namespace Barotrauma
             upperArmLength = Vector2.Distance(localAnchorShoulder, localAnchorElbow);
             if (rightElbow != null)
             {
-                if (rightForearm == null)
+                if (rightForearm == null && rightHand != null)
                 {
                     forearmLength = Vector2.Distance(
                         rightHand.PullJointLocalAnchorA,

@@ -22,8 +22,8 @@ namespace Barotrauma.Networking
         public bool IsOwner;
         public bool IsDownloading;
     }
-    
-    partial class Client : IDisposable
+
+    public partial class Client : IDisposable
     {
         public const int MaxNameLength = 32;
 
@@ -188,7 +188,7 @@ namespace Barotrauma.Networking
         public HashSet<Identifier> GivenAchievements = new HashSet<Identifier>();
 
         public ClientPermissions Permissions = ClientPermissions.None;
-        public readonly HashSet<DebugConsole.Command> PermittedConsoleCommands = new HashSet<DebugConsole.Command>();
+        internal readonly HashSet<DebugConsole.Command> PermittedConsoleCommands = new HashSet<DebugConsole.Command>();
 
         private readonly object[] votes;
 
@@ -231,7 +231,7 @@ namespace Barotrauma.Networking
                 }
             }
         }
-        public static void ReadPermissions(IReadMessage inc, out ClientPermissions permissions, out List<DebugConsole.Command> permittedCommands)
+        internal static void ReadPermissions(IReadMessage inc, out ClientPermissions permissions, out List<DebugConsole.Command> permittedCommands)
         {
             int permissionsInt = inc.ReadRangedInteger(0, (int)ClientPermissions.All);
             permissions = ClientPermissions.None;

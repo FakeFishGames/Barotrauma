@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    sealed partial class TraitorManager
+    public sealed partial class TraitorManager
     {
         public struct TraitorResults : INetSerializableStruct
         {

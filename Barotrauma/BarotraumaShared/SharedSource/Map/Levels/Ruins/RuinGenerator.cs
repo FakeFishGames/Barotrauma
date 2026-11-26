@@ -6,7 +6,7 @@ using Voronoi2;
 
 namespace Barotrauma.RuinGeneration
 {
-    partial class Ruin
+    public partial class Ruin
     {
         private readonly RuinGenerationParams generationParams;
 

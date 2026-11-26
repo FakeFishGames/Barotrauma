@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Barotrauma
@@ -26,8 +25,6 @@ namespace Barotrauma
 
         protected Vector2 textPos;
         protected Vector2 origin;
-
-        protected Color textColor, disabledTextColor, selectedTextColor;
 
         private LocalizedString wrappedText;
         private string censoredText;
@@ -196,30 +193,49 @@ namespace Barotrauma
             private set;
         }
 
+        #region Colors
+        protected Color textColor;
         public Color TextColor
         {
-            get { return textColor; }
-            set { textColor = value; }
-        }
-
-        public Color DisabledTextColor
-        {
-            get => disabledTextColor;
-            set => disabledTextColor = value;
+            get => textColor;
+            set => textColor = value;
         }
 
         private Color? hoverTextColor;
         public Color HoverTextColor
         {
-            get { return hoverTextColor ?? textColor; }
-            set { hoverTextColor = value; }
+            get => hoverTextColor ?? textColor;
+            set => hoverTextColor = value;
         }
 
+        private Color? pressedTextColor;
+        public Color PressedTextColor
+        {
+            get => pressedTextColor ?? textColor;
+            set => pressedTextColor = value;
+        }
+
+        protected Color selectedTextColor;
         public Color SelectedTextColor
         {
-            get { return selectedTextColor; }
-            set { selectedTextColor = value; }
+            get => selectedTextColor;
+            set => selectedTextColor = value;
         }
+
+        private Color? hoverSelectedTextColor;
+        public Color HoverSelectedTextColor
+        {
+            get => hoverSelectedTextColor ?? HoverTextColor;
+            set => hoverSelectedTextColor = value;
+        }
+
+        protected Color disabledTextColor;
+        public Color DisabledTextColor
+        {
+            get => disabledTextColor;
+            set => disabledTextColor = value;
+        }
+        #endregion
 
         public Alignment TextAlignment
         {
@@ -243,28 +259,12 @@ namespace Barotrauma
             get { return censoredText; }
         }
 
-        public class StrikethroughSettings
-        {
-            public Color Color { get; set; } = GUIStyle.Red;
-            private int thickness;
-            private int expand;
+        public Strikethrough? Strikethrough = null;
 
-            public StrikethroughSettings(Color? color = null, int thickness = 1, int expand = 0)
-            {
-                if (color != null) { Color = color.Value; }
-                this.thickness = thickness;
-                this.expand = expand;
-            }
+        public ImmutableArray<RichTextData>? OverrideRichTextData;
 
-            public void Draw(SpriteBatch spriteBatch, float textSizeHalf, float xPos, float yPos)
-            {
-                ShapeExtensions.DrawLine(spriteBatch, new Vector2(xPos - textSizeHalf - expand, yPos), new Vector2(xPos + textSizeHalf + expand, yPos), Color, thickness);
-            }
-        }
-
-        public StrikethroughSettings Strikethrough = null;
-
-        public ImmutableArray<RichTextData>? RichTextData => text.RichTextData;
+        public ImmutableArray<RichTextData>? RichTextData
+            => OverrideRichTextData ?? text.RichTextData;
 
         public bool HasColorHighlight => RichTextData.HasValue;
 
@@ -281,7 +281,12 @@ namespace Barotrauma
         public List<ClickableArea> ClickableAreas { get; private set; } = new List<ClickableArea>();
 
         public bool Shadow { get; set; }
-        
+
+        /// <summary>
+        /// Kinda expensive, use sparingly, only if Shadow doesn't look good
+        /// </summary>
+        public Color? TextOutlineColor = null;
+
         /// <summary>
         /// This is the new constructor.
         /// If the rectT height is set 0, the height is calculated from the text.
@@ -338,8 +343,10 @@ namespace Barotrauma
 
             textColor = componentStyle.TextColor;
             hoverTextColor = componentStyle.HoverTextColor;
-            disabledTextColor = componentStyle.DisabledTextColor;
+            pressedTextColor = componentStyle.PressedTextColor;
             selectedTextColor = componentStyle.SelectedTextColor;
+            hoverSelectedTextColor = componentStyle.HoverSelectedTextColor;
+            disabledTextColor = componentStyle.DisabledTextColor;
 
             if (Font == null || !componentStyle.Font.IsEmpty)
             {
@@ -363,9 +370,9 @@ namespace Barotrauma
 
             overflowClipActive = false;
             wrappedText = text.SanitizedString;
-            
-            TextSize = MeasureText(text.SanitizedString);
-            
+
+            TextSize = Censor ? MeasureText(censoredText) : MeasureText(text.SanitizedString);
+
             if (Wrap && rect.Width > 0)
             {
                 wrappedText = ToolBox.WrapText(text.SanitizedString, rect.Width - padding.X - padding.Z, Font, textScale);
@@ -572,15 +579,37 @@ namespace Barotrauma
                     pos.Y = (int)pos.Y;
                 }
 
-                Color currentTextColor = State is ComponentState.Hover or ComponentState.HoverSelected ? HoverTextColor : TextColor;
+                Color currentTextColor = !enabled ? DisabledTextColor : State switch
+                {
+                    ComponentState.Hover => HoverTextColor,
+                    ComponentState.Pressed => PressedTextColor,
+                    ComponentState.Selected => SelectedTextColor,
+                    ComponentState.HoverSelected => HoverSelectedTextColor,
+                    _ => TextColor
+                };
 
-                if (!enabled)
+                // This seems inefficient but is the best way to my understanding how to get a text outline like this.
+                // This method is also used by when fonts don't have a dedicated bold font
+                if (TextOutlineColor is { } outlineColor)
                 {
-                    currentTextColor = disabledTextColor;
+                    for (int x = -1; x <= 1; x += 1)
+                    {
+                        for (int y = -1; y <= 1; y += 1)
+                        {
+                            // exclude center and diagonals
+                            if (x is 0 || y is 0) { continue; }
+                            if (Math.Abs(x) + Math.Abs(y) is 1) { continue; }
+
+                            Font.DrawString(spriteBatch, textToShow, pos + new Vector2(x, y), outlineColor, 0.0f, origin, TextScale, SpriteEffects.None, textDepth, alignment: textAlignment, forceUpperCase: ForceUpperCase);
+                        }
+                    }
                 }
-                else if (State == ComponentState.Selected)
+
+                if (Shadow)
                 {
-                    currentTextColor = selectedTextColor;
+                    Vector2 shadowOffset = new Vector2(Math.Max(GUI.IntScale(2), 1));
+                    Strikethrough? strikethrough = Strikethrough.HasValue ? Strikethrough.Value with { Color = null } : Strikethrough;
+                    Font.DrawString(spriteBatch, textToShow, pos + shadowOffset, Color.Black, rotation: 0, origin, TextScale, SpriteEffects.None, textDepth, textAlignment, ForceUpperCase, strikethrough);
                 }
 
                 if (!HasColorHighlight)
@@ -594,26 +623,17 @@ namespace Barotrauma
                         }
                     }
 
-                    if (Shadow)
-                    {
-                        Vector2 shadowOffset = new Vector2(Math.Max(GUI.IntScale(2), 1));
-                        Font.DrawString(spriteBatch, textToShow, pos + shadowOffset, Color.Black, 0.0f, origin, TextScale, SpriteEffects.None, textDepth, alignment: textAlignment, forceUpperCase: ForceUpperCase);
-                    }
-
-                    Font.DrawString(spriteBatch, textToShow, pos, colorToShow, 0.0f, origin, TextScale, SpriteEffects.None, textDepth, alignment: textAlignment, forceUpperCase: ForceUpperCase);
+                    Font.DrawString(spriteBatch, textToShow, pos, colorToShow, rotation: 0, origin, TextScale, SpriteEffects.None, textDepth, textAlignment, ForceUpperCase, Strikethrough);
                 }
                 else
                 {
                     if (OverrideRichTextDataAlpha)
                     {
-                        RichTextData?.ForEach(rt => rt.Alpha = currentTextColor.A / 255.0f);
+                        RichTextData?.ForEach(rt => rt.Alpha = currentTextColor.A / 255f);
                     }
                     Font.DrawStringWithColors(spriteBatch, textToShow, pos,
-                        currentTextColor * (currentTextColor.A / 255.0f), 0.0f, origin, TextScale, SpriteEffects.None, textDepth, RichTextData, alignment: textAlignment, forceUpperCase: ForceUpperCase);
+                        currentTextColor * (currentTextColor.A / 255f), rotation: 0, origin, TextScale, SpriteEffects.None, textDepth, RichTextData, alignment: textAlignment, forceUpperCase: ForceUpperCase, strikethrough: Strikethrough);
                 }
-
-                Strikethrough?.Draw(spriteBatch, (int)Math.Ceiling(TextSize.X / 2f), pos.X,
-                    /* TODO: ???? */ForceUpperCase == ForceUpperCase.Yes ? pos.Y : pos.Y + GUI.Scale * 2f);
             }
 
             if (overflowClipActive)
@@ -651,6 +671,8 @@ namespace Barotrauma
             float minScale = Math.Max(textBlocks.First().TextScale, 1.0f);
             foreach (GUITextBlock textBlock in textBlocks)
             {
+                //make sure the position/wrapping etc is up-to-date first
+                textBlock.SetTextPos();
                 if (defaultScale.HasValue) { textBlock.TextScale = defaultScale.Value; }
                 textBlock.AutoScaleHorizontal = scaleHorizontal;
                 textBlock.AutoScaleVertical = scaleVertical;

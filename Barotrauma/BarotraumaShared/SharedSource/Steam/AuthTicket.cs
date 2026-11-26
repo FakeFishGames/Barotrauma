@@ -41,33 +41,6 @@ namespace Barotrauma.Steam
         }
         #endregion Auth ticket for Steam host
 
-        #region Auth ticket for EOS host
-        private const string EosHostAuthIdentity = "BarotraumaRemotePlayerAuth";
-
-        private static Option<Steamworks.AuthTicket> currentEosHostAuthTicket = Option.None;
-        public static async Task<Option<Steamworks.AuthTicket>> GetAuthTicketForEosHostAuth()
-        {
-            if (!IsInitialized)
-            {
-                return Option.None;
-            }
-
-            if (currentEosHostAuthTicket.TryUnwrap(out var ticketToCancel))
-            {
-                ticketToCancel.Cancel();
-            }
-            currentEosHostAuthTicket = Option.None;
-
-            var newTicket = await Steamworks.SteamUser.GetAuthTicketForWebApiAsync(identity: EosHostAuthIdentity);
-
-            currentEosHostAuthTicket = newTicket != null
-                ? Option.Some(newTicket)
-                : Option.None;
-
-            return currentEosHostAuthTicket;
-        }
-        #endregion Auth ticket for EOS host
-
         #region Auth ticket for GameAnalytics consent server
         private const string GameAnalyticsConsentIdentity = "BarotraumaGameAnalyticsConsent";
 

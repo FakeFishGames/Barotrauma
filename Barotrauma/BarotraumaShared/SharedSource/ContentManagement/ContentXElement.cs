@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -54,6 +54,15 @@ namespace Barotrauma
 
         public IEnumerable<ContentXElement> GetChildElements(string name)
             => Elements().Where(e => string.Equals(name, e.Name.LocalName, StringComparison.OrdinalIgnoreCase));
+        
+        public IEnumerable<ContentXElement> GetChildElements(params string[] names)
+            => names.SelectMany(GetChildElements);
+        
+        public IEnumerable<ContentXElement> GetAllChildElements(string name)
+            => Descendants().Where(e => string.Equals(name, e.Name.LocalName, StringComparison.OrdinalIgnoreCase));
+        
+        public IEnumerable<ContentXElement> GetAllChildElements(params string[] names)
+            => names.SelectMany(GetAllChildElements);
 
         public XAttribute? GetAttribute(string name) => Element.GetAttribute(name);
         
@@ -74,6 +83,7 @@ namespace Barotrauma
         [return: NotNullIfNotNull(parameterName: "def")]
         public string? GetAttributeString(string key, string? def) => Element.GetAttributeString(key, def);
         public string GetAttributeStringUnrestricted(string key, string def) => Element.GetAttributeStringUnrestricted(key, def);
+        [return: NotNullIfNotNull(nameof(def))]
         public string[]? GetAttributeStringArray(string key, string[]? def, bool convertToLowerInvariant = false) => Element.GetAttributeStringArray(key, def, convertToLowerInvariant);
         public ContentPath? GetAttributeContentPath(string key) => Element.GetAttributeContentPath(key, ContentPackage);
         public int? GetAttributeNullableInt(string key) => Element.GetAttributeNullableInt(key);
@@ -81,6 +91,7 @@ namespace Barotrauma
         public ushort GetAttributeUInt16(string key, ushort def) => Element.GetAttributeUInt16(key, def);
         public int[]? GetAttributeIntArray(string key, int[]? def) => Element.GetAttributeIntArray(key, def);
         public ushort[]? GetAttributeUshortArray(string key, ushort[]? def) => Element.GetAttributeUshortArray(key, def);
+        public uint[] GetAttributeUIntArray(string key, uint[] def) => Element.GetAttributeUIntArray(key, def);
         public float? GetAttributeNullableFloat(string key) => Element.GetAttributeNullableFloat(key);
         public float GetAttributeFloat(string key, float def) => Element.GetAttributeFloat(key, def);
         public float[]? GetAttributeFloatArray(string key, float[]? def) => Element.GetAttributeFloatArray(key, def);
@@ -148,6 +159,11 @@ namespace Barotrauma
 
         public static bool operator !=(in ContentXElement? a, in ContentXElement? b) =>
             !(a == b);
+
+        public override string ToString()
+        {
+            return Element?.ToString() ?? $"{nameof(ContentXElement)}: null";
+        }
     }
 
     public static class ContentXElementExtensions

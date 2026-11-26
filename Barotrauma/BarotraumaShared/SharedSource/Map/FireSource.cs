@@ -12,11 +12,13 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class FireSource : ISpatialEntity
+    public partial class FireSource : ISpatialEntity
     {
         const float OxygenConsumption = 50.0f;
         const float GrowSpeed = 20.0f;
         const float MaxDamageRange = 250.0f;
+
+        private readonly Identifier decalIdentifier = "burnt".ToIdentifier();
 
         /// <summary>
         /// How often the FireSource checks whether it can spread to nearby hulls.
@@ -267,17 +269,17 @@ namespace Barotrauma
             {
                 if (burnDecals.Count == 0)
                 {
-                    var newDecal = hull.AddDecal("burnt", WorldPosition + size / 2, 1f, isNetworkEvent: false);
+                    var newDecal = hull.AddDecal(decalIdentifier, WorldPosition + size / 2, 1f, isNetworkEvent: false);
                     if (newDecal != null) { burnDecals.Add(newDecal); }
                 }
                 else if (WorldPosition.X < burnDecals[0].WorldPosition.X - 256.0f)
                 {
-                    var newDecal = hull.AddDecal("burnt", WorldPosition, 1f, isNetworkEvent: false);
+                    var newDecal = hull.AddDecal(decalIdentifier, WorldPosition, 1f, isNetworkEvent: false);
                     if (newDecal != null) { burnDecals.Insert(0, newDecal); }
                 }
                 else if (WorldPosition.X + size.X > burnDecals[burnDecals.Count - 1].WorldPosition.X + 256.0f)
                 {
-                    var newDecal = hull.AddDecal("burnt", WorldPosition + Vector2.UnitX * size.X, 1f, isNetworkEvent: false);
+                    var newDecal = hull.AddDecal(decalIdentifier, WorldPosition + Vector2.UnitX * size.X, 1f, isNetworkEvent: false);
                     if (newDecal != null) { burnDecals.Add(newDecal); }
                 }
             }
@@ -371,7 +373,7 @@ namespace Barotrauma
                 if (!IsInDamageRange(c, DamageRange)) { continue; }
 
                 //GetApproximateDistance returns float.MaxValue if there's no path through open gaps between the hulls (e.g. if there's a door/wall in between)
-                if (hull.GetApproximateDistance(Position, c.Position, c.CurrentHull, maxDistance: 10000.0f, minimumGapOpenness: Structure.LargeGapOpenness) > size.X + DamageRange + FlameHeight)
+                if (hull.GetApproximateDistance(WorldPosition, c.WorldPosition, c.CurrentHull, maxDistance: 10000.0f, minimumGapOpenness: Structure.LargeGapOpenness) > size.X + DamageRange + FlameHeight)
                 {
                     continue;
                 }

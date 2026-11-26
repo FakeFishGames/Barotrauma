@@ -8,7 +8,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
 
-    class BackgroundCreature : ISteerable, ILevelRenderableObject
+    public class BackgroundCreature : ISteerable, ILevelRenderableObject
     {
         const float MaxDepth = 10000.0f;
 
@@ -381,7 +381,7 @@ namespace Barotrauma
         }
     }
 
-    class Swarm
+    public class Swarm
     {
         public List<BackgroundCreature> Members;
 

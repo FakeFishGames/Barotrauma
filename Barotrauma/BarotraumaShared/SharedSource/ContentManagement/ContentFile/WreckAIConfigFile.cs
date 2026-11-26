@@ -3,7 +3,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
     [RequiredByCorePackage]
-    sealed class WreckAIConfigFile : GenericPrefabFile<WreckAIConfig>
+    public sealed class WreckAIConfigFile : GenericPrefabFile<WreckAIConfig>
     {
         public WreckAIConfigFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 

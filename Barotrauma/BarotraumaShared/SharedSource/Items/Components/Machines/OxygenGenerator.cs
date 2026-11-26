@@ -30,6 +30,11 @@ namespace Barotrauma.Items.Components
             set { generatedAmount = MathHelper.Clamp(value, -10000.0f, 10000.0f); }
         }
 
+        /// <summary>
+        /// Deteriorate when generating oxygen
+        /// </summary>
+        public override bool ShouldCauseDeterioration => CurrFlow > 0.1f;
+
         public OxygenGenerator(Item item, ContentXElement element)
             : base(item, element)
         {

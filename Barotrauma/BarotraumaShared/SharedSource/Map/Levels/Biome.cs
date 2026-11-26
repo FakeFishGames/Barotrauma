@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class Biome : PrefabWithUintIdentifier
+    public class Biome : PrefabWithUintIdentifier
     {
         public readonly static PrefabCollection<Biome> Prefabs = new PrefabCollection<Biome>();
 
@@ -92,6 +92,21 @@ namespace Barotrauma
 
         public int HighestSubmarineTierAvailable(SubmarineClass subClass, Identifier locationType)
         {
+            int pluginHighest = -1;
+            foreach (var hook in PluginData.GetHooks<PluginSelectHighestSubmarineTierAvailable>())
+            {
+                int highestTier = hook(subClass, locationType);
+                if (highestTier != -1)
+                {
+                    pluginHighest = highestTier;
+                }
+            }
+
+            if (pluginHighest != -1)
+            {
+                return pluginHighest;
+            }
+
             if (!submarineAvailability.HasValue)
             {
                 // If the availability is not explicitly defined, make all subs available

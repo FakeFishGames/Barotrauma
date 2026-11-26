@@ -6,11 +6,12 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    class AIObjectiveExtinguishFires : AIObjectiveLoop<Hull>
+    public class AIObjectiveExtinguishFires : AIObjectiveLoop<Hull>
     {
         public override Identifier Identifier { get; set; } = "extinguish fires".ToIdentifier();
         public override bool ForceRun => true;
         protected override bool AllowInAnySub => true;
+        protected override bool RequireBothHandsAvailable => true;
         // Periodically clear the ignore list so that fires abandoned when fumbling with finding an extinguisher, navigating etc get reconsidered
         protected override float IgnoreListClearInterval => 30;
 
@@ -43,7 +44,7 @@ namespace Barotrauma
             if (hull.FireSources.None()) { return false; }
             if (hull.Submarine == null) { return false; }
             if (character.Submarine == null) { return false; }
-            if (!character.Submarine.IsEntityFoundOnThisSub(hull, includingConnectedSubs: true)) { return false; }
+            if (!character.Submarine.IsEntityFoundOnThisSub(hull, includingConnectedSubs: true, allowDifferentType: true)) { return false; }
             if (hull.BallastFlora != null) { return false; }
             foreach (var ballastFlora in MapCreatures.Behavior.BallastFloraBehavior.EntityList)
             {

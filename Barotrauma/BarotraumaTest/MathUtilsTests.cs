@@ -120,4 +120,87 @@ public class MathUtilsTests
         MathUtils.NearlyEqual(new Vector2(0, 0), result[0, 0]).Should().BeTrue();
         MathUtils.NearlyEqual(new Vector2(30, 30), result[1, 1]).Should().BeTrue();
     }
+
+    [Fact]
+    public void TestLineSegmentsIntersect()
+    {
+        //non-parallel, intersecting
+        MathUtils.LineSegmentsIntersect(
+            new Vector2(0f, 0f), new Vector2(2f, 2f),
+            new Vector2(0f, 2f), new Vector2(2f, 0f))
+            .Should().BeTrue();
+
+        MathUtils.LineSegmentsIntersect(
+            new Vector2(-1f, -1f), new Vector2(1f, 1f),
+            new Vector2(-1f, 1f), new Vector2(1f, -1f))
+            .Should().BeTrue();
+
+        //non-parallel, non-intersecting
+        MathUtils.LineSegmentsIntersect(
+            new Vector2(0f, 0f), new Vector2(1f, 1f),
+            new Vector2(2f, 2f), new Vector2(3f, 3f))
+            .Should().BeFalse();
+
+        MathUtils.LineSegmentsIntersect(
+            new Vector2(0f, 0f), new Vector2(2f, 1f),
+            new Vector2(3f, 0f), new Vector2(4f, 1f))
+            .Should().BeFalse();
+
+        //parallel, non-collinear
+        MathUtils.LineSegmentsIntersect(
+            new Vector2(0f, 0f), new Vector2(2f, 0f),
+            new Vector2(0f, 1f), new Vector2(2f, 1f))
+            .Should().BeFalse();
+
+        MathUtils.LineSegmentsIntersect(
+            new Vector2(-1f, 2f), new Vector2(1f, 2f),
+            new Vector2(-1f, 3f), new Vector2(1f, 3f))
+            .Should().BeFalse();
+
+        //collinear, overlapping
+        MathUtils.LineSegmentsIntersect(
+            new Vector2(0f, 0f), new Vector2(2f, 0f),
+            new Vector2(1f, 0f), new Vector2(3f, 0f))
+            .Should().BeTrue();
+
+        MathUtils.LineSegmentsIntersect(
+            new Vector2(-2f, 0f), new Vector2(2f, 0f),
+            new Vector2(-1f, 0f), new Vector2(1f, 0f))
+            .Should().BeTrue();
+
+        MathUtils.LineSegmentsIntersect(
+            new Vector2(0f, 0f), new Vector2(2f, 0f),
+            new Vector2(2f, 0f), new Vector2(4f, 0f))
+            .Should().BeTrue();
+
+        //collinear, non-overlapping
+        MathUtils.LineSegmentsIntersect(
+            new Vector2(721f, 403f), new Vector2(958f, 403f),
+            new Vector2(1348f, 403f), new Vector2(1496f, 403f))
+            .Should().BeFalse();
+
+        MathUtils.LineSegmentsIntersect(
+            new Vector2(0f, 0f), new Vector2(1f, 0f),
+            new Vector2(2f, 0f), new Vector2(3f, 0f))
+            .Should().BeFalse();
+
+        //edge cases
+
+        //touching at a single point
+        MathUtils.LineSegmentsIntersect(
+            new Vector2(0f, 0f), new Vector2(1f, 1f),
+            new Vector2(1f, 1f), new Vector2(2f, 0f))
+            .Should().BeTrue();
+
+        //one segment is a point (degenerate)
+        MathUtils.LineSegmentsIntersect(
+            new Vector2(1f, 1f), new Vector2(1f, 1f),
+            new Vector2(0f, 0f), new Vector2(2f, 2f)).
+            Should().BeTrue(); // lies on the line
+
+        MathUtils.LineSegmentsIntersect(
+            new Vector2(3f, 3f), new Vector2(3f, 3f),
+            new Vector2(0f, 0f), new Vector2(2f, 2f))
+            .Should().BeFalse(); // outside
+    }
 }

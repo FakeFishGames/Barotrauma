@@ -8,7 +8,7 @@ using FarseerPhysics;
 
 namespace Barotrauma
 {
-    class MonsterEvent : Event
+    public class MonsterEvent : Event
     {
         /// <summary>
         /// The name of the species to spawn
@@ -136,7 +136,7 @@ namespace Barotrauma
             spawnPointTag = prefab.ConfigElement.GetAttributeString("spawnpointtag", string.Empty);
             SpawnDistance = prefab.ConfigElement.GetAttributeFloat("spawndistance", 0);
             offset = prefab.ConfigElement.GetAttributeFloat("offset", 0);
-            scatter = Math.Clamp(prefab.ConfigElement.GetAttributeFloat("scatter", 500), 0, 3000);
+            scatter = Math.Clamp(prefab.ConfigElement.GetAttributeFloat("scatter", 500), 0, 10000);
             delayBetweenSpawns = prefab.ConfigElement.GetAttributeFloat("delaybetweenspawns", 0.1f);
             resetTime = prefab.ConfigElement.GetAttributeFloat("resettime", 0);
             float playDeadProbability = prefab.ConfigElement.GetAttributeFloat("playdeadprobability", -1f);
@@ -272,6 +272,12 @@ namespace Barotrauma
                 {
                     removals.Add(position);
                 }
+                // Don't spawn inside submarines (e.g. wrecks or outposts the path goes through)
+                // Check the hulls instead of the submarine's bounds, since the bounds of a big outpost may cover most of the path in outpost levels
+                if (Hull.FindHull(position.Position.ToVector2()) != null)
+                {
+                    removals.Add(position);
+                }
             }
             removals.ForEach(r => availablePositions.Remove(r));         
             return availablePositions;
@@ -299,6 +305,7 @@ namespace Barotrauma
                     disallowed = true;
                     return;
                 }
+
                 Submarine refSub = GetReferenceSub(acceptRemoteControlledSubs: true);
                 //randomly choose which main sub to spawn the monsters around if there's 2 player subs (e.g. in the PvP mode)
                 if (Submarine.MainSubs.Length == 2 && 
@@ -322,7 +329,7 @@ namespace Barotrauma
                     foreach (Submarine sub in Submarine.Loaded)
                     {
                         if (sub.Info.Type != SubmarineType.Player &&
-                            sub.Info.Type != SubmarineType.EnemySubmarine &&
+                            sub.Info.Type != SubmarineType.AIControlled &&
                             !sub.IsRespawnShuttle) 
                         { 
                             continue; 
@@ -378,10 +385,10 @@ namespace Barotrauma
                 if (!isRuinOrWreckOrCave)
                 {
                     float minDistance = 20000;
-                    for (int i = 0; i < Submarine.MainSubs.Length; i++)
+                    foreach (Submarine sub in Submarine.MainSubs)
                     {
-                        if (Submarine.MainSubs[i] == null) { continue; }
-                        availablePositions.RemoveAll(p => Vector2.DistanceSquared(Submarine.MainSubs[i].WorldPosition, p.Position.ToVector2()) < minDistance * minDistance);
+                        if (sub == null) { continue; }
+                        availablePositions.RemoveAll(p => Vector2.DistanceSquared(sub.WorldPosition, p.Position.ToVector2()) < minDistance * minDistance);
                     }
                 }
                 if (availablePositions.None())
@@ -434,19 +441,12 @@ namespace Barotrauma
                             //find the waypoint whose distance from the spawnPos is closest to the desired offset
                             var targetWaypoint = waypoints.OrderBy(wp => 
                                 Math.Abs(Vector2.DistanceSquared(wp.WorldPosition, spawnPos.Value) - offsetSqr)).FirstOrDefault();
-                            if (targetWaypoint != null)
+                            // If the offset position is inside a submarine, keep the original position (which has already been checked to be outside)
+                            if (targetWaypoint != null && Hull.FindHull(targetWaypoint.WorldPosition) == null)
                             {
                                 spawnPos = targetWaypoint.WorldPosition;
                             }
                         }
-                    }
-                    // Ensure that the position is not inside a submarine (in practice wrecks).
-                    if (Submarine.Loaded.Any(s => ToolBox.GetWorldBounds(s.Borders.Center, s.Borders.Size).ContainsWorld(spawnPos.Value)))
-                    {
-                        //no suitable position found, disable the event
-                        spawnPos = null;
-                        disallowed = true;
-                        return;
                     }
                 }
                 spawnPending = true;
@@ -455,7 +455,12 @@ namespace Barotrauma
 
         private float GetMinDistanceToSub(Submarine submarine) 
         {
-            float minDist = Math.Max(Math.Max(submarine.Borders.Width, submarine.Borders.Height), Sonar.DefaultSonarRange * 0.9f);
+            float minDist = Math.Max(submarine.Borders.Width, submarine.Borders.Height);
+            if (!Level.IsLoadedOutpost)
+            {
+                //try to spawn outside sonar range, except in outpost levels, they're so small it would be too restrictive
+                minDist = Math.Max(minDist, Sonar.DefaultSonarRange * 0.9f);
+            }
             if (SpawnPosType.HasFlag(Level.PositionType.Abyss))
             {
                 minDist *= 2;
@@ -643,19 +648,7 @@ namespace Barotrauma
                 spawnPending = false;
 
                 float scatterAmount = scatter;
-                if (SpawnPosType.HasFlag(Level.PositionType.SidePath))
-                {
-                    var sidePaths = Level.Loaded.Tunnels.Where(t => t.Type == Level.TunnelType.SidePath);
-                    if (sidePaths.Any())
-                    {
-                        scatterAmount = Math.Min(scatter, sidePaths.Min(t => t.MinWidth) / 2);
-                    }
-                    else
-                    {
-                        scatterAmount = scatter;
-                    }
-                }
-                else if (SpawnPosType.IsIndoorsArea())
+                if (SpawnPosType.IsIndoorsArea())
                 {
                     scatterAmount = 0;
                 }
@@ -683,7 +676,7 @@ namespace Barotrauma
                                 pos = spawnPos.Value + Rand.Vector(Rand.Range(0.0f, scatterAmount));
 
                                 bool isValidPos = true;
-                                if (Submarine.Loaded.Any(s => ToolBox.GetWorldBounds(s.Borders.Center, s.Borders.Size).ContainsWorld(pos)) ||
+                                if (Hull.FindHull(pos) != null ||
                                     Level.Loaded.Ruins.Any(r => ToolBox.GetWorldBounds(r.Area.Center, r.Area.Size).ContainsWorld(pos)) ||
                                     Level.Loaded.IsPositionInsideWall(pos))
                                 {
@@ -696,6 +689,12 @@ namespace Barotrauma
                                     {
                                         isValidPos = false;
                                     }
+                                }
+                                //also check for visibility from the intended spawnpos to the "scattered position",
+                                //so we don't end up spawning the monster e.g. outside the walls of the side path we're trying to spawn it in
+                                else if (Submarine.CheckVisibility(ConvertUnits.ToSimUnits(spawnPos.Value), ConvertUnits.ToSimUnits(pos), ignoreSubs: true) != null)
+                                {
+                                    isValidPos = false;
                                 }
 
                                 if (isValidPos)

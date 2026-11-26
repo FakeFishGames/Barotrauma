@@ -67,7 +67,7 @@ namespace Barotrauma
                             color = Color.Red;
                         }
                     
-                        GUI.DrawRectangle(spriteBatch, new Vector2(pos.Position.X - 15.0f, -pos.Position.Y - 15.0f), new Vector2(30.0f, 30.0f), color, true);
+                        GUI.DrawRectangle(spriteBatch, new Vector2(pos.Position.X - 15.0f, -pos.Position.Y - 15.0f), new Vector2(30.0f, 30.0f), color, isFilled: false, thickness: 3 / cam.Zoom);
                     }
 
                     foreach (RuinGeneration.Ruin ruin in Ruins)

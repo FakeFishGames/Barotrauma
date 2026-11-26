@@ -6,6 +6,7 @@
         private readonly float multiplyValue;
 
         public override bool AllowClientSimulation => true;
+        public override bool OnlyModifiesAbilityObject => true;
 
         public CharacterAbilityModifyValue(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
