@@ -209,8 +209,7 @@ namespace Barotrauma
                 {
                     if (hashTask == null)
                     {
-                        XDocument doc = OpenFile(FilePath);
-                        StartHashDocTask(doc);
+                        StartHashDocTask();
                     }
                     hashTask.Wait();
                     hashTask = null;
@@ -464,7 +463,7 @@ namespace Barotrauma
             }
             if (hash == null)
             {
-                StartHashDocTask(doc);
+                StartHashDocTask();
             }
             SubmarineElement = doc.Root;
         }
@@ -623,14 +622,14 @@ namespace Barotrauma
             return false;
         }
 
-        public void StartHashDocTask(XDocument doc)
+        public void StartHashDocTask()
         {
             if (hash != null) { return; }
             if (hashTask != null) { return; }
 
             hashTask = new Task(() =>
             {
-                hash = Md5Hash.CalculateForString(doc.ToString(), Md5Hash.StringHashOptions.IgnoreWhitespace);
+                hash = Md5Hash.CalculateForFile(FilePath);
             });
             hashTask.Start();
         }
