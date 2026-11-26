@@ -537,7 +537,7 @@ namespace Barotrauma
             }
         }
 
-        partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool log)
+        partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool log, bool triggerDeathEffects)
         {
             HintManager.OnCharacterKilled(this);
 
@@ -551,7 +551,10 @@ namespace Barotrauma
 
                 RespawnManager.ShowDeathPromptIfNeeded();
 
-                GameMain.NetworkMember.AddChatMessage(chatMessage.Value, ChatMessageType.Dead);
+                if (triggerDeathEffects)
+                {
+                    GameMain.NetworkMember.AddChatMessage(chatMessage.Value, ChatMessageType.Dead);
+                }
                 GameMain.LightManager.LosEnabled = false;
                 controlled = null;
                 if (Screen.Selected?.Cam is Camera cam)
@@ -569,7 +572,10 @@ namespace Barotrauma
                 limb.UpdateLights();
             }
 
-            PlaySound(CharacterSound.SoundType.Die);
+            if (triggerDeathEffects)
+            {
+                PlaySound(CharacterSound.SoundType.Die);
+            }
         }
 
         partial void DisposeProjSpecific()
